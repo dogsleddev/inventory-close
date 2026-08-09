@@ -13,8 +13,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "c48c734ac71ed61978735fea52eb9e27020085001d0461fe26b5f4c0329fb43e",
-      "bytes": 761
+      "sha256": "353baaf59c2dec9144fac2be4b21102da6d4ed759fe3f9c62fe68761b268352f",
+      "bytes": 1221
     },
     {
       "path": "README.md",
@@ -93,7 +93,7 @@
     },
     {
       "path": "docs/13_BUILD_PLAN.md",
-      "sha256": "5522a6ad7b57eb72e1419d07195f4c12df55cd86fae20b6c88866d0e58162a12",
+      "sha256": "2056b1191801e07d6ad999e815d6f295cad831db44b0073c184390a54343e32c",
       "bytes": 1192
     },
     {

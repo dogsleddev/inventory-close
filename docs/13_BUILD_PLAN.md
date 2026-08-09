@@ -1,6 +1,6 @@
 # 13 — Build Plan
 
-Build order: DATA → SCHEMAS → DOMAIN → RULES → TESTS → SERVICES → WORKFLOWS → UI → AI → POLISH.
+Build order: SCHEMAS → DATA → DOMAIN → RULES → TESTS → SERVICES → WORKFLOWS → UI → AI → POLISH.
 
 Hard gate: do not build the main dashboard until all 15 golden accounting scenarios and aggregate controls pass.
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## Spec correction — build-order mnemonic in docs/13
+
+`docs/13_BUILD_PLAN.md` line 3 read `DATA → SCHEMAS → …`, inverting the
+authoritative order in `CANONICAL_SPEC.md` §16 (schemas/types before the
+dataset generator) and contradicting the workstream list in the same file.
+Corrected to `SCHEMAS → DATA → …`. `SPEC_MANIFEST.json` hash updated for
+that file. No financial control totals, exceptions, identifiers, or
+accounting behavior changed.
+
 ## FY2026-DEMO-v1.1.0 — NetSuite architecture amendment
 
 Supersedes generic ERP/WMS language with synthetic NetSuite ERP + NetSuite WMS. Adds:
