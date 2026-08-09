@@ -1,0 +1,14 @@
+{
+  "name": "@icg/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Future MCP adapter (P2). Calls application services; never reimplements accounting logic.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@icg/domain": "workspace:*",
+    "@icg/services": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

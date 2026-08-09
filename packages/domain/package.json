@@ -1,0 +1,19 @@
+{
+  "name": "@icg/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic domain core for Inventory Close Gaurd. Zero AI dependencies — enforced by lint rules and tests.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@icg/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Provider-independent AI adapter for Ask Gaurd (Stage 08). Calls application services through typed tools; contains no accounting logic.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@icg/domain": "workspace:*",
+    "@icg/services": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

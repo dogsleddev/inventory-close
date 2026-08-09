@@ -1,0 +1,11 @@
+{
+  "name": "@icg/rules",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic, versioned close-control rules (pure TypeScript). Zero AI dependencies.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": { "@icg/domain": "workspace:*" },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

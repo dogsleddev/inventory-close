@@ -1,0 +1,24 @@
+{
+  "name": "inventory-close-gaurd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Inventory Close Gaurd — the evidence layer between NetSuite inventory operations and the financial close. Synthetic FY2026 prototype for the fictional KestrelGrid AI.",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.5.3",
+  "scripts": {
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "pnpm --filter @icg/web run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "vitest": "^3.0.0"
+  }
+}
