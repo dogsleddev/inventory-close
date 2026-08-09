@@ -1,0 +1,18 @@
+{
+  "dataset_version": "FY2026-DEMO-v1.1.0",
+  "book_units": 1500,
+  "gross_inventory_cents": 480000000,
+  "gross_gl_cents": 481245000,
+  "gross_gl_difference_cents": 1245000,
+  "exception_count": 15,
+  "open_exception_count": 7,
+  "resolved_exception_count": 8,
+  "blocker_count": 7,
+  "blocker_exposure_cents": 19895000,
+  "designed_exception_exposure_cents": 25565000,
+  "close_readiness_bps": 8142,
+  "pbc_ready": 17,
+  "pbc_total": 21,
+  "pbc_readiness_percent": "80.95",
+  "source_health_percent": "91.67"
+}

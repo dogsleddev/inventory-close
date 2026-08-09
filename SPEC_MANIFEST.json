@@ -1,0 +1,230 @@
+{
+  "package": "inventory-close-gaurd-kickoff",
+  "canonical_dataset": "FY2026-DEMO-v1.1.0",
+  "prompt_packages": {
+    "claude_design": "prompts/design/README.md",
+    "claude_code": "prompts/code/README.md"
+  },
+  "files": [
+    {
+      "path": "CANONICAL_SPEC.md",
+      "sha256": "31ea63c073e8bde615d773571e692ddeb52b5236a87a7e025ebd48a7d59f8f4c",
+      "bytes": 14228
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "c48c734ac71ed61978735fea52eb9e27020085001d0461fe26b5f4c0329fb43e",
+      "bytes": 761
+    },
+    {
+      "path": "README.md",
+      "sha256": "67fc7e06f15b3a2e26275ebeb39a1f70114d61d2e8b3b56ec8432098364d8ddc",
+      "bytes": 3540
+    },
+    {
+      "path": "data/README.md",
+      "sha256": "221694bc1be9c01cf5ec183497f9b256b7cdc13f1d8582ff91bee70c4cf6b23f",
+      "bytes": 347
+    },
+    {
+      "path": "docs/00_PROJECT_CHARTER.md",
+      "sha256": "5cbb23635b83cd98b2f7fdcdb2192412ac4c6c08178b6683d03b1092e2c05560",
+      "bytes": 1717
+    },
+    {
+      "path": "docs/01_PRODUCT_PRINCIPLES.md",
+      "sha256": "e37b4f02d1b106f9d823366f4b25e4be3046456636d9f4e245b8aa265b7f7bcd",
+      "bytes": 1868
+    },
+    {
+      "path": "docs/02_COMPANY_CONTEXT.md",
+      "sha256": "43c3b8682f1015e4dc33df30055c43fed7485c44e925e8e5fb28fee3a602733d",
+      "bytes": 1295
+    },
+    {
+      "path": "docs/03_AUDIT_AND_ACCOUNTING_FRAMEWORK.md",
+      "sha256": "1215d43c334744017782153a9bfef03015f23259380950f13eb872d7362a5cf2",
+      "bytes": 1535
+    },
+    {
+      "path": "docs/04_ASSUMPTIONS_AND_OPEN_QUESTIONS.md",
+      "sha256": "32cb2958a92a2f0d5f4dd2ac97d7ac02ebdb3dc15d9120783faa1448619bfdbb",
+      "bytes": 1204
+    },
+    {
+      "path": "docs/05_SYSTEM_ARCHITECTURE.md",
+      "sha256": "c665086b7df1d4e20d12fad2dd3e4dcf0d4408f5333e171819f0ad2a15c3e8a9",
+      "bytes": 1345
+    },
+    {
+      "path": "docs/06_DATA_MODEL.md",
+      "sha256": "4d5127b414c71a6758e8993efb0820053dec4ffcc9d32b0169f1c57feab42851",
+      "bytes": 1760
+    },
+    {
+      "path": "docs/07_MOCK_DATASET_SPEC.md",
+      "sha256": "f60b8c83d45da9d5ff3c0273b39a107ff9712e2561698faf3651df27397ab9ef",
+      "bytes": 1553
+    },
+    {
+      "path": "docs/08_EXCEPTION_LIBRARY.md",
+      "sha256": "bbcda36a7482a78b3dcc749935bba82c291030c7609c8249acb897cc1e78464a",
+      "bytes": 2345
+    },
+    {
+      "path": "docs/09_AI_BEHAVIOR_AND_GUARDRAILS.md",
+      "sha256": "3a5d269b7dbe2d56ff5386125bdce0e054af1043007e791a1acf3d4a29ba6d74",
+      "bytes": 1897
+    },
+    {
+      "path": "docs/10_PBC_AND_AUDIT_PACKAGE.md",
+      "sha256": "5e1cdffaf9526026f8ff5ae6011be0287768141e2ff96aef7b5fb4adb2e30741",
+      "bytes": 1574
+    },
+    {
+      "path": "docs/11_UX_AND_INFORMATION_ARCHITECTURE.md",
+      "sha256": "410c3f6498afa800b34f5b450574e30992c25890e3be131d1af2808220164a9c",
+      "bytes": 1561
+    },
+    {
+      "path": "docs/12_DEMO_FLOW.md",
+      "sha256": "8bcd6b51f780d84d9dcbf2dd31c2ed4a6e77a30db7172628b91b1b4fe9227f77",
+      "bytes": 1090
+    },
+    {
+      "path": "docs/13_BUILD_PLAN.md",
+      "sha256": "5522a6ad7b57eb72e1419d07195f4c12df55cd86fae20b6c88866d0e58162a12",
+      "bytes": 1192
+    },
+    {
+      "path": "docs/14_QA_ACCEPTANCE_CRITERIA.md",
+      "sha256": "4c2b8fb58f97959f646f6221ea67872eac0db8925ac2fa3bd3b4b1837fa04a70",
+      "bytes": 1427
+    },
+    {
+      "path": "docs/15_SECURITY_PERMISSIONS_AND_AUDIT_TRAIL.md",
+      "sha256": "b05ef9327a4c8fc1aa5fd7aefa7b192105202c287d9de295d22df7db9a4a5124",
+      "bytes": 1382
+    },
+    {
+      "path": "docs/16_RULE_REGISTRY_AND_DETERMINISM.md",
+      "sha256": "786f06084fbed16836108e77a64ae8eeabb839103ab8a7bcbd1ffe929c490c24",
+      "bytes": 1711
+    },
+    {
+      "path": "golden/baseline.json",
+      "sha256": "f2eb8098cbdfb0f9a53b06eb4fea86c124de0ad59590a49166d3c97e84af913e",
+      "bytes": 514
+    },
+    {
+      "path": "prompts/README.md",
+      "sha256": "c111ab9db2c6f6f984fc16ed3e9869fbefdbffdd0681add912d9f3b4861dda0f",
+      "bytes": 400
+    },
+    {
+      "path": "prompts/code/00_CLAUDE_CODE_MASTER_KICKOFF.md",
+      "sha256": "f96b474345b706a9d372b98367ca28f8f01444218951237160f6e5212d1e091c",
+      "bytes": 3129
+    },
+    {
+      "path": "prompts/code/01_REPO_FOUNDATION_AND_DOMAIN.md",
+      "sha256": "02e2c4b9125feb057b841ad3793a4fb3b3e0c1a6db17e891b7cc68ed679efc3b",
+      "bytes": 2032
+    },
+    {
+      "path": "prompts/code/02_DATASET_GENERATOR_AND_NETSUITE_FIXTURES.md",
+      "sha256": "992f17acb2f3aea5c4ec821ba0fe9c565b4eff500086835464d77e8743e71bea",
+      "bytes": 2247
+    },
+    {
+      "path": "prompts/code/03_RULE_ENGINE_AND_GOLDEN_TESTS.md",
+      "sha256": "7c0355cc491044ca515feb3f18e61248f3645f980e88b2ee2c51ede497373c90",
+      "bytes": 2514
+    },
+    {
+      "path": "prompts/code/04_SERVICES_EVIDENCE_WORKFLOWS_SECURITY.md",
+      "sha256": "bcb910c84bccfb336c1cb09e977c1fd48f57bd409d1d82cbbfef9c8d126623d6",
+      "bytes": 2020
+    },
+    {
+      "path": "prompts/code/05_CORE_UI_OVERVIEW_AND_EXCEPTIONS.md",
+      "sha256": "06b93f4476bc0d6e4bc51f1f4011b45c5786f4ec1a558911c70416dc335674bd",
+      "bytes": 1683
+    },
+    {
+      "path": "prompts/code/06_FINANCIAL_LIFE_COUNTS_AND_NETSUITE_CHAINS.md",
+      "sha256": "8426024f01af97303d73a8697fb498d5fbc9b534259c789604cabd62bfbeecdf",
+      "bytes": 2069
+    },
+    {
+      "path": "prompts/code/07_RECONCILIATION_VALUATION_PBC.md",
+      "sha256": "e3b85bb4400146e8fdacbaee806692cb2ed0981c7fd2298d76e2654e9f3e5b9e",
+      "bytes": 1516
+    },
+    {
+      "path": "prompts/code/08_ASK_GAURD.md",
+      "sha256": "d7740fc5a2007ab42faf7bcf32ee13b2c35d76f775f19ddb262704cf56e75439",
+      "bytes": 2352
+    },
+    {
+      "path": "prompts/code/09_DEMO_RESET_REPLAY_AND_QA.md",
+      "sha256": "d0849bc1f1face8d249b6e6083808276a27eab333153b5f7fe04b58ce9484705",
+      "bytes": 1381
+    },
+    {
+      "path": "prompts/code/10_FINAL_POLISH_AND_DEPLOYMENT.md",
+      "sha256": "0953f6ff550ccea950c8642e31510da5cdf002a46cda008a533f6b99722142bd",
+      "bytes": 1922
+    },
+    {
+      "path": "prompts/code/README.md",
+      "sha256": "65f7f8281dd7e906e194f2d93ccbf8ccd19346eb36d68b89be38ad5dfb9bc6be",
+      "bytes": 3601
+    },
+    {
+      "path": "prompts/design/00_CLAUDE_DESIGN_MASTER_BRIEF.md",
+      "sha256": "2fa75a7fe2370e88f694281c725a5cf7fed57a8bfe54a4325493b1400f265615",
+      "bytes": 8569
+    },
+    {
+      "path": "prompts/design/01_APP_SHELL_AND_DESIGN_SYSTEM.md",
+      "sha256": "75d7431efca98d1c13568c115d444bdb33373ad2b926a2a43dd87f5085f67fb2",
+      "bytes": 3458
+    },
+    {
+      "path": "prompts/design/02_OVERVIEW_AND_SIGNOFF.md",
+      "sha256": "700ed35127cf2d8aa9bfda57f90aed3f32538fcad592846f31158e8d8b474702",
+      "bytes": 3268
+    },
+    {
+      "path": "prompts/design/03_EXCEPTION_AND_EVIDENCE.md",
+      "sha256": "3e96006add3a40e7dd17ae41d5d71955824a27d2c977445ad2903e5dc2284e23",
+      "bytes": 3963
+    },
+    {
+      "path": "prompts/design/04_FINANCIAL_LIFE_OF_UNIT.md",
+      "sha256": "bd3a6dc8afa21f242f17c621907b186e97e06caaab5f6cc93392c4e7f59aa7d0",
+      "bytes": 3081
+    },
+    {
+      "path": "prompts/design/05_COUNTS_AND_RECONCILIATION.md",
+      "sha256": "9066401e1e4efb800388418c95349699c2c892a1843f1cc364ffb78401914656",
+      "bytes": 3629
+    },
+    {
+      "path": "prompts/design/06_AUDIT_PACKAGE_AND_ASK_GAURD.md",
+      "sha256": "affb19235dbe2e4410a22aae9d728e2abdb79621c78144f571a0077d4f93b7e6",
+      "bytes": 3047
+    },
+    {
+      "path": "prompts/design/07_FINAL_DESIGN_REVIEW_AND_POLISH.md",
+      "sha256": "c06c4647b34f8e84c63397b6c3ed459115713cfcde4907f94f991b7e47feebe9",
+      "bytes": 3394
+    },
+    {
+      "path": "prompts/design/README.md",
+      "sha256": "e2babf533caef4eb27011d36fce0d89439e06718439f148acba40ff55ad06ff1",
+      "bytes": 2052
+    }
+  ]
+}

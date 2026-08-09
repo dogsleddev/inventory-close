@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Test output
+coverage/
+
+# Env and local config
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.turbo/
+.vercel/
+.eslintcache
+
+# OS noise
+Thumbs.db
+.DS_Store
