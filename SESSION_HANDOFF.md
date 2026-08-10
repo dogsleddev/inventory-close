@@ -15,7 +15,7 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **426 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+   **448 tests passing**. **Stop any `pnpm dev` server first** (see §7).
 3. Follow `prompts/code/08_ASK_GAURD.md`. All figures come from `@icg/services`; no accounting
    logic in components or prompts; no hard-coded totals.
 
@@ -49,9 +49,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **426 tests passing**; typecheck, lint, and production build all green.
+- **448 tests passing**; typecheck, lint, and production build all green.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
-  off-by-one in the note, not a skipped test. Stage 07 added 51.)
+  off-by-one in the note, not a skipped test.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
 - Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
 
@@ -69,12 +69,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 04 Services/Security | Done + fleet-reviewed (`a02bf35`, `5e6a461`, `e0a603b`) |
 | Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
 | Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
-| Code 07 Bridge/Adjustments/Valuation/PBC | Done — **fleet review not yet run** (see §6) |
+| Code 07 Bridge/Adjustments/Valuation/PBC | Done + fleet-reviewed (`04fe79b`, `36dafe5`) — bridge tab, Adjustments, Valuation, Audit Package |
 | Code 08–10 | Not started. **Code 08 (Ask Gaurd) is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+36dafe5 Stage 07 fleet remediation: 9 defects fixed
+d8d69ec Refresh SESSION_HANDOFF.md for code stage 08
 04fe79b Code stage 07: reconciliation bridge, adjustments, valuation, audit package
 ae9f4bd Record stage-06 fleet outcome and the invariants it established
 e18d94e Stage 06 fleet remediation: 16 confirmed defects fixed
@@ -226,8 +228,13 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - **Adversarial fleet review after each stage** (the pattern used for 02/03/04/05/06): 5 finder
   lenses in parallel → dedupe → one skeptic verifier per finding at high effort → apply confirmed
   fixes with regression tests → re-run gate → commit. It has confirmed real latent defects every
-  single time (7 clusters in stage 03, 10 in stage 04, 9 in stage 05, 16 in stage 06), so don't
-  skip it. **Stage 07's has not been run yet.**
+  single time (7 clusters in stage 03, 10 in stage 04, 9 in stage 05, 16 in stage 06, 9 in
+  stage 07), so don't skip it.
+- Stage 07 ran **two** skeptics per finding with different jobs — one told to refute and to
+  default to refuted when uncertain, one told to reproduce the failure by running code. Confirm
+  only when both fail to refute; a split is **contested**, to be adjudicated inline rather than
+  dropped. Four of the five contested findings turned out to be real. A dedicated lens pointed
+  at the stage's own authored interpretations is worth one agent slot.
 
 ---
 
@@ -243,8 +250,9 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - Valuation (EXC-011 reserve) and Adjustments were **deliberately not designed**; stage 07 built
   them on the exception-detail and bridge-row patterns as `design/IMPLEMENTATION_HANDOFF.md` §9
   directed. **Settled** — nothing further is owed here.
-- **The stage-07 fleet review has not been run.** The stage is committed and green, so it is a
-  safe point to launch one (§6). Every previous stage's review found real latent defects.
+- **Fleet-review agents can leave artifacts despite read-only instructions.** The stage-07
+  review left an empty `x.html` in the repo root (a stray shell redirect). Check
+  `git status --porcelain` after a review and before staging; never `git add -A`.
 - **A third §9a-class mockup copy defect** was found in `05_counts-reconciliation`: the Financial
   tab asserts "Two of the three are still open items" and "Not reachable — 2 items open", but its
   own bridge rows show one open item (EXC-015; EXC-009 and EXC-014 are both resolved). The
@@ -302,15 +310,40 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Run the stage-07 fleet review** (§6) — it is the one step of the working method stage 07
-   did not complete.
-2. **Code 08 — Ask Gaurd.** The assistant reads the same query service the UI does and inherits
+1. **Code 08 — Ask Gaurd.** The assistant reads the same query service the UI does and inherits
    its authorization; it may explain, investigate, draft and navigate, and may never decide,
    approve, post, close a controlled exception, invent evidence or a contract term, select an
    auditor sample, or set a reserve. The golden answers in `CANONICAL_SPEC.md` §13 are all
    derivable from existing queries.
-3. Then 09 (reset / replay / QA), 10 (polish / deployment — note stage 10 edits the
+2. Then 09 (reset / replay / QA), 10 (polish / deployment — note stage 10 edits the
    manifest-covered root `README.md`; see the `SPEC_MANIFEST.json` trap in §7).
+
+**What the stage-07 fleet review established (`36dafe5`) — 5 confirmed, 5 contested, 4 refuted:**
+
+- **Gate a sentence on the fact it names, never on a proxy for it.** Every confirmed defect was
+  this: an empty evidence list standing in for "not provided" (which told the auditor four
+  sealed, provided workpapers had never been provided), a location standing in for "assessment
+  outstanding", `recon.items` standing in for "drafted proposals". In each case the correct
+  predicate was already in hand and discarded.
+- **ScopeNotice is a property of every section a scope predicate can empty**, not of the
+  sections that happen to have tests. The Evidence tab disclosed suppression; the Workpaper
+  tab, twelve lines above it in the same builder, did not.
+- **An auditor sees sealed versions only.** `getPbcPackage` filters unsealed drafts for them and
+  reports `withheldVersionCount` so the omission is visible. `hasProvidedVersion`,
+  `latestVersion` and `immutable` are still derived from the full history.
+- **Row activation is structural and jsdom cannot see it.** `.icg-row-btn::after` is
+  `position:absolute; inset:0` and must resolve against `.icg-table tr`, so the ID cell must
+  **not** be positioned and the anchor needs `icg-row-link` to sit above the overlay. A new
+  table that drops either one silently loses the row hit area, the ID link, or both.
+  `apps/web/test/stage07-regressions.test.tsx` pins the pairing across every row-activated
+  screen, and the §5 test pins that any 4+ column KPI grid has a 1280–1439 rule.
+- **Accepted as refuted:** sealing version hashes against `currentStateHash` rather than
+  `preparedStateHash`. The two are provably equal in every reachable state — `ws.close` is
+  assigned only inside `resetWorkspace`, which re-derives the prepared map from the same object
+  — and sealing against the prepared hash would be worse in the only state where they differ.
+- The lens tasked with attacking the three stage-07 interpretations (the PBC baseline
+  correction, the sealed-version scope model, and shipping two drafted entries against
+  "JE-001/002/003") **produced no finding against any of them**.
 
 **What stage 07 established that later stages must not undo:**
 
