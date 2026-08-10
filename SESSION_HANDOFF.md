@@ -9,20 +9,19 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
 
 ## 0. Start here
 
-**The next task is code stage 08 — Ask Gaurd.** Everything it depends on is done and committed.
+**The next task is code stage 09 — demo reset, replay, and QA.** Everything it depends on is
+done and committed.
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **448 tests passing**. **Stop any `pnpm dev` server first** (see §7).
-3. Follow `prompts/code/08_ASK_GAURD.md`. All figures come from `@icg/services`; no accounting
-   logic in components or prompts; no hard-coded totals.
+   **524 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+3. Follow `prompts/code/09_DEMO_RESET_REPLAY_AND_QA.md`. All figures come from `@icg/services`;
+   no accounting logic in components or prompts; no hard-coded totals.
 
-Stage 08 is unblocked: the query service now covers every figure the assistant's golden answers
-need — readiness, blockers, exceptions, Financial Life, counts, reconciliation, procurement
-match, commercial chain, **valuation, the adjustment register, and the PBC package**. The
-drawer shell and its deterministic fallback already exist from stage 05.
+Stage 09 is unblocked: `resetWorkspace()` and `reproduceClose()` already exist, the audit log
+already survives a reset, and every screen and Ask Gaurd itself read the same query service.
 
 ---
 
@@ -49,7 +48,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **448 tests passing**; typecheck, lint, and production build all green.
+- **524 tests passing**; typecheck, lint, and production build all green.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
   off-by-one in the note, not a skipped test.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
@@ -70,11 +69,16 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
 | Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
 | Code 07 Bridge/Adjustments/Valuation/PBC | Done + fleet-reviewed (`04fe79b`, `36dafe5`) — bridge tab, Adjustments, Valuation, Audit Package |
-| Code 08–10 | Not started. **Code 08 (Ask Gaurd) is next** — see §8. |
+| Code 08 Ask Gaurd | Done + fleet-reviewed (`2eaab1e`, `e343f2e`, `4552c9b`) — tools, deterministic answers, guardrails, drawer |
+| Code 09–10 | Not started. **Code 09 (reset / replay / QA) is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+4552c9b Stage 08 fleet remediation: 18 confirmed defects fixed
+e343f2e Stage 08 UI: the Ask Gaurd drawer over the deterministic engine
+2eaab1e Stage 08 core: Ask Gaurd tools, deterministic answers, and guardrails
+65716d0 Record the stage-07 fleet outcome and the invariants it established
 36dafe5 Stage 07 fleet remediation: 9 defects fixed
 d8d69ec Refresh SESSION_HANDOFF.md for code stage 08
 04fe79b Code stage 07: reconciliation bridge, adjustments, valuation, audit package
@@ -229,7 +233,14 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   lenses in parallel → dedupe → one skeptic verifier per finding at high effort → apply confirmed
   fixes with regression tests → re-run gate → commit. It has confirmed real latent defects every
   single time (7 clusters in stage 03, 10 in stage 04, 9 in stage 05, 16 in stage 06, 9 in
-  stage 07), so don't skip it.
+  stage 07, **18 in stage 08**), so don't skip it.
+- **Add a lens that tries to BREAK the stage, not review it.** Stage 08's red-team — told to
+  execute an attack and only report ones it observed succeeding — found five guardrail bypasses
+  that a code-reading lens would have called defensible.
+- **Write regressions as categories, not instances.** Stage 08's review criticised the original
+  suite harder than the code: "each gap is the shape of a test that asserts an instance where the
+  contract states a category". The replacements iterate every exception, every serial with a
+  scope difference, every shipped chip.
 - Stage 07 ran **two** skeptics per finding with different jobs — one told to refute and to
   default to refuted when uncertain, one told to reproduce the failure by running code. Confirm
   only when both fail to refute; a split is **contested**, to be adjudicated inline rather than
@@ -310,13 +321,45 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Code 08 — Ask Gaurd.** The assistant reads the same query service the UI does and inherits
-   its authorization; it may explain, investigate, draft and navigate, and may never decide,
-   approve, post, close a controlled exception, invent evidence or a contract term, select an
-   auditor sample, or set a reserve. The golden answers in `CANONICAL_SPEC.md` §13 are all
-   derivable from existing queries.
-2. Then 09 (reset / replay / QA), 10 (polish / deployment — note stage 10 edits the
+1. **Code 09 — demo reset, replay, QA.** `resetWorkspace()` rebuilds derived state and keeps the
+   audit log; `reproduceClose()` compares structured output and returns MATCH/MISMATCH. **LLM
+   prose is excluded from replay equivalence** (CANONICAL_SPEC §15), so replay must compare the
+   structured answer object — tool calls, section payloads, figures, evidence ids — and never
+   hash generated prose.
+2. Then 10 (polish / deployment — note stage 10 edits the
    manifest-covered root `README.md`; see the `SPEC_MANIFEST.json` trap in §7).
+
+**What stage 08 established that later stages must not undo:**
+
+- **There is ONE restricted-content redactor**, `packages/services/src/redaction.ts`. An evidence
+  item carries the retrieved value twice (`content` and `originalValue`) and the fixture pipeline
+  is an identity transformation, so clearing one and spreading the other discloses everything.
+  That bug shipped in stage 04, was fixed in `traceLineage` in stage 08, and then turned out to
+  exist in a **second copy** in `commands.ts`. If a third copy of the value is ever added to an
+  evidence shape, `redactRestricted()` is the one place that learns about it.
+- **Ask Gaurd's answer is deterministic; only `narration` is generative.** Every figure, status,
+  conclusion and citation is read from a tool result, so "numeric values must match tool results
+  exactly" holds by construction. There is no provider bound anywhere — the engine IS the answer,
+  which is why the "disable the AI provider" acceptance test is the normal case here.
+- **Narration may not carry figures or identifiers at all.** Five separate bypasses came from
+  trying to decide whether a number in prose was the RIGHT number. That comparison is not
+  reliably decidable across spellings, scripts and phrasings, so it is not attempted: quantities
+  and record ids belong to the structured answer. Do not "improve" this by re-admitting numbers.
+- **Every tool takes the caller's `ServiceContext`.** Authorization, restricted-content
+  redaction and auditor scoping are inherited from `@icg/services`; a tool that builds its own
+  context or reads the workspace directly bypasses all three silently.
+- **A refusal must name which kind of nothing it is.** NOT_AUTHORIZED / NO_SUCH_OBJECT /
+  OUT_OF_SCOPE are three different states, and NO_SUCH_OBJECT is a claim about the world — it
+  must be established by asking the tools, never inferred from the shape of the request.
+- **A timeline must read `ref` and `at` from the same scope.** Crossing a scoped and an unscoped
+  source turned a withheld date into an absent one and let the sort reorder a chain of custody.
+  Withheld is its own state and is held out of the ordering.
+- **Ask Gaurd's suggestion chips and the intent table must stay reconciled** — a test asserts
+  every shipped chip produces an answer. They were authored independently and 18 of 32 refused.
+- AI types live in `@icg/ai`, not `@icg/domain`: the core's identity is that the close works if
+  AI disappears. No AI permission key (each tool authorizes through its query) and no audit event
+  per question (docs/09 scopes logging to *saved material work*). All three survived a hostile
+  interpretation audit.
 
 **What the stage-07 fleet review established (`36dafe5`) — 5 confirmed, 5 contested, 4 refuted:**
 
