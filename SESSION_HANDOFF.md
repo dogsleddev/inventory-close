@@ -1,7 +1,7 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-09 at commit `75dc3b2`.
+re-deriving decisions or breaking locked facts. Written 2026-08-10 at commit `ffbb2a8`.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
@@ -9,18 +9,21 @@ re-deriving decisions or breaking locked facts. Written 2026-08-09 at commit `75
 
 ## 0. Start here
 
-**The next task is code stage 05 — the core UI.** Everything it depends on is done and committed.
+**The next task is code stage 07 — reconciliation bridge, valuation, PBC.** Everything it
+depends on is done and committed.
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the two
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **204 tests passing** — and confirm `git log -1` is `75dc3b2` or later.
-3. Follow `prompts/code/05_CORE_UI_OVERVIEW_AND_EXCEPTIONS.md`. All figures come from
+   **359 tests passing** — and confirm `git log -1` is `ffbb2a8` or later.
+3. Follow `prompts/code/07_RECONCILIATION_VALUATION_PBC.md`. All figures come from
    `@icg/services`; no accounting logic in components; no hard-coded totals.
 
-One decision is open and unanswered (see §7): the **Physical Count screen was designed but never
-exported**. It does not block stage 05, only stage 06. Ask before assuming either way.
+Stage 07 adds the **Financial tab** to the Reconciliation screen stage 06 built
+(`apps/web/components/ReconciliationScreen.tsx` — the tab exists and currently renders an
+honest "not built yet" state, not a placeholder figure). Valuation and Adjustments are
+separate nav sections and are deliberately not designed; see §7.
 
 ---
 
@@ -43,11 +46,11 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified at `3a4dc6b`)
+## 2. Current state (verified at `ffbb2a8`)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **317 tests passing** (204 pre-stage-05 tests untouched); typecheck, lint, and production build all green.
+- **359 tests passing** (the 317 pre-stage-06 tests untouched); typecheck, lint, and production build all green.
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
 - Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
 
@@ -64,11 +67,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 03 Rules/Golden | Done + fleet-reviewed — **hard gate PASS** (`e8b7d12`, `cad38bb`) |
 | Code 04 Services/Security | Done + fleet-reviewed (`a02bf35`, `5e6a461`, `e0a603b`) |
 | Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
-| Code 06–10 | Not started. **Code 06 is next** — see §8. |
+| Code 06 Life/Counts/Chains | Done (`ffbb2a8`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
+| Code 07–10 | Not started. **Code 07 is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+ffbb2a8 Code stage 06: Financial Life, Physical Count, and NetSuite chains
+a856e9f Refresh SESSION_HANDOFF.md for code stage 06 and ignore local Claude settings
 3a4dc6b Code stage 05: core UI (Overview, Exceptions, EXC-001) + fleet remediation
 3096d0e Refresh SESSION_HANDOFF.md for a new session at 75dc3b2
 75dc3b2 Record two mockup copy defects found by independent screen review
@@ -216,15 +222,14 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 **Needs your attention:**
 
-- **The Physical Count screen was designed but never exported into the repo.** Design 07's own
-  screen inventory lists `ICG Physical Count` as *Designed* (year-end count, cycle history,
-  auditor test counts, count movements — `prompts/design/05` Parts A/B), but only
-  `ICG-Reconciliation.html` (Part C) was saved. **Code stage 06 needs it.** *Decided
-  2026-08-09: it will NOT be exported* — build stage 06's count tabs from the Reconciliation +
-  Financial Life patterns plus the prompt-05 spec, reusing the stage-05 kit.
+- **The Physical Count screen was designed but never exported into the repo** — design 07's screen
+  inventory lists `ICG Physical Count` as *Designed*, but only `ICG-Reconciliation.html` (Part C)
+  was saved. *Decided 2026-08-09: it will NOT be exported.* **Settled** — stage 06 built
+  `/physical-count` from the Reconciliation + Financial Life patterns plus the `prompts/design/05`
+  Parts A/B spec. Nothing further is owed here.
 - Valuation (EXC-011 reserve) and Adjustments screens are **deliberately not designed** and marked
   not-blocking; build them on the exception-detail and bridge-row patterns respectively.
-  See `design/IMPLEMENTATION_HANDOFF.md` §9.
+  See `design/IMPLEMENTATION_HANDOFF.md` §9. **Still open — these are stage 07 work.**
 - `design/05_counts-reconciliation/ICG-Reconciliation.html` was **accidentally swept into commit
   `e0a603b`** by a `git add -A` during Stage 04 remediation; that commit message doesn't mention it.
   Harmless to the tree, but the history is misleading if that matters to you.
@@ -261,18 +266,45 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   not refuted** — adjudicate them inline rather than trusting the tally.
 - Old session workflow journals (with full finding lists) live under
   `C:\Users\dough\.claude\projects\C--dev-Inventory-Close\<sessionId>\subagents\workflows\*\journal.jsonl`.
+  A journal only gains a `{"type":"result"}` line when an agent **finishes**: a run whose host
+  process died mid-flight leaves nothing but `started` lines and is not recoverable — relaunch it.
+- **Commit the stage before the fleet review, not after** (as stages 03/04 did with their own
+  remediation commits). Reviews are long-running background work; three host exits during stage
+  06 would each have stranded an uncommitted tree.
+- `pnpm test` can OOM ("Zone Allocation failed") when a `pnpm dev` server is also running — the
+  jsdom suites plus a Next dev server exceed available RAM. Stop the dev server first.
 
 ---
 
 ## 8. What to do next
 
-1. **Code 06** — Financial Life / counts / chains. Build the count tabs from existing patterns
-   (see §7), reusing the stage-05 kit in `apps/web/components/kit.tsx` (Panel, PanelHead,
-   StatusCapsule, RiskIndicator, AuditDetails, RestrictedState, ScopeNotice, NoRecordsState,
-   SourceStateChip) and the `AppShell` drawer arbitration. Page data belongs in
-   `apps/web/lib/server/` alongside `data.ts`, never in components.
-2. Then 07 (reconciliation / valuation / PBC), 08 (Ask Gaurd — services are stable, so it's
-   unblocked whenever), 09 (reset / replay / QA), 10 (polish / deployment).
+1. **Code 07** — reconciliation bridge / valuation / PBC. The bridge is a **new tab on the
+   existing Reconciliation screen**, not a new route: `ReconciliationScreen.tsx` already has the
+   tab (`key: "financial"`), currently rendering an honest not-built-yet state. Reuse the
+   stage-06 `TabBar` and the bridge-row pattern; Valuation (EXC-011, reserve stays
+   **UNDETERMINED**) and Adjustments (**every row NOT POSTED**) are separate nav sections and
+   are deliberately not designed — see §7 and `design/IMPLEMENTATION_HANDOFF.md` §9.
+2. Then 08 (Ask Gaurd — services are stable, so it's unblocked whenever), 09 (reset / replay /
+   QA), 10 (polish / deployment).
+
+**What stage 06 established that later stages must not undo:**
+
+- Page data lives in `apps/web/lib/server/` — `financial-life-view.ts`, `count-view.ts`,
+  `recon-view.ts` alongside `data.ts`/`exception-view.ts`; components receive JSON-safe view
+  models from `lib/view-model.ts` and carry no accounting logic.
+- Four routes exist: `/inventory` (serial search), `/inventory/[serial]` (Financial Life),
+  `/physical-count`, `/reconciliation`. `app/[section]/page.tsx` still covers the rest.
+- **Native NetSuite match state vs close-control state**: muted mono `.icg-nstag` beside the
+  coloured close capsule, never derived from one another. `getProcurementMatches()` supplies both.
+- **Chain completeness is component counts**, never a score, ratio bar, or percentage.
+- **Cycle-count history is a management risk lens.** `getCountDetail()` returns no
+  `managementIndicators` for an auditor, and the UI renders `ScopeNotice` in that slot while
+  keeping the factual history visible. No sampling language, no sample-generation control.
+- The **§9a-2 carrier defect is corrected at the source**: carrier state comes from the
+  service's real delivery event (`shipmentPosition` in `financial-life-view.ts` mirrors
+  `carrierEvent` in `exception-view.ts`). Never re-introduce static "in transit" copy.
+- Additive read-only service queries stage 07+ can rely on: `FinancialLifeView.records`,
+  `getProcurementDetail()`, and `getCountDetail().adjustments`.
 
 **What stage 05 established that later stages must not undo:**
 
