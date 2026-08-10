@@ -23,6 +23,10 @@ const FORBIDDEN = [
   "18,750",
   "14,800",
   "9,200",
+  // Stage 06: count population and the KE-E2 unit cost behind EXC-001
+  "1,065",
+  "1,061",
+  "7,400",
   // Overview-scale strings
   "81.4",
   "80.95",

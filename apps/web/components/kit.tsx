@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import type { TabDef } from "../lib/view-model";
 import type { RiskView, StatusView } from "../lib/workflow-view";
 
 /**
@@ -170,6 +171,40 @@ export function NoRecordsState({ note }: { note: string }) {
         <div className="icg-state-title">No records</div>
         <div className="icg-state-note">{note}</div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Tab bar (stage 06) — ember underline, optional count. Client-side, no
+ * reload; switching tabs never changes the object in an open drawer (§4).
+ */
+export function TabBar({
+  tabs,
+  active,
+  onSelect,
+  label,
+}: {
+  tabs: readonly TabDef[];
+  active: string;
+  onSelect: (key: string) => void;
+  label: string;
+}) {
+  return (
+    <div className="icg-tabs" role="tablist" aria-label={label}>
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          role="tab"
+          aria-selected={t.key === active}
+          className={`icg-tab${t.key === active ? " icg-tab--active" : ""}`}
+          onClick={() => onSelect(t.key)}
+        >
+          {t.label}
+          {t.count !== null ? <span className="icg-tab-count">{t.count}</span> : null}
+        </button>
+      ))}
     </div>
   );
 }

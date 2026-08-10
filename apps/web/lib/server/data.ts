@@ -68,7 +68,7 @@ import { getQueries, initials, makeContext, roleLabel } from "./workspace";
  * Any other failure rethrows: a bug must surface as a bug, never disguise
  * itself as a permissions boundary the Controller would try to request.
  */
-function attempt<T>(fn: () => T): T | undefined {
+export function attempt<T>(fn: () => T): T | undefined {
   try {
     return fn();
   } catch (error) {

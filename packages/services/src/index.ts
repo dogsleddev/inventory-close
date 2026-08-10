@@ -24,6 +24,7 @@ export type {
   EvidenceView,
   ExceptionView,
   FinancialLifeView,
+  ProcurementDetail,
   QueryService,
   SerialSearchHit,
   ServiceContext,

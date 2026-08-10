@@ -1,13 +1,22 @@
 import type { DemoUser } from "@icg/data";
 import type {
+  CarrierShipmentFixture,
   CountMovementFixture,
   CountResultFixture,
   CountTestFixture,
+  CustomerInvoiceFixture,
   EvidenceSensitivity,
+  InstallationFixture,
+  ItemFulfillmentFixture,
+  ItemReceiptFixture,
   ProcurementMatch,
+  PurchaseOrderFixture,
+  SalesOrderFixture,
   SourceHealthFixture,
   SourceRecordRef,
+  TelemetryFixture,
   TransactionChain,
+  VendorBillFixture,
 } from "@icg/domain";
 import { isResolvedStatus } from "@icg/domain";
 import type {
@@ -173,6 +182,30 @@ export interface FinancialLifeView {
   readonly exceptions: readonly string[];
   /** Canonical steps with no record — visibly missing, never inferred. */
   readonly missing: readonly string[];
+  /**
+   * The underlying source records for each present component (stage 06).
+   * Raw fixture facts — dates, lines, source refs — so the Financial Life
+   * surface can show occurred/retrieved and amounts without recomputing
+   * anything. Absent components stay absent here too.
+   */
+  readonly records: {
+    readonly purchaseOrder?: PurchaseOrderFixture | undefined;
+    readonly itemReceipt?: ItemReceiptFixture | undefined;
+    readonly vendorBill?: VendorBillFixture | undefined;
+    readonly salesOrder?: SalesOrderFixture | undefined;
+    readonly itemFulfillment?: ItemFulfillmentFixture | undefined;
+    readonly carrierShipment?: CarrierShipmentFixture | undefined;
+    readonly installation?: InstallationFixture | undefined;
+    readonly telemetry?: TelemetryFixture | undefined;
+    readonly customerInvoice?: CustomerInvoiceFixture | undefined;
+  };
+}
+
+/** PO ↔ IR ↔ VB source documents behind one procurement match (stage 06). */
+export interface ProcurementDetail {
+  readonly purchaseOrder?: PurchaseOrderFixture | undefined;
+  readonly itemReceipt?: ItemReceiptFixture | undefined;
+  readonly vendorBill?: VendorBillFixture | undefined;
 }
 
 const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
@@ -383,6 +416,17 @@ export function createQueryService(ws: Workspace) {
           .filter((e) => e.finding.subjects.serials?.includes(serial))
           .map((e) => e.id),
         missing,
+        records: {
+          ...(po ? { purchaseOrder: po } : {}),
+          ...(receipt ? { itemReceipt: receipt } : {}),
+          ...(bill ? { vendorBill: bill } : {}),
+          ...(so ? { salesOrder: so } : {}),
+          ...(iff ? { itemFulfillment: iff } : {}),
+          ...(shipment ? { carrierShipment: shipment } : {}),
+          ...(installation ? { installation } : {}),
+          ...(telemetry ? { telemetry } : {}),
+          ...(invoice ? { customerInvoice: invoice } : {}),
+        },
       };
     },
 
@@ -398,6 +442,9 @@ export function createQueryService(ws: Workspace) {
         results: ws.dataset.countResults,
         tests: ws.dataset.countTests,
         movements: ws.dataset.countMovements,
+        // Adjustment trace for cycle-count history (stage 06): NetSuite
+        // inventory adjustments, including relatedCountPlanId links.
+        adjustments: ws.dataset.inventoryAdjustments,
         // The cycle-count lens is a MANAGEMENT risk view (locked decision
         // 3); it is never part of the auditor's provided support.
         managementIndicators: isAuditor(ctx.user) ? [] : ws.close.managementIndicators,
@@ -412,6 +459,29 @@ export function createQueryService(ws: Workspace) {
     getProcurementMatches(ctx: ServiceContext): readonly ProcurementMatch[] {
       authorize(ctx.user, "close.read");
       return ws.close.procurementMatches;
+    },
+
+    /**
+     * Source documents behind one procurement match (stage 06). Read-only
+     * fixture facts so the Procurement Match surface can show dates and
+     * amounts; the match STATUSES still come only from the rule output.
+     */
+    getProcurementDetail(ctx: ServiceContext, poNumber: string): ProcurementDetail {
+      authorize(ctx.user, "close.read");
+      const po = ws.dataset.purchaseOrders.find(
+        (p) => p.transactionNumber === poNumber,
+      );
+      const receipt = ws.dataset.itemReceipts.find(
+        (r) => r.purchaseOrderNumber === poNumber,
+      );
+      const bill = ws.dataset.vendorBills.find(
+        (b) => b.purchaseOrderNumber === poNumber,
+      );
+      return {
+        ...(po ? { purchaseOrder: po } : {}),
+        ...(receipt ? { itemReceipt: receipt } : {}),
+        ...(bill ? { vendorBill: bill } : {}),
+      };
     },
 
     getCommercialChains(ctx: ServiceContext): readonly TransactionChain[] {

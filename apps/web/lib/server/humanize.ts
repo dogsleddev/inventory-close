@@ -22,7 +22,11 @@ export function capitalize(value: string): string {
 
 /** LOCATION / classification enums → display ("PRIMARY_WAREHOUSE" → "Primary Warehouse"). */
 export function locationLabel(value: string): string {
-  return titleCase(value);
+  const special: Record<string, string> = {
+    RMA_REPAIR: "RMA / Repair",
+    DAMAGED_HOLD: "Damaged / Hold",
+  };
+  return special[value] ?? titleCase(value);
 }
 
 /** Evidence/record kinds → display ("ITEM_FULFILLMENT" → "Item Fulfillment"). */

@@ -238,6 +238,301 @@ export interface TimelineEntry {
   readonly evidenceId: string | null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Stage 06 — Financial Life, Physical Count, Reconciliation chains    */
+/* ------------------------------------------------------------------ */
+
+/** Tab bar entry (design: ember underline · optional count). */
+export interface TabDef {
+  readonly key: string;
+  readonly label: string;
+  readonly count: string | null;
+}
+
+/**
+ * One event card in the four-phase chain of custody. Visual vocabulary from
+ * the design-04 relationship legend: accounting transaction · physical
+ * event · corroborating · required-missing · conflicting · conclusion.
+ */
+export interface LifeEventCard {
+  readonly key: string;
+  readonly kind: string;
+  readonly date: string;
+  readonly title: string;
+  readonly meta: string | null;
+  readonly visual: "acc" | "phy" | "cor" | "miss" | "conf" | "conc";
+  readonly glyph: string;
+  /** Opens the record drawer; null when the card has no backing record. */
+  readonly recordId: string | null;
+  /** Navigates instead of opening a drawer (exception cards). */
+  readonly href: string | null;
+}
+
+export interface LifePhase {
+  readonly name: string;
+  readonly range: string;
+  readonly accent: boolean;
+  readonly events: readonly LifeEventCard[];
+}
+
+export interface LifeCycleRow {
+  readonly date: string;
+  readonly plan: string;
+  readonly snapshot: string;
+  readonly counted: string;
+  readonly variance: string;
+  readonly varianceWarn: boolean;
+  readonly approval: { readonly label: string; readonly glyph: string; readonly tone: "aurora" | "soft" | "ember" };
+  readonly adjustment: string;
+}
+
+export interface FinancialLifeData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly serial: string;
+  /** False when no source anywhere mentions the serial. */
+  readonly found: boolean;
+  readonly onBook: boolean;
+  readonly header?: {
+    readonly sku: string;
+    readonly skuNote: string;
+    readonly carrying: string | null;
+    readonly netsuite: { readonly headline: string; readonly sub: string };
+    readonly physical: { readonly headline: string; readonly sub: string; readonly ember: boolean };
+    readonly exception: { readonly id: string; readonly note: string } | null;
+    readonly close: {
+      readonly status: StatusView | null;
+      readonly blocker: boolean;
+      readonly body: string;
+    };
+    readonly chips: readonly { readonly label: string; readonly recordId: string | null; readonly href: string | null }[];
+  };
+  readonly range: string | null;
+  readonly phases: readonly LifePhase[];
+  readonly cycle: {
+    readonly rows: readonly LifeCycleRow[];
+    readonly notes: readonly string[];
+    readonly empty: string | null;
+  } | null;
+  readonly evidenceChain: readonly {
+    readonly label: string;
+    readonly tag: string;
+    readonly glyph: string;
+    readonly visual: "present" | "corroborating" | "missing" | "conflict";
+    readonly recordId: string | null;
+  }[];
+  readonly chainFootnote: string | null;
+  readonly accounting: {
+    readonly rows: readonly { readonly k: string; readonly v: string; readonly mono?: boolean }[];
+    readonly proposed: string;
+    readonly footnote: string;
+  } | null;
+  readonly records: Readonly<Record<string, EvidenceRecordView>>;
+}
+
+export interface InventorySearchData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly query: string;
+  readonly bookCountNote: string | null;
+  readonly hits: readonly {
+    readonly serial: string;
+    readonly onBook: boolean;
+    readonly foundIn: readonly string[];
+    readonly sku: string | null;
+    readonly location: string | null;
+  }[] | null;
+  /** Serials referenced by open exceptions — deterministic entry points. */
+  readonly notable: readonly { readonly serial: string; readonly note: string }[];
+}
+
+export interface CountVarianceRow {
+  readonly key: string;
+  readonly subject: string;
+  readonly subjectMono: boolean;
+  readonly sku: string;
+  readonly location: string;
+  readonly bin: string;
+  readonly book: string;
+  readonly counted: string;
+  readonly variance: string;
+  readonly exceptionId: string | null;
+  readonly status: StatusView | null;
+  readonly risk: RiskView | null;
+  readonly exposure: string | null;
+  readonly owner: string | null;
+}
+
+export interface CountTestRow {
+  readonly id: string;
+  readonly direction: "SHEET_TO_FLOOR" | "FLOOR_TO_SHEET";
+  readonly directionLabel: string;
+  readonly sku: string;
+  readonly serial: string | null;
+  readonly location: string;
+  readonly bin: string | null;
+  readonly recorded: string;
+  readonly observation: string;
+  readonly traced: boolean;
+  readonly exceptionId: string | null;
+}
+
+export interface CycleHistoryRow {
+  readonly key: string;
+  readonly countDate: string;
+  readonly plan: string;
+  readonly planExternal: string | null;
+  readonly countType: string;
+  readonly sku: string;
+  readonly location: string;
+  readonly bin: string | null;
+  readonly serial: string | null;
+  readonly snapshot: string;
+  readonly counted: string;
+  readonly variance: string;
+  readonly varianceWarn: boolean;
+  readonly recount: string;
+  readonly approval: { readonly label: string; readonly glyph: string; readonly tone: "aurora" | "soft" | "ember" };
+  readonly adjustment: string | null;
+  readonly nextDue: string | null;
+}
+
+export interface PhysicalCountData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly stats: readonly KpiTile[];
+  readonly planNote: string | null;
+  readonly locations: readonly { readonly label: string; readonly units: string }[];
+  readonly locationTotal: string | null;
+  readonly variances: readonly CountVarianceRow[];
+  readonly discovery: {
+    readonly serial: string;
+    readonly location: string;
+    readonly bin: string | null;
+    readonly testId: string;
+    readonly observation: string;
+    readonly exceptionId: string | null;
+    readonly status: StatusView | null;
+    readonly exposure: string | null;
+  } | null;
+  readonly auditorTests: readonly CountTestRow[];
+  readonly managementTests: readonly CountTestRow[];
+  readonly testSummary: { readonly auditor: string; readonly management: string } | null;
+  readonly movements: readonly {
+    readonly id: string;
+    readonly subject: string;
+    readonly qty: string;
+    readonly from: string;
+    readonly to: string;
+    readonly movedAt: string;
+    readonly authorizedBy: string;
+    readonly reason: string;
+    readonly exceptionId: string | null;
+  }[];
+  readonly cycle: {
+    readonly rows: readonly CycleHistoryRow[];
+    /** Null when the viewer's role scopes the management lens out. */
+    readonly indicators:
+      | readonly { readonly title: string; readonly why: string; readonly rule: string }[]
+      | null;
+  };
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+}
+
+export interface ProcurementLeg {
+  readonly label: string;
+  readonly glyph: string;
+  readonly value: string;
+  readonly note: string;
+  readonly missing: boolean;
+}
+
+export interface ProcurementCard {
+  readonly key: string;
+  readonly po: string;
+  readonly title: string;
+  readonly qtyAmount: string | null;
+  readonly nsTag: string;
+  readonly close: { readonly label: string; readonly glyph: string; readonly variant: "frost" | "aurora" };
+  readonly ember: boolean;
+  readonly legs: readonly ProcurementLeg[];
+  readonly footnote: { readonly glyph: string; readonly tone: "ember" | "aurora"; readonly text: string };
+  readonly exceptionId: string | null;
+}
+
+export interface ReconciliationData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly tabs: readonly TabDef[];
+  readonly procurement: {
+    readonly nativeSummary: string;
+    readonly closeSummary: string;
+    readonly featured: readonly ProcurementCard[];
+    readonly rows: readonly {
+      readonly po: string;
+      readonly ir: string;
+      readonly vb: string;
+      readonly native: string;
+      readonly close: { readonly label: string; readonly glyph: string; readonly variant: "frost" | "aurora" };
+      readonly exceptionId: string | null;
+    }[];
+  } | null;
+  readonly commercial: {
+    readonly featured: {
+      readonly subject: string;
+      readonly subNote: string;
+      readonly exceptionId: string | null;
+      readonly nodes: readonly ChainNodeView[];
+      readonly summary: string;
+      readonly completeness: {
+        readonly big: string;
+        readonly rows: readonly { readonly glyph: string; readonly tone: string; readonly label: string; readonly value: string; readonly ember: boolean }[];
+        readonly footnote: string;
+      };
+      readonly accounting: {
+        readonly big: string;
+        readonly sub: string;
+        readonly rows: readonly { readonly k: string; readonly v: string }[];
+        readonly footnote: string;
+      } | null;
+    } | null;
+    readonly others: readonly {
+      readonly subject: string;
+      readonly customer: string | null;
+      readonly presence: string;
+      readonly requiredMissing: number;
+      readonly note: string | null;
+      readonly exceptionId: string | null;
+    }[];
+  } | null;
+  readonly serialTab: {
+    readonly query: string;
+    readonly notable: readonly string[];
+    readonly card: {
+      readonly serial: string;
+      readonly sku: string;
+      readonly carrying: string | null;
+      readonly onBook: boolean;
+      readonly facts: readonly { readonly label: string; readonly value: string; readonly sub: string; readonly ember: boolean }[];
+      readonly jump: readonly { readonly label: string; readonly meta: string; readonly href: string }[];
+      readonly chainRows: readonly {
+        readonly type: string;
+        readonly value: string;
+        readonly state: string;
+        readonly glyph: string;
+        readonly missing: boolean;
+      }[];
+      readonly related: readonly { readonly id: string; readonly status: StatusView; readonly exposure: string; readonly note: string }[];
+      readonly relatedEmpty: string | null;
+    } | null;
+    readonly notFound: string | null;
+  };
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+  /** Evidence records behind the featured chain's nodes. */
+  readonly records: Readonly<Record<string, EvidenceRecordView>>;
+}
+
 export interface ExceptionDetailData {
   readonly restricted: boolean;
   readonly roleLabel: string;
