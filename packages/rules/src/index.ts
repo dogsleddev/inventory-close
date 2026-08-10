@@ -1,28 +1,47 @@
 /**
- * @icg/rules — versioned pure-function close-control rules (Stage 03).
+ * @icg/rules — deterministic, versioned close-control rules (Stage 03).
  *
- * Every rule is a pure function over structured domain state returning a
- * RuleResult plus separate RuleCoverage. Missing required evidence never
- * silently becomes PASS. The registry (CANONICAL_SPEC §10) is implemented in
- * Stage 03 behind the golden-test gate; only the execution contract lives
- * here for now.
+ * Zero AI dependencies; imports @icg/domain only. Rules are pure functions:
+ * same CloseInput, policy, and scenario events produce the same structured
+ * exceptions, blockers, reconciliation, readiness, and hashes. Missing
+ * required evidence never silently becomes PASS. The LLM may explain these
+ * results; it may never create them.
  */
 
-import type {
-  RuleCoverage,
-  RuleDefinition,
-  RuleResult,
-} from "@icg/domain";
-
-export interface RuleOutcome {
-  readonly result: RuleResult;
-  readonly coverage: RuleCoverage;
-  readonly reasonCodes: readonly string[];
-  readonly relatedObjectRefs: readonly string[];
-}
-
-/** A rule evaluates a typed input snapshot; implementations arrive in Stage 03. */
-export interface Rule<TInput> {
-  readonly definition: RuleDefinition;
-  evaluate(input: TInput): RuleOutcome;
-}
+export { hashValue, stableStringify, fnv1a64Hex } from "./engine/hash.js";
+export type { CloseIndex, CloseInput } from "./engine/input.js";
+export { buildIndex } from "./engine/input.js";
+export type {
+  EvidenceRequirementFinding,
+  FindingKind,
+  FindingSubjects,
+  RuleFinding,
+  RuleOutput,
+} from "./engine/findings.js";
+export type { Rule, RuleContext } from "./engine/rule.js";
+export { PBC_BASELINE_V1, POLICY_V1 } from "./policy.js";
+export type { ClosePolicy, ReadinessCategoryPolicy } from "./policy.js";
+export {
+  ALL_RULES,
+  PRIMARY_RULES,
+  RULE_DEFINITIONS,
+  RULESET_VERSION,
+  SUPPORTING_RULES,
+} from "./registry.js";
+export { assignExceptionIds } from "./exceptions.js";
+export type { DerivedException } from "./exceptions.js";
+export { applyScenarioEvents } from "./scenario.js";
+export type { ScenarioResult } from "./scenario.js";
+export { buildReconciliation } from "./reconciliation.js";
+export type { ReconciliationItemOut, ReconciliationOut } from "./reconciliation.js";
+export { computeReadiness } from "./readiness.js";
+export type { ReadinessCategoryOut, ReadinessOut } from "./readiness.js";
+export { CONFIG_VERSION, reproduceClose, runClose } from "./close.js";
+export type {
+  BlockerOut,
+  CloseAggregates,
+  CloseRunResult,
+  CountSummaryOut,
+  PbcItemOut,
+  RunCloseOptions,
+} from "./close.js";

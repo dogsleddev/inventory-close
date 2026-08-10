@@ -7,5 +7,9 @@
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc --noEmit" },
   "dependencies": { "@icg/domain": "workspace:*" },
-  "devDependencies": { "typescript": "^5.7.2" }
+  "devDependencies": {
+    "@icg/data": "workspace:*",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
 }

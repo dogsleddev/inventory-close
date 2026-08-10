@@ -60,5 +60,14 @@ export function isAfter(a: IsoDate, b: IsoDate): boolean {
   return compareIsoDates(a, b) > 0;
 }
 
+/** Whole days from `a` to `b` (positive when `b` is later). Pure arithmetic. */
+export function daysBetween(a: IsoDate, b: IsoDate): number {
+  const toUtc = (v: string) => {
+    const [y, m, d] = v.split("-").map(Number) as [number, number, number];
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((toUtc(b) - toUtc(a)) / 86_400_000);
+}
+
 /** FY2026 balance-sheet date for the canonical dataset. */
 export const FY2026_BALANCE_SHEET_DATE: IsoDate = isoDate("2026-12-31");

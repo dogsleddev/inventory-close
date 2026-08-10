@@ -49,8 +49,33 @@
       },
       {
         "provisionType": "TITLE_RETENTION",
+        "status": "MISSING"
+      }
+    ]
+  },
+  {
+    "id": "CT-014",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "LNM-2025-001",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6e844a6c47b03373ce9e7c899c5b6384a4a6766ccc388e6a9365520422a4c048"
+    },
+    "counterparty": "KestrelGrid AI — standard loaner program",
+    "title": "Standard Equipment Loaner Master Agreement",
+    "effectiveDate": "2025-06-01",
+    "provisions": [
+      {
+        "provisionType": "LOANER_TERMS",
         "status": "PRESENT",
-        "documentRef": "LA-2026-118-ADD-2"
+        "documentRef": "LNM-2025-001 §2"
+      },
+      {
+        "provisionType": "TITLE_RETENTION",
+        "status": "PRESENT",
+        "documentRef": "LNM-2025-001 §4"
       }
     ]
   },

@@ -42,7 +42,7 @@ export default tseslint.config(
     // packages/domain imports no AI SDK and no other @icg package. One
     // complete rule entry per file set — flat config replaces, not merges,
     // the same rule key across blocks.
-    files: ["packages/domain/**/*.ts"],
+    files: ["packages/domain/src/**/*.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -57,7 +57,8 @@ export default tseslint.config(
   },
   {
     // packages/rules: zero AI dependencies; may import only @icg/domain.
-    files: ["packages/rules/**/*.ts"],
+    // Scoped to src: tests wire @icg/data in as the dataset source.
+    files: ["packages/rules/src/**/*.ts"],
     rules: {
       "no-restricted-imports": [
         "error",

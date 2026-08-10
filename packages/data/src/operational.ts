@@ -230,6 +230,9 @@ export function buildOperational(
       ],
     },
     {
+      // EXC-008: at year-end retrieval the title-retention addendum cannot
+      // be located (AccordVault index stale since 12/26). Scenario event
+      // SE-008 locates LA-2026-118-ADD-2 during the close.
       id: "CT-002",
       sourceRef: opRef("ACCORD_VAULT", "CONTRACT", "LN-2026-118", vaultModified),
       counterparty: "Silver Fir Hotels",
@@ -237,7 +240,20 @@ export function buildOperational(
       effectiveDate: "2026-10-01",
       provisions: [
         { provisionType: "LOANER_TERMS", status: "PRESENT", documentRef: "LA-2026-118" },
-        { provisionType: "TITLE_RETENTION", status: "PRESENT", documentRef: "LA-2026-118-ADD-2" },
+        { provisionType: "TITLE_RETENTION", status: "MISSING" },
+      ],
+    },
+    {
+      // Standard master terms covering the routine loaner fleet: title is
+      // retained by KestrelGrid; evidence is locatable at year end.
+      id: "CT-014",
+      sourceRef: opRef("ACCORD_VAULT", "CONTRACT", "LNM-2025-001", vaultModified),
+      counterparty: "KestrelGrid AI — standard loaner program",
+      title: "Standard Equipment Loaner Master Agreement",
+      effectiveDate: "2025-06-01",
+      provisions: [
+        { provisionType: "LOANER_TERMS", status: "PRESENT", documentRef: "LNM-2025-001 §2" },
+        { provisionType: "TITLE_RETENTION", status: "PRESENT", documentRef: "LNM-2025-001 §4" },
       ],
     },
     {
@@ -498,7 +514,10 @@ export function buildOperational(
       startedAt: isExc008
         ? "2026-10-05"
         : `2026-${String(prng.int(8, 11)).padStart(2, "0")}-${String(prng.int(1, 27)).padStart(2, "0")}`,
-      ...(isExc008 ? { contractId: "CT-002" } : {}),
+      // EXC-008's loaner runs on the bespoke Silver Fir agreement whose
+      // title clause is initially unlocatable; the rest ride the standard
+      // master with title retention evidenced up front.
+      contractId: isExc008 ? "CT-002" : "CT-014",
     });
   });
 

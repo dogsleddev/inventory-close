@@ -151,12 +151,26 @@ describe("EXC-007 — Redwood third-party confirmation outstanding", () => {
 });
 
 describe("EXC-008 / EXC-010 / EXC-012 — ownership, demo age, damage", () => {
-  it("the customer-site loaner KE-Y1 ($12,800) has a located title-retention addendum", () => {
+  it("the customer-site loaner KE-Y1 ($12,800) initially lacks title evidence; SE-008 locates it", () => {
     const u = unit(story.exc008Serial);
     expect(u?.classification).toBe("LOANER");
     expect(u?.unitCostCents).toBe(1280000);
     const assignment = d.assignments.find((a) => a.serial === story.exc008Serial);
     expect(assignment?.contractId).toBe("CT-002");
+    const ct002 = d.contracts.find((c) => c.id === "CT-002");
+    expect(
+      ct002?.provisions.find((p) => p.provisionType === "TITLE_RETENTION")?.status,
+    ).toBe("MISSING");
+    // Every other customer-site loaner rides the standard master with title
+    // retention evidenced at year end.
+    const others = d.assignments.filter(
+      (a) => a.kind === "LOANER" && a.serial !== story.exc008Serial,
+    );
+    expect(others.every((a) => a.contractId === "CT-014")).toBe(true);
+    const ct014 = d.contracts.find((c) => c.id === "CT-014");
+    expect(
+      ct014?.provisions.find((p) => p.provisionType === "TITLE_RETENTION")?.status,
+    ).toBe("PRESENT");
     const located = d.scenarioEvents.find((e) => e.eventType === "CONTRACT_LOCATED");
     expect(located?.subjects.serials).toEqual([story.exc008Serial]);
   });
