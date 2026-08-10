@@ -27,14 +27,21 @@ import {
 export function ReconciliationScreen({
   shell,
   data,
+  initialTab,
   setRoleAction,
 }: {
   shell: ShellData;
   data: ReconciliationData;
+  /** `?tab=` deep link (stage 09); an unknown value falls back to the default. */
+  initialTab?: string | undefined;
   setRoleAction: (userId: string) => Promise<void>;
 }) {
   const [tab, setTab] = useState<string>(
-    data.serialTab.query !== "" ? "serial" : "financial",
+    initialTab !== undefined && data.tabs.some((t) => t.key === initialTab)
+      ? initialTab
+      : data.serialTab.query !== ""
+        ? "serial"
+        : "financial",
   );
   const [exceptionId, setExceptionId] = useState<string | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);

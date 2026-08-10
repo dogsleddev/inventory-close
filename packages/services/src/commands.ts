@@ -26,6 +26,13 @@ import {
  * write path to source fixtures at all.
  */
 
+/**
+ * Demo reset is a controlled operation, so it authorizes against the same
+ * key as locking the period. Named once: a surface that offers the control
+ * must gate on THIS, never on a role list that happens to match today.
+ */
+export const DEMO_RESET_PERMISSION = "period.lock" as const;
+
 export class PeriodLockedError extends Error {
   constructor(action: string) {
     super(`Period is locked; ${action} is not allowed`);
@@ -258,16 +265,43 @@ export function createCommandService(ws: Workspace) {
       return ws.period.state;
     },
 
+    /**
+     * Reset Demo (CANONICAL_SPEC section 15). Rebuilds derived state from
+     * the seed, the rules, and the scenario events; it hard-codes no final
+     * metric, so the restored baseline is a re-derivation rather than a
+     * stored snapshot. The audit trail survives on purpose — a reset is
+     * itself an event, and erasing the history that records it would make
+     * the log a description of the present instead of the past.
+     */
     resetDemo(ctx: ServiceContext) {
-      // Reset is a controller-level demo operation; it rebuilds from source
-      // facts and never hard-codes final metrics.
-      authorize(ctx.user, "period.lock", "demo reset is a controlled operation");
+      authorize(ctx.user, DEMO_RESET_PERMISSION, "demo reset is a controlled operation");
       const at = nextInstant(ws);
+      const cleared = {
+        comments: ws.comments.length,
+        drafts: ws.drafts.length,
+        submittedEvidence: ws.submittedEvidence.length,
+        reviews: ws.reviews.length,
+        period: ws.period.state,
+      };
       resetWorkspace(ws);
       audit(ctx, "DEMO_RESET", "WORKSPACE", at, {
-        detail: `dataset ${ws.dataset.manifest.datasetVersion} rebuilt; run ${ws.close.runManifest.runId}`,
+        priorState: cleared.period,
+        newState: ws.period.state,
+        detail:
+          `dataset ${ws.dataset.manifest.datasetVersion} rebuilt; run ${ws.close.runManifest.runId}; ` +
+          `working state cleared: ${cleared.comments} comments, ${cleared.drafts} drafts, ` +
+          `${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews`,
       });
-      return ws.close.aggregates;
+      return {
+        aggregates: ws.close.aggregates,
+        runId: ws.close.runManifest.runId,
+        datasetVersion: ws.dataset.manifest.datasetVersion,
+        datasetHash: ws.dataset.manifest.datasetHash,
+        outputHash: ws.close.runManifest.outputHash,
+        cleared,
+        /** The log is append-only: this is what a reset preserved. */
+        auditEventsRetained: ws.audit.count(),
+      };
     },
   };
 }

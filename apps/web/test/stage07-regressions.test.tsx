@@ -15,6 +15,7 @@ import { ReconciliationScreen } from "../components/ReconciliationScreen";
 import { ValuationScreen } from "../components/ValuationScreen";
 import { buildAdjustmentsData } from "../lib/server/adjustments-view";
 import { buildAuditPackageData } from "../lib/server/audit-package-view";
+import { buildPackageManifest } from "../lib/server/integrity-view";
 import { buildPhysicalCountData } from "../lib/server/count-view";
 import { buildExceptionsData, buildOverviewData, buildShellData } from "../lib/server/data";
 import { buildInventorySearchData } from "../lib/server/financial-life-view";
@@ -51,6 +52,10 @@ function renderPackage(role: Role, id = "") {
     <AuditPackageScreen
       shell={buildShellData(user, "T-07R")}
       data={buildAuditPackageData(user, id, "T-07R")}
+      manifest={buildPackageManifest(user, "T-07R")}
+      reproduceAction={async () => {
+        throw new Error("not used in this test");
+      }}
       setRoleAction={noopRole}
     />,
   );

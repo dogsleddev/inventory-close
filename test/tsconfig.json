@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // These files are only ever executed by vitest, which resolves them the
+    // way a bundler does — extensionless relative imports included. The
+    // packages stay on NodeNext; this directory does not ship.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}

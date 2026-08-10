@@ -156,10 +156,11 @@ describe("demo reset", () => {
   it("rebuilds from source facts with identical canonical outputs and preserves the audit trail", () => {
     commands.addComment(controller, "EXC-001", "pre-reset note");
     const beforeHash = ws.close.runManifest.outputHash;
-    const aggregates = commands.resetDemo(controller);
+    const result = commands.resetDemo(controller);
     // Derived, not hard-coded: the same facts produce the same numbers.
-    expect(aggregates.closeReadinessBps).toBe(8142);
-    expect(aggregates.blockerCount).toBe(7);
+    expect(result.aggregates.closeReadinessBps).toBe(8142);
+    expect(result.aggregates.blockerCount).toBe(7);
+    expect(result.cleared.comments).toBe(1);
     expect(ws.close.runManifest.outputHash).toBe(beforeHash);
     // Working state cleared; audit history retained and grew.
     expect(ws.comments).toHaveLength(0);

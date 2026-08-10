@@ -9,11 +9,11 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import type { AskResult, ShellData } from "../lib/view-model";
+import type { AskResult, ResetResultView, ShellData } from "../lib/view-model";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_KEY, type Theme } from "../lib/theme";
 import { AskGaurd, type AskState } from "./AskGaurd";
-import { askGaurd } from "../app/actions";
+import { askGaurd, resetDemo } from "../app/actions";
 
 /**
  * Application shell (design 01): nav rail, global header, workspace, and
@@ -53,6 +53,8 @@ export interface AppShellProps {
     question: string,
     scope: { exceptionId?: string; serial?: string },
   ) => Promise<AskResult>;
+  /** Reset Demo; overridden in tests so no server round trip is needed. */
+  readonly resetAction?: () => Promise<ResetResultView>;
   readonly children: ReactNode;
 }
 
@@ -67,6 +69,14 @@ export function AppShell(props: AppShellProps) {
    */
   const [asked, setAsked] = useState<AskState | null>(null);
   const [roleOpen, setRoleOpen] = useState(false);
+  /**
+   * Reset Demo is a two-step control: it rebuilds the whole workspace, so
+   * it asks before it acts rather than firing on a stray click during a
+   * demo. The result is then stated in full — what was re-derived, what was
+   * cleared, and what the append-only log kept.
+   */
+  const [resetStep, setResetStep] = useState<"idle" | "confirm" | "running">("idle");
+  const [resetResult, setResetResult] = useState<ResetResultView | null>(null);
   const [, startTransition] = useTransition();
   const roleRef = useRef<HTMLDivElement | null>(null);
   const askHeadingRef = useRef<HTMLDivElement | null>(null);
@@ -189,6 +199,16 @@ export function AppShell(props: AppShellProps) {
     setRoleOpen(false);
     startTransition(async () => {
       await props.setRoleAction(userId);
+    });
+  };
+
+  const runReset = () => {
+    setResetStep("running");
+    const action = props.resetAction ?? resetDemo;
+    startTransition(async () => {
+      const result = await action();
+      setResetResult(result);
+      setResetStep("idle");
     });
   };
 
@@ -360,6 +380,40 @@ export function AppShell(props: AppShellProps) {
                 </div>
               ) : null}
             </div>
+            {shell.canResetDemo ? (
+              resetStep === "confirm" ? (
+                <span
+                  className="icg-reset-confirm"
+                  role="group"
+                  aria-label="Confirm demo reset"
+                >
+                  <span style={{ fontSize: "11px" }}>Rebuild the demo from its seed?</span>
+                  <button
+                    type="button"
+                    className="icg-btn icg-btn--mono"
+                    onClick={runReset}
+                  >
+                    Confirm reset
+                  </button>
+                  <button
+                    type="button"
+                    className="icg-linkbtn"
+                    onClick={() => setResetStep("idle")}
+                  >
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="icg-btn icg-btn--mono"
+                  disabled={resetStep === "running"}
+                  onClick={() => setResetStep("confirm")}
+                >
+                  {resetStep === "running" ? "Resetting…" : "Reset Demo"}
+                </button>
+              )
+            ) : null}
             <button type="button" className="icg-btn icg-btn--mono" onClick={toggleTheme}>
               THEME
             </button>
@@ -374,6 +428,32 @@ export function AppShell(props: AppShellProps) {
             </button>
           </div>
         </header>
+
+        {resetResult !== null ? (
+          <div className="icg-reset-note" role="status">
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600 }}>
+                {resetResult.ok ? "Demo reset" : "Reset refused"}
+                {resetResult.ok ? (
+                  <span className="icg-quiet" style={{ fontWeight: 400 }}>
+                    {" · "}
+                    {resetResult.headline}
+                  </span>
+                ) : null}
+              </div>
+              <div className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+                {resetResult.detail}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="icg-linkbtn"
+              onClick={() => setResetResult(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        ) : null}
 
         {props.children}
       </div>

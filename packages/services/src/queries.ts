@@ -31,9 +31,20 @@ import type {
   ReconciliationOut,
   ValuationOut,
 } from "@icg/rules";
+import { RULE_DEFINITIONS } from "@icg/rules";
 import { traceExceptionLineage, type ExceptionLineage } from "@icg/evidence";
-import { authorize, canReadContent } from "@icg/permissions";
+import { authorize, canReadContent, hasPermission } from "@icg/permissions";
+import { DEMO_RESET_PERMISSION } from "./commands.js";
 import { redactRestricted } from "./redaction.js";
+import {
+  describeControls,
+  pbcDependencySlices,
+  replayCoverage,
+  verifyReproduction,
+  type CloseControl,
+  type PbcDependencySlice,
+  type ReproductionCheck,
+} from "./integrity.js";
 import { PBC_DEPENDENCIES, pbcDependencyHash, type Workspace } from "./workspace.js";
 import { hasProvidedVersion, versionsFor, type PbcVersion } from "./pbc.js";
 
@@ -42,6 +53,13 @@ import { hasProvidedVersion, versionsFor, type PbcVersion } from "./pbc.js";
  * reaches any caller — the UI, exports, and the future Ask Gaurd adapter
  * all inherit it. There is no client-side permission logic anywhere.
  */
+
+/** A rule's identity and control domain, without its schemas or doc refs. */
+export interface RuleSummary {
+  readonly id: string;
+  readonly version: string;
+  readonly controlDomain: string;
+}
 
 export interface ServiceContext {
   readonly user: DemoUser;
@@ -857,6 +875,74 @@ export function createQueryService(ws: Workspace) {
     getRunManifest(ctx: ServiceContext) {
       authorize(ctx.user, "close.read");
       return ws.close.runManifest;
+    },
+
+    /**
+     * What the acting user may do with the demo controls (stage 09). Gated
+     * on the SAME permission key the command authorizes against, so a
+     * surface can never offer a control the service will refuse — or hide
+     * one it would have allowed.
+     */
+    getDemoCapabilities(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return {
+        canResetDemo: hasPermission(ctx.user, DEMO_RESET_PERMISSION),
+      };
+    },
+
+    /**
+     * The control totals a rebuild is checked against (stage 09). Derived
+     * from the close on every call — there is no stored copy to drift.
+     */
+    getCloseControls(ctx: ServiceContext): readonly CloseControl[] {
+      authorize(ctx.user, "close.read");
+      return describeControls(ws.close, ws.dataset.manifest.controlTotals.bookUnits);
+    },
+
+    /**
+     * What a replay compares and what it deliberately leaves out — the
+     * same lists the check itself uses, readable without paying for a
+     * rebuild.
+     */
+    getReplayCoverage(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return replayCoverage();
+    },
+
+    /**
+     * Reproduce Close (CANONICAL_SPEC section 15). Rebuilds the dataset
+     * from the seed, re-runs the rules, and compares structured output
+     * only. This is a read: it verifies the running close, changes nothing,
+     * and so appends no audit event.
+     */
+    verifyReproduction(ctx: ServiceContext): ReproductionCheck {
+      authorize(ctx.user, "close.read");
+      return verifyReproduction(ws.close);
+    },
+
+    /**
+     * Which workpapers each controlled-state slice invalidates when it
+     * changes (docs/10). The same edges `getPbcPackage` reads per
+     * workpaper, inverted — never a second declaration of them.
+     */
+    getPbcDependencySlices(ctx: ServiceContext): readonly PbcDependencySlice[] {
+      authorize(ctx.user, "pbc.read");
+      return pbcDependencySlices(ws.close);
+    },
+
+    /**
+     * The rule registry as a caller-facing summary (stage 09). Control
+     * domain lives on the rule definition, so a section that filters the
+     * exception list by domain reads the registry rather than hard-coding
+     * which rule ids belong to it.
+     */
+    listRuleSummaries(ctx: ServiceContext): readonly RuleSummary[] {
+      authorize(ctx.user, "close.read");
+      return RULE_DEFINITIONS.map((rule) => ({
+        id: String(rule.id),
+        version: rule.version,
+        controlDomain: rule.controlDomain,
+      }));
     },
 
     /** Per-rule execution records (result + coverage shown on exception detail). */

@@ -7,21 +7,23 @@ import { setRole } from "../actions";
 export const dynamic = "force-dynamic";
 
 /**
- * Reconciliation — stage 06 ships the Procurement Match, Commercial Chain,
- * and Serial Integrity tabs; the Financial bridge tab arrives in stage 07.
+ * Reconciliation — the Financial bridge, Procurement Match, Commercial
+ * Chain, and Serial Integrity tabs. `?serial=` drives the serial-integrity
+ * search; `?tab=` opens a tab directly so a demo stop is a link (stage 09).
  */
 export default async function ReconciliationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ serial?: string }>;
+  searchParams: Promise<{ serial?: string; tab?: string }>;
 }) {
-  const { serial } = await searchParams;
+  const { serial, tab } = await searchParams;
   const user = await currentUser();
   const correlationId = newCorrelationId();
   return (
     <ReconciliationScreen
       shell={buildShellData(user, correlationId)}
       data={buildReconciliationData(user, serial ?? "", correlationId)}
+      initialTab={tab}
       setRoleAction={setRole}
     />
   );

@@ -13,6 +13,9 @@ export default defineConfig({
     include: [
       "packages/*/test/**/*.test.{ts,tsx}",
       "apps/*/test/**/*.test.{ts,tsx}",
+      // Repo-wide QA scans (stage 09) belong to no single package: they read
+      // the tree itself — stale identifiers, deprecated names, secrets.
+      "test/**/*.test.ts",
     ],
     environment: "node",
     /**

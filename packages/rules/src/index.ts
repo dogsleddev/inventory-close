@@ -50,7 +50,12 @@ export type {
 } from "./valuation.js";
 export { computeReadiness } from "./readiness.js";
 export type { ReadinessCategoryOut, ReadinessOut } from "./readiness.js";
-export { CONFIG_VERSION, reproduceClose, runClose } from "./close.js";
+export {
+  CONFIG_VERSION,
+  REPLAY_COMPARED_SECTIONS,
+  reproduceClose,
+  runClose,
+} from "./close.js";
 export type {
   BlockerOut,
   CloseAggregates,

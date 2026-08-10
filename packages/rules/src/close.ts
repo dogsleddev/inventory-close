@@ -302,6 +302,27 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
 }
 
 /**
+ * The structured sections replay equivalence covers, named once so a caller
+ * that reports what was compared cannot drift from what actually was. LLM
+ * prose is not among them and never will be (CANONICAL_SPEC section 15).
+ */
+export const REPLAY_COMPARED_SECTIONS = [
+  "exceptions",
+  "blockers",
+  "reconciliation",
+  "readiness",
+  "aggregates",
+  "procurementMatches",
+  "countSummary",
+  "proposedAdjustments",
+  "adjustmentRegister",
+  "valuation",
+  "chains",
+  "managementIndicators",
+  "pbc",
+] as const;
+
+/**
  * Reproduce Close (CANONICAL_SPEC section 15): re-run and compare
  * structured output. LLM prose plays no part in replay equivalence.
  */
@@ -312,21 +333,7 @@ export function reproduceClose(
   const match = baseline.runManifest.outputHash === replay.runManifest.outputHash;
   const mismatchPaths: string[] = [];
   if (!match) {
-    const keys = [
-      "exceptions",
-      "blockers",
-      "reconciliation",
-      "readiness",
-      "aggregates",
-      "procurementMatches",
-      "countSummary",
-      "proposedAdjustments",
-      "adjustmentRegister",
-      "valuation",
-      "chains",
-      "managementIndicators",
-      "pbc",
-    ] as const;
+    const keys = REPLAY_COMPARED_SECTIONS;
     for (const key of keys) {
       if (hashValue(baseline[key]) !== hashValue(replay[key])) {
         mismatchPaths.push(key);

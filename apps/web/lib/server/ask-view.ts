@@ -1,6 +1,11 @@
 import type { DemoUser } from "@icg/data";
 import type { ExceptionStatus } from "@icg/domain";
-import { answerQuestion, type AiCitation, type AiFigure } from "@icg/ai";
+import {
+  answerQuestion,
+  describeAvailability,
+  type AiCitation,
+  type AiFigure,
+} from "@icg/ai";
 import { formatBpsExact, formatCents } from "../format";
 import { statusView } from "../workflow-view";
 import type { AskAnswerView, AskCitation, AskFigure, AskResult } from "../view-model";
@@ -89,6 +94,16 @@ export function askGaurdData(
   const toolsUsed = [
     ...new Set(interaction.toolCalls.filter((c) => c.outcome === "OK").map((c) => c.tool)),
   ].sort();
+  // The AI-off state is reported, not left to be inferred from a missing
+  // paragraph: docs/12 requires the primary demo to work without live AI,
+  // and a reader cannot tell a deterministic answer from a narrated one by
+  // looking at it.
+  const availability = describeAvailability(interaction);
+  const aiStatus = {
+    providerBound: availability.providerBound,
+    narrationAvailable: availability.narrationAvailable,
+    note: availability.note,
+  };
 
   if (interaction.answer !== undefined) {
     const a = interaction.answer;
@@ -107,7 +122,7 @@ export function askGaurdData(
       // Absent unless a provider ran and its prose passed the guardrails.
       narration: interaction.narrationAvailable ? (interaction.narration ?? null) : null,
     };
-    return { answer, refusal: null, toolsUsed, versions };
+    return { answer, refusal: null, toolsUsed, versions, aiStatus };
   }
 
   const r = interaction.refusal;
@@ -122,5 +137,6 @@ export function askGaurdData(
     },
     toolsUsed,
     versions,
+    aiStatus,
   };
 }

@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { AuditPackageData, ShellData } from "../lib/view-model";
+import type {
+  AuditPackageData,
+  PackageManifestData,
+  ReplayResultView,
+  ShellData,
+} from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
 import { ExceptionDrawer } from "./ExceptionDrawer";
+import { PackageManifest } from "./PackageManifest";
 import {
   AuditDetails,
   NoRecordsState,
@@ -29,13 +35,24 @@ import {
 export function AuditPackageScreen({
   shell,
   data,
+  manifest,
+  reproduceAction,
+  initialTab,
   setRoleAction,
 }: {
   shell: ShellData;
   data: AuditPackageData;
+  /** Package-level provenance; null when the role cannot read close data. */
+  manifest: PackageManifestData | null;
+  reproduceAction: () => Promise<ReplayResultView>;
+  /** `?tab=` deep link into a workpaper tab; ignored when unknown. */
+  initialTab?: string | undefined;
   setRoleAction: (userId: string) => Promise<void>;
 }) {
-  const [tab, setTab] = useState("summary");
+  const tabKeys = data.detail?.tabs.map((t) => t.key) ?? [];
+  const [tab, setTab] = useState(
+    initialTab !== undefined && tabKeys.includes(initialTab) ? initialTab : "summary",
+  );
   const [exceptionId, setExceptionId] = useState<string | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
   const exceptionDrawer = exceptionId !== null ? data.drawers[exceptionId] : undefined;
@@ -620,6 +637,10 @@ export function AuditPackageScreen({
                 </p>
               </div>
             </Panel>
+
+            {manifest !== null ? (
+              <PackageManifest data={manifest} reproduceAction={reproduceAction} />
+            ) : null}
           </>
         )}
       </main>

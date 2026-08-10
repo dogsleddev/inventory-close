@@ -82,6 +82,7 @@ export function AskGaurd({
   const refusal = state?.result?.refusal ?? null;
   const toolsUsed = state?.result?.toolsUsed ?? [];
   const versions = state?.result?.versions ?? [];
+  const aiStatus = state?.result?.aiStatus ?? null;
 
   return (
     <>
@@ -266,6 +267,21 @@ export function AskGaurd({
                           ),
                         )}
                       </div>
+                    </div>
+                  ) : null}
+
+                  {aiStatus !== null ? (
+                    <div className="icg-ask-aistate">
+                      <span className="icg-label">
+                        {aiStatus.providerBound
+                          ? aiStatus.narrationAvailable
+                            ? "AI NARRATION ATTACHED"
+                            : "AI NARRATION WITHHELD"
+                          : "AI OFF — DETERMINISTIC ANSWER"}
+                      </span>
+                      <span style={{ fontSize: "10.5px", lineHeight: 1.5 }}>
+                        {aiStatus.note}
+                      </span>
                     </div>
                   ) : null}
 

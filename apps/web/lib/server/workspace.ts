@@ -1,5 +1,10 @@
-import { createQueryService, createWorkspace } from "@icg/services";
-import type { QueryService, ServiceContext, Workspace } from "@icg/services";
+import { createCommandService, createQueryService, createWorkspace } from "@icg/services";
+import type {
+  CommandService,
+  QueryService,
+  ServiceContext,
+  Workspace,
+} from "@icg/services";
 import { DEMO_USERS } from "@icg/data";
 import type { DemoUser } from "@icg/data";
 
@@ -32,6 +37,16 @@ export function getQueries(): QueryService {
     globalStore.__icgLocationsRegistered = true;
   }
   return queries;
+}
+
+/**
+ * The command service over the same workspace (stage 09). Only the demo
+ * controls reach for this; every screen still reads through queries alone.
+ * Authorization stays inside @icg/services — a command called from here is
+ * refused exactly as it would be anywhere else.
+ */
+export function getCommands(): CommandService {
+  return createCommandService(getWorkspace());
 }
 
 export const DEFAULT_USER_ID = "U-002"; // M. Reyes — Controller

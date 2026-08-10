@@ -38,6 +38,12 @@ export interface ShellData {
     readonly exposure: string;
     readonly blockerIds: string;
   } | null;
+  /**
+   * Whether this role may run Reset Demo (stage 09). Derived from the same
+   * permission key the command authorizes against, so the control is never
+   * offered to a role the service would refuse.
+   */
+  readonly canResetDemo: boolean;
 }
 
 export interface Restricted {
@@ -97,6 +103,16 @@ export interface AskResult {
   /** Which tools ran, for the Audit Details line under the answer. */
   readonly toolsUsed: readonly string[];
   readonly versions: readonly { readonly k: string; readonly v: string }[];
+  /**
+   * Whether any model contributed, stated on the answer (stage 09). The
+   * demo must work with AI off, and a reader cannot tell a deterministic
+   * answer from a narrated one by looking at it.
+   */
+  readonly aiStatus: {
+    readonly providerBound: boolean;
+    readonly narrationAvailable: boolean;
+    readonly note: string;
+  };
 }
 
 export interface KpiTile {
@@ -255,6 +271,19 @@ export interface ExceptionsData {
   readonly openBlockerExposure: string;
   readonly totalCount: number;
   readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+  /**
+   * Present on a control-domain section (Cutoff, Ownership — stage 09).
+   * A filtered list must say what it filtered on and how much of the queue
+   * it is showing, or its counts read as the whole close.
+   */
+  readonly filter: {
+    readonly title: string;
+    readonly context: string;
+    readonly basis: string;
+    readonly shown: number;
+    readonly outOf: number;
+    readonly emptyNote: string;
+  } | null;
 }
 
 export interface EvidenceRecordView {
@@ -928,4 +957,46 @@ export interface ExceptionDetailData {
   };
   readonly evidenceRecords?: Readonly<Record<string, EvidenceRecordView>>;
   readonly blockerPosition?: string | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage 09 — demo reset, replay, and the package manifest             */
+/* ------------------------------------------------------------------ */
+
+/** One controlled-state slice and the workpapers a change to it invalidates. */
+export interface DependencySliceRow {
+  readonly slice: string;
+  readonly kind: string;
+  readonly hash: string;
+  readonly workpapers: string;
+}
+
+/**
+ * The export package's manifest (docs/10): versions, hashes, control
+ * totals, dependency map and the synthetic disclosure. Every figure is
+ * formatted from a service result — nothing on this panel is authored.
+ */
+export interface PackageManifestData {
+  readonly manifest: readonly { readonly k: string; readonly v: string }[];
+  readonly controls: readonly { readonly k: string; readonly v: string }[];
+  readonly dependencies: readonly DependencySliceRow[];
+  readonly comparedSections: readonly string[];
+  readonly excluded: readonly string[];
+  readonly disclosure: string;
+  readonly dependencyNote: string;
+}
+
+/** Outcome of a Reproduce Close run, rendered under the manifest. */
+export interface ReplayResultView {
+  readonly outcome: "MATCH" | "MISMATCH" | "DENIED";
+  readonly headline: string;
+  readonly rows: readonly { readonly k: string; readonly v: string }[];
+  readonly mismatchPaths: readonly string[];
+}
+
+/** Outcome of a Reset Demo run, rendered in the shell header. */
+export interface ResetResultView {
+  readonly ok: boolean;
+  readonly headline: string;
+  readonly detail: string;
 }

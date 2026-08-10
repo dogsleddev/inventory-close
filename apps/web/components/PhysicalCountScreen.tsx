@@ -31,13 +31,20 @@ const TABS = [
 export function PhysicalCountScreen({
   shell,
   data,
+  initialTab,
   setRoleAction,
 }: {
   shell: ShellData;
   data: PhysicalCountData;
+  /** `?tab=` deep link (stage 09); an unknown value falls back to year-end. */
+  initialTab?: string | undefined;
   setRoleAction: (userId: string) => Promise<void>;
 }) {
-  const [tab, setTab] = useState<string>("year-end");
+  const [tab, setTab] = useState<string>(
+    initialTab !== undefined && TABS.some((t) => t.key === initialTab)
+      ? initialTab
+      : "year-end",
+  );
   const [openId, setOpenId] = useState<string | null>(null);
   const drawerData = openId !== null ? data.drawers[openId] : undefined;
 

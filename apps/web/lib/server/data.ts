@@ -86,6 +86,9 @@ export function buildShellData(user: DemoUser, correlationId: string): ShellData
   const readiness = attempt(() => queries.getCloseReadiness(ctx));
   const blockers = attempt(() => queries.getBlockers(ctx));
   const period = attempt(() => queries.getPeriod(ctx));
+  // Read from the service, which gates on the same permission key the reset
+  // command authorizes against — never from a role list transcribed here.
+  const capabilities = attempt(() => queries.getDemoCapabilities(ctx));
 
   return {
     userId: user.id,
@@ -116,6 +119,7 @@ export function buildShellData(user: DemoUser, correlationId: string): ShellData
             blockerIds: blockers.map((b) => b.exceptionId).join(", "),
           }
         : null,
+    canResetDemo: capabilities?.canResetDemo ?? false,
   };
 }
 
@@ -526,11 +530,57 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   };
 }
 
-export function buildExceptionsData(user: DemoUser, correlationId: string): ExceptionsData {
+/**
+ * Control-domain sections (stage 09). Cutoff and Ownership are filtered
+ * views of the exception queue (design/IMPLEMENTATION_HANDOFF §9.4), and
+ * the domains each one includes are read from the rule registry rather than
+ * transcribed as a list of rule ids that would silently go stale.
+ *
+ * Ownership carries THIRD_PARTY as well as OWNERSHIP: units held by a third
+ * party and units on loan at a customer site are the same assertion — do we
+ * own what the books say we own. That is an authored grouping, so the page
+ * states which domains it contains instead of leaving the reader to infer
+ * why a third-party item appears there.
+ */
+export const EXCEPTION_SECTIONS: Readonly<
+  Record<
+    string,
+    {
+      readonly label: string;
+      readonly title: string;
+      readonly context: string;
+      readonly domains: readonly string[];
+      readonly emptyNote: string;
+    }
+  >
+> = {
+  cutoff: {
+    label: "Cutoff",
+    title: "Cutoff",
+    context: "Did each transaction land in the right period?",
+    domains: ["CUTOFF"],
+    emptyNote: "No cutoff rule produced an exception in this close.",
+  },
+  ownership: {
+    label: "Ownership",
+    title: "Ownership",
+    context: "Do we own what the books say we own, wherever the unit physically sits?",
+    domains: ["OWNERSHIP", "THIRD_PARTY"],
+    emptyNote: "No ownership or third-party rule produced an exception in this close.",
+  },
+};
+
+export function buildExceptionsData(
+  user: DemoUser,
+  correlationId: string,
+  /** A key of EXCEPTION_SECTIONS; omitted for the full queue. */
+  sectionKey?: string,
+): ExceptionsData {
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
-  const exceptions = attempt(() => queries.listExceptions(ctx));
-  if (exceptions === undefined) {
+  const section = sectionKey !== undefined ? EXCEPTION_SECTIONS[sectionKey] : undefined;
+  const all = attempt(() => queries.listExceptions(ctx));
+  if (all === undefined) {
     return {
       restricted: true,
       roleLabel: roleLabel(user),
@@ -539,9 +589,22 @@ export function buildExceptionsData(user: DemoUser, correlationId: string): Exce
       openBlockerExposure: "—",
       totalCount: 0,
       drawers: {},
+      filter: null,
     };
   }
-  const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
+  const rules = attempt(() => queries.listRuleSummaries(ctx)) ?? [];
+  const domainOf = new Map(rules.map((r) => [r.id, r.controlDomain]));
+  const exceptions =
+    section === undefined
+      ? all
+      : all.filter((e) => {
+          const domain = domainOf.get(e.exception.finding.ruleId);
+          return domain !== undefined && section.domains.includes(domain);
+        });
+
+  const blockers = (attempt(() => queries.getBlockers(ctx)) ?? []).filter((b) =>
+    exceptions.some((e) => e.exception.id === b.exceptionId),
+  );
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
 
   const ordered = [...exceptions].sort((a, b) =>
@@ -589,6 +652,19 @@ export function buildExceptionsData(user: DemoUser, correlationId: string): Exce
     ),
     totalCount: exceptions.length,
     drawers,
+    filter:
+      section === undefined
+        ? null
+        : {
+            title: section.title,
+            context: section.context,
+            // The basis is stated, not implied: this page is a filter over
+            // the queue, and its counts are the filter's, not the close's.
+            basis: `Exceptions whose rule belongs to the ${section.domains.join(" or ")} control ${section.domains.length === 1 ? "domain" : "domains"}.`,
+            shown: exceptions.length,
+            outOf: all.length,
+            emptyNote: section.emptyNote,
+          },
   };
 }
 

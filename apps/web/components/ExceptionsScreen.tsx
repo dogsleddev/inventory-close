@@ -6,6 +6,7 @@ import type { ExceptionsData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
+  NoRecordsState,
   Panel,
   PanelHead,
   RestrictedState,
@@ -31,11 +32,12 @@ export function ExceptionsScreen({
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const drawerData = openId !== null ? data.drawers[openId] : undefined;
+  const filter = data.filter;
 
   return (
     <AppShell
       shell={shell}
-      section="Exceptions"
+      section={filter?.title ?? "Exceptions"}
       setRoleAction={setRoleAction}
       drawerOpen={drawerData !== undefined}
       onCloseDrawer={() => setOpenId(null)}
@@ -50,9 +52,11 @@ export function ExceptionsScreen({
       <main className="icg-workspace">
         <div className="icg-page-head">
           <div>
-            <h1 className="icg-page-title">Exceptions</h1>
+            <h1 className="icg-page-title">{filter?.title ?? "Exceptions"}</h1>
             <div className="icg-page-context">
-              FY2026 · balance-sheet date Dec. 31, 2026
+              {filter !== null
+                ? `${filter.context} · FY2026`
+                : "FY2026 · balance-sheet date Dec. 31, 2026"}
             </div>
           </div>
         </div>
@@ -67,19 +71,31 @@ export function ExceptionsScreen({
           <Panel>
             <PanelHead
               large
-              title="Exception queue"
-              sub="Open blockers first, then open items, then resolved — exposure descending."
+              title={filter !== null ? `${filter.title} exceptions` : "Exception queue"}
+              sub={
+                filter !== null
+                  ? `${filter.basis} Showing ${filter.shown} of ${filter.outOf} designed exceptions — the counts on this page are the filter's, not the close's.`
+                  : "Open blockers first, then open items, then resolved — exposure descending."
+              }
               right={
                 <div style={{ textAlign: "right" }}>
                   <div className="icg-num" style={{ fontSize: "12px", fontWeight: 600 }}>
-                    {data.openBlockerCount} blockers · {data.openBlockerExposure}
+                    {data.openBlockerCount} {data.openBlockerCount === 1 ? "blocker" : "blockers"} ·{" "}
+                    {data.openBlockerExposure}
                   </div>
                   <div className="icg-quiet icg-num" style={{ fontSize: "10.5px" }}>
-                    {data.totalCount} designed exceptions
+                    {filter !== null
+                      ? `${data.totalCount} in this domain`
+                      : `${data.totalCount} designed exceptions`}
                   </div>
                 </div>
               }
             />
+            {data.rows.length === 0 && filter !== null ? (
+              <div style={{ padding: "18px 20px" }}>
+                <NoRecordsState note={filter.emptyNote} />
+              </div>
+            ) : null}
             <div className="icg-table-wrap">
               <table className="icg-table">
                 <thead>

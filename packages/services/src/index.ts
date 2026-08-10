@@ -27,11 +27,24 @@ export type {
   PbcPackageItem,
   ProcurementDetail,
   QueryService,
+  RuleSummary,
   SerialSearchHit,
   ServiceContext,
   SourceCoverageWarning,
   ThirdPartyHolding,
 } from "./queries.js";
+export {
+  describeControls,
+  pbcDependencySlices,
+  replayCoverage,
+  REPLAY_EXCLUSIONS,
+  verifyReproduction,
+} from "./integrity.js";
+export type {
+  CloseControl,
+  PbcDependencySlice,
+  ReproductionCheck,
+} from "./integrity.js";
 export { hasProvidedVersion, versionsFor } from "./pbc.js";
 export type { PbcVersion, PbcVersionState } from "./pbc.js";
 /**
@@ -56,5 +69,5 @@ export type {
   ValuationOut,
   ValuationPopulationOut,
 } from "@icg/rules";
-export { createCommandService, PeriodLockedError } from "./commands.js";
+export { createCommandService, DEMO_RESET_PERMISSION, PeriodLockedError } from "./commands.js";
 export type { CommandService } from "./commands.js";

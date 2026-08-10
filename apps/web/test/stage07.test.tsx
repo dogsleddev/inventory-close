@@ -9,6 +9,7 @@ import { ReconciliationScreen } from "../components/ReconciliationScreen";
 import { ValuationScreen } from "../components/ValuationScreen";
 import { buildAdjustmentsData } from "../lib/server/adjustments-view";
 import { buildAuditPackageData } from "../lib/server/audit-package-view";
+import { buildPackageManifest } from "../lib/server/integrity-view";
 import { buildShellData } from "../lib/server/data";
 import { buildReconciliationData } from "../lib/server/recon-view";
 import { buildValuationData } from "../lib/server/valuation-view";
@@ -64,6 +65,10 @@ function renderPackage(role: Role = "CONTROLLER", pbc = "") {
     <AuditPackageScreen
       shell={buildShellData(user, "T-07")}
       data={buildAuditPackageData(user, pbc, "T-07")}
+      manifest={buildPackageManifest(user, "T-07")}
+      reproduceAction={async () => {
+        throw new Error("not used in this test");
+      }}
       setRoleAction={noopRole}
     />,
   );

@@ -6,14 +6,23 @@ import { setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
 
-/** Physical Count — year-end count, cycle history, test counts, movements. */
-export default async function PhysicalCountPage() {
+/**
+ * Physical Count — year-end count, cycle history, test counts, movements.
+ * `?tab=` opens one directly (stage 09).
+ */
+export default async function PhysicalCountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const user = await currentUser();
   const correlationId = newCorrelationId();
   return (
     <PhysicalCountScreen
       shell={buildShellData(user, correlationId)}
       data={buildPhysicalCountData(user, correlationId)}
+      initialTab={tab}
       setRoleAction={setRole}
     />
   );

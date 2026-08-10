@@ -221,6 +221,36 @@ export function withNarration(
 }
 
 /**
+ * The AI-off path, stated rather than inferred (stage 09, docs/12: the
+ * primary demo must work without live AI).
+ *
+ * There is no provider bound in this product, so "AI unavailable" is not a
+ * degraded mode to fall back to — it is the running mode. What the reader
+ * needs to know is that nothing in the answer came from a model: every
+ * figure, status, conclusion and citation was read from a tool result, and
+ * the only field a provider could ever write is narration.
+ */
+export interface AiAvailability {
+  readonly providerBound: boolean;
+  readonly narrationAvailable: boolean;
+  readonly note: string;
+}
+
+export function describeAvailability(interaction: AiInteraction): AiAvailability {
+  const providerBound = interaction.versions.providerName !== undefined;
+  const narrationAvailable = interaction.narrationAvailable;
+  return {
+    providerBound,
+    narrationAvailable,
+    note: !providerBound
+      ? "No language model is bound. Every figure, status, conclusion and citation in this answer was read from a tool result, so the answer is identical with AI unavailable."
+      : narrationAvailable
+        ? "A provider added the explanatory prose only. Every figure, status, conclusion and citation was read from a tool result."
+        : "The provider's prose was withheld by the guardrails. The answer below is unchanged — narration is the only thing a provider can contribute.",
+  };
+}
+
+/**
  * Wrap untrusted content before it is ever serialized into a prompt. The
  * fence is explicit because the model must be told which bytes are data:
  * evidence titles, contract clauses and carrier notes are all attacker-shaped
