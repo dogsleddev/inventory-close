@@ -854,6 +854,9 @@ button {
 .icg-kpis--narrow {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.icg-kpis--quad {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .icg-kpi {
   background: var(--panel);
   border: 1px solid var(--hair);
@@ -1767,6 +1770,149 @@ button {
   color: var(--soft);
   white-space: nowrap;
 }
+/**
+ * Proposed vs posted (IMPLEMENTATION_HANDOFF §6): a proposal is dashed and
+ * says NOT POSTED in words. Posted state is solid and requires a JE
+ * reference, which nothing in this product can produce — Gaurd never posts.
+ */
+.icg-notposted {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border: 1px dashed var(--ember-line);
+  border-radius: 3px;
+  background: var(--ember-bg);
+  color: var(--ember);
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* ============ Stage 07 — proposals, lineage, versions ============ */
+
+/**
+ * A proposal card is dashed for the same reason its tag says NOT POSTED:
+ * proposed and posted are different states and must never be told apart by
+ * colour alone.
+ */
+.icg-proposal {
+  border: 1.5px dashed var(--hair-2);
+  border-radius: 8px;
+  background: var(--panel-3);
+}
+.icg-proposal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px 10px;
+}
+.icg-proposal-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0 0;
+}
+.icg-proposal-meta-row {
+  display: grid;
+  gap: 2px;
+}
+.icg-proposal-foot {
+  border-top: 1px solid var(--hair);
+  padding: 8px 14px;
+}
+.icg-table--flush {
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.icg-linkbtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--frost);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.icg-linkbtn:hover {
+  color: var(--ink);
+}
+
+/* Aging bars: a relative width, never a second statement of the number. */
+.icg-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--frost);
+  min-width: 2px;
+}
+.icg-bar--aged {
+  background: var(--warn);
+}
+.icg-bar-track {
+  background: var(--panel-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Lineage path — four nodes, the last may terminate in absence. */
+.icg-lineage {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.icg-lineage-node {
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: var(--panel-3);
+  flex: 1 1 150px;
+  min-width: 0;
+}
+.icg-lineage-node--ember {
+  border-color: var(--ember-line);
+  background: var(--ember-bg);
+}
+.icg-lineage-arrow {
+  align-self: center;
+  padding: 0 8px;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+/* A sealed version is visibly locked and says so in words. */
+.icg-version {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 10px 13px;
+  background: transparent;
+}
+.icg-version--sealed {
+  background: var(--panel-2);
+}
+.icg-version--draft {
+  border-style: dashed;
+  border-color: var(--hair-2);
+}
+.icg-lock {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  padding: 2px 7px;
+  border: 1px solid var(--hair-2);
+  border-radius: 3px;
+  color: var(--soft);
+  white-space: nowrap;
+}
+
 .icg-proc-card {
   border: 1px solid var(--hair);
   border-radius: 8px;

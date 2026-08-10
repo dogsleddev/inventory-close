@@ -128,8 +128,12 @@ describe("restricted screens render a restriction, never an empty screen", () =>
     expect(screen.queryByText("NETSUITE SAYS")).toBeNull();
   });
 
+  // EXC-009 sits under PBC-002, which is Preparing — no version of it has
+  // ever been provided, so its support is outside the auditor's scope.
+  // (EXC-001 is IN scope since stage 07 corrected the PBC baseline: PBC-008
+  // is Follow-Up Requested, which means it was provided and more was asked.)
   it("an auditor is told the evidence is out of scope rather than shown nothing", () => {
-    const data = buildExceptionDetailData(userByRole("AUDITOR_READ_ONLY"), "EXC-001", "T-INT");
+    const data = buildExceptionDetailData(userByRole("AUDITOR_READ_ONLY"), "EXC-009", "T-INT");
     expect(data.found).toBe(true);
     expect(Object.keys(data.evidenceRecords ?? {})).toHaveLength(0);
     expect(data.evidenceState?.scopeNotice).toContain("outside your scope");
@@ -138,9 +142,21 @@ describe("restricted screens render a restriction, never an empty screen", () =>
     expect(data.evidenceState?.conflicting).toHaveLength(0);
     expect(data.timeline?.entries).toHaveLength(0);
 
-    renderDetail("AUDITOR_READ_ONLY");
+    renderDetail("AUDITOR_READ_ONLY", "EXC-009");
     expect(screen.getAllByText("Outside your scope").length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Both facts are sourced/)).toBeNull();
+  });
+
+  it("an in-scope exception still withholds restricted content from the auditor", () => {
+    const data = buildExceptionDetailData(userByRole("AUDITOR_READ_ONLY"), "EXC-001", "T-INT");
+    expect(data.found).toBe(true);
+    // Provided support reaches them; scope is not a substitute for the
+    // sensitivity gate, and the contract stays withheld.
+    expect(Object.keys(data.evidenceRecords ?? {}).length).toBeGreaterThan(0);
+    expect(data.evidenceState?.scopeNotice).toBeNull();
+    const contract = Object.values(data.evidenceRecords ?? {}).find(
+      (r) => r.kind === "CONTRACT",
+    );
+    if (contract !== undefined) expect(contract.contentWithheld).toBe(true);
   });
 
   it("the controller's evidence sections carry no scope notice", () => {

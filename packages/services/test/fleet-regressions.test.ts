@@ -74,11 +74,21 @@ describe("auditor sees only provided/permitted support", () => {
     const auditorVisible = queries.listEvidence(auditor);
     expect(auditorVisible.length).toBeGreaterThan(0);
     expect(auditorVisible.length).toBeLessThan(controllerAll.length);
-    // EXC-001's workpaper (PBC-008 Outbound Cutoff) is READY, not PROVIDED:
-    expect(queries.traceLineage(auditor, "EXC-001")).toBeUndefined();
-    expect(queries.traceLineage(ctx("CONTROLLER"), "EXC-001")).toBeDefined();
-    // EXC-009 sits under the PROVIDED GL reconciliation workpaper:
-    expect(queries.traceLineage(auditor, "EXC-009")).toBeDefined();
+    // EXC-001's workpaper is PBC-008 Outbound Cutoff. Stage 07 corrected the
+    // baseline to the specified one: PBC-008 is FOLLOW_UP_REQUESTED, which
+    // means support was already provided and the auditor asked for more —
+    // its sealed versions are in their hands, so the lineage is in scope.
+    expect(queries.traceLineage(auditor, "EXC-001")).toBeDefined();
+    // EXC-009 sits under PBC-002, which is Preparing at the baseline — no
+    // version of it has ever been provided, so it is NOT in auditor scope.
+    expect(queries.traceLineage(auditor, "EXC-009")).toBeUndefined();
+    expect(queries.traceLineage(ctx("CONTROLLER"), "EXC-009")).toBeDefined();
+    // Scope is not a content gate: restricted contract content stays
+    // withheld from the auditor even inside an in-scope lineage.
+    const lineage = queries.traceLineage(auditor, "EXC-001");
+    for (const { item } of lineage?.evidence ?? []) {
+      if (item.sensitivity === "RESTRICTED") expect(item.content).toBeUndefined();
+    }
     // The management cycle-count lens is never auditor-facing.
     expect(queries.getCountDetail(auditor).managementIndicators).toHaveLength(0);
     expect(

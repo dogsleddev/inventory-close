@@ -28,24 +28,28 @@ function services() {
   return { queries: getQueries(), ctx: makeContext(user, "T-RECON-SVC") };
 }
 
+/** The bridge is the default tab now, so procurement tests must open it. */
+async function openTab(name: RegExp) {
+  await userEvent.setup().click(screen.getByRole("tab", { name }));
+}
+
 describe("Reconciliation — tabs", () => {
-  it("carries the four designed tabs; the financial bridge states its stage honestly", async () => {
-    const user = userEvent.setup();
+  it("carries the four designed tabs and opens on the financial bridge", () => {
     renderRecon();
     expect(screen.getByRole("tab", { name: /Financial/ })).toBeTruthy();
     expect(screen.getByRole("tab", { name: /Procurement Match/ })).toBeTruthy();
     expect(screen.getByRole("tab", { name: /Commercial Chain/ })).toBeTruthy();
     expect(screen.getByRole("tab", { name: /Serial Integrity/ })).toBeTruthy();
-    await user.click(screen.getByRole("tab", { name: /Financial/ }));
-    expect(screen.getByText("Financial bridge — not built yet")).toBeTruthy();
+    expect(screen.getByText("CURRENT POSTED STATE")).toBeTruthy();
   });
 });
 
 describe("Reconciliation — procurement match", () => {
-  it("keeps the native NetSuite state and the close state side by side and independent", () => {
+  it("keeps the native NetSuite state and the close state side by side and independent", async () => {
     const { queries, ctx } = services();
     const matches = queries.getProcurementMatches(ctx);
     renderRecon();
+    await openTab(/Procurement Match/);
     // Every match renders both states.
     const panel = screen.getByText("All procurement matches").closest("section");
     const rows = within(panel as HTMLElement).getAllByRole("row").slice(1);
@@ -63,8 +67,9 @@ describe("Reconciliation — procurement match", () => {
     expect(screen.getAllByText("No close exception").length).toBeGreaterThan(0);
   });
 
-  it("features the EXC-002 incomplete year-end example with its absent receipt", () => {
+  it("features the EXC-002 incomplete year-end example with its absent receipt", async () => {
     renderRecon();
+    await openTab(/Procurement Match/);
     expect(screen.getByText(/Absent at Dec\. 31/)).toBeTruthy();
     const footnotes = screen.getAllByText(/EXC-002/);
     expect(footnotes.length).toBeGreaterThan(0);
@@ -73,7 +78,7 @@ describe("Reconciliation — procurement match", () => {
     ).toBeTruthy();
   });
 
-  it("features a resolved-historical example alongside the open one", () => {
+  it("features a resolved-historical example alongside the open one", async () => {
     const { queries, ctx } = services();
     const resolved = queries
       .listExceptions(ctx)
@@ -93,6 +98,7 @@ describe("Reconciliation — procurement match", () => {
       );
     expect(resolved).toBeDefined();
     renderRecon();
+    await openTab(/Procurement Match/);
     expect(
       screen.getAllByText(new RegExp(resolved?.exception.id ?? "")).length,
     ).toBeGreaterThan(0);

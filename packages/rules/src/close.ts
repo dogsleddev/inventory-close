@@ -21,7 +21,9 @@ import { buildIndex, type CloseInput } from "./engine/input.js";
 import type { RuleContext } from "./engine/rule.js";
 import { assignExceptionIds, type DerivedException } from "./exceptions.js";
 import { PBC_BASELINE_V1, POLICY_V1, type ClosePolicy } from "./policy.js";
+import { buildAdjustmentRegister, type AdjustmentRegisterOut } from "./adjustments.js";
 import { buildReconciliation, type ReconciliationOut } from "./reconciliation.js";
+import { buildValuation, type ValuationOut } from "./valuation.js";
 import { computeReadiness, type ReadinessOut } from "./readiness.js";
 import { ALL_RULES, RULESET_VERSION } from "./registry.js";
 import { applyScenarioEvents } from "./scenario.js";
@@ -32,6 +34,8 @@ export interface PbcItemOut {
   readonly id: string;
   readonly title: string;
   readonly status: PbcStatus;
+  /** Canonical role id responsible for preparing the workpaper. */
+  readonly owner: string;
 }
 
 export interface CountSummaryOut {
@@ -91,6 +95,9 @@ export interface CloseRunResult {
   readonly readiness: ReadinessOut;
   readonly pbc: readonly PbcItemOut[];
   readonly proposedAdjustments: readonly ProposedAdjustment[];
+  /** Reconciling items paired with the entries drafted for them (stage 07). */
+  readonly adjustmentRegister: AdjustmentRegisterOut;
+  readonly valuation: ValuationOut;
   readonly countSummary: CountSummaryOut;
   readonly aggregates: CloseAggregates;
 }
@@ -186,7 +193,12 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     if (!(PBC_STATUSES as readonly string[]).includes(item.status)) {
       throw new Error(`Invalid PBC status ${item.status}`);
     }
-    return { id: item.id, title: item.title, status: item.status as PbcStatus };
+    return {
+      id: item.id,
+      title: item.title,
+      status: item.status as PbcStatus,
+      owner: item.owner,
+    };
   });
   const pbcReady = pbc.filter((i) => countsAsReadyOrProvided(i.status)).length;
   const pbcReadinessBps = Math.round((pbcReady / pbc.length) * 10000);
@@ -194,6 +206,13 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
   const sourceHealthBps = aggregateHealthBasisPoints(
     input.sourceHealth.map((h) => ({ sourceSystem: h.sourceSystem, status: h.status })),
   );
+
+  const adjustmentRegister = buildAdjustmentRegister(
+    reconciliation,
+    exceptions,
+    scenario.proposedAdjustments,
+  );
+  const valuation = buildValuation(input, exceptions, policy);
 
   const countSummary = buildCountSummary(input);
   const openExceptions = exceptions.filter((e) => !isResolvedStatus(e.status));
@@ -236,6 +255,8 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     procurementMatches,
     countSummary,
     proposedAdjustments: scenario.proposedAdjustments,
+    adjustmentRegister,
+    valuation,
     chains,
     managementIndicators,
     pbc,
@@ -273,6 +294,8 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     readiness,
     pbc,
     proposedAdjustments: scenario.proposedAdjustments,
+    adjustmentRegister,
+    valuation,
     countSummary,
     aggregates,
   };
@@ -298,6 +321,8 @@ export function reproduceClose(
       "procurementMatches",
       "countSummary",
       "proposedAdjustments",
+      "adjustmentRegister",
+      "valuation",
       "chains",
       "managementIndicators",
       "pbc",

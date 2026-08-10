@@ -81,13 +81,32 @@ describe("stage-06 fleet regressions — record scoping", () => {
     // listEvidence / traceLineage.
     const leaked = refs.filter((t) => graphTitles.has(t) && !auditorTitles.has(t));
     expect(leaked).toEqual([]);
-    expect(queries.traceLineage(ctx("AUDITOR_READ_ONLY"), "EXC-001")).toBeUndefined();
-    // The controller, whose scope is full, still sees the whole chain.
-    const full = queries.getFinancialLife(ctx("CONTROLLER"), "KE-E2-1048");
-    expect(Object.keys(full.records).length).toBeGreaterThan(
-      Object.keys(life.records).length,
+    // EXC-009's workpaper (PBC-002) has never been provided, so nothing
+    // under it reaches the auditor. (EXC-001 moved INTO scope in stage 07
+    // when the PBC baseline was corrected — PBC-008's versions are sealed
+    // and provided; see packages/services/test/fleet-regressions.test.ts.)
+    expect(queries.traceLineage(ctx("AUDITOR_READ_ONLY"), "EXC-009")).toBeUndefined();
+    // The controller's scope is full: on a serial whose exception is NOT
+    // under any provided workpaper, they see records the auditor does not.
+    // The serial is derived, so the assertion follows the scope rather than
+    // a hard-coded example that a later baseline could pull into scope.
+    const outOfScope = ws.close.exceptions.find(
+      (e) =>
+        queries.traceLineage(ctx("AUDITOR_READ_ONLY"), e.id) === undefined &&
+        (e.finding.subjects.serials?.length ?? 0) > 0,
     );
-    expect(full.records.salesOrder?.customer).toBeDefined();
+    expect(outOfScope, "no out-of-scope exception with a serial").toBeDefined();
+    const serial = outOfScope!.finding.subjects.serials![0]!;
+    const full = queries.getFinancialLife(ctx("CONTROLLER"), serial);
+    const scoped = queries.getFinancialLife(ctx("AUDITOR_READ_ONLY"), serial);
+    expect(Object.keys(full.records).length).toBeGreaterThan(
+      Object.keys(scoped.records).length,
+    );
+    // Content the auditor's scope does allow is still complete, not stubbed.
+    expect(
+      queries.getFinancialLife(ctx("CONTROLLER"), "KE-E2-1048").records.salesOrder
+        ?.customer,
+    ).toBeDefined();
   });
 
   it("scopes procurement documents the same way", () => {

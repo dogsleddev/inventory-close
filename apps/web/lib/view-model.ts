@@ -464,11 +464,263 @@ export interface ProcurementCard {
   readonly exceptionId: string | null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Stage 07 — bridge, adjustments, valuation, audit package            */
+/* ------------------------------------------------------------------ */
+
+/** A figure in the posted / potential state panels. */
+export interface StateFigure {
+  readonly label: string;
+  readonly value: string;
+  readonly note: string | null;
+  readonly emphasis: boolean;
+  readonly ember: boolean;
+}
+
+/**
+ * One row of the reconciling bridge. `posted` is a literal string on every
+ * row because the distinction between proposed and posted is a build
+ * requirement, not a styling choice (§6).
+ */
+export interface BridgeRow {
+  readonly key: string;
+  readonly kind: "opening" | "item" | "net" | "total";
+  readonly id: string | null;
+  readonly label: string;
+  readonly detail: string;
+  readonly amount: string;
+  readonly ember: boolean;
+  readonly status: StatusView | null;
+  readonly posted: string;
+  readonly exceptionId: string | null;
+  readonly href: string | null;
+}
+
+export interface FinancialBridgeData {
+  readonly posted: {
+    readonly tag: string;
+    readonly figures: readonly StateFigure[];
+    readonly footnote: string;
+  };
+  readonly potential: {
+    readonly tag: string;
+    readonly figures: readonly StateFigure[];
+    readonly footnote: string;
+  };
+  readonly bridge: {
+    readonly summary: string;
+    readonly rows: readonly BridgeRow[];
+  };
+  readonly direction: string;
+  readonly reserves: string;
+  readonly unexplained: string | null;
+  readonly audit: readonly { readonly k: string; readonly v: string }[];
+}
+
+/** One line of a proposed journal entry. Debit/credit is stated in words. */
+export interface AdjustmentLineRow {
+  readonly account: string;
+  readonly memo: string;
+  readonly amount: string;
+  readonly side: "DEBIT" | "CREDIT";
+}
+
+export interface AdjustmentCard {
+  readonly key: string;
+  readonly exceptionId: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly amount: string;
+  readonly ember: boolean;
+  readonly status: StatusView | null;
+  /** Null when no entry has been drafted for this reconciling item. */
+  readonly entry: {
+    readonly id: string;
+    readonly description: string;
+    readonly lines: readonly AdjustmentLineRow[];
+    readonly balance: string;
+    readonly balanced: boolean;
+    readonly preparer: string;
+    readonly reviewer: string;
+    readonly approval: string;
+    readonly approvalRequirement: string;
+  } | null;
+  readonly undraftedReason: string | null;
+  readonly posted: string;
+  readonly drawerId: string | null;
+  readonly href: string;
+}
+
+export interface AdjustmentsData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly stats: readonly KpiTile[];
+  readonly cards: readonly AdjustmentCard[];
+  readonly postingNote: string;
+  readonly bridgeNote: string;
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+}
+
+export interface ValuationData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly reserve: {
+    readonly conclusion: string;
+    readonly note: string;
+    readonly recordedLabel: string;
+    readonly recorded: string;
+    readonly recordedNote: string;
+    readonly reviews: readonly {
+      readonly id: string;
+      readonly title: string;
+      readonly exposure: string;
+      readonly status: StatusView;
+      readonly detail: string;
+      readonly drawerId: string | null;
+    }[];
+  } | null;
+  readonly aging: {
+    readonly rows: readonly {
+      readonly key: string;
+      readonly label: string;
+      readonly units: string;
+      readonly carrying: string;
+      readonly fillPct: number;
+      readonly aged: boolean;
+    }[];
+    readonly unknown: { readonly units: string; readonly carrying: string } | null;
+    readonly note: string;
+  } | null;
+  readonly populations: readonly {
+    readonly key: string;
+    readonly label: string;
+    readonly basis: string;
+    readonly units: string;
+    readonly carrying: string;
+  }[];
+  readonly damaged: {
+    readonly rows: readonly {
+      readonly serial: string;
+      readonly sku: string;
+      readonly carrying: string;
+      readonly rma: string;
+      readonly reason: string;
+      readonly exceptionId: string | null;
+      readonly drawerId: string | null;
+    }[];
+    readonly empty: string | null;
+  };
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+}
+
+export interface PbcVersionRow {
+  readonly key: string;
+  readonly label: string;
+  readonly date: string;
+  readonly note: string;
+  readonly by: string;
+  readonly state: string;
+  readonly glyph: string;
+  readonly lock: string;
+  readonly sealed: boolean;
+  readonly editable: boolean;
+  readonly hash: string | null;
+}
+
+export interface PbcRow {
+  readonly id: string;
+  readonly title: string;
+  readonly status: StatusView;
+  readonly owner: string;
+  readonly versions: string;
+  readonly blockedBy: readonly string[];
+  readonly refreshRequired: boolean;
+  readonly selected: boolean;
+}
+
+export interface AuditPackageData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly readiness: {
+    readonly pct: string;
+    readonly summary: string;
+    readonly note: string;
+    readonly states: readonly {
+      readonly label: string;
+      readonly glyph: string;
+      readonly count: number;
+    }[];
+  } | null;
+  readonly attention: {
+    readonly rows: readonly {
+      readonly id: string;
+      readonly title: string;
+      readonly status: StatusView;
+      readonly owner: string;
+      readonly blocker: string;
+      readonly selected: boolean;
+    }[];
+    readonly note: string;
+  } | null;
+  readonly rows: readonly PbcRow[];
+  readonly detail: {
+    readonly id: string;
+    readonly title: string;
+    readonly status: StatusView;
+    readonly owner: string;
+    readonly tabs: readonly TabDef[];
+    readonly summary: readonly { readonly k: string; readonly v: string }[];
+    readonly workpaper: {
+      readonly lineage: readonly {
+        readonly layer: string;
+        readonly id: string;
+        readonly note: string;
+        readonly ember: boolean;
+      }[];
+      readonly note: string;
+      readonly terminates: string | null;
+    };
+    readonly evidence: {
+      readonly rows: readonly {
+        readonly id: string;
+        readonly source: string;
+        readonly kind: string;
+        readonly state: string;
+        readonly glyph: string;
+        readonly missing: boolean;
+        readonly recordId: string | null;
+      }[];
+      readonly scopeNotice: string | null;
+      readonly note: string;
+    };
+    readonly versions: readonly PbcVersionRow[];
+    readonly related: readonly {
+      readonly id: string;
+      readonly title: string;
+      readonly status: StatusView;
+      readonly exposure: string;
+      readonly open: boolean;
+      readonly drawerId: string | null;
+    }[];
+    readonly audit: readonly { readonly k: string; readonly v: string }[];
+  } | null;
+  readonly ladder: readonly {
+    readonly label: string;
+    readonly glyph: string;
+    readonly meaning: string;
+  }[];
+  readonly acceptanceNote: string;
+  readonly auditorNote: string | null;
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+  readonly records: Readonly<Record<string, EvidenceRecordView>>;
+}
+
 export interface ReconciliationData {
   readonly restricted: boolean;
   readonly roleLabel: string;
   readonly headerNote: string | null;
   readonly tabs: readonly TabDef[];
+  readonly financial: FinancialBridgeData | null;
   readonly procurement: {
     readonly nativeSummary: string;
     readonly closeSummary: string;

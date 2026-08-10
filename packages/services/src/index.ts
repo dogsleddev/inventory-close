@@ -24,11 +24,36 @@ export type {
   EvidenceView,
   ExceptionView,
   FinancialLifeView,
+  PbcPackageItem,
   ProcurementDetail,
   QueryService,
   SerialSearchHit,
   ServiceContext,
   SourceCoverageWarning,
 } from "./queries.js";
+export { hasProvidedVersion, versionsFor } from "./pbc.js";
+export type { PbcVersion, PbcVersionState } from "./pbc.js";
+/**
+ * Re-exported rule result shapes. Callers above this layer (the web app,
+ * the future Ask Gaurd adapter) type against @icg/services alone — the
+ * dependency direction stays UI → services → rules with no shortcut.
+ */
+export type {
+  AdjustmentLineOut,
+  AdjustmentRegisterEntry,
+  AdjustmentRegisterOut,
+  AgingBucketOut,
+  BlockerOut,
+  CloseAggregates,
+  CountSummaryOut,
+  DamagedUnitOut,
+  PbcItemOut,
+  ProposedAdjustmentOut,
+  ReadinessOut,
+  ReconciliationItemOut,
+  ReconciliationOut,
+  ValuationOut,
+  ValuationPopulationOut,
+} from "@icg/rules";
 export { createCommandService, PeriodLockedError } from "./commands.js";
 export type { CommandService } from "./commands.js";

@@ -73,7 +73,10 @@ export const PBC_DEPENDENCIES: Readonly<Record<string, readonly string[]>> = {
   "PBC-002": ["RECONCILIATION", "EXC-009", "EXC-014", "EXC-015"],
   "PBC-003": ["COUNTS"],
   "PBC-004": ["COUNTS"],
-  "PBC-005": ["COUNTS", "EXC-005", "EXC-006", "EXC-013"],
+  // Count variance reconciliation covers every count-variance exception, not
+  // only the resolved ones: it is Preparing precisely because the EXC-003
+  // recount and the EXC-004 floor-to-sheet treatment are still open.
+  "PBC-005": ["COUNTS", "EXC-003", "EXC-004", "EXC-005", "EXC-006", "EXC-013"],
   "PBC-006": ["COUNTS"],
   "PBC-007": ["COUNTS", "EXC-006"],
   "PBC-008": ["EXC-001"],

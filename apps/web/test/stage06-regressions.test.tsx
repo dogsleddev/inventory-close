@@ -108,12 +108,14 @@ describe("a count that found nothing is evidence of absence, not absence of evid
 });
 
 describe("negative claims are only made when they are true", () => {
-  it("a match whose exception is resolved never reads 'No close exception'", () => {
+  it("a match whose exception is resolved never reads 'No close exception'", async () => {
     const { queries, ctx } = services();
     // EXC-014 is resolved and rides on PO-26-1201's receipt.
     const exc = queries.listExceptions(ctx).find((e) => e.exception.id === "EXC-014");
     expect(exc?.open).toBe(false);
     recon();
+    // Stage 07 made the financial bridge the default tab.
+    await userEvent.setup().click(screen.getByRole("tab", { name: /Procurement Match/ }));
     const table = screen.getByText("All procurement matches").closest("section");
     const row = within(table as HTMLElement)
       .getAllByRole("row")
@@ -140,8 +142,9 @@ describe("negative claims are only made when they are true", () => {
 });
 
 describe("controls tell the truth about what they do", () => {
-  it("rows with nothing to open are not rendered as selected", () => {
+  it("rows with nothing to open are not rendered as selected", async () => {
     recon();
+    await userEvent.setup().click(screen.getByRole("tab", { name: /Procurement Match/ }));
     const table = screen.getByText("All procurement matches").closest("section");
     const selected = within(table as HTMLElement)
       .getAllByRole("row")

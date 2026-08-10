@@ -1,11 +1,18 @@
 import type { DemoUser } from "@icg/data";
 import type { TransactionChain } from "@icg/domain";
-import type { ExceptionView, ProcurementDetail } from "@icg/services";
+import type {
+  AdjustmentRegisterOut,
+  ExceptionView,
+  ProcurementDetail,
+  ReconciliationOut,
+} from "@icg/services";
 import { formatCents, formatDate, formatDateShort } from "../format";
 import type {
+  BridgeRow,
   ChainNodeView,
   EvidenceRecordView,
   ExceptionDrawerData,
+  FinancialBridgeData,
   ProcurementCard,
   ProcurementLeg,
   ReconciliationData,
@@ -24,11 +31,215 @@ import { locationLabel, titleCase } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
 
 /**
- * Reconciliation — stage 06 owns the Procurement Match, Commercial Chain,
- * and Serial Integrity tabs (the financial bridge is stage 07). The native
+ * Reconciliation — the Financial bridge (stage 07) plus the Procurement
+ * Match, Commercial Chain, and Serial Integrity tabs (stage 06). The native
  * NetSuite match state and the close-control state are separate columns
  * everywhere; neither is ever derived from the other here.
  */
+
+/**
+ * The financial bridge.
+ *
+ * Every figure comes from `getReconciliation()` and `getAdjustmentRegister()`
+ * — this function formats and labels, it never adds money up. The posted and
+ * potential states are separate panels because they are different kinds of
+ * claim: one is recorded in NetSuite today, the other is what would be true
+ * if management approved and posted proposals that nobody has approved or
+ * posted.
+ */
+function buildFinancialBridge(
+  recon: ReconciliationOut,
+  register: AdjustmentRegisterOut | undefined,
+  exceptions: readonly ExceptionView[],
+  manifest: { runId: string; datasetVersion: string } | undefined,
+  ruleExecutions: readonly { ruleId: unknown; ruleVersion: string; result: string; coverage: string }[],
+  drawerFor: (view: ExceptionView | undefined) => string | null,
+): FinancialBridgeData {
+  const viewFor = (id: string) => exceptions.find((e) => e.exception.id === id);
+  const entries = register?.entries ?? [];
+  const openEntries = entries.filter((e) => e.exceptionOpen);
+  const undrafted = entries.filter((e) => e.proposal === undefined);
+  const potentialDifferenceCents = recon.potentialAdjustedGlCents - recon.subledgerCents;
+
+  const rows: BridgeRow[] = [
+    {
+      key: "opening",
+      kind: "opening",
+      id: null,
+      label: "Current GL difference",
+      detail: "Starting position — gross GL over subledger",
+      amount: formatCents(recon.differenceCents),
+      ember: false,
+      status: null,
+      posted: "RECORDED",
+      exceptionId: null,
+      href: null,
+    },
+  ];
+
+  for (const item of recon.items) {
+    const entry = entries.find((e) => e.reconcilingItemId === item.id);
+    const view = viewFor(item.relatedExceptionId);
+    const open = view?.open ?? false;
+    rows.push({
+      key: item.id,
+      kind: "item",
+      id: item.relatedExceptionId,
+      label: item.description,
+      // Say whether an entry exists rather than implying one does. An
+      // identified difference with no drafted entry is its own state.
+      detail:
+        entry?.proposal !== undefined
+          ? `${entry.proposal.id} · prepared, ${entry.proposal.lines.length} balanced lines`
+          : (entry?.undraftedReason ?? "No entry drafted."),
+      amount: formatCents(item.amountCents),
+      ember: open,
+      status: view !== undefined ? statusView(view.exception.status) : null,
+      posted: "NOT POSTED",
+      exceptionId: drawerFor(view),
+      href: `/exceptions/${item.relatedExceptionId}`,
+    });
+  }
+
+  rows.push(
+    {
+      key: "net",
+      kind: "net",
+      id: null,
+      label: "Net potential adjustment",
+      detail: `If all ${recon.items.length} were approved and posted`,
+      amount: formatCents(recon.explainedCents),
+      ember: false,
+      status: null,
+      posted: "—",
+      exceptionId: null,
+      href: null,
+    },
+    {
+      key: "total",
+      kind: "total",
+      id: null,
+      label: "Potential adjusted difference",
+      // The reason it is unreachable is the real one, counted from state.
+      detail:
+        openEntries.length > 0 || undrafted.length > 0
+          ? `Not reachable — ${[
+              openEntries.length > 0
+                ? `${openEntries.length} exception${openEntries.length === 1 ? "" : "s"} open`
+                : null,
+              undrafted.length > 0
+                ? `${undrafted.length} with no entry drafted`
+                : null,
+            ]
+              .filter((s) => s !== null)
+              .join(", ")}`
+          : "Every item has a prepared entry awaiting approval",
+      amount: formatCents(potentialDifferenceCents),
+      ember: false,
+      status: null,
+      posted: "HYPOTHETICAL",
+      exceptionId: null,
+      href: null,
+    },
+  );
+
+  const reducing = recon.items.filter((i) => i.amountCents < 0).length;
+  const increasing = recon.items.filter((i) => i.amountCents > 0).length;
+  const recGl = ruleExecutions.find((e) => String(e.ruleId) === "REC-GL-001");
+
+  return {
+    posted: {
+      tag: "NETSUITE · READ-ONLY",
+      figures: [
+        {
+          label: "Gross subledger",
+          value: formatCents(recon.subledgerCents),
+          note: null,
+          emphasis: false,
+          ember: false,
+        },
+        {
+          label: "Gross GL",
+          value: formatCents(recon.grossGlCents),
+          note: null,
+          emphasis: false,
+          ember: false,
+        },
+        {
+          label: "Current difference",
+          value: formatCents(recon.differenceCents),
+          note: "GL over subledger, gross of reserves",
+          emphasis: true,
+          ember: true,
+        },
+      ],
+      footnote:
+        "This is what is recorded today. Nothing on this page has been posted to NetSuite, and Gaurd has no path that could post it.",
+    },
+    potential: {
+      tag: "NOT POSTED · MANAGEMENT VIEW",
+      figures: [
+        {
+          label: "Net potential adjustment",
+          value: formatCents(recon.explainedCents),
+          note: null,
+          emphasis: false,
+          ember: false,
+        },
+        {
+          label: "Potential adjusted GL",
+          value: formatCents(recon.potentialAdjustedGlCents),
+          note: null,
+          emphasis: false,
+          ember: false,
+        },
+        {
+          label: "Potential adjusted difference",
+          value: formatCents(potentialDifferenceCents),
+          note: "Hypothetical — not a recorded balance",
+          emphasis: true,
+          ember: false,
+        },
+      ],
+      footnote: `A management view of what would be true if every proposal were approved and posted. ${
+        register !== undefined
+          ? `${register.draftedCount} of ${register.identifiedCount} identified items carry a prepared entry and ${register.postedCount} are posted.`
+          : ""
+      }`,
+    },
+    bridge: {
+      summary:
+        register !== undefined
+          ? `${register.identifiedCount} identified · ${register.draftedCount} drafted · ${register.postedCount} posted`
+          : `${recon.items.length} identified`,
+      rows,
+    },
+    direction: `${reducing} proposal${reducing === 1 ? "" : "s"} reduce the GL and ${increasing} increase${increasing === 1 ? "s" : ""} it. They net to the current difference by coincidence of this period's facts — not because the bridge was balanced to it.`,
+    reserves:
+      "All figures on this tab are gross. Reserve conclusions are held in Valuation and are not netted here.",
+    // A residual would mean the identified items do not explain the whole
+    // difference. It renders only when there is one.
+    unexplained:
+      recon.unexplainedCents === 0
+        ? null
+        : `${formatCents(recon.unexplainedCents)} of the difference is not explained by any identified item.`,
+    audit: [
+      ...(recGl !== undefined
+        ? [
+            { k: "Rule", v: `${String(recGl.ruleId)} · v${recGl.ruleVersion}` },
+            { k: "Coverage", v: `${recGl.result} / ${recGl.coverage}` },
+          ]
+        : []),
+      { k: "As of", v: formatDate(recon.asOf) },
+      ...(manifest !== undefined
+        ? [
+            { k: "Run", v: manifest.runId },
+            { k: "Dataset", v: manifest.datasetVersion },
+          ]
+        : []),
+    ],
+  };
+}
 
 /**
  * Document totals arrive from `getProcurementDetail().totals` — the web app
@@ -78,6 +289,7 @@ export function buildReconciliationData(
       roleLabel: role,
       headerNote: null,
       tabs: [],
+      financial: null,
       procurement: null,
       commercial: null,
       serialTab: { query: "", notable: [], card: null, notFound: null },
@@ -90,7 +302,9 @@ export function buildReconciliationData(
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const recon = attempt(() => queries.getReconciliation(ctx));
+  const register = attempt(() => queries.getAdjustmentRegister(ctx));
   const manifest = attempt(() => queries.getRunManifest(ctx));
+  const ruleExecutions = attempt(() => queries.getRuleExecutions(ctx)) ?? [];
   const periodEnd = recon?.asOf;
 
   const drawers: Record<string, ExceptionDrawerData> = {};
@@ -680,6 +894,17 @@ export function buildReconciliationData(
     headerNote:
       recon !== undefined ? `Current difference ${formatCents(recon.differenceCents)}` : null,
     tabs,
+    financial:
+      recon !== undefined
+        ? buildFinancialBridge(
+            recon,
+            register,
+            exceptions,
+            manifest,
+            ruleExecutions,
+            drawerFor,
+          )
+        : null,
     procurement: {
       nativeSummary: `${nativePass} / ${matches.length}`,
       closeSummary: `${closeOpen} open`,

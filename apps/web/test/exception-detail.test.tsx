@@ -168,9 +168,12 @@ describe("Exception detail — roles and edge cases", () => {
   });
 
   it("scopes evidence records away from the auditor (provided support only)", () => {
+    // EXC-009's workpaper (PBC-002 Inventory-to-GL Reconciliation) is
+    // Preparing and has never been provided, so none of its support is in
+    // the auditor's scope — the exception itself stays visible.
     const data = buildExceptionDetailData(
       userByRole("AUDITOR_READ_ONLY"),
-      "EXC-001",
+      "EXC-009",
       "T-AUD",
     );
     expect(data.found).toBe(true);

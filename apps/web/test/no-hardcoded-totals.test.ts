@@ -27,6 +27,10 @@ const FORBIDDEN = [
   "1,065",
   "1,061",
   "7,400",
+  // Stage 07: the 1290 reserve balance and the PBC package counts
+  "54,000",
+  "17 of 21",
+  "17/21",
   // Overview-scale strings
   "81.4",
   "80.95",
@@ -46,6 +50,7 @@ const FORBIDDEN = [
   "1875000",
   "1480000",
   "920000",
+  "5400000",
   "8142",
   "8095",
   "9167",

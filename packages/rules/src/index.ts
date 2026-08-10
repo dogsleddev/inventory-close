@@ -34,6 +34,20 @@ export { applyScenarioEvents } from "./scenario.js";
 export type { ScenarioResult } from "./scenario.js";
 export { buildReconciliation } from "./reconciliation.js";
 export type { ReconciliationItemOut, ReconciliationOut } from "./reconciliation.js";
+export { buildAdjustmentRegister } from "./adjustments.js";
+export type {
+  AdjustmentLineOut,
+  AdjustmentRegisterEntry,
+  AdjustmentRegisterOut,
+  ProposedAdjustmentOut,
+} from "./adjustments.js";
+export { buildValuation } from "./valuation.js";
+export type {
+  AgingBucketOut,
+  DamagedUnitOut,
+  ValuationOut,
+  ValuationPopulationOut,
+} from "./valuation.js";
 export { computeReadiness } from "./readiness.js";
 export type { ReadinessCategoryOut, ReadinessOut } from "./readiness.js";
 export { CONFIG_VERSION, reproduceClose, runClose } from "./close.js";

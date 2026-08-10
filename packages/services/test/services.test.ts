@@ -109,7 +109,11 @@ describe("query services", () => {
     expect(pkg).toHaveLength(21);
     // Baseline: nothing has changed since preparation — no REFRESH_REQUIRED.
     expect(pkg.every((i) => i.status !== "REFRESH_REQUIRED")).toBe(true);
-    expect(pkg.filter((i) => i.immutable)).toHaveLength(5); // the Provided set
+    // Immutability follows a SEALED version, not the current status: the 5
+    // Provided items plus PBC-008, whose v1/v2 stay sealed while its request
+    // sits at Follow-Up Requested.
+    expect(pkg.filter((i) => i.immutable)).toHaveLength(6);
+    expect(pkg.filter((i) => i.baselineStatus === "PROVIDED")).toHaveLength(5);
     const outbound = pkg.find((i) => i.id === "PBC-008");
     expect(outbound?.dependsOn).toContain("EXC-001");
     // Simulate underlying controlled state changing after preparation:

@@ -7,6 +7,7 @@ import { AppShell } from "./AppShell";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
+  AuditDetails,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -16,10 +17,12 @@ import {
 } from "./kit";
 
 /**
- * Reconciliation (stage 06 tabs): Procurement Match, Commercial Chain, and
- * Serial Integrity. The Financial bridge tab arrives in code stage 07. The
- * native NetSuite match state is a muted mono tag; the close-control state
- * is the colored capsule — two different questions, never conflated.
+ * Reconciliation: the Financial bridge (stage 07) plus Procurement Match,
+ * Commercial Chain, and Serial Integrity (stage 06). The native NetSuite
+ * match state is a muted mono tag; the close-control state is the colored
+ * capsule — two different questions, never conflated. On the bridge, the
+ * proposed/posted distinction gets the same treatment: every proposal row
+ * carries a literal NOT POSTED tag, never a colour alone.
  */
 export function ReconciliationScreen({
   shell,
@@ -31,7 +34,7 @@ export function ReconciliationScreen({
   setRoleAction: (userId: string) => Promise<void>;
 }) {
   const [tab, setTab] = useState<string>(
-    data.serialTab.query !== "" ? "serial" : "procurement",
+    data.serialTab.query !== "" ? "serial" : "financial",
   );
   const [exceptionId, setExceptionId] = useState<string | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
@@ -109,24 +112,230 @@ export function ReconciliationScreen({
               aria-labelledby={`icg-recon-panel-tab-${tab}`}
               style={{ display: "contents" }}
             >
-            {tab === "financial" ? (
-              <Panel>
-                <div style={{ padding: "24px 20px" }}>
-                  <div className="icg-state" role="status">
-                    <span className="icg-state-glyph" aria-hidden>
-                      ⧖
-                    </span>
-                    <div>
-                      <div className="icg-state-title">Financial bridge — not built yet</div>
-                      <div className="icg-state-note">
-                        The reconciling bridge (current posted state vs. potential adjusted
-                        state) arrives with code stage 07. The current difference shown in the
-                        header comes from the deterministic core and is already live.
+            {tab === "financial" && data.financial !== null ? (
+              <>
+                {/* Posted and potential are separate panels on purpose: one
+                    is recorded in NetSuite today, the other is what would be
+                    true if proposals nobody has approved were posted. */}
+                <div
+                  className="icg-split"
+                  style={{ "--icg-split-cols": "1fr 1fr" } as CSSProperties}
+                >
+                  {[
+                    { key: "posted", state: data.financial.posted, adjusted: false },
+                    { key: "potential", state: data.financial.potential, adjusted: true },
+                  ].map(({ key, state, adjusted }) => (
+                    <Panel key={key} className={adjusted ? "" : "icg-panel--decision"}>
+                      <div style={{ padding: "14px 18px 15px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "10px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <h2 className="icg-label icg-label--md">
+                            {adjusted ? "POTENTIAL ADJUSTED STATE" : "CURRENT POSTED STATE"}
+                          </h2>
+                          <span
+                            className={
+                              adjusted ? "icg-notposted" : "icg-nstag"
+                            }
+                          >
+                            {state.tag}
+                          </span>
+                        </div>
+                        <dl
+                          style={{
+                            margin: "11px 0 0",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "7px",
+                          }}
+                        >
+                          {state.figures.map((fig) => (
+                            <div
+                              key={fig.label}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "baseline",
+                                gap: "12px",
+                              }}
+                            >
+                              <dt
+                                style={{
+                                  fontSize: "12px",
+                                  color: fig.emphasis ? "var(--ink)" : "var(--soft)",
+                                  fontWeight: fig.emphasis ? 600 : 400,
+                                }}
+                              >
+                                {fig.label}
+                                {fig.note !== null ? (
+                                  <span
+                                    className="icg-quiet"
+                                    style={{ display: "block", fontSize: "10.5px", fontWeight: 400 }}
+                                  >
+                                    {fig.note}
+                                  </span>
+                                ) : null}
+                              </dt>
+                              <dd
+                                className="icg-num"
+                                style={{
+                                  margin: 0,
+                                  fontSize: fig.emphasis ? "19px" : "14px",
+                                  fontWeight: fig.emphasis ? 600 : 500,
+                                  color:
+                                    fig.emphasis && fig.ember ? "var(--ember)" : "var(--ink)",
+                                }}
+                              >
+                                {fig.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <p
+                          className="icg-quiet"
+                          style={{ fontSize: "10.5px", lineHeight: 1.55, margin: "11px 0 0" }}
+                        >
+                          {state.footnote}
+                        </p>
                       </div>
-                    </div>
-                  </div>
+                    </Panel>
+                  ))}
                 </div>
-              </Panel>
+
+                <Panel>
+                  <PanelHead
+                    title="Reconciling bridge"
+                    sub="Each line traces to an exception with its own management conclusion."
+                    right={
+                      <span className="icg-nstag">{data.financial.bridge.summary}</span>
+                    }
+                  />
+                  <div className="icg-table-wrap">
+                    <table className="icg-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">ID</th>
+                          <th scope="col">Reconciling item</th>
+                          <th scope="col" className="icg-cell-right">
+                            Proposed effect
+                          </th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Posted?</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.financial.bridge.rows.map((row) => (
+                          <tr
+                            key={row.key}
+                            data-kind={row.kind}
+                            style={
+                              row.kind === "opening" || row.kind === "net"
+                                ? { background: "var(--panel-2)" }
+                                : row.kind === "total"
+                                  ? { background: "var(--panel-2)", fontWeight: 600 }
+                                  : undefined
+                            }
+                          >
+                            <td style={{ position: "relative" }}>
+                              {/* Row opens the drawer; the ID cell navigates
+                                  to the full object (§4 row activation). */}
+                              {row.exceptionId !== null ? (
+                                <button
+                                  type="button"
+                                  className="icg-row-btn"
+                                  aria-label={`Open ${row.id} summary`}
+                                  onClick={() => openException(row.exceptionId)}
+                                />
+                              ) : null}
+                              {row.id !== null && row.href !== null ? (
+                                <Link className="icg-row-id icg-mono" href={row.href}>
+                                  {row.id}
+                                </Link>
+                              ) : (
+                                <span className="icg-quiet" aria-hidden>
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12px" }}>{row.label}</span>
+                              <span
+                                className="icg-quiet"
+                                style={{ display: "block", fontSize: "10.5px", marginTop: "2px" }}
+                              >
+                                {row.detail}
+                              </span>
+                            </td>
+                            <td
+                              className="icg-cell-money"
+                              style={row.ember ? { color: "var(--ember)", fontWeight: 600 } : undefined}
+                            >
+                              {row.amount}
+                            </td>
+                            <td>
+                              {row.status !== null ? (
+                                <StatusCapsule status={row.status} />
+                              ) : (
+                                <span className="icg-soft" style={{ fontSize: "11.5px" }}>
+                                  {row.kind === "opening" ? "Recorded" : "—"}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <span
+                                className={
+                                  row.posted === "NOT POSTED" ? "icg-notposted" : "icg-nstag"
+                                }
+                              >
+                                {row.posted}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ padding: "13px 18px 15px", display: "grid", gap: "10px" }}>
+                    {data.financial.unexplained !== null ? (
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "11.5px",
+                          color: "var(--ember)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {data.financial.unexplained}
+                      </p>
+                    ) : null}
+                    <div className="icg-subpanel" style={{ padding: "11px 13px" }}>
+                      <div className="icg-label">DIRECTION OF EFFECT</div>
+                      <p
+                        className="icg-soft"
+                        style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 0" }}
+                      >
+                        {data.financial.direction}
+                      </p>
+                    </div>
+                    <div className="icg-subpanel" style={{ padding: "11px 13px" }}>
+                      <div className="icg-label">RESERVES</div>
+                      <p
+                        className="icg-soft"
+                        style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 0" }}
+                      >
+                        {data.financial.reserves}
+                      </p>
+                    </div>
+                    <AuditDetails rows={data.financial.audit} />
+                  </div>
+                </Panel>
+              </>
             ) : null}
 
             {tab === "procurement" && data.procurement !== null ? (

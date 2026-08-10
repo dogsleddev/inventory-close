@@ -26,7 +26,7 @@ function group(digits: string): string {
 
 /**
  * Integer cents → workpaper-scale dollars ("$1,234,567"). Accounting
- * negatives render in parentheses: -5400000 → "($54,000)". Non-whole-dollar
+ * negatives render in parentheses: -123400 → "($1,234)". Non-whole-dollar
  * amounts keep their cents rather than silently rounding.
  */
 export function formatCents(cents: number): string {

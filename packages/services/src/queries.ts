@@ -1,4 +1,4 @@
-import type { DemoUser } from "@icg/data";
+import { DEMO_USERS, type DemoUser } from "@icg/data";
 import type {
   CarrierShipmentFixture,
   CountMovementFixture,
@@ -13,6 +13,7 @@ import type {
   PurchaseOrderFixture,
   SalesOrderFixture,
   SourceHealthFixture,
+  PbcStatus,
   SourceRecordRef,
   TelemetryFixture,
   TransactionChain,
@@ -20,6 +21,7 @@ import type {
 } from "@icg/domain";
 import { isResolvedStatus } from "@icg/domain";
 import type {
+  AdjustmentRegisterOut,
   BlockerOut,
   CloseAggregates,
   CountSummaryOut,
@@ -27,10 +29,12 @@ import type {
   PbcItemOut,
   ReadinessOut,
   ReconciliationOut,
+  ValuationOut,
 } from "@icg/rules";
 import { traceExceptionLineage, type ExceptionLineage } from "@icg/evidence";
 import { authorize, canReadContent } from "@icg/permissions";
 import { PBC_DEPENDENCIES, pbcDependencyHash, type Workspace } from "./workspace.js";
+import { hasProvidedVersion, versionsFor, type PbcVersion } from "./pbc.js";
 
 /**
  * Query services (prompt 04). Authorization happens HERE, before data
@@ -85,10 +89,29 @@ const RULE_REQUIRED_SOURCES: Readonly<Record<string, readonly string[]>> = {
  */
 const isAuditor = (user: DemoUser): boolean => user.roles.includes("AUDITOR_READ_ONLY");
 
+/** The demo user who holds a role, for version attribution. */
+function userForRole(role: string): string {
+  return DEMO_USERS.find((u) => (u.roles as readonly string[]).includes(role))?.id ?? "";
+}
+
+/**
+ * Scope keys on whether a workpaper has ever been PROVIDED, not on whether
+ * its status reads PROVIDED right now. FOLLOW_UP_REQUESTED means further
+ * support was asked for *after* providing — the prior version stays sealed
+ * in the auditor's hands, so its support is plainly in their scope.
+ */
 function providedExceptionIds(ws: Workspace): ReadonlySet<string> {
   return new Set(
     ws.close.pbc
-      .filter((item) => item.status === "PROVIDED")
+      .filter((item) =>
+        hasProvidedVersion(
+          versionsFor(
+            item,
+            pbcDependencyHash(ws.close, PBC_DEPENDENCIES[item.id] ?? []),
+            userForRole,
+          ),
+        ),
+      )
       .flatMap((item) =>
         (PBC_DEPENDENCIES[item.id] ?? []).filter((dep) => dep.startsWith("EXC-")),
       ),
@@ -236,6 +259,25 @@ export interface FinancialLifeView {
     readonly salesOrderCents?: number | undefined;
     readonly customerInvoiceCents?: number | undefined;
   };
+}
+
+/**
+ * One PBC request as the audit-package workspace reads it (stage 07):
+ * the derived request plus its version history, immutability, dependency
+ * staleness, and the open exceptions holding it up.
+ */
+export interface PbcPackageItem extends PbcItemOut {
+  /** The prepared state, preserved when `status` reports REFRESH_REQUIRED. */
+  readonly baselineStatus: PbcStatus;
+  readonly refreshRequired: boolean;
+  readonly immutable: boolean;
+  readonly hasProvidedVersion: boolean;
+  readonly latestVersion?: number | undefined;
+  readonly versions: readonly PbcVersion[];
+  readonly dependsOn: readonly string[];
+  readonly blockedBy: readonly string[];
+  readonly preparedStateHash: string;
+  readonly currentStateHash: string;
 }
 
 /** PO ↔ IR ↔ VB source documents behind one procurement match (stage 06). */
@@ -537,6 +579,27 @@ export function createQueryService(ws: Workspace) {
       return ws.close.reconciliation;
     },
 
+    /**
+     * The proposed-adjustment register (stage 07): every reconciling item
+     * paired with the entry drafted for it, or with the reason none exists.
+     * Nothing here is posted, and no caller can post it — there is no
+     * command that writes to NetSuite.
+     */
+    getAdjustmentRegister(ctx: ServiceContext): AdjustmentRegisterOut {
+      authorize(ctx.user, "close.read");
+      return ws.close.adjustmentRegister;
+    },
+
+    /**
+     * Valuation workspace (stage 07): aging, review populations, damage/RMA,
+     * and the reserve position. The reserve conclusion is UNDETERMINED and
+     * no query, rule, or assistant produces an amount for it.
+     */
+    getValuation(ctx: ServiceContext): ValuationOut {
+      authorize(ctx.user, "close.read");
+      return ws.close.valuation;
+    },
+
     getProcurementMatches(ctx: ServiceContext): readonly ProcurementMatch[] {
       authorize(ctx.user, "close.read");
       return ws.close.procurementMatches;
@@ -638,20 +701,39 @@ export function createQueryService(ws: Workspace) {
      * PBC package view with version/dependency model (docs/10): provided
      * versions are immutable; a workpaper whose underlying controlled state
      * has changed since preparation becomes REFRESH_REQUIRED.
+     *
+     * `status` is the *effective* state a reader acts on; `baselineStatus`
+     * keeps the prepared state visible underneath it, so a refresh flag
+     * never erases what the workpaper was.
      */
-    getPbcPackage(ctx: ServiceContext) {
+    getPbcPackage(ctx: ServiceContext): readonly PbcPackageItem[] {
       authorize(ctx.user, "pbc.read");
       return ws.close.pbc.map((item) => {
         const dependsOn = PBC_DEPENDENCIES[item.id] ?? [];
         const currentStateHash = pbcDependencyHash(ws.close, dependsOn);
         const preparedStateHash = ws.pbcPreparedState.get(item.id) ?? currentStateHash;
         const stale = preparedStateHash !== currentStateHash;
+        const versions = versionsFor(item, currentStateHash, userForRole);
+        const provided = hasProvidedVersion(versions);
         return {
           ...item,
-          version: 1,
-          immutable: item.status === "PROVIDED",
-          dependsOn,
+          baselineStatus: item.status,
           status: stale ? ("REFRESH_REQUIRED" as const) : item.status,
+          refreshRequired: stale,
+          // A sealed version can never be edited in place, whatever the
+          // request's current status says.
+          immutable: provided,
+          hasProvidedVersion: provided,
+          latestVersion: versions.find((v) => v.version !== undefined)?.version,
+          versions,
+          dependsOn,
+          /** The open exceptions this workpaper is waiting on, if any. */
+          blockedBy: dependsOn.filter((dep) => {
+            const exc = ws.close.exceptions.find((e) => e.id === dep);
+            return exc !== undefined && !isResolvedStatus(exc.status);
+          }),
+          preparedStateHash,
+          currentStateHash,
         };
       });
     },
