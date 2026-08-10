@@ -1,8 +1,8 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 08 and its
-fleet review (HEAD `714acec`).
+re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 09
+(HEAD `38a115c`).
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
@@ -10,19 +10,20 @@ fleet review (HEAD `714acec`).
 
 ## 0. Start here
 
-**The next task is code stage 09 — demo reset, replay, and QA.** Everything it depends on is
-done and committed.
+**The next task is code stage 10 — final polish and deployment.** Stage 09 is committed and
+its release gate is recorded in `QA_RELEASE_GATE.md` (no P0 open).
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **524 tests passing**. **Stop any `pnpm dev` server first** (see §7).
-3. Follow `prompts/code/09_DEMO_RESET_REPLAY_AND_QA.md`. All figures come from `@icg/services`;
-   no accounting logic in components or prompts; no hard-coded totals.
+   **577 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+3. Follow `prompts/code/10_FINAL_POLISH_AND_DEPLOYMENT.md`. All figures come from
+   `@icg/services`; no accounting logic in components or prompts; no hard-coded totals.
 
-Stage 09 is unblocked: `resetWorkspace()` and `reproduceClose()` already exist, the audit log
-already survives a reset, and every screen and Ask Gaurd itself read the same query service.
+**Stage 09 has not had its adversarial fleet review yet** (§6 working method). It has confirmed
+real latent defects after every stage so far; run it against `38a115c` before stage 10, or
+decide explicitly to skip it.
 
 ---
 
@@ -45,11 +46,13 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified after code stage 08)
+## 2. Current state (verified after code stage 09)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **524 tests passing**; typecheck, lint, and production build all green.
+- **577 tests across 41 files passing**; typecheck, lint, and production build all green.
+  `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
+  scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
   off-by-one in the note, not a skipped test.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
@@ -71,11 +74,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
 | Code 07 Bridge/Adjustments/Valuation/PBC | Done + fleet-reviewed (`04fe79b`, `36dafe5`) — bridge tab, Adjustments, Valuation, Audit Package |
 | Code 08 Ask Gaurd | Done + fleet-reviewed (`2eaab1e`, `e343f2e`, `4552c9b`) — tools, deterministic answers, guardrails, drawer |
-| Code 09–10 | Not started. **Code 09 (reset / replay / QA) is next** — see §8. |
+| Code 09 Reset/Replay/QA | Done (`38a115c`) — **fleet review not yet run**. Reset + Reproduce Close controls, package manifest, `/cutoff` + `/ownership`, `?tab=` deep links, AI-off statement, repo-wide QA scans, `QA_RELEASE_GATE.md` |
+| Code 10 | Not started. **Final polish / deployment is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+38a115c Code stage 09: demo reset, replay, deep routes, and the QA release gate
+3aab9a1 Make the documented gate reliable, and refresh the handoff for stage 09
 4552c9b Stage 08 fleet remediation: 18 confirmed defects fixed
 e343f2e Stage 08 UI: the Ask Gaurd drawer over the deterministic engine
 2eaab1e Stage 08 core: Ask Gaurd tools, deterministic answers, and guardrails
@@ -159,11 +165,16 @@ docs/  prompts/  golden/  data/README.md                                        
 design/00_master … 06_audit-ai/    <- approved design exports (self-extracting bundles)
 design/07_final/                   <- ICG-Design-Handoff.html (design 07 output, authoritative)
 design/IMPLEMENTATION_HANDOFF.md   <- markdown distillation of it; what code 05-08 read
-apps/web/                          <- Next.js App Router. 11 routes: /, /inventory,
+apps/web/                          <- Next.js App Router. 13 routes: /, /inventory,
                                       /inventory/[serial], /physical-count, /exceptions,
                                       /exceptions/[id], /reconciliation, /valuation,
-                                      /adjustments, /audit-package, /[section] (not-designed
-                                      state for the rest). Page data in lib/server/*-view.ts.
+                                      /adjustments, /audit-package, /cutoff, /ownership,
+                                      /[section] (not-designed state for /evidence,
+                                      /assumptions, /user-guide). Page data in
+                                      lib/server/*-view.ts.
+test/                              <- repo-wide QA scans (stage 09): stale references,
+                                      synthetic-data and secret scans. Own tsconfig.
+QA_RELEASE_GATE.md                 <- the docs/14 matrix with evidence per category
 packages/
   domain/       types, enums, Zod schemas, money/dates, repositories   (zero deps but zod)
   data/         deterministic generator, committed fixtures, toCloseInput,
@@ -174,7 +185,8 @@ packages/
   workflows/    period + review state machines with append-only history
   audit/        append-only audit log (no mutation API)
   services/     workspace, query services, command services, demo reset,
-                the single restricted-content redactor, PBC version model
+                the single restricted-content redactor, PBC version model,
+                close integrity (replay check, control totals, dependency map)
   ai/           Ask Gaurd: approved tools, deterministic answer engine, guardrails
   mcp/          stub (P2 — deliberately inert)
 ```
@@ -279,6 +291,10 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   was saved. *Decided 2026-08-09: it will NOT be exported.* **Settled** — stage 06 built
   `/physical-count` from the Reconciliation + Financial Life patterns plus the `prompts/design/05`
   Parts A/B spec. Nothing further is owed here.
+- **`/evidence`, `/assumptions` and `/user-guide` are still the shell's not-designed state.**
+  Stage 09 built `/cutoff` and `/ownership` (docs/13 P0, filtered exception views); the other
+  three are P2 in docs/13 and the demo path does not traverse them. The rail still badges
+  User Guide "START HERE", which lands on the not-designed screen — a stage-10 polish item.
 - Valuation (EXC-011 reserve) and Adjustments were **deliberately not designed**; stage 07 built
   them on the exception-detail and bridge-row patterns as `design/IMPLEMENTATION_HANDOFF.md` §9
   directed. **Settled** — nothing further is owed here.
@@ -352,13 +368,44 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Code 09 — demo reset, replay, QA.** `resetWorkspace()` rebuilds derived state and keeps the
-   audit log; `reproduceClose()` compares structured output and returns MATCH/MISMATCH. **LLM
-   prose is excluded from replay equivalence** (CANONICAL_SPEC §15), so replay must compare the
-   structured answer object — tool calls, section payloads, figures, evidence ids — and never
-   hash generated prose.
-2. Then 10 (polish / deployment — note stage 10 edits the
-   manifest-covered root `README.md`; see the `SPEC_MANIFEST.json` trap in §7).
+1. **Run the stage-09 fleet review** against `38a115c` (§6). Every stage so far has produced
+   confirmed defects; stage 09 has not been reviewed.
+2. **Code 10 — final polish and deployment.** Note stage 10 edits the manifest-covered root
+   `README.md`; see the `SPEC_MANIFEST.json` trap in §7.
+
+**What stage 09 established that later stages must not undo:**
+
+- **A replay proves the numbers come from their sources.** `verifyReproduction()` rebuilds the
+  dataset from the seed and re-runs the rules; it never compares the workspace to a stored copy
+  of itself. What it compares is `REPLAY_COMPARED_SECTIONS`, exported from `@icg/rules` so a
+  surface reporting coverage reads the same list the comparison used. The exclusions —
+  narration, working state, the audit trail — are data (`REPLAY_EXCLUSIONS`) and are printed
+  next to every result. An equivalence check that hides its exclusions reads as a stronger
+  claim than it is.
+- **A control is gated on the permission the command authorizes against, never on a role list.**
+  `DEMO_RESET_PERMISSION` is declared once in `commands.ts`; `getDemoCapabilities()` and
+  `resetDemo()` both use it, and a test walks every demo user asserting offer and allow agree.
+- **`resetDemo()` reports what it cleared and what survived.** A reset that silently kept or
+  dropped working state is indistinguishable from one that did the opposite. The audit log is
+  append-only and keeps every event including the reset itself.
+- **Book units and the count population are different figures.** 1,500 on the book, 1,065 in
+  countable locations. The manifest labels them separately; the first version of that panel
+  called the count population "Book units", which is the same class of defect as any other
+  sentence asserting more than its source.
+- **A filtered list says what it filtered on.** `/cutoff` and `/ownership` read control domains
+  from the rule registry (`listRuleSummaries()`), state the domains they include, and say their
+  counts are the filter's rather than the close's. Ownership groups OWNERSHIP with THIRD_PARTY —
+  an authored grouping, which is why the page names both.
+- **The AI-off condition is stated on the answer.** `describeAvailability()` in `@icg/ai` reports
+  whether a provider contributed; the drawer renders "AI OFF — DETERMINISTIC ANSWER" with the
+  reason. No provider is bound anywhere, so this is the running mode, not a fallback.
+- **`test/` scans the tree, not the application.** Every serial, exception, workpaper, rule and
+  source-system id in shipped source must exist in the built dataset — checked against live
+  data, never an allowlist. A new identifier pattern belongs in that scan. `pnpm typecheck`
+  covers this directory through `test/tsconfig.json` (Bundler resolution; the packages stay on
+  NodeNext).
+- **The root `package.json` now depends on `@icg/{data,domain,rules}`** so the repo-level scans
+  can build the dataset. Keep them as devDependencies.
 
 **What stage 08 established that later stages must not undo:**
 
