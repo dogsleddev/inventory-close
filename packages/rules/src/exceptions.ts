@@ -31,6 +31,18 @@ export function assignExceptionIds(
   findings: readonly RuleFinding[],
 ): DerivedException[] {
   const primaryOrder = new Map(PRIMARY_RULES.map((r, i) => [r.id, i]));
+  // Fail visible: an accounting exception from outside the primary registry
+  // must never be silently dropped from the exception population.
+  const orphaned = findings.filter(
+    (f) => f.kind === "ACCOUNTING_EXCEPTION" && !primaryOrder.has(f.ruleId),
+  );
+  if (orphaned.length > 0) {
+    throw new Error(
+      `Accounting exceptions from non-primary rules cannot be assigned ids: ${orphaned
+        .map((f) => f.ruleId)
+        .join(", ")}`,
+    );
+  }
   const accounting = findings
     .filter((f) => f.kind === "ACCOUNTING_EXCEPTION" && primaryOrder.has(f.ruleId))
     .sort((a, b) => {

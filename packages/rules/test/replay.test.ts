@@ -114,7 +114,7 @@ describe("missing evidence never becomes PASS", () => {
     expect(cutOut?.result).not.toBe("PASS");
   });
 
-  it("third-party coverage is PARTIAL when a custodian has no statement record", () => {
+  it("a custodian with holdings but no confirmation record becomes an exception, never PASS", () => {
     const input = closeInputFromDataset();
     const result = runClose({
       ...input,
@@ -123,7 +123,13 @@ describe("missing evidence never becomes PASS", () => {
       ),
     });
     const tpi = result.ruleExecutions.find((e) => String(e.ruleId) === "TPI-CONF-001");
-    expect(tpi?.coverage).toBe("PARTIAL");
+    expect(tpi?.result).toBe("REVIEW_REQUIRED");
+    const beacon = result.exceptions.find(
+      (e) => e.finding.subjects.custodian === "Beacon Field Services",
+    );
+    expect(beacon?.finding.reasonCodes).toContain("CONFIRMATION_NOT_REQUESTED");
+    expect(beacon?.status).toBe("WAITING_ON_THIRD_PARTY");
+    expect(result.exceptions).toHaveLength(16);
   });
 
   it("a changed policy is a new version with a different run identity", () => {

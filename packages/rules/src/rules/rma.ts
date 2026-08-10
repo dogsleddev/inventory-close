@@ -32,7 +32,8 @@ export const rmaDup001: Rule = {
         reasonCodes: ["DUPLICATE_GL_POSTING", "WRONG_ACCOUNT_CLASSIFICATION"],
         assertions: ["ACCURACY"],
         risk: "MEDIUM",
-        exposureCents: entry.amountCents,
+        exposureCents: Math.abs(entry.amountCents),
+        signedAmountCents: entry.amountCents,
         subjects: {
           transactionNumbers: [entry.transactionNumber, duplicateOf.transactionNumber],
           documentRefs: [entry.supportRef],

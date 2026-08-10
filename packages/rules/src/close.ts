@@ -224,6 +224,9 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     (f) => f.kind === "MANAGEMENT_INDICATOR",
   );
 
+  // Replay equivalence covers EVERY structured financial output (docs/16):
+  // proposals, chains, indicators, PBC, and per-rule results included. Only
+  // LLM prose is excluded - none exists here.
   const structuredOutput = {
     exceptions,
     blockers,
@@ -232,6 +235,13 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     aggregates,
     procurementMatches,
     countSummary,
+    proposedAdjustments: scenario.proposedAdjustments,
+    chains,
+    managementIndicators,
+    pbc,
+    ruleResults: Object.fromEntries(
+      ruleExecutions.map((e) => [String(e.ruleId), `${e.result}/${e.coverage}/${e.outputHash}`]),
+    ),
   };
 
   return {
@@ -287,6 +297,10 @@ export function reproduceClose(
       "aggregates",
       "procurementMatches",
       "countSummary",
+      "proposedAdjustments",
+      "chains",
+      "managementIndicators",
+      "pbc",
     ] as const;
     for (const key of keys) {
       if (hashValue(baseline[key]) !== hashValue(replay[key])) {

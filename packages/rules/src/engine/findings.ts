@@ -45,7 +45,14 @@ export interface RuleFinding {
   readonly reasonCodes: readonly string[];
   readonly assertions: readonly Assertion[];
   readonly risk: RiskLevel;
+  /** Absolute exposure for risk display and blocker sums. */
   readonly exposureCents: number;
+  /**
+   * The signed GL amount behind a reconciling finding (positive = the entry
+   * inflated GL). Reconciliation direction math uses this, never the
+   * absolute exposure, so credit-side entries reverse correctly.
+   */
+  readonly signedAmountCents?: number;
   readonly subjects: FindingSubjects;
   readonly initialStatus: ExceptionStatus;
   readonly evidenceRequirements: readonly EvidenceRequirementFinding[];

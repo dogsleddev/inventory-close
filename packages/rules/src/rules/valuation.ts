@@ -13,8 +13,14 @@ export const valEo001: Rule = {
   controlDomain: "VALUATION",
   evaluate(ctx): RuleOutput {
     const agedBySku = new Map<string, { units: number; exposure: number }>();
+    // A unit with no movement date has UNKNOWN age - that is missing aging
+    // evidence, never "fresh". It degrades coverage rather than passing.
+    let partial = false;
     for (const u of ctx.input.inventoryUnits) {
-      if (u.lastMovementAt === undefined) continue;
+      if (u.lastMovementAt === undefined) {
+        partial = true;
+        continue;
+      }
       const age = daysBetween(isoDate(u.lastMovementAt), isoDate(ctx.asOf));
       if (age < ctx.policy.slowMovingAgeDays) continue;
       const entry = agedBySku.get(u.sku) ?? { units: 0, exposure: 0 };
@@ -24,7 +30,6 @@ export const valEo001: Rule = {
     }
 
     const findings: RuleFinding[] = [];
-    let partial = false;
     for (const [sku, aged] of [...agedBySku.entries()].sort(([a], [b]) => (a < b ? -1 : 1))) {
       const forecast = ctx.input.forecasts.find((f) => f.sku === sku);
       if (!forecast) {
@@ -57,7 +62,9 @@ export const valEo001: Rule = {
       });
     }
     return {
-      result: findings.length > 0 ? "REVIEW_REQUIRED" : "PASS",
+      // Missing aging or forecast evidence never silently becomes PASS.
+      result:
+        findings.length > 0 ? "REVIEW_REQUIRED" : partial ? "INCOMPLETE" : "PASS",
       coverage: partial ? "PARTIAL" : "COMPLETE",
       findings,
     };

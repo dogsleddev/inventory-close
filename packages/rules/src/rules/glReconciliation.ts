@@ -23,7 +23,8 @@ export const recGl001: Rule = {
         reasonCodes: ["RECEIPT_GL_TIMING"],
         assertions: ["ACCURACY", "CUTOFF"],
         risk: "MEDIUM",
-        exposureCents: entry.amountCents,
+        exposureCents: Math.abs(entry.amountCents),
+        signedAmountCents: entry.amountCents,
         subjects: {
           transactionNumbers: [receipt.transactionNumber, entry.transactionNumber],
           serials: receipt.lines.flatMap((l) => l.serials ?? []),
@@ -65,6 +66,7 @@ export const glMan001: Rule = {
         assertions: ["ACCURACY"],
         risk: "CRITICAL",
         exposureCents: Math.abs(entry.amountCents),
+        signedAmountCents: entry.amountCents,
         subjects: { transactionNumbers: [entry.transactionNumber] },
         initialStatus: "CONTROLLER_REVIEW",
         evidenceRequirements: [

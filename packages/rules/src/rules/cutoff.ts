@@ -12,11 +12,17 @@ function provisionStatus(
   contracts: readonly ContractFixture[],
   provisionType: string,
 ): "PRESENT" | "MISSING" | "ABSENT" {
+  // Order-independent: located evidence in ANY governing document counts;
+  // a MISSING marker in one contract never masks a PRESENT in another.
+  let sawMissing = false;
   for (const c of contracts) {
-    const p = c.provisions.find((x) => x.provisionType === provisionType);
-    if (p) return p.status;
+    for (const p of c.provisions) {
+      if (p.provisionType !== provisionType) continue;
+      if (p.status === "PRESENT") return "PRESENT";
+      sawMissing = true;
+    }
   }
-  return "ABSENT";
+  return sawMissing ? "MISSING" : "ABSENT";
 }
 
 /** CUT-OUT-001 - outbound cutoff: shipped/deployed but still on the books. */

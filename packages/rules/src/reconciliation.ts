@@ -28,8 +28,12 @@ export interface ReconciliationOut {
   readonly potentialAdjustedGlCents: number;
 }
 
+/**
+ * Adjustment direction applied to the SIGNED entry amount: reversing an
+ * entry is -signed (correct for both debit and credit entries); recording a
+ * missing entry is +signed.
+ */
 const RECONCILING_RULE_DIRECTION: Readonly<Record<string, 1 | -1>> = {
-  // Adjustment direction applied to GL:
   "RMA-DUP-001": -1, // remove the duplicate re-add
   "GL-MAN-001": -1, // reverse the unsupported manual entry
   "REC-GL-001": 1, // record the in-period receipt the GL is missing
@@ -54,10 +58,15 @@ export function buildReconciliation(
   for (const exc of exceptions) {
     const direction = RECONCILING_RULE_DIRECTION[exc.finding.ruleId];
     if (direction === undefined) continue;
+    const signed = exc.finding.signedAmountCents;
+    if (signed === undefined) {
+      // Fail visible: a reconciling rule must state the signed GL amount.
+      throw new Error(`Reconciling finding ${exc.id} lacks signedAmountCents`);
+    }
     items.push({
       id: `REC-${exc.id}`,
       description: exc.finding.title,
-      amountCents: direction * exc.finding.exposureCents,
+      amountCents: direction * signed,
       relatedExceptionId: exc.id,
     });
   }

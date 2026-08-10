@@ -66,14 +66,19 @@ export function applyScenarioEvents(
 ): ScenarioResult {
   const ordered = [...events].sort((a, b) => a.seq - b.seq);
   const state = new Map(initial.map((e) => [e.id, e]));
-  const identified = new Map<string, string>(); // ruleId -> identifying event id
+  // Identification is scoped to the SPECIFIC exception the event's subjects
+  // match, never to a whole rule family - evidence lineage stays attributed
+  // to the exception it belongs to.
+  const identifiedBy = new Map<string, string>(); // exceptionId -> event id
   const proposedAdjustments: ProposedAdjustment[] = [];
+  const isResolved = (status: string) => status.startsWith("RESOLVED_");
 
   for (const event of ordered) {
     const simple = EVENT_RESOLUTIONS[event.eventType];
     if (simple) {
       for (const [id, exc] of state) {
         if (exc.finding.ruleId !== simple.ruleId) continue;
+        if (isResolved(exc.status)) continue;
         if (!subjectsOverlap(event, exc)) continue;
         state.set(id, {
           ...exc,
@@ -85,13 +90,19 @@ export function applyScenarioEvents(
     }
     const identifyingRule = IDENTIFYING_EVENTS[event.eventType];
     if (identifyingRule !== undefined) {
-      identified.set(identifyingRule, event.id);
+      for (const [id, exc] of state) {
+        if (exc.finding.ruleId !== identifyingRule) continue;
+        if (isResolved(exc.status)) continue;
+        if (!subjectsOverlap(event, exc)) continue;
+        identifiedBy.set(id, event.id);
+      }
       continue;
     }
     if (event.eventType === "ADJUSTMENT_PROPOSED") {
       for (const [id, exc] of state) {
-        const eventId = identified.get(exc.finding.ruleId);
+        const eventId = identifiedBy.get(id);
         if (eventId === undefined) continue;
+        if (isResolved(exc.status)) continue;
         if (!subjectsOverlap(event, exc)) continue;
         const amount = event.subjects.amountCents ?? 0;
         const account = event.subjects.glAccount ?? "1200";
