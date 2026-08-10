@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "@fontsource-variable/fraunces";
+import { THEME_BOOTSTRAP } from "../lib/theme";
+import "./icg.css";
 
 export const metadata: Metadata = {
   title: "Inventory Close Gaurd",
@@ -9,8 +14,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
+      <body className={`${GeistSans.variable} ${GeistMono.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,16 +1,18 @@
-export default function Home() {
+import { buildOverviewData, buildShellData } from "../lib/server/data";
+import { currentUser, newCorrelationId } from "../lib/server/current-user";
+import { OverviewScreen } from "../components/OverviewScreen";
+import { setRole } from "./actions";
+
+export const dynamic = "force-dynamic";
+
+export default async function OverviewPage() {
+  const user = await currentUser();
+  const correlationId = newCorrelationId();
   return (
-    <main>
-      <h1>Inventory Close Gaurd</h1>
-      <p>
-        Foundation scaffold (Stage 01). The product UI is intentionally not
-        built yet: the main dashboard is gated behind the Stage 03 golden
-        accounting tests.
-      </p>
-      <p>
-        All companies, data, and documents in this prototype are fictional and
-        synthetic.
-      </p>
-    </main>
+    <OverviewScreen
+      shell={buildShellData(user, correlationId)}
+      data={buildOverviewData(user, correlationId)}
+      setRoleAction={setRole}
+    />
   );
 }

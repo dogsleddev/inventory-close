@@ -501,6 +501,37 @@ export function createQueryService(ws: Workspace) {
       };
     },
 
+    /** Close-period workflow state for the shell header (stage 05). */
+    getPeriod(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return ws.period;
+    },
+
+    /**
+     * Run provenance for Audit Details surfaces (stage 05). Read-only view
+     * of the close run's manifest — dataset/ruleset versions and hashes.
+     */
+    getRunManifest(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return ws.close.runManifest;
+    },
+
+    /** Per-rule execution records (result + coverage shown on exception detail). */
+    getRuleExecutions(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return ws.close.ruleExecutions;
+    },
+
+    /**
+     * Scenario events, ordered by seq — the close's recorded workflow
+     * history. The Overview activity feed reads these; it never invents
+     * activity the dataset does not contain.
+     */
+    getScenarioEvents(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return [...ws.dataset.scenarioEvents].sort((a, b) => a.seq - b.seq);
+    },
+
     getAuditTrail(ctx: ServiceContext) {
       authorize(ctx.user, "audit.read");
       return ws.audit.list();

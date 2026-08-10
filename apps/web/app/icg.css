@@ -1,0 +1,1636 @@
+/*
+ * Inventory Close Gaurd — design system (code stage 05).
+ *
+ * Ported verbatim from the approved design exports (design/00_master …
+ * design/03_exception): the :root and [data-icg="dark"] token blocks are the
+ * two separately verified palettes — dark is not derived from light. Class
+ * names map 1:1 onto the component inventory in
+ * design/IMPLEMENTATION_HANDOFF.md §2.
+ *
+ * This file carries zero financial content. Every figure the classes style
+ * arrives from @icg/services at render time.
+ */
+
+:root {
+  --bg: #ede3cd;
+  --panel: #f7f0de;
+  --panel-2: #f2ead8;
+  --panel-3: #e9dfc6;
+  --ink: #0e1116;
+  --inv: #f7f0de;
+  --soft: rgba(14, 17, 22, 0.62);
+  --quiet: rgba(14, 17, 22, 0.42);
+  --hair: rgba(14, 17, 22, 0.14);
+  --hair-2: rgba(14, 17, 22, 0.24);
+  --ember: #c25431;
+  --ember-strong: #96351b;
+  --ember-bg: rgba(194, 84, 49, 0.1);
+  --ember-line: rgba(194, 84, 49, 0.38);
+  --aurora: #2a8e6d;
+  --aurora-bg: rgba(42, 142, 109, 0.12);
+  --aurora-line: rgba(42, 142, 109, 0.34);
+  --frost: #4a779e;
+  --frost-bg: rgba(74, 119, 158, 0.12);
+  --frost-line: rgba(74, 119, 158, 0.34);
+  --warn: #8a6320;
+  --warn-bg: rgba(190, 140, 50, 0.16);
+  --warn-line: rgba(138, 99, 32, 0.36);
+  --rail: #0e1116;
+  --rail-fg: rgba(242, 234, 216, 0.68);
+  --rail-active: #1f242d;
+  --rail-hair: rgba(242, 234, 216, 0.12);
+  --shadow: 0 1px 2px rgba(14, 17, 22, 0.06);
+  --shadow-lg: 0 8px 24px rgba(14, 17, 22, 0.1);
+  --font-display: "Fraunces Variable", "Fraunces", serif;
+  --font-ui: var(--font-geist-sans), "Geist", -apple-system, "Helvetica Neue", sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
+}
+[data-icg="dark"] {
+  --bg: #0e1116;
+  --panel: #161a21;
+  --panel-2: #1f242d;
+  --panel-3: #2a3038;
+  --ink: #f2ead8;
+  --inv: #0e1116;
+  --soft: rgba(242, 234, 216, 0.62);
+  --quiet: rgba(242, 234, 216, 0.45);
+  --hair: rgba(242, 234, 216, 0.12);
+  --hair-2: rgba(242, 234, 216, 0.22);
+  --ember: #e66a3c;
+  --ember-strong: #f0906b;
+  --ember-bg: rgba(230, 106, 60, 0.14);
+  --ember-line: rgba(230, 106, 60, 0.42);
+  --aurora: #6fe0b4;
+  --aurora-bg: rgba(111, 224, 180, 0.12);
+  --aurora-line: rgba(111, 224, 180, 0.32);
+  --frost: #8fb8d6;
+  --frost-bg: rgba(143, 184, 214, 0.12);
+  --frost-line: rgba(143, 184, 214, 0.32);
+  --warn: #dca85c;
+  --warn-bg: rgba(220, 168, 92, 0.14);
+  --warn-line: rgba(220, 168, 92, 0.36);
+  --rail: #161a21;
+  --rail-fg: rgba(242, 234, 216, 0.62);
+  --rail-active: #2a3038;
+  --rail-hair: rgba(242, 234, 216, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+a {
+  color: var(--frost);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ember);
+  text-decoration: underline;
+}
+button {
+  font-family: inherit;
+  color: inherit;
+}
+/* 2px frost focus ring, offset 2px, never removed on mouse input for
+   keyboard users (design/IMPLEMENTATION_HANDOFF §7). */
+:focus-visible {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
+}
+@keyframes icg-shimmer {
+  0% {
+    background-position: -240px 0;
+  }
+  100% {
+    background-position: 240px 0;
+  }
+}
+
+/* ============ App frame ============ */
+.icg-app {
+  display: flex;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+}
+.icg-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.icg-workspace {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Workspace panels must never crush under scroll (design 07 defect fix). */
+.icg-workspace > * {
+  flex-shrink: 0;
+}
+
+/* ============ Nav rail ============ */
+.icg-rail {
+  width: 204px;
+  background: var(--rail);
+  color: var(--rail-fg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.icg-rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 16px 16px 4px;
+}
+.icg-rail-brand-mark {
+  width: 24px;
+  height: 24px;
+  background: #f2ead8;
+  color: #0e1116;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+.icg-rail-brand-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: #f2ead8;
+}
+.icg-rail-company {
+  padding: 0 16px 14px 49px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(242, 234, 216, 0.4);
+}
+.icg-rail-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+  gap: 1px;
+  overflow: auto;
+}
+.icg-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  background: transparent;
+  color: var(--rail-fg);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.icg-nav-item:hover {
+  background: var(--rail-active);
+  color: var(--rail-fg);
+  text-decoration: none;
+}
+.icg-nav-item[aria-current="page"] {
+  background: var(--rail-active);
+  color: #f2ead8;
+  font-weight: 600;
+}
+.icg-nav-bar {
+  width: 2px;
+  height: 14px;
+  border-radius: 1px;
+  background: transparent;
+  flex-shrink: 0;
+}
+.icg-nav-item[aria-current="page"] .icg-nav-bar {
+  background: #e66a3c;
+}
+.icg-nav-num {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: rgba(242, 234, 216, 0.32);
+  width: 14px;
+  flex-shrink: 0;
+}
+.icg-nav-item[aria-current="page"] .icg-nav-num {
+  color: rgba(242, 234, 216, 0.55);
+}
+.icg-nav-label {
+  flex: 1;
+  white-space: nowrap;
+}
+.icg-nav-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-variant-numeric: tabular-nums;
+  background: #e66a3c;
+  color: #0e1116;
+  border-radius: 8px;
+  padding: 1px 7px;
+}
+.icg-nav-start {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: #e66a3c;
+  border: 1px solid rgba(230, 106, 60, 0.45);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.icg-rail-footer {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--rail-hair);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.icg-rail-health {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--rail-fg);
+}
+.icg-rail-health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid #dca85c;
+}
+.icg-rail-health strong {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #f2ead8;
+}
+.icg-rail-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+}
+.icg-rail-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2a3038;
+  color: #f2ead8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  flex-shrink: 0;
+}
+.icg-rail-user-name {
+  color: #f2ead8;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.icg-rail-user-role {
+  font-size: 10px;
+  color: rgba(242, 234, 216, 0.42);
+  white-space: nowrap;
+}
+
+/* ============ Global header ============ */
+.icg-header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--hair);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.icg-crumbs {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.icg-crumb-org {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--quiet);
+}
+.icg-crumb-sep {
+  color: var(--hair-2);
+}
+.icg-crumb-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.icg-crumb-date {
+  font-size: 11.5px;
+  color: var(--soft);
+  white-space: nowrap;
+}
+.icg-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  border-radius: 3px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.icg-tag--period {
+  color: var(--frost);
+  border: 1px solid var(--frost-line);
+  background: var(--frost-bg);
+}
+.icg-tag--demo {
+  color: var(--warn);
+  border: 1px dashed var(--warn-line);
+}
+.icg-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.icg-header-kpis {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 12px;
+  border-right: 1px solid var(--hair);
+  font-size: 11.5px;
+  color: var(--soft);
+}
+.icg-header-kpis .icg-num {
+  font-variant-numeric: tabular-nums;
+}
+.icg-header-blockers {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ember);
+  font-weight: 600;
+}
+.icg-header-blockers-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ember);
+}
+.icg-role {
+  position: relative;
+}
+.icg-role-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  border: 1px solid var(--hair-2);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: transparent;
+  min-height: 32px;
+}
+.icg-role-btn:hover {
+  background: var(--panel-2);
+}
+.icg-role-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--quiet);
+}
+.icg-role-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 20;
+  width: 224px;
+  background: var(--panel);
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.icg-role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--soft);
+  text-align: left;
+  min-height: 32px;
+}
+.icg-role-option:hover {
+  background: var(--panel-2);
+}
+.icg-role-option[aria-checked="true"] {
+  color: var(--ink);
+}
+.icg-role-check {
+  width: 10px;
+  font-size: 10px;
+}
+.icg-btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.icg-btn--primary {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--inv);
+}
+.icg-btn--ghost {
+  border: 1px solid var(--hair-2);
+  background: transparent;
+  color: var(--ink);
+}
+.icg-btn--ghost:hover {
+  background: var(--panel-2);
+}
+.icg-btn--mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 6px 10px;
+  border: 1px solid var(--hair-2);
+  background: transparent;
+  color: var(--soft);
+}
+.icg-btn--mono:hover {
+  background: var(--panel-2);
+}
+/* Disabled actions are never hidden: dashed, with the reason beneath. */
+.icg-btn--disabled {
+  border: 1px dashed var(--hair-2);
+  background: transparent;
+  color: var(--quiet);
+  cursor: not-allowed;
+}
+.icg-btn-reason {
+  font-size: 10px;
+  color: var(--quiet);
+}
+
+/* ============ Page heading ============ */
+.icg-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.icg-page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.icg-page-context {
+  font-size: 12px;
+  color: var(--soft);
+  margin-top: 3px;
+}
+
+/* ============ Panels ============ */
+.icg-panel {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+}
+.icg-panel--decision {
+  border: 1px solid var(--hair-2);
+  border-top: 3px solid var(--ember);
+}
+.icg-subpanel {
+  background: var(--panel-2);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+.icg-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--hair);
+}
+.icg-panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+.icg-panel-title--lg {
+  font-size: 18px;
+}
+.icg-panel-sub {
+  font-size: 11.5px;
+  color: var(--soft);
+  margin-top: 2px;
+}
+.icg-panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--panel-2);
+  border-radius: 0 0 8px 8px;
+}
+
+/* ============ Type helpers ============ */
+.icg-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--soft);
+  text-transform: uppercase;
+}
+.icg-label--md {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+}
+.icg-mono {
+  font-family: var(--font-mono);
+}
+.icg-num {
+  font-variant-numeric: tabular-nums;
+}
+.icg-soft {
+  color: var(--soft);
+}
+.icg-quiet {
+  color: var(--quiet);
+}
+.icg-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--frost);
+}
+
+/* ============ Status capsule (7 workflow states, glyph + label) ============ */
+.icg-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.icg-capsule-glyph {
+  font-size: 9px;
+}
+.icg-capsule--neutral {
+  background: var(--panel-2);
+  color: var(--soft);
+}
+.icg-capsule--waiting {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.icg-capsule--review {
+  background: var(--frost-bg);
+  color: var(--frost);
+}
+.icg-capsule--resolved {
+  background: var(--aurora-bg);
+  color: var(--aurora);
+}
+/* Proposed-vs-posted rule: a proposal never inherits a posted treatment. */
+.icg-capsule--proposed {
+  background: var(--aurora-bg);
+  color: var(--aurora);
+  border: 1px dashed var(--aurora-line);
+}
+.icg-capsule--attention {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* ============ Risk indicator (plain text weight, never a filled badge) ==== */
+.icg-risk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.icg-risk-glyph {
+  font-size: 9px;
+}
+.icg-risk--critical {
+  color: var(--ember-strong);
+}
+.icg-risk--high {
+  color: var(--ember);
+}
+.icg-risk--medium {
+  color: var(--warn);
+}
+.icg-risk--low {
+  color: var(--soft);
+}
+.icg-risk--outline {
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--ember-line);
+}
+
+/* ============ Source-system chip (mono tag + health state) ============ */
+.icg-source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 7px;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  color: var(--soft);
+  white-space: nowrap;
+}
+.icg-source-chip-glyph {
+  font-size: 8px;
+}
+.icg-source-chip--degraded {
+  border-color: var(--warn-line);
+  color: var(--warn);
+}
+.icg-source-chip--stale {
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.icg-source-chip--failed {
+  border-color: var(--ember-line);
+  background: var(--ember-bg);
+  color: var(--ember);
+}
+
+/* ===== Record chip: SOURCE · record type · identifier — opens evidence ==== */
+.icg-record-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--hair);
+  background: transparent;
+  border-radius: 5px;
+  padding: 5px 9px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  min-height: 32px;
+}
+.icg-record-chip:hover {
+  border-color: var(--frost);
+}
+.icg-record-chip--netsuite {
+  border-color: var(--hair-2);
+  background: var(--panel-3);
+}
+.icg-record-chip--warn {
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+}
+.icg-record-chip--missing {
+  border: 1.5px dashed var(--ember);
+  background: transparent;
+}
+.icg-record-chip-src {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.icg-record-chip-div {
+  width: 1px;
+  height: 11px;
+  background: var(--hair-2);
+  flex-shrink: 0;
+}
+.icg-record-chip-kind {
+  font-size: 11px;
+  color: var(--soft);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.icg-record-chip-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--frost);
+}
+.icg-record-chip--missing .icg-record-chip-src,
+.icg-record-chip--missing .icg-record-chip-kind,
+.icg-record-chip--missing .icg-record-chip-id {
+  color: var(--ember);
+}
+.icg-record-chip--missing .icg-record-chip-kind {
+  font-weight: 600;
+}
+.icg-record-chip--warn .icg-record-chip-src,
+.icg-record-chip--warn .icg-record-chip-kind,
+.icg-record-chip--warn .icg-record-chip-id {
+  color: var(--warn);
+}
+
+/* ============ Inline chip (physical evidence row on three-layer band) ===== */
+.icg-chip-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border: 1px solid var(--hair);
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--soft);
+  min-height: 24px;
+}
+.icg-chip-inline:hover {
+  border-color: var(--frost);
+}
+.icg-chip-inline--netsuite {
+  border-color: var(--hair-2);
+  background: var(--panel-3);
+  color: var(--ink);
+}
+.icg-chip-inline-id {
+  color: var(--frost);
+}
+.icg-chip-inline-div {
+  width: 1px;
+  height: 9px;
+  background: var(--hair-2);
+}
+
+/* ============ Evidence-state chip (Known / Conflicting / Missing) ======== */
+.icg-evchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  padding: 4px 9px;
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink);
+  min-height: 28px;
+}
+.icg-evchip:hover {
+  border-color: var(--frost);
+}
+.icg-evchip-glyph {
+  font-size: 8px;
+}
+.icg-evchip-glyph--known {
+  color: var(--aurora);
+}
+.icg-evchip-glyph--corroborating {
+  color: var(--frost);
+}
+.icg-evchip-src {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--quiet);
+}
+
+/* ============ KPI tiles ============ */
+.icg-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.icg-kpis--narrow {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.icg-kpi {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.icg-kpi-value {
+  font-size: 25px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  margin-top: 3px;
+}
+.icg-kpi-note {
+  font-size: 10.5px;
+  color: var(--quiet);
+  margin-top: 1px;
+}
+
+/* ============ Sign-off gate ============ */
+.icg-gate {
+  display: grid;
+  grid-template-columns: 1.05fr 1.35fr;
+  overflow: hidden;
+}
+.icg-gate-left {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid var(--hair);
+}
+.icg-gate-state {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ember);
+}
+.icg-gate-readiness {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.icg-gate-pct {
+  font-size: 46px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.icg-gate-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+}
+.icg-gate-bar-seg {
+  background: var(--hair);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.icg-gate-bar-fill {
+  height: 100%;
+}
+.icg-gate-right {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 18px;
+  align-content: center;
+}
+.icg-gate-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  margin-top: 2px;
+}
+
+/* ============ Data table (real table, th/scope semantics) ============ */
+.icg-table-wrap {
+  overflow-x: auto;
+}
+.icg-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.icg-table th {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--soft);
+  font-weight: 400;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 7px 8px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--hair);
+  white-space: nowrap;
+}
+.icg-table th:first-child,
+.icg-table td:first-child {
+  padding-left: 18px;
+}
+.icg-table th:last-child,
+.icg-table td:last-child {
+  padding-right: 18px;
+}
+.icg-table td {
+  font-size: 12.5px;
+  padding: 8px;
+  border-bottom: 1px solid var(--hair);
+  vertical-align: top;
+}
+.icg-table tr {
+  position: relative;
+}
+.icg-table tbody tr:hover {
+  background: var(--panel-2);
+}
+.icg-table tbody tr[data-selected="true"] {
+  background: var(--panel-2);
+}
+.icg-cell-right,
+.icg-table th.icg-cell-right {
+  text-align: right;
+}
+.icg-cell-money {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* The whole row is the hit area: a real button in the ID cell stretched
+   over the row (never a div with a handler). The ID link sits above it. */
+.icg-row-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.icg-row-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--frost);
+  text-align: left;
+}
+.icg-row-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.icg-row-btn:focus-visible::after {
+  outline: 2px solid var(--frost);
+  outline-offset: -2px;
+}
+.icg-row-link {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============ Key/value rows ============ */
+.icg-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+.icg-kv-key {
+  color: var(--soft);
+}
+.icg-kv-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ============ Three-layer reality ============ */
+.icg-three-layer {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+}
+.icg-layer {
+  padding: 14px 18px;
+  border-right: 1px solid var(--hair);
+  min-width: 0;
+}
+.icg-layer:last-child {
+  border-right: 0;
+}
+.icg-layer--conflict {
+  background: var(--ember-bg);
+}
+.icg-layer-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.icg-layer-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 9px;
+}
+.icg-layer-fact-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.icg-interpretation {
+  border-top: 1px solid var(--hair-2);
+  background: var(--panel-2);
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.icg-interpretation-text {
+  font-size: 12.5px;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.icg-interpretation-text strong {
+  color: var(--ink);
+}
+
+/* ============ Transaction chain strip ============ */
+.icg-chain {
+  display: flex;
+  align-items: stretch;
+}
+.icg-chain-seg {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+.icg-chain-node {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--hair);
+  background: transparent;
+  border-radius: 6px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.icg-chain-node:hover {
+  border-color: var(--frost);
+}
+.icg-chain-node--missing {
+  border: 1.5px dashed var(--ember);
+  background: var(--ember-bg);
+}
+.icg-chain-node--conflict {
+  border: 1px solid var(--ember-line);
+  background: var(--ember-bg);
+}
+.icg-chain-node-type {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: var(--quiet);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.icg-chain-node--missing .icg-chain-node-type {
+  color: var(--ember);
+}
+.icg-chain-node-value {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.icg-chain-node--missing .icg-chain-node-value,
+.icg-chain-node--conflict .icg-chain-node-value {
+  color: var(--ember);
+}
+.icg-chain-node--missing .icg-chain-node-value {
+  font-weight: 700;
+}
+.icg-chain-node-state {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  color: var(--soft);
+  margin-top: auto;
+}
+.icg-chain-node--missing .icg-chain-node-state,
+.icg-chain-node--conflict .icg-chain-node-state {
+  color: var(--ember);
+}
+.icg-chain-connector {
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hair-2);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* ============ Timeline ============ */
+.icg-timeline-row {
+  display: grid;
+  grid-template-columns: 52px 14px 1fr;
+  column-gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.icg-timeline-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--soft);
+  text-align: right;
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.icg-timeline-spine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.icg-timeline-glyph {
+  font-size: 9px;
+  line-height: 1.2;
+}
+.icg-timeline-line {
+  flex: 1;
+  width: 1px;
+  background: var(--hair);
+  min-height: 10px;
+}
+.icg-timeline-label {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.icg-timeline-src {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--quiet);
+}
+.icg-timeline-body {
+  padding-bottom: 9px;
+}
+/* The undated missing block is held OUTSIDE the chronology. */
+.icg-timeline-missing {
+  border-top: 1px dashed var(--ember-line);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+
+/* ============ Audit details (collapsed by default) ============ */
+.icg-audit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  min-height: 28px;
+}
+.icg-audit-caret {
+  font-size: 10px;
+  color: var(--soft);
+  width: 10px;
+}
+.icg-audit-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.icg-audit-hint {
+  font-size: 10.5px;
+  color: var(--quiet);
+}
+.icg-audit-body {
+  margin-top: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.icg-audit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10.5px;
+}
+.icg-audit-key {
+  color: var(--soft);
+  white-space: nowrap;
+}
+.icg-audit-val {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* ============ Drawers ============ */
+.icg-drawer {
+  width: 340px;
+  background: var(--panel);
+  border-left: 1px solid var(--hair-2);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: auto;
+}
+.icg-drawer--evidence {
+  width: 352px;
+}
+.icg-drawer--ask {
+  width: 320px;
+  overflow: hidden;
+}
+.icg-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--hair);
+}
+.icg-drawer-close {
+  font-size: 14px;
+  color: var(--quiet);
+  cursor: pointer;
+  padding: 0 4px;
+  background: none;
+  border: 0;
+  min-width: 32px;
+  min-height: 32px;
+}
+.icg-drawer-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.icg-askrail {
+  width: 42px;
+  background: var(--panel);
+  border-left: 1px solid var(--hair);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 13px;
+  gap: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-right: 0;
+}
+.icg-askrail:hover {
+  background: var(--panel-2);
+}
+.icg-askrail-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--soft);
+  writing-mode: vertical-rl;
+}
+.icg-gmark {
+  width: 22px;
+  height: 22px;
+  background: var(--ink);
+  color: var(--inv);
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.icg-gmark--sm {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============ Ask Gaurd drawer internals ============ */
+.icg-ask-context {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--panel-2);
+}
+.icg-ask-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.icg-ask-suggestion {
+  font-size: 12px;
+  color: var(--frost);
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 7px 11px;
+  cursor: pointer;
+  background: none;
+  text-align: left;
+  min-height: 32px;
+}
+.icg-ask-suggestion:hover {
+  background: var(--panel-2);
+}
+.icg-ask-input {
+  padding: 11px 16px;
+  border-top: 1px solid var(--hair);
+}
+.icg-ask-input-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--hair-2);
+  border-radius: 6px;
+  padding: 7px 11px;
+}
+.icg-ask-disclaimer {
+  font-size: 9.5px;
+  color: var(--quiet);
+  margin-top: 7px;
+  line-height: 1.5;
+}
+
+/* ============ Non-result states ============ */
+.icg-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icg-state-glyph {
+  width: 30px;
+  height: 30px;
+  border: 1.5px dashed var(--hair-2);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--quiet);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.icg-state-glyph--solid {
+  border-style: solid;
+  color: var(--soft);
+}
+.icg-state-glyph--warn {
+  border-color: var(--warn-line);
+  color: var(--warn);
+}
+.icg-state-glyph--warn-solid {
+  border-style: solid;
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.icg-state-title {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.icg-state-note {
+  font-size: 11.5px;
+  color: var(--soft);
+}
+.icg-skeleton {
+  height: 11px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%);
+  background-size: 400px 100%;
+  animation: icg-shimmer 1.4s infinite linear;
+}
+.icg-notdesigned {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+.icg-notdesigned-inner {
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.icg-notdesigned-glyph {
+  width: 40px;
+  height: 40px;
+  border: 1.5px dashed var(--hair-2);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--quiet);
+  font-size: 16px;
+}
+
+/* ============ Stale-source callout ============ */
+.icg-callout--warn {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 6px;
+  padding: 9px 11px;
+}
+.icg-callout-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--warn);
+}
+.icg-callout-body {
+  font-size: 11px;
+  color: var(--soft);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.icg-callout-body strong {
+  color: var(--ink);
+}
+
+/* ============ Rule-result tags (mono — deterministic checks) ============ */
+.icg-ruletag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border: 1px solid var(--hair-2);
+  border-radius: 3px;
+  background: var(--panel-2);
+  color: var(--soft);
+  white-space: nowrap;
+}
+.icg-ruletag--fail {
+  border-color: var(--ember-line);
+  background: var(--ember-bg);
+  color: var(--ember);
+}
+.icg-ruletag--review {
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.icg-ruletag--incomplete {
+  border-style: dashed;
+  background: transparent;
+}
+.icg-ruletag--na {
+  border-color: var(--hair);
+  background: transparent;
+  color: var(--quiet);
+}
+
+/* ============ Assertion tags ============ */
+.icg-assertion {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--hair-2);
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+/* ============ Responsive (design/IMPLEMENTATION_HANDOFF §5) ============ */
+/* Workspace splits set only their column ratio inline (--icg-split-cols), so
+   the breakpoints below can still collapse them. A grid-template-columns
+   written inline could not be overridden by any stylesheet rule. */
+.icg-split {
+  display: grid;
+  grid-template-columns: var(--icg-split-cols, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+/* 1280–1439: KPI grids drop to 3 columns. */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .icg-gate-right {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 1024–1279: nav rail is icon-only 56px; the two-column workspace stacks. */
+@media (max-width: 1279px) {
+  .icg-rail {
+    width: 56px;
+  }
+  .icg-rail-brand-name,
+  .icg-rail-company,
+  .icg-nav-label,
+  .icg-nav-badge,
+  .icg-nav-start,
+  .icg-rail-health,
+  .icg-rail-user-meta {
+    display: none;
+  }
+  .icg-split {
+    grid-template-columns: 1fr;
+  }
+  .icg-gate-right {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  /* Below 1024 the product is read-only review: conclusion and
+     evidence-request actions are removed, not disabled. */
+  .icg-action-conclude {
+    display: none;
+  }
+  /* §7: 44px minimum on every control that stays interactive here. */
+  .icg-btn,
+  .icg-role-btn,
+  .icg-role-option,
+  .icg-nav-item,
+  .icg-record-chip,
+  .icg-chip-inline,
+  .icg-evchip,
+  .icg-audit-toggle,
+  .icg-drawer-close,
+  .icg-ask-suggestion,
+  .icg-timeline-row,
+  .icg-chain-node,
+  .icg-row-btn {
+    min-height: 44px;
+  }
+  .icg-chip-inline,
+  .icg-evchip,
+  .icg-drawer-close,
+  .icg-audit-toggle {
+    /* Inline-level controls need a box before min-height applies. */
+    display: inline-flex;
+    align-items: center;
+  }
+}
+@media print {
+  .icg-rail,
+  .icg-askrail,
+  .icg-drawer--ask,
+  .icg-header-right {
+    display: none;
+  }
+  .icg-app {
+    height: auto;
+    overflow: visible;
+  }
+  .icg-workspace {
+    overflow: visible;
+  }
+}
