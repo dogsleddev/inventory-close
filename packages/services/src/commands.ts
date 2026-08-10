@@ -1,8 +1,5 @@
-import {
-  assertNotSelfApproval,
-  authorize,
-  canReadContent,
-} from "@icg/permissions";
+import { assertNotSelfApproval, authorize } from "@icg/permissions";
+import { redactRestricted } from "./redaction.js";
 import type { DemoUser } from "@icg/data";
 import { sha256Canonical } from "@icg/evidence";
 import type { EvidenceSensitivity } from "@icg/domain";
@@ -44,13 +41,13 @@ function requireMutable(ws: Workspace, action: string): void {
 
 /**
  * Submitted-evidence return paths apply the same restricted-content
- * redaction as the query layer — commands are not a side door either.
+ * redaction as the query layer — commands are not a side door either. This
+ * calls the SHARED redactor rather than repeating it; the previous local
+ * copy cleared `content` and spread `originalValue`, which is byte-identical
+ * to it, and so disclosed exactly what it was meant to withhold.
  */
-function redactFor(user: DemoUser, item: SubmittedEvidence): SubmittedEvidence {
-  return canReadContent(user, item.sensitivity)
-    ? item
-    : { ...item, content: undefined };
-}
+const redactFor = (user: DemoUser, item: SubmittedEvidence): SubmittedEvidence =>
+  redactRestricted(user, item);
 
 export function createCommandService(ws: Workspace) {
   const audit = (

@@ -163,12 +163,18 @@ describe("6. unsupported evidence citation", () => {
     expect(verdict.violations).toContain("UNRESOLVED_CITATION");
   });
 
-  it("accepts an id the tools did return", () => {
+  it("rejects citations in prose entirely — they belong to the structured answer", () => {
     const r = answerQuestion(t, "Why is this open?", { exceptionId: "EXC-001" });
     const returned = [...new Set(r.toolCalls.flatMap((c) => c.evidenceIds))];
     expect(returned.length).toBeGreaterThan(0);
-    const verdict = narrate(r, `The delivery is evidenced by ${returned[0]}.`);
-    expect(verdict.violations).not.toContain("UNRESOLVED_CITATION");
+    // Even a REAL id is rejected in narration. Deciding whether a cited id
+    // is the right one cannot be done reliably, so prose does not cite:
+    // the answer's citations already resolve to records the tools returned.
+    expect(narrate(r, `The delivery is evidenced by ${returned[0]}.`).violations).toContain(
+      "UNRESOLVED_CITATION",
+    );
+    // Prose that adds no identifier and no figure is fine.
+    expect(narrate(r, "The delivery is evidenced; the contract is not.").ok).toBe(true);
   });
 
   it("only ever cites records the answer itself carries", () => {
@@ -201,16 +207,33 @@ describe("7. state contradiction", () => {
 });
 
 describe("8. numeric drift", () => {
-  it("rejects a figure no tool returned, and passes the ones that were", () => {
+  /**
+   * Drift is prevented structurally, not detected lexically. Narration may
+   * not state a quantity AT ALL — right or wrong — because deciding which
+   * it is cannot be done reliably across spellings, scripts and phrasings.
+   * The figures live in the structured answer beside the prose.
+   */
+  it("rejects any quantity in prose, including a correct one", () => {
     const r = answerQuestion(t, "Does inventory tie?");
-    expect(narrate(r, "The difference is $12,450.").violations).not.toContain("NUMERIC_DRIFT");
-    expect(narrate(r, "The difference is $12,460.").violations).toContain("NUMERIC_DRIFT");
+    for (const prose of [
+      "The difference is $12,450.", // correct — still rejected
+      "The difference is $12,460.", // wrong
+      "The difference is twelve thousand four hundred and sixty dollars.", // number words
+      "The difference is 12,460.", // no currency symbol
+      "There are ٣ blockers.", // Unicode digits
+      "Roughly 5% of the balance is affected.", // single digit + percent
+    ]) {
+      expect(narrate(r, prose).violations, prose).toContain("NUMERIC_DRIFT");
+    }
   });
 
-  it("does not let a percentage drift either", () => {
-    const r = answerQuestion(t, "How ready is the PBC package?");
-    expect(narrate(r, "The package is 80.95% ready.").violations).not.toContain("NUMERIC_DRIFT");
-    expect(narrate(r, "The package is 85% ready.").violations).toContain("NUMERIC_DRIFT");
+  it("accepts prose that explains without restating a figure", () => {
+    const r = answerQuestion(t, "Does inventory tie?");
+    const verdict = narrate(
+      r,
+      "The ledger and the subledger disagree, and every part of the gap is attributed to a specific item listed above.",
+    );
+    expect(verdict.ok, verdict.detail.join("; ")).toBe(true);
   });
 });
 

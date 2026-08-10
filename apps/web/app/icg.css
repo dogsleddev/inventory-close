@@ -1841,11 +1841,17 @@ button {
 .icg-ask-fact dt {
   color: var(--soft);
   min-width: 0;
+  /* Long labels ("Redwood Installation Services — carrying value") wrap
+     rather than pushing the figure out of a 320px drawer. */
+  overflow-wrap: anywhere;
 }
 .icg-ask-fact dd {
   margin: 0;
   font-weight: 600;
-  white-space: nowrap;
+  /* Never nowrap: it shoved the figure off the edge of the drawer instead
+     of wrapping the label beside it. */
+  text-align: right;
+  flex-shrink: 0;
 }
 .icg-ask-body {
   font-size: 11.5px;
@@ -1914,7 +1920,17 @@ a.icg-ask-cite:hover {
   font: inherit;
   font-size: 11.5px;
   color: var(--ink);
-  outline: none;
+}
+/* §7: the 2px frost focus ring is never removed. The box carries it so the
+   ring frames the whole control rather than an inset field. */
+.icg-ask-input-box:focus-within {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
+}
+.icg-ask-cite:focus-visible,
+.icg-ask-send:focus-visible {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
 }
 .icg-ask-input-box input::placeholder {
   color: var(--quiet);
@@ -2356,8 +2372,20 @@ button.icg-close-capsule {
   .icg-chainrow,
   .icg-serial-chip,
   .icg-row-link,
-  .icg-row-btn {
+  .icg-row-btn,
+  .icg-ask-send,
+  .icg-ask-cite,
+  .icg-ask-input-box input,
+  .icg-linkbtn {
     min-height: 44px;
+  }
+  /* The send button is a 16px glyph without a box of its own. */
+  .icg-ask-send {
+    min-width: 44px;
+  }
+  .icg-ask-cite {
+    display: inline-flex;
+    align-items: center;
   }
   /* Inline-level controls need a box before min-height applies. */
   .icg-close-capsule,

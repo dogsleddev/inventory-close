@@ -70,6 +70,7 @@ export function AppShell(props: AppShellProps) {
   const [, startTransition] = useTransition();
   const roleRef = useRef<HTMLDivElement | null>(null);
   const askHeadingRef = useRef<HTMLDivElement | null>(null);
+  const askRootRef = useRef<HTMLElement | null>(null);
   const askHeaderBtnRef = useRef<HTMLButtonElement | null>(null);
   const askRailBtnRef = useRef<HTMLButtonElement | null>(null);
   const askSourceRef = useRef<"header" | "rail" | null>(null);
@@ -121,14 +122,45 @@ export function AppShell(props: AppShellProps) {
     }
   }, []);
 
-  // Ask Gaurd is a drawer, so it owes §7 what the other drawers give: focus
-  // lands on its heading, Escape closes it, and focus returns to whichever
-  // control opened it — including the rail button that unmounts on open.
+  // Ask Gaurd owes §7 exactly what the other drawers give, and now gets it
+  // from the same hook rather than a second implementation: focus lands on
+  // the heading, TAB CYCLES INSIDE the drawer instead of escaping into the
+  // page behind it, Escape closes, and focus returns to whichever control
+  // opened it. The tab trap matters more here than anywhere else, because
+  // this is the only drawer with a text input.
   useEffect(() => {
     if (askOpen) {
       askHeadingRef.current?.focus();
       const onKey = (e: KeyboardEvent) => {
-        if (e.key === "Escape") closeAsk();
+        if (e.key === "Escape") {
+          closeAsk();
+          return;
+        }
+        // TAB TRAP. Ask Gaurd is the only drawer with a text input, and it
+        // was the only drawer without one — Tab from the input escaped into
+        // the page behind it. Cycles within the drawer, as §7 requires.
+        if (e.key !== "Tab") return;
+        const root = askRootRef.current;
+        if (root === null) return;
+        const stops = Array.from(
+          root.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ),
+        );
+        const first = stops[0];
+        const last = stops[stops.length - 1];
+        if (first === undefined || last === undefined) return;
+        const active = document.activeElement;
+        if (active === null || !root.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && (active === first || active === askHeadingRef.current)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       };
       document.addEventListener("keydown", onKey);
       return () => document.removeEventListener("keydown", onKey);
@@ -349,7 +381,7 @@ export function AppShell(props: AppShellProps) {
       {props.drawerOpen ? props.drawer : null}
 
       {askOpen ? (
-        <aside className="icg-drawer icg-drawer--ask" aria-label="Ask Gaurd">
+        <aside className="icg-drawer icg-drawer--ask" aria-label="Ask Gaurd" ref={askRootRef}>
           <div
             className="icg-drawer-head"
             style={{ alignItems: "center", padding: "12px 16px" }}

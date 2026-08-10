@@ -44,6 +44,8 @@ export const AI_TOOL_NAMES = [
   "get_third_party_holdings",
   "get_valuation_status",
   "get_proposed_adjustments",
+  /** Establishes whether a serial exists at all, before anything is said about it. */
+  "search_serial",
 ] as const;
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
 

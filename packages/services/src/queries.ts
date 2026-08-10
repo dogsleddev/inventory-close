@@ -33,6 +33,7 @@ import type {
 } from "@icg/rules";
 import { traceExceptionLineage, type ExceptionLineage } from "@icg/evidence";
 import { authorize, canReadContent } from "@icg/permissions";
+import { redactRestricted } from "./redaction.js";
 import { PBC_DEPENDENCIES, pbcDependencyHash, type Workspace } from "./workspace.js";
 import { hasProvidedVersion, versionsFor, type PbcVersion } from "./pbc.js";
 
@@ -776,14 +777,10 @@ export function createQueryService(ws: Workspace) {
       // nothing and lineage integrity depends on them.
       return {
         ...lineage,
-        evidence: lineage.evidence.map(({ item, linkType }) =>
-          canReadContent(ctx.user, item.sensitivity)
-            ? { item, linkType }
-            : {
-                item: { ...item, content: undefined, originalValue: undefined },
-                linkType,
-              },
-        ),
+        evidence: lineage.evidence.map(({ item, linkType }) => ({
+          item: redactRestricted(ctx.user, item),
+          linkType,
+        })),
       };
     },
 

@@ -143,7 +143,14 @@ interface LifeResult {
   exceptions: readonly string[];
 }
 interface TimelineResult {
-  events: readonly { label: string; ref?: string | undefined; at?: string | undefined }[];
+  events: readonly {
+    label: string;
+    ref: string;
+    at?: string | undefined;
+    state: "DATED" | "UNDATED" | "WITHHELD";
+  }[];
+  withheldCount: number;
+  scopeReduced: boolean;
   missing: readonly string[];
 }
 
@@ -151,7 +158,117 @@ interface TimelineResult {
 /* Intents — one per golden question, plus the object-scoped default.    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Intent order is significant — the FIRST match wins — so the more specific
+ * patterns come first and each is anchored on a word the other topics do not
+ * use. The suggestion chips the screens ship are listed against the intent
+ * they must reach, and a test asserts every shipped chip produces an answer:
+ * the two lists were previously authored independently and 18 of 32 chips
+ * fell through to a refusal.
+ */
 const INTENTS: readonly Intent[] = [
+  {
+    key: "missing-evidence",
+    mode: "INVESTIGATE",
+    match: [/evidence.*(missing|still needed|outstanding)|missing evidence|what.*evidence.*need/],
+    answer: (s) => {
+      const exceptions = s.run<readonly ExceptionResult[]>("list_open_exceptions");
+      if (exceptions === undefined) return undefined;
+      const gaps = exceptions.flatMap((e) =>
+        e.exception.finding.evidenceRequirements
+          .filter((r) => r.required && !r.satisfied)
+          .map((r) => ({ id: e.exception.id, description: r.description })),
+      );
+      if (gaps.length === 0) return undefined;
+      return {
+        status: `${gaps.length} required item${gaps.length === 1 ? "" : "s"} of evidence outstanding`,
+        knownFacts: gaps.map((g) => ({
+          label: `${g.id} — ${g.description}`,
+          text: "Not in evidence",
+          source: "list_open_exceptions" as const,
+        })),
+        conflictingEvidence: [],
+        missingEvidence: gaps.map((g) => `${g.id}: ${g.description} — not in evidence.`),
+        assertions: [],
+        managementConclusion:
+          "Each open item is waiting on a specific record. None of them can be concluded on what is held today.",
+        nextAction: "Obtain the outstanding records; each exception names its own.",
+        citations: [...new Set(gaps.map((g) => g.id))].map((id) =>
+          cite(id, { href: `/exceptions/${id}` }),
+        ),
+      };
+    },
+  },
+  {
+    key: "largest-exposures",
+    mode: "SUMMARIZE",
+    match: [/largest|biggest|top .*(exposure|risk|item)|unresolved exposure|by exposure/],
+    answer: (s) => {
+      const exceptions = s.run<readonly ExceptionResult[]>("list_open_exceptions");
+      if (exceptions === undefined || exceptions.length === 0) return undefined;
+      const ranked = [...exceptions].sort(
+        (a, b) => b.exception.finding.exposureCents - a.exception.finding.exposureCents,
+      );
+      return {
+        status: `${ranked.length} unresolved item${ranked.length === 1 ? "" : "s"}, largest first`,
+        knownFacts: ranked.map((e) => ({
+          label: `${e.exception.id} — ${e.exception.finding.title}`,
+          valueCents: e.exception.finding.exposureCents,
+          source: "list_open_exceptions" as const,
+        })),
+        conflictingEvidence: [],
+        missingEvidence: [],
+        assertions: [],
+        exposure: {
+          label: "Total unresolved exposure",
+          valueCents: ranked.reduce((sum, e) => sum + e.exception.finding.exposureCents, 0),
+          source: "list_open_exceptions",
+        },
+        managementConclusion:
+          "Exposure is the carrying value the question touches, not a loss estimate.",
+        nextAction: "Work them in exposure order; each carries its own conclusion and owner.",
+        citations: ranked.map((e) => cite(e.exception.id, { href: `/exceptions/${e.exception.id}` })),
+      };
+    },
+  },
+  {
+    key: "counts",
+    mode: "EXPLAIN",
+    match: [/count|counted|variance|recount|stocktake|physical inventory/],
+    answer: (s) => {
+      const detail = s.run<{
+        summary: {
+          populationUnits: number;
+          firstPassMatchedUnits: number;
+          varianceRows: number;
+          movements: number;
+          managementTests: number;
+          auditorTests: number;
+        };
+        managementLensInScope: boolean;
+      }>("get_cycle_count_history");
+      if (detail === undefined) return undefined;
+      const c = detail.summary;
+      return {
+        status: `${c.firstPassMatchedUnits} of ${c.populationUnits} units matched on the first pass`,
+        knownFacts: [
+          { label: "Counted population", count: c.populationUnits, source: "get_cycle_count_history" },
+          { label: "Matched first pass", count: c.firstPassMatchedUnits, source: "get_cycle_count_history" },
+          { label: "Variance rows", count: c.varianceRows, source: "get_cycle_count_history" },
+          { label: "Movements during the count", count: c.movements, source: "get_cycle_count_history" },
+          { label: "Management test counts", count: c.managementTests, source: "get_cycle_count_history" },
+          { label: "Auditor test counts", count: c.auditorTests, source: "get_cycle_count_history" },
+        ],
+        conflictingEvidence: [],
+        missingEvidence: [],
+        assertions: ["EXISTENCE", "COMPLETENESS"],
+        managementConclusion:
+          "Cycle-count history is a management risk lens. It is not auditor sampling and carries no reliance.",
+        nextAction: "Resolve the open count variances; each is an exception of its own.",
+        citations: [cite("Physical Count", { href: "/physical-count" })],
+      };
+    },
+  },
   {
     key: "blockers",
     mode: "EXPLAIN",
@@ -353,12 +470,131 @@ const INTENTS: readonly Intent[] = [
     },
   },
   {
+    key: "adjustments",
+    mode: "EXPLAIN",
+    match: [/adjustment|journal entry|\bje\b|proposed entr|posted/],
+    answer: (s) => {
+      const reg = s.run<{
+        entries: readonly {
+          exceptionId: string;
+          description: string;
+          amountCents: number;
+          exceptionOpen: boolean;
+          proposal?: { id: string } | undefined;
+          undraftedReason?: string | undefined;
+        }[];
+        identifiedCount: number;
+        draftedCount: number;
+        postedCount: number;
+      }>("get_proposed_adjustments");
+      if (reg === undefined) return undefined;
+      return {
+        status: `${reg.draftedCount} of ${reg.identifiedCount} identified items carry a prepared entry; ${reg.postedCount} are posted`,
+        knownFacts: reg.entries.map((e) => ({
+          label: `${e.exceptionId} — ${e.proposal?.id ?? "no entry drafted"}`,
+          valueCents: e.amountCents,
+          source: "get_proposed_adjustments" as const,
+        })),
+        conflictingEvidence: [],
+        missingEvidence: reg.entries
+          .filter((e) => e.proposal === undefined)
+          .map((e) => e.undraftedReason ?? `No entry drafted for ${e.exceptionId}.`),
+        assertions: [],
+        managementConclusion:
+          "Nothing here has been posted. Approval is a human act recorded outside this product, and posting happens in NetSuite.",
+        nextAction: "Conclude the open items, then prepare and approve the remaining entries.",
+        citations: reg.entries.map((e) => cite(e.exceptionId, { href: `/exceptions/${e.exceptionId}` })),
+      };
+    },
+  },
+  {
+    key: "source-health",
+    mode: "SUMMARIZE",
+    match: [/source health|data health|feed|stale|which systems|integration/],
+    answer: (s) => {
+      const health = s.run<{
+        sources: readonly { sourceSystem: string; status: string; note?: string | undefined }[];
+        aggregateBasisPoints: number;
+      }>("get_source_health");
+      if (health === undefined) return undefined;
+      const degraded = health.sources.filter((x) => x.status !== "HEALTHY");
+      return {
+        status: `Source health ${degraded.length === 0 ? "fully healthy" : `${degraded.length} feed${degraded.length === 1 ? "" : "s"} degraded`}`,
+        knownFacts: [
+          { label: "Aggregate source health", valueBps: health.aggregateBasisPoints, source: "get_source_health" },
+          ...health.sources.map((x) => ({
+            label: x.sourceSystem,
+            text: x.status,
+            source: "get_source_health" as const,
+          })),
+        ],
+        conflictingEvidence: [],
+        missingEvidence: degraded.map(
+          (x) => `${x.sourceSystem} is ${x.status}${x.note !== undefined ? ` — ${x.note}` : ""}.`,
+        ),
+        assertions: [],
+        managementConclusion:
+          "A degraded feed never changes a control result. It sits beside the result so the evidence behind it can be weighed.",
+        nextAction: "Restore the degraded feeds; the affected controls name them.",
+        citations: [cite("Evidence", { href: "/evidence" })],
+      };
+    },
+  },
+  {
+    key: "procurement-chain",
+    mode: "INVESTIGATE",
+    match: [
+      /procurement|three.?way|3wm|purchase order match|commercial chain|transaction chain/,
+      // The Reconciliation screen's own chips ask it these ways.
+      /native match|native netsuite|chains?\b|missing required component/,
+    ],
+    answer: (s) => {
+      const matches = s.run<readonly { purchaseOrderNumber: string; nativeNetsuiteMatchStatus: string; closeMatchStatus: string }[]>(
+        "get_procurement_match",
+      );
+      const chains = s.run<readonly { subjectRef: string; presentCount: number; totalCount: number; requiredMissingCount: number }[]>(
+        "get_commercial_chain",
+      );
+      if (matches === undefined || chains === undefined) return undefined;
+      const closeOpen = matches.filter((m) => m.closeMatchStatus !== "PASS");
+      const incompleteChains = chains.filter((c) => c.requiredMissingCount > 0);
+      return {
+        status: `${closeOpen.length} procurement match${closeOpen.length === 1 ? "" : "es"} and ${incompleteChains.length} commercial chain${incompleteChains.length === 1 ? "" : "s"} carry an open close question`,
+        knownFacts: [
+          { label: "Procurement matches", count: matches.length, source: "get_procurement_match" },
+          { label: "Open close questions", count: closeOpen.length, source: "get_procurement_match" },
+          { label: "Commercial chains", count: chains.length, source: "get_commercial_chain" },
+          ...incompleteChains.map((c) => ({
+            label: `${c.subjectRef} — components present`,
+            text: `${c.presentCount} of ${c.totalCount}`,
+            source: "get_commercial_chain" as const,
+          })),
+        ],
+        conflictingEvidence: [],
+        missingEvidence: incompleteChains.map(
+          (c) => `${c.subjectRef} is missing ${c.requiredMissingCount} required component(s).`,
+        ),
+        assertions: ["EXISTENCE", "CUTOFF"],
+        managementConclusion:
+          "A native three-way match asks whether a bill can be paid. The close control asks whether we owned the goods at the balance-sheet date. They are reported separately because they answer different questions.",
+        nextAction: "Resolve the open close questions; completeness alone concludes nothing.",
+        citations: [cite("Reconciliation", { href: "/reconciliation" })],
+      };
+    },
+  },
+  {
     key: "financial-life",
     mode: "NAVIGATE",
     match: [/walk me through|financial life|life of|history of/],
     answer: (s, q) => {
       const serial = q.serial;
       if (serial === undefined) return undefined;
+      // getFinancialLife answers for ANY string, so it cannot be used to
+      // establish that a serial exists. Ask the search first: a unit no
+      // source mentions must produce NO_SUCH_OBJECT, never a life story
+      // whose every component reads "missing".
+      const hits = s.run<readonly { serial: string }[]>("search_serial", { serial });
+      if (hits !== undefined && !hits.some((h) => h.serial === serial)) return undefined;
       const life = s.run<LifeResult>("get_financial_lifecycle", { serial });
       const timeline = s.run<TimelineResult>("get_evidence_timeline", { serial });
       if (life === undefined || timeline === undefined) return undefined;
@@ -375,7 +611,11 @@ const INTENTS: readonly Intent[] = [
           ...timeline.events.map(
             (e): AiFigure => ({
               label: e.label,
-              text: `${e.ref ?? ""}${e.at !== undefined ? ` · ${e.at}` : " · undated"}`,
+              // Withheld is not undated: a restriction says so.
+              text:
+                e.state === "WITHHELD"
+                  ? `${e.ref} · withheld by your access scope`
+                  : `${e.ref}${e.at !== undefined ? ` · ${e.at}` : " · undated"}`,
               source: "get_evidence_timeline",
             }),
           ),
@@ -409,9 +649,21 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
   const view = s.run<ExceptionResult>("get_exception", { exceptionId });
   if (view === undefined) return undefined;
   const f = view.exception.finding;
-  const unmet = f.evidenceRequirements.filter((r) => r.required && !r.satisfied);
   const met = f.evidenceRequirements.filter((r) => r.satisfied);
   const serial = f.subjects.serials?.[0];
+  /**
+   * Unmet requirements are only OUTSTANDING while the exception is open.
+   * A resolved exception was concluded by a scenario event that addressed
+   * exactly these requirements, so demanding them again contradicts the
+   * recorded resolution — the engine was reporting "Resolved" and
+   * "Obtain: …" in the same answer for eight of the fifteen exceptions.
+   */
+  const unmet = view.open
+    ? f.evidenceRequirements.filter((r) => r.required && !r.satisfied)
+    : [];
+  const unmetWhileResolved = view.open
+    ? []
+    : f.evidenceRequirements.filter((r) => r.required && !r.satisfied);
 
   return {
     status: view.exception.status,
@@ -427,17 +679,26 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
       ),
     ],
     conflictingEvidence: view.open ? [f.whyFlagged] : [],
-    // Stated as missing, never inferred. This is the refusal.
+    // Stated as missing, never inferred. This is the refusal — and it is
+    // phrased from the requirement, not from EXC-001's contract language,
+    // which was previously emitted verbatim for recounts and damage
+    // assessments too.
     missingEvidence: unmet.map(
-      (r) => `${r.description} — not in evidence. The term cannot be inferred; it must be obtained.`,
+      (r) =>
+        `${r.description} — not in evidence. It cannot be inferred; it must be obtained.`,
     ),
     assertions: [...f.assertions],
     exposure: { label: "Exposure", valueCents: f.exposureCents, source: "get_exception" },
     managementConclusion: view.open
       ? "Open. No conclusion has been recorded, and none can be reached on the evidence held."
-      : `Resolved — ${view.exception.status}.`,
-    nextAction:
-      unmet.length > 0
+      : unmetWhileResolved.length > 0
+        ? `Resolved. The conclusion was reached without ${unmetWhileResolved
+            .map((r) => r.description.toLowerCase())
+            .join("; ")} — the resolving event addressed the question instead.`
+        : "Resolved. The recorded conclusion stands on the evidence held.",
+    nextAction: !view.open
+      ? "None — resolved; the history travels with the item."
+      : unmet.length > 0
         ? `Obtain: ${unmet.map((r) => r.description).join("; ")}`
         : "Record a management conclusion.",
     citations: [
@@ -478,7 +739,11 @@ export function answerQuestion(
   } else if (intent !== undefined) {
     answer = intent.answer(session, context);
     mode = intent.mode;
-  } else if (context.exceptionId !== undefined) {
+  }
+  // An intent that MATCHED but produced nothing must still fall back to the
+  // scoped object — previously the two branches were mutually exclusive, so
+  // "show me the history of this item" on an exception answered nothing.
+  if (answer === undefined && context.exceptionId !== undefined) {
     answer = answerException(session, context.exceptionId);
     mode = "INVESTIGATE";
   }
@@ -510,15 +775,29 @@ export function answerQuestion(
       },
     };
   }
-  if (context.exceptionId !== undefined || context.serial !== undefined) {
-    return {
-      ...base,
-      refusal: {
-        reason: "NO_SUCH_OBJECT",
-        message: "No object in the FY2026 close population matches that reference.",
-        stillVisible: [],
-      },
-    };
+  // NO_SUCH_OBJECT is a claim about the WORLD, so it must be established by
+  // asking the tools whether the object resolves — not inferred from the
+  // fact that a scope was supplied. Choosing it on scope-presence made the
+  // assistant deny the existence of the very object the screen was rendering.
+  const scopedId = context.exceptionId ?? context.serial;
+  if (scopedId !== undefined) {
+    const resolves =
+      context.exceptionId !== undefined
+        ? session.run("get_exception", { exceptionId: context.exceptionId }) !== undefined
+        : (session.run<readonly { serial: string }[]>("search_serial", {
+            serial: context.serial ?? "",
+          }) ?? []).some((h) => h.serial === context.serial);
+    if (!resolves) {
+      return {
+        ...base,
+        toolCalls: session.calls,
+        refusal: {
+          reason: "NO_SUCH_OBJECT",
+          message: `No object in the FY2026 close population matches ${scopedId}.`,
+          stillVisible: [],
+        },
+      };
+    }
   }
   return {
     ...base,

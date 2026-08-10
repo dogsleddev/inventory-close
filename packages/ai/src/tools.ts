@@ -67,31 +67,90 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   },
   /**
    * There is no ordered-timeline query below the web app, so one is derived
-   * here from the records the Financial Life view already returns. Order
-   * comes from the source records' own dates — never invented, and a record
-   * without a date is reported undated rather than being given one.
+   * here from what the Financial Life view returns.
+   *
+   * Two rules, both learned the hard way. First, `ref` and `at` must come
+   * from the SAME scope: `buySide`/`sellSide` are unfiltered while `records`
+   * is scope-filtered, so reading the reference from one and the date from
+   * the other made a WITHHELD date look like a missing one — and then the
+   * date sort moved that entry, silently reordering an auditor's chain of
+   * custody into an order the data contradicts. A withheld entry is now
+   * marked WITHHELD, keeps its position out of the ordering, and the caller
+   * is told the timeline was scope-reduced.
+   *
+   * Second, an event is only asserted when the fact that DEFINES it exists.
+   * A carrier shipment is not a delivery: keying the "Delivery" row on the
+   * shipment reference claimed delivery for goods still in transit.
    */
   get_evidence_timeline: ({ queries, ctx }, args) => {
     const serial = args["serial"] ?? "";
     const life = queries.getFinancialLife(ctx, serial);
     const r = life.records;
-    const entries = [
-      { label: "Purchase Order", ref: life.buySide.purchaseOrder, at: r.purchaseOrder?.orderDate },
-      { label: "Item Receipt", ref: life.buySide.itemReceipt, at: r.itemReceipt?.receiptDate },
-      { label: "Vendor Bill", ref: life.buySide.vendorBill, at: r.vendorBill?.billDate },
-      { label: "Sales Order", ref: life.sellSide.salesOrder, at: r.salesOrder?.orderDate },
-      { label: "Item Fulfillment", ref: life.sellSide.itemFulfillment, at: r.itemFulfillment?.shipDate },
-      { label: "Delivery", ref: life.sellSide.carrierShipment, at: life.sellSide.deliveredAt },
-      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt },
-      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt },
-      { label: "Customer Invoice", ref: life.sellSide.customerInvoice, at: r.customerInvoice?.invoiceDate },
-    ].filter((e) => e.ref !== undefined);
+
+    // ref, at, and the fact that defines the event — all from one scope.
+    const spec: {
+      label: string;
+      ref?: string | undefined;
+      at?: string | undefined;
+      present: boolean;
+    }[] = [
+      { label: "Purchase Order", ref: r.purchaseOrder?.transactionNumber, at: r.purchaseOrder?.orderDate, present: r.purchaseOrder !== undefined },
+      { label: "Item Receipt", ref: r.itemReceipt?.transactionNumber, at: r.itemReceipt?.receiptDate, present: r.itemReceipt !== undefined },
+      { label: "Vendor Bill", ref: r.vendorBill?.transactionNumber, at: r.vendorBill?.billDate, present: r.vendorBill !== undefined },
+      { label: "Sales Order", ref: r.salesOrder?.transactionNumber, at: r.salesOrder?.orderDate, present: r.salesOrder !== undefined },
+      { label: "Item Fulfillment", ref: r.itemFulfillment?.transactionNumber, at: r.itemFulfillment?.shipDate, present: r.itemFulfillment !== undefined },
+      // Delivery exists only where a delivery event does.
+      { label: "Delivery", ref: r.carrierShipment?.id, at: life.sellSide.deliveredAt, present: life.sellSide.deliveredAt !== undefined },
+      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, present: life.sellSide.installedAt !== undefined },
+      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, present: life.sellSide.firstOnlineAt !== undefined },
+      { label: "Customer Invoice", ref: r.customerInvoice?.transactionNumber, at: r.customerInvoice?.invoiceDate, present: r.customerInvoice !== undefined },
+    ];
+
+    // A component the viewer's scope withheld: the unfiltered side still
+    // names it, the scoped side does not. That is a restriction, and it is
+    // reported as one rather than dropped or dated.
+    const unscopedRefs: Readonly<Record<string, string | undefined>> = {
+      "Purchase Order": life.buySide.purchaseOrder,
+      "Item Receipt": life.buySide.itemReceipt,
+      "Vendor Bill": life.buySide.vendorBill,
+      "Sales Order": life.sellSide.salesOrder,
+      "Item Fulfillment": life.sellSide.itemFulfillment,
+      Delivery: life.sellSide.carrierShipment,
+      "Customer Invoice": life.sellSide.customerInvoice,
+    };
+
+    const dated: { label: string; ref: string; at: string; state: "DATED" }[] = [];
+    const withheld: { label: string; ref: string; state: "WITHHELD" }[] = [];
+    const undated: { label: string; ref: string; state: "UNDATED" }[] = [];
+
+    for (const e of spec) {
+      if (e.present && e.ref !== undefined && e.at !== undefined) {
+        dated.push({ label: e.label, ref: e.ref, at: e.at, state: "DATED" });
+        continue;
+      }
+      if (e.present && e.ref !== undefined) {
+        undated.push({ label: e.label, ref: e.ref, state: "UNDATED" });
+        continue;
+      }
+      const unscoped = unscopedRefs[e.label];
+      if (unscoped !== undefined) {
+        withheld.push({ label: e.label, ref: unscoped, state: "WITHHELD" });
+      }
+    }
+
     return {
       serial,
-      // Undated entries sort last and say so; they are never given a date.
-      events: [...entries].sort((a, b) =>
-        a.at === undefined ? 1 : b.at === undefined ? -1 : a.at < b.at ? -1 : 1,
-      ),
+      // Only dated events are ordered. A total order over values that
+      // include undefined is not an order — the previous comparator returned
+      // 1 for both (a,b) and (b,a) when neither had a date.
+      events: [
+        ...[...dated].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.label < b.label ? -1 : 1)),
+        ...undated,
+        ...withheld,
+      ],
+      datedCount: dated.length,
+      withheldCount: withheld.length,
+      scopeReduced: withheld.length > 0,
       missing: life.missing,
     };
   },
@@ -116,6 +175,7 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   get_pbc_status: ({ queries, ctx }) => queries.getPbcPackage(ctx),
   get_source_health: ({ queries, ctx }) => queries.getSourceHealth(ctx),
   get_third_party_holdings: ({ queries, ctx }) => queries.getThirdPartyHoldings(ctx),
+  search_serial: ({ queries, ctx }, args) => queries.searchSerial(ctx, args["serial"] ?? ""),
   get_valuation_status: ({ queries, ctx }) => queries.getValuation(ctx),
   get_proposed_adjustments: ({ queries, ctx }) => queries.getAdjustmentRegister(ctx),
 };

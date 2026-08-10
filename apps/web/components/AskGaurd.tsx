@@ -22,7 +22,8 @@ const CANNOT = ["Decide", "Approve", "Post", "Close an exception", "Invent evide
 
 export interface AskState {
   readonly question: string;
-  readonly result: AskResult;
+  /** Null when the request itself failed — the AI-unavailable state. */
+  readonly result: AskResult | null;
 }
 
 export function AskGaurd({
@@ -45,18 +46,30 @@ export function AskGaurd({
   ) => Promise<AskResult>;
 }) {
   const [draft, setDraft] = useState("");
+  const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const ask = (question: string) => {
     const trimmed = question.trim();
     if (trimmed === "" || pending) return;
     setDraft("");
+    setFailed(false);
     startTransition(async () => {
-      const result = await askAction(trimmed, {
-        ...(scope.exceptionId !== undefined ? { exceptionId: scope.exceptionId } : {}),
-        ...(scope.serial !== undefined ? { serial: scope.serial } : {}),
-      });
-      onState({ question: trimmed, result });
+      try {
+        const result = await askAction(trimmed, {
+          ...(scope.exceptionId !== undefined ? { exceptionId: scope.exceptionId } : {}),
+          ...(scope.serial !== undefined ? { serial: scope.serial } : {}),
+        });
+        onState({ question: trimmed, result });
+      } catch {
+        // "AI failure does not break the close" (docs/09). An unhandled
+        // rejection here would unmount the whole close screen — the one
+        // outcome this product must never have. The designed
+        // AI-unavailable state renders instead, and the deterministic
+        // screens behind the drawer are untouched.
+        onState({ question: trimmed, result: null });
+        setFailed(true);
+      }
     });
   };
 
@@ -65,8 +78,10 @@ export function AskGaurd({
     ask(draft);
   };
 
-  const answer = state?.result.answer ?? null;
-  const refusal = state?.result.refusal ?? null;
+  const answer = state?.result?.answer ?? null;
+  const refusal = state?.result?.refusal ?? null;
+  const toolsUsed = state?.result?.toolsUsed ?? [];
+  const versions = state?.result?.versions ?? [];
 
   return (
     <>
@@ -76,6 +91,19 @@ export function AskGaurd({
       </div>
 
       <div className="icg-ask-scroll">
+        {/* Mounted for the whole life of the drawer so assistive tech has a
+            region to observe before the first answer lands. */}
+        <div role="status" aria-live="polite" className="icg-sr-only">
+          {pending
+            ? "Reading the close."
+            : state === null
+              ? ""
+              : state.result?.answer != null
+                ? `Answer ready. ${state.result.answer.missingEvidence.length} required item${state.result.answer.missingEvidence.length === 1 ? "" : "s"} of evidence reported missing.`
+                : state.result?.refusal != null
+                  ? `Ask Gaurd declined: ${state.result.refusal.reason}.`
+                  : "Ask Gaurd is unavailable. Deterministic close data remains available."}
+        </div>
         {state === null ? (
           <>
             <div className="icg-label icg-label--md">SUGGESTED</div>
@@ -115,8 +143,10 @@ export function AskGaurd({
           <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
             <div className="icg-ask-user">{state.question}</div>
 
-            {/* Assistive tech hears the answer arrive. */}
-            <div role="status" aria-live="polite" style={{ display: "contents" }}>
+            {/* The live region must exist BEFORE its content so a change is
+                announced; inserting region and content in one commit is not
+                reliably read. It is always mounted (see the wrapper above). */}
+            <div>
               {pending ? (
                 <div className="icg-state">
                   <span className="icg-state-glyph" aria-hidden>
@@ -240,10 +270,32 @@ export function AskGaurd({
                   ) : null}
 
                   <div className="icg-quiet icg-ask-prov">
-                    {state.result.toolsUsed.length > 0 ? (
-                      <>Answered from {state.result.toolsUsed.join(", ")}.</>
-                    ) : null}{" "}
-                    {state.result.versions.map((v) => `${v.k}: ${v.v}`).join(" · ")}
+                    {toolsUsed.length > 0 ? <>Answered from {toolsUsed.join(", ")}.</> : null}{" "}
+                    {versions.map((v) => `${v.k}: ${v.v}`).join(" · ")}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* AI unavailable: narration is all that is lost. The close's
+                  own figures are on the screen behind this drawer. */}
+              {failed && !pending ? (
+                <div className="icg-state">
+                  <span
+                    className="icg-state-glyph icg-state-glyph--solid"
+                    style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+                    aria-hidden
+                  >
+                    G
+                  </span>
+                  <div>
+                    <div className="icg-state-title">
+                      Ask Gaurd unavailable
+                    </div>
+                    <div className="icg-state-note">
+                      The assistant could not be reached. Deterministic close data remains
+                      available — every figure it would have quoted is on the screen behind
+                      this drawer, and close work is unaffected.
+                    </div>
                   </div>
                 </div>
               ) : null}
