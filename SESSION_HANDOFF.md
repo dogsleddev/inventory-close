@@ -43,11 +43,11 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified at `75dc3b2`)
+## 2. Current state (verified at `3a4dc6b`)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **204 tests passing**; typecheck, lint, and production build all green.
+- **317 tests passing** (204 pre-stage-05 tests untouched); typecheck, lint, and production build all green.
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
 - Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
 
@@ -63,11 +63,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 02 Dataset | Done + fleet-reviewed (`31f2765`, `ff89a3b`) |
 | Code 03 Rules/Golden | Done + fleet-reviewed — **hard gate PASS** (`e8b7d12`, `cad38bb`) |
 | Code 04 Services/Security | Done + fleet-reviewed (`a02bf35`, `5e6a461`, `e0a603b`) |
-| Code 05–10 | Not started. **Code 05 is now UNBLOCKED** — the design handoff exists. |
+| Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
+| Code 06–10 | Not started. **Code 06 is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+3a4dc6b Code stage 05: core UI (Overview, Exceptions, EXC-001) + fleet remediation
+3096d0e Refresh SESSION_HANDOFF.md for a new session at 75dc3b2
 75dc3b2 Record two mockup copy defects found by independent screen review
 28ff2d9 Handoff-doc corrections from verification fleet + close a silent test-skip trap
 24b8309 Design 07 complete: approved handoff exports plus IMPLEMENTATION_HANDOFF.md
@@ -216,9 +219,9 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - **The Physical Count screen was designed but never exported into the repo.** Design 07's own
   screen inventory lists `ICG Physical Count` as *Designed* (year-end count, cycle history,
   auditor test counts, count movements — `prompts/design/05` Parts A/B), but only
-  `ICG-Reconciliation.html` (Part C) was saved. **Code stage 06 needs it.** Either export it to
-  `design/05_counts-reconciliation/ICG-Physical-Count.html` or build stage 06's count tabs from
-  the Reconciliation + Financial Life patterns plus the prompt-05 spec.
+  `ICG-Reconciliation.html` (Part C) was saved. **Code stage 06 needs it.** *Decided
+  2026-08-09: it will NOT be exported* — build stage 06's count tabs from the Reconciliation +
+  Financial Life patterns plus the prompt-05 spec, reusing the stage-05 kit.
 - Valuation (EXC-011 reserve) and Adjustments screens are **deliberately not designed** and marked
   not-blocking; build them on the exception-detail and bridge-row patterns respectively.
   See `design/IMPLEMENTATION_HANDOFF.md` §9.
@@ -237,13 +240,16 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - `exactOptionalPropertyTypes` is on: Zod-inferred optionals are `T | undefined`, so domain
   interfaces that receive fixture data must declare `?: T | undefined`.
 - ESLint dependency rules are scoped to `packages/*/src/**` — tests may import `@icg/data`.
-- **There is no UI test infrastructure yet, and the gate cannot tell you that.** `vitest.config.ts`
-  collects `packages/*/test/**` and `apps/*/test/**` with `environment: "node"`; no jsdom,
-  happy-dom, `@testing-library/*`, or React plugin is installed, and `apps/web` has no `test/`
-  directory. The include glob now matches `.test.ts` **and** `.test.tsx` so a UI test can never be
-  silently skipped — but a `.test.ts(x)` file placed outside a `test/` directory still matches
-  nothing and is ignored without warning. Stage 05 must install the browser-environment deps it
-  needs; until then a green gate says nothing about UI correctness.
+- **UI tests need a per-file environment docblock.** Stage 05 installed jsdom +
+  `@testing-library/*` + the React plugin, but `vitest.config.ts` keeps `environment: "node"` as
+  the default so the packages stay in node. Every browser test must open with
+  `// @vitest-environment jsdom` on line 1 — without it, a `.tsx` test fails on `document` being
+  undefined rather than telling you the environment is wrong. A `.test.ts(x)` file placed outside
+  a `test/` directory still matches no glob and is ignored without warning.
+- **The web app must reach data only through `@icg/services`.** `apps/web` deliberately does not
+  depend on `@icg/permissions`, so `attempt()` in `lib/server/data.ts` discriminates an
+  authorization denial by `error.name === "AuthorizationError"` rather than `instanceof`. Any
+  other throw is rethrown on purpose — a bug must not render as a permissions boundary.
 - **`SPEC_MANIFEST.json` is not enforced by anything.** No test, script, or gate step checks it —
   typecheck/lint/test/build all stay green with a stale manifest. It covers 44 files:
   `CANONICAL_SPEC.md`, `CHANGELOG.md`, root `README.md`, `data/README.md`, and everything under
@@ -260,14 +266,33 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Code 05** — `prompts/code/05_CORE_UI_OVERVIEW_AND_EXCEPTIONS.md`: shell, Overview,
-   Exceptions, EXC-001 with three-layer reality and the transaction chain. Read
-   `design/IMPLEMENTATION_HANDOFF.md` first — it carries the component/reuse map, geometry,
-   interaction rules, and the eight semantic distinctions the UI must hold. All data comes from
-   `@icg/services`; no accounting logic in components, no hard-coded totals.
-2. Then code 06 (Financial Life / counts / chains — note the missing Physical Count export in §7),
-   07 (reconciliation / valuation / PBC), 08 (Ask Gaurd — services are stable, so it's unblocked
-   whenever), 09 (reset / replay / QA), 10 (polish / deployment).
+1. **Code 06** — Financial Life / counts / chains. Build the count tabs from existing patterns
+   (see §7), reusing the stage-05 kit in `apps/web/components/kit.tsx` (Panel, PanelHead,
+   StatusCapsule, RiskIndicator, AuditDetails, RestrictedState, ScopeNotice, NoRecordsState,
+   SourceStateChip) and the `AppShell` drawer arbitration. Page data belongs in
+   `apps/web/lib/server/` alongside `data.ts`, never in components.
+2. Then 07 (reconciliation / valuation / PBC), 08 (Ask Gaurd — services are stable, so it's
+   unblocked whenever), 09 (reset / replay / QA), 10 (polish / deployment).
+
+**What stage 05 established that later stages must not undo:**
+
+- `design/IMPLEMENTATION_HANDOFF.md` is the build contract; §4 interaction, §5 responsive, §6
+  semantic distinctions and §7 accessibility are requirements, and stage 05's fleet review found
+  real defects in all four. Row activation: the row is the hit area and opens a drawer, the **ID
+  cell** navigates (`.icg-row-btn` + `.icg-row-id`). Audit Details is collapsed by default and its
+  state is not remembered between objects (key the drawer per record). Drawers use
+  `lib/use-drawer-focus.ts` for focus-to-heading, tab trap and focus restore.
+- Workspace two-column splits use `.icg-split` and set only `--icg-split-cols` inline, so the
+  breakpoints can still collapse them. Never write `grid-template-columns` inline on a split.
+- The theme contract lives in `lib/theme.ts` (`THEME_KEY`, `THEME_ATTR`, `THEME_BOOTSTRAP`).
+  Both the `<head>` bootstrap and the toggle read it from there.
+- **Copy may never assert more than the services returned.** A missing required record renders as
+  a gap, never a positive state; a gap with no record behind it names no source system; a section
+  emptied by the viewer's scope says so via `ScopeNotice` instead of rendering empty. The
+  regressions live in `apps/web/test/evidence-truthfulness.test.tsx` and
+  `apps/web/test/interaction-contract.test.tsx`.
+- `apps/web/test/no-hardcoded-totals.test.ts` is the locked-baseline firewall over `app/`,
+  `components/` and `lib/`. Add any new canonical figure you render to its `FORBIDDEN` list.
 
 The 60-second demo path the UI must serve:
 `Overview → EXC-001 → NetSuite vs Physical vs Accounting → Transaction Chain → Ask Gaurd`.
