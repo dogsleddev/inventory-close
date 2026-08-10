@@ -55,6 +55,12 @@ export interface Workspace {
   pbcPreparedState: Map<string, string>;
   /** Deterministic logical clock: base instant + one minute per tick. */
   clockSeq: number;
+  /**
+   * Submitted-evidence id sequence. Survives demo reset (like the clock and
+   * the audit log) so ids referenced by surviving audit events are never
+   * reused by later submissions.
+   */
+  evidenceSeq: number;
 }
 
 /**
@@ -149,6 +155,7 @@ export function createWorkspace(): Workspace {
     reviews: [],
     pbcPreparedState: preparedStateFor(state.close),
     clockSeq: 0,
+    evidenceSeq: 0,
   };
 }
 

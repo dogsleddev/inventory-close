@@ -22,11 +22,20 @@ export interface EvidenceItem {
   readonly title: string;
   readonly kind: string;
   readonly sensitivity: EvidenceSensitivity;
-  /** sha-256 over the canonical JSON of the referenced record. */
+  /** sha-256 over the canonical JSON of the normalized value. */
   readonly contentHash: string;
   readonly sourceRef?: SourceRecordRef;
   /** The record content; restricted content is withheld at the service layer. */
   readonly content: unknown;
+  /**
+   * Source snapshot lineage (docs/15): the value as retrieved and as
+   * normalized, each hashed. The fixture pipeline is an identity
+   * transformation — original and normalized coincide by construction, and
+   * the transformation field says so explicitly.
+   */
+  readonly originalValue: unknown;
+  readonly originalHash: string;
+  readonly transformation: "IDENTITY";
   readonly supersededBy?: string;
   readonly voided?: boolean;
   readonly voidReason?: string;
@@ -55,9 +64,12 @@ function canonical(v: unknown): string {
   return JSON.stringify(v) ?? "null";
 }
 
-function sha256(value: unknown): string {
+/** Canonical sha-256 — THE hashing convention for all evidence content. */
+export function sha256Canonical(value: unknown): string {
   return createHash("sha256").update(canonical(value), "utf8").digest("hex");
 }
+
+const sha256 = sha256Canonical;
 
 /**
  * Build the evidence graph for a close run. Every exception gets evidence
@@ -80,20 +92,28 @@ export function buildEvidenceGraph(
     sensitivity: EvidenceSensitivity,
     sourceRef?: SourceRecordRef,
   ): string => {
-    const key = `${kind}|${title}`;
+    // Dedupe on stable record identity, never on display title — distinct
+    // contracts share titles like "Master Purchase Agreement".
+    const key = sourceRef
+      ? `${kind}|${sourceRef.sourceSystem}|${sourceRef.internalId}`
+      : `${kind}|${title}`;
     const existing = seen.get(key);
     if (existing !== undefined) return existing;
     seq += 1;
     const id = `EV-${String(seq).padStart(4, "0")}`;
     seen.set(key, id);
+    const hash = sha256(content);
     items.push({
       id,
       title,
       kind,
       sensitivity,
-      contentHash: sha256(content),
+      contentHash: hash,
       ...(sourceRef ? { sourceRef } : {}),
       content,
+      originalValue: content,
+      originalHash: hash,
+      transformation: "IDENTITY",
     });
     return id;
   };
@@ -196,9 +216,17 @@ function linkExceptionEvidence(
     }
   }
 
-  // Physical count rows conflicting with the book position.
+  // Physical count rows conflicting with the book position: serialized rows
+  // by serial, non-serialized rows by the finding's sku×location subjects
+  // (EXC-005's KV-Z1 warehouse variance has no serial).
+  const skus = new Set(f.subjects.skus ?? []);
+  const locations = new Set(f.subjects.locations ?? []);
   const countRows = dataset.countResults.filter(
-    (r) => r.serial !== undefined && serials.has(r.serial) && r.variance !== 0,
+    (r) =>
+      r.variance !== 0 &&
+      (r.serial !== undefined
+        ? serials.has(r.serial)
+        : skus.has(r.sku) && locations.has(r.location)),
   );
   for (const row of countRows) {
     const id = addItem(
@@ -208,6 +236,22 @@ function linkExceptionEvidence(
       "STANDARD",
     );
     link(id, "CONFLICTS_WITH", exc.id);
+  }
+
+  // Test-count observations for the exception's serials (EXC-004's
+  // floor-to-sheet discovery of KE-X1-8842 lives here, not in count rows).
+  for (const test of dataset.countTests) {
+    if (test.serial === undefined || !serials.has(test.serial)) continue;
+    const id = addItem("COUNT_TEST", test.id, test, "STANDARD");
+    link(id, "SUPPORTS", exc.id);
+  }
+
+  // Demand forecasts referenced by the finding (EXC-011's collapsed KE-M1
+  // forecast is required input for the E&O review).
+  for (const forecast of dataset.forecasts) {
+    if (!docs.has(forecast.id)) continue;
+    const id = addItem("FORECAST", forecast.id, forecast, "STANDARD", forecast.sourceRef);
+    link(id, "SUPPORTS", exc.id);
   }
 }
 

@@ -46,23 +46,52 @@ export interface SourceCoverageWarning {
   readonly note?: string;
 }
 
+/**
+ * Sources each rule's evaluation actually reads. Entries mirror the rule
+ * implementations in packages/rules/src/rules — every feed a rule touches
+ * is listed, so a degraded source can never be silently omitted from the
+ * warnings this map drives.
+ */
 const RULE_REQUIRED_SOURCES: Readonly<Record<string, readonly string[]>> = {
   "CUT-OUT-001": ["NETSUITE_ERP", "FLIGHTPATH", "DEPLOY_OPS", "DEVICE_CLOUD", "ACCORD_VAULT"],
   "CUT-IN-001": ["NETSUITE_ERP", "FLIGHTPATH", "ACCORD_VAULT"],
-  "CNT-EX-001": ["NETSUITE_WMS"],
-  "CNT-COMP-001": ["NETSUITE_WMS"],
+  "CNT-EX-001": ["NETSUITE_WMS", "NETSUITE_ERP"],
+  "CNT-COMP-001": ["NETSUITE_WMS", "NETSUITE_ERP"],
   "CNT-VAR-001": ["NETSUITE_WMS"],
   "CNT-MOVE-001": ["NETSUITE_WMS"],
   "TPI-CONF-001": ["NETSUITE_ERP"],
-  "OWN-LOAN-001": ["ACCORD_VAULT"],
+  "OWN-LOAN-001": ["ACCORD_VAULT", "KESTREL_CRM", "NETSUITE_ERP"],
   "RMA-DUP-001": ["NETSUITE_ERP", "RETURN_LOOP"],
-  "DEMO-AGE-001": ["KESTREL_CRM"],
-  "VAL-EO-001": ["FORECAST_PLATFORM"],
-  "VAL-DMG-001": ["RETURN_LOOP"],
+  "DEMO-AGE-001": ["KESTREL_CRM", "NETSUITE_ERP"],
+  "VAL-EO-001": ["FORECAST_PLATFORM", "NETSUITE_ERP"],
+  "VAL-DMG-001": ["RETURN_LOOP", "NETSUITE_ERP"],
   "DQ-LOC-001": ["NETSUITE_WMS"],
   "REC-GL-001": ["NETSUITE_ERP"],
   "GL-MAN-001": ["NETSUITE_ERP"],
 };
+
+/**
+ * docs/10: the auditor sees only provided/permitted support. Provided
+ * workpapers define which exceptions' evidence is in scope.
+ */
+const isAuditor = (user: DemoUser): boolean => user.roles.includes("AUDITOR_READ_ONLY");
+
+function providedExceptionIds(ws: Workspace): ReadonlySet<string> {
+  return new Set(
+    ws.close.pbc
+      .filter((item) => item.status === "PROVIDED")
+      .flatMap((item) =>
+        (PBC_DEPENDENCIES[item.id] ?? []).filter((dep) => dep.startsWith("EXC-")),
+      ),
+  );
+}
+
+function auditorVisibleEvidenceIds(ws: Workspace): ReadonlySet<string> {
+  const scope = providedExceptionIds(ws);
+  return new Set(
+    ws.evidenceGraph.links.filter((l) => scope.has(l.to)).map((l) => l.from),
+  );
+}
 
 function coverageWarnings(
   ws: Workspace,
@@ -98,10 +127,20 @@ export interface EvidenceView {
   readonly contentWithheld: boolean;
 }
 
+export interface SerialSearchHit {
+  readonly serial: string;
+  readonly onBook: boolean;
+  readonly foundIn: readonly string[];
+  readonly unit?: unknown;
+}
+
 export interface FinancialLifeView {
   readonly serial: string;
+  /** SERIAL: unit-level documents; BATCH: non-serialized stock tracked at batch level. */
+  readonly buySideTracking: "SERIAL" | "BATCH";
   readonly unit?: {
     readonly sku: string;
+    readonly serialized: boolean;
     readonly location: string;
     readonly classification: string;
     readonly unitCostCents: number;
@@ -190,28 +229,78 @@ export function createQueryService(ws: Workspace) {
       return ws.dataset.inventoryUnits;
     },
 
-    searchSerial(ctx: ServiceContext, query: string) {
+    /**
+     * Global serial search (docs/11: one click to Financial Life). Searches
+     * beyond the book listing so off-book observations (KE-X1-8842) and
+     * sold serials are discoverable — each hit says where it was seen and
+     * whether it is on the year-end book, never implying book membership.
+     */
+    searchSerial(ctx: ServiceContext, query: string): readonly SerialSearchHit[] {
       authorize(ctx.user, "close.read");
       const q = query.trim().toUpperCase();
-      return ws.dataset.inventoryUnits.filter((u) => u.serial.toUpperCase().includes(q));
+      if (q === "") return [];
+      const found = new Map<string, Set<string>>();
+      const note = (serial: string, source: string) => {
+        if (!serial.toUpperCase().includes(q)) return;
+        const entry = found.get(serial) ?? new Set<string>();
+        entry.add(source);
+        found.set(serial, entry);
+      };
+      for (const u of ws.dataset.inventoryUnits) note(u.serial, "BOOK_LISTING");
+      for (const t of ws.dataset.countTests) if (t.serial) note(t.serial, "COUNT_TEST");
+      for (const r of ws.dataset.countResults) if (r.serial) note(r.serial, "COUNT_RESULT");
+      const txn = [
+        ...ws.dataset.purchaseOrders,
+        ...ws.dataset.itemReceipts,
+        ...ws.dataset.vendorBills,
+        ...ws.dataset.salesOrders,
+        ...ws.dataset.itemFulfillments,
+      ];
+      for (const t of txn)
+        for (const l of t.lines) for (const s of l.serials ?? []) note(s, "NETSUITE_TXN");
+      for (const c of ws.dataset.carrierShipments) for (const s of c.serials) note(s, "CARRIER");
+      for (const a of ws.dataset.assignments) note(a.serial, "ASSIGNMENT");
+      for (const r of ws.dataset.rmaRecords) if (r.serial) note(r.serial, "RMA");
+      for (const t of ws.dataset.telemetry) note(t.serial, "TELEMETRY");
+
+      return [...found.entries()]
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([serial, sources]) => {
+          const unit = ws.dataset.inventoryUnits.find((u) => u.serial === serial);
+          return {
+            serial,
+            onBook: unit !== undefined,
+            foundIn: [...sources].sort(),
+            ...(unit ? { unit } : {}),
+          };
+        });
     },
 
     getFinancialLife(ctx: ServiceContext, serial: string): FinancialLifeView {
       authorize(ctx.user, "close.read");
       const d = ws.dataset;
       const unit = d.inventoryUnits.find((u) => u.serial === serial);
+      const serialized =
+        d.skus.find((s) => s.code === unit?.sku)?.serialized ?? true;
       const hasSerial = (lines: readonly { serials?: readonly string[] | undefined }[]) =>
         lines.some((l) => l.serials?.includes(serial));
 
-      const receipt = d.itemReceipts.find((r) => hasSerial(r.lines));
+      // Non-serialized stock is procured at batch level: its unit ids never
+      // appear on transaction lines, so the buy side is tracked per batch
+      // rather than per unit — that is a tracking mode, not missing paper.
+      const receipt = serialized ? d.itemReceipts.find((r) => hasSerial(r.lines)) : undefined;
       const po = receipt
         ? d.purchaseOrders.find((p) => p.transactionNumber === receipt.purchaseOrderNumber)
-        : d.purchaseOrders.find((p) => hasSerial(p.lines));
-      const bill = d.vendorBills.find(
-        (b) =>
-          hasSerial(b.lines) ||
-          (po !== undefined && b.purchaseOrderNumber === po.transactionNumber),
-      );
+        : serialized
+          ? d.purchaseOrders.find((p) => hasSerial(p.lines))
+          : undefined;
+      const bill = serialized
+        ? d.vendorBills.find(
+            (b) =>
+              hasSerial(b.lines) ||
+              (po !== undefined && b.purchaseOrderNumber === po.transactionNumber),
+          )
+        : undefined;
       const iff = d.itemFulfillments.find((f) => hasSerial(f.lines));
       const so = iff
         ? d.salesOrders.find((s) => s.transactionNumber === iff.salesOrderNumber)
@@ -227,9 +316,11 @@ export function createQueryService(ws: Workspace) {
       const rma = d.rmaRecords.find((r) => r.serial === serial);
 
       const missing: string[] = [];
-      if (!po) missing.push("Purchase Order");
-      if (!receipt) missing.push("Item Receipt");
-      if (!bill) missing.push("Vendor Bill");
+      if (serialized) {
+        if (!po) missing.push("Purchase Order");
+        if (!receipt) missing.push("Item Receipt");
+        if (!bill) missing.push("Vendor Bill");
+      }
       if (iff) {
         if (!shipment) missing.push("Carrier shipment");
         if (!delivered) missing.push("Delivery confirmation");
@@ -239,10 +330,12 @@ export function createQueryService(ws: Workspace) {
 
       return {
         serial,
+        buySideTracking: serialized ? "SERIAL" : "BATCH",
         ...(unit
           ? {
               unit: {
                 sku: unit.sku,
+                serialized,
                 location: unit.location,
                 classification: unit.classification,
                 unitCostCents: unit.unitCostCents,
@@ -305,7 +398,9 @@ export function createQueryService(ws: Workspace) {
         results: ws.dataset.countResults,
         tests: ws.dataset.countTests,
         movements: ws.dataset.countMovements,
-        managementIndicators: ws.close.managementIndicators,
+        // The cycle-count lens is a MANAGEMENT risk view (locked decision
+        // 3); it is never part of the auditor's provided support.
+        managementIndicators: isAuditor(ctx.user) ? [] : ws.close.managementIndicators,
       };
     },
 
@@ -326,28 +421,37 @@ export function createQueryService(ws: Workspace) {
 
     listEvidence(ctx: ServiceContext): readonly EvidenceView[] {
       authorize(ctx.user, "evidence.read");
-      return ws.evidenceGraph.items.map((item) => {
-        const readable = canReadContent(ctx.user, item.sensitivity);
-        return {
-          id: item.id,
-          title: item.title,
-          kind: item.kind,
-          sensitivity: item.sensitivity,
-          contentHash: item.contentHash,
-          ...(item.sourceRef ? { sourceRef: item.sourceRef } : {}),
-          ...(readable ? { content: item.content } : {}),
-          contentWithheld: !readable,
-        };
-      });
+      const auditorScope = isAuditor(ctx.user) ? auditorVisibleEvidenceIds(ws) : undefined;
+      return ws.evidenceGraph.items
+        .filter((item) => auditorScope === undefined || auditorScope.has(item.id))
+        .map((item) => {
+          const readable = canReadContent(ctx.user, item.sensitivity);
+          return {
+            id: item.id,
+            title: item.title,
+            kind: item.kind,
+            sensitivity: item.sensitivity,
+            contentHash: item.contentHash,
+            ...(item.sourceRef ? { sourceRef: item.sourceRef } : {}),
+            ...(readable ? { content: item.content } : {}),
+            contentWithheld: !readable,
+          };
+        });
     },
 
     getEvidenceLinks(ctx: ServiceContext) {
       authorize(ctx.user, "evidence.read");
-      return ws.evidenceGraph.links;
+      if (!isAuditor(ctx.user)) return ws.evidenceGraph.links;
+      const visible = auditorVisibleEvidenceIds(ws);
+      return ws.evidenceGraph.links.filter((l) => visible.has(l.from));
     },
 
     traceLineage(ctx: ServiceContext, exceptionId: string): ExceptionLineage | undefined {
       authorize(ctx.user, "evidence.read");
+      // Auditor scope: lineage exists only for provided support (docs/10).
+      if (isAuditor(ctx.user) && !providedExceptionIds(ws).has(exceptionId)) {
+        return undefined;
+      }
       const lineage = traceExceptionLineage(exceptionId, ws.close, ws.evidenceGraph);
       if (!lineage) return undefined;
       // Restricted content is redacted here exactly as in listEvidence —

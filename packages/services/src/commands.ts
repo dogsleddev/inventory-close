@@ -1,7 +1,10 @@
 import {
   assertNotSelfApproval,
   authorize,
+  canReadContent,
 } from "@icg/permissions";
+import type { DemoUser } from "@icg/data";
+import { sha256Canonical } from "@icg/evidence";
 import type { EvidenceSensitivity } from "@icg/domain";
 import {
   createReview,
@@ -9,7 +12,6 @@ import {
   transitionPeriod,
   transitionReview,
 } from "@icg/workflows";
-import { createHash } from "node:crypto";
 import type { ServiceContext } from "./queries.js";
 import {
   nextInstant,
@@ -38,6 +40,16 @@ function requireMutable(ws: Workspace, action: string): void {
   if (!mutationAllowed(ws.period.state)) {
     throw new PeriodLockedError(action);
   }
+}
+
+/**
+ * Submitted-evidence return paths apply the same restricted-content
+ * redaction as the query layer — commands are not a side door either.
+ */
+function redactFor(user: DemoUser, item: SubmittedEvidence): SubmittedEvidence {
+  return canReadContent(user, item.sensitivity)
+    ? item
+    : { ...item, content: undefined };
 }
 
 export function createCommandService(ws: Workspace) {
@@ -76,15 +88,20 @@ export function createCommandService(ws: Workspace) {
       authorize(ctx.user, "evidence.submit");
       requireMutable(ws, "evidence submission");
       const at = nextInstant(ws);
+      // Monotonic across demo resets: the audit log survives reset, so
+      // evidence ids must never be reused by a later submission.
+      ws.evidenceSeq += 1;
+      const hash = sha256Canonical(input.content);
       const item: SubmittedEvidence = {
-        id: `EV-S${String(ws.submittedEvidence.length + 1).padStart(3, "0")}`,
+        id: `EV-S${String(ws.evidenceSeq).padStart(3, "0")}`,
         title: input.title,
         kind: input.kind,
         sensitivity: input.sensitivity ?? "STANDARD",
-        contentHash: createHash("sha256")
-          .update(JSON.stringify(input.content) ?? "null", "utf8")
-          .digest("hex"),
+        contentHash: hash,
         content: input.content,
+        originalValue: input.content,
+        originalHash: hash,
+        transformation: "IDENTITY",
         submittedByUserId: ctx.user.id,
         submittedAt: at,
         reviewState: "PENDING",
@@ -111,6 +128,13 @@ export function createCommandService(ws: Workspace) {
       if (!item) throw new Error(`Unknown evidence ${evidenceId}`);
       // Reviewing your own submission is self-approval (docs/15 SOD).
       assertNotSelfApproval(ctx.user, item.submittedByUserId, evidenceId);
+      // One review per submission: a decided item is superseded by a new
+      // submission, never silently re-reviewed (append-only history).
+      if (item.reviewState !== "PENDING") {
+        throw new Error(
+          `Evidence ${evidenceId} already reviewed (${item.reviewState}); supersede via a new submission instead`,
+        );
+      }
       const at = nextInstant(ws);
       const updated: SubmittedEvidence = {
         ...item,
@@ -123,11 +147,11 @@ export function createCommandService(ws: Workspace) {
       };
       ws.submittedEvidence[idx] = updated;
       audit(ctx, "EVIDENCE_REVIEWED", evidenceId, at, {
-        priorState: "PENDING",
+        priorState: item.reviewState,
         newState: outcome,
         ...(note !== undefined ? { detail: note } : {}),
       });
-      return updated;
+      return redactFor(ctx.user, updated);
     },
 
     annotateEvidence(ctx: ServiceContext, evidenceId: string, note: string): SubmittedEvidence {
@@ -144,7 +168,7 @@ export function createCommandService(ws: Workspace) {
       };
       ws.submittedEvidence[idx] = updated;
       audit(ctx, "EVIDENCE_ANNOTATED", evidenceId, at);
-      return updated;
+      return redactFor(ctx.user, updated);
     },
 
     addComment(ctx: ServiceContext, objectRef: string, text: string): Comment {

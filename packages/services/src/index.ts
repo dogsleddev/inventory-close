@@ -25,6 +25,7 @@ export type {
   ExceptionView,
   FinancialLifeView,
   QueryService,
+  SerialSearchHit,
   ServiceContext,
   SourceCoverageWarning,
 } from "./queries.js";

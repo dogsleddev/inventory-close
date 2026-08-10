@@ -37,9 +37,32 @@ describe("query services", () => {
     expect(queries.getBlockers(controller)).toHaveLength(7);
   });
 
-  it("finds serials with global search", () => {
-    expect(queries.searchSerial(controller, "ke-e2-1048")).toHaveLength(1);
-    expect(queries.searchSerial(controller, "KE-X1-8842")).toHaveLength(0);
+  it("global search finds book, off-book, and sold serials with provenance", () => {
+    const onBook = queries.searchSerial(controller, "ke-e2-1048");
+    expect(onBook).toHaveLength(1);
+    expect(onBook[0]?.onBook).toBe(true);
+    // The EXC-004 discovery serial is off-book but must be discoverable.
+    const offBook = queries.searchSerial(controller, "KE-X1-8842");
+    expect(offBook).toHaveLength(1);
+    expect(offBook[0]?.onBook).toBe(false);
+    expect(offBook[0]?.foundIn).toContain("COUNT_TEST");
+    // Sold serials (clean chains) are reachable through their transactions.
+    const soldSerial = ws.dataset.itemFulfillments
+      .find((f) => f.transactionNumber !== "IF-261972")!
+      .lines.flatMap((l) => l.serials ?? [])[0]!;
+    const sold = queries.searchSerial(controller, soldSerial);
+    expect(sold[0]?.onBook).toBe(false);
+    expect(sold[0]?.foundIn).toContain("NETSUITE_TXN");
+  });
+
+  it("tracks non-serialized accessories at batch level, not as missing paper", () => {
+    const accessory = ws.dataset.inventoryUnits.find((u) => u.sku === "KV-D1")!.serial;
+    const life = queries.getFinancialLife(controller, accessory);
+    expect(life.buySideTracking).toBe("BATCH");
+    expect(life.unit?.serialized).toBe(false);
+    expect(life.missing).not.toContain("Purchase Order");
+    expect(life.missing).not.toContain("Item Receipt");
+    expect(life.missing).not.toContain("Vendor Bill");
   });
 
   it("reconstructs the EXC-001 Financial Life with missing steps visible", () => {
