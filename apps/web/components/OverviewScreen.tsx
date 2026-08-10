@@ -560,7 +560,8 @@ export function OverviewScreen({
                         <span className="icg-soft">
                           Potential adjusted difference{" "}
                           <span className="icg-quiet" style={{ fontSize: "10px" }}>
-                            · {data.glPanel.proposedCount} proposed, none posted
+                            · {data.glPanel.identifiedCount} identified,{" "}
+                            {data.glPanel.draftedCount} drafted, none posted
                           </span>
                         </span>
                         <span className="icg-num" style={{ fontWeight: 700 }}>

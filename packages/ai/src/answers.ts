@@ -764,17 +764,19 @@ export function answerQuestion(
   // No answer. Say WHICH kind of nothing this is — a denial, an unknown
   // object, and an out-of-scope question are three different states and an
   // empty answer must never stand for any of them.
-  if (session.anyDenied) {
-    return {
-      ...base,
-      refusal: {
-        reason: "NOT_AUTHORIZED",
-        message:
-          "Your role cannot read the data this question needs. No figure is shown — this is a restriction, not a zero.",
-        stillVisible: ["The close status of the item remains visible to everyone who works it."],
-      },
-    };
-  }
+  const notAuthorized = () => ({
+    ...base,
+    toolCalls: session.calls,
+    refusal: {
+      reason: "NOT_AUTHORIZED" as const,
+      message:
+        "Your role cannot read the data this question needs. No figure is shown — this is a restriction, not a zero.",
+      stillVisible: ["The close status of the item remains visible to everyone who works it."],
+    },
+  });
+
+  if (session.anyDenied) return notAuthorized();
+
   // NO_SUCH_OBJECT is a claim about the WORLD, so it must be established by
   // asking the tools whether the object resolves — not inferred from the
   // fact that a scope was supplied. Choosing it on scope-presence made the
@@ -787,6 +789,13 @@ export function answerQuestion(
         : (session.run<readonly { serial: string }[]>("search_serial", {
             serial: context.serial ?? "",
           }) ?? []).some((h) => h.serial === context.serial);
+    // The PROBE ITSELF can be denied, and an undefined result then means
+    // "you may not look", not "it does not exist". Answering NO_SUCH_OBJECT
+    // there states a fact about the world on the strength of a permission
+    // check — the same substitution of a proxy for the fact it names that
+    // the scope-presence version of this branch made. `anyDenied` is a live
+    // getter over the call log, so it now sees the probe's own outcome.
+    if (session.anyDenied) return notAuthorized();
     if (!resolves) {
       return {
         ...base,

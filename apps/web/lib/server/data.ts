@@ -183,9 +183,17 @@ function categoryNote(
       return { note: `${blockers.length} open blockers`, warn: blockers.length > 0 };
     }
     case "ADJUSTMENTS": {
-      const recon = attempt(() => queries.getReconciliation(ctx));
-      const n = recon?.items.length ?? 0;
-      return { note: `${n} proposed, none posted`, warn: false };
+      // The register's own vocabulary: identified (a reconciling item),
+      // drafted (an entry written for it), posted (never). "Proposed" is
+      // this product's word for a DRAFTED entry, so counting all three
+      // identified items as proposed claims one entry that was never
+      // written — and this ratio IS the ADJUSTMENTS readiness score.
+      const register = attempt(() => queries.getAdjustmentRegister(ctx));
+      if (register === undefined) return { note: "—", warn: false };
+      return {
+        note: `${register.draftedCount} of ${register.identifiedCount} drafted, none posted`,
+        warn: register.draftedCount < register.identifiedCount,
+      };
     }
     default:
       return { note: "—", warn: false };
@@ -325,6 +333,7 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
   const recon = attempt(() => queries.getReconciliation(ctx));
+  const register = attempt(() => queries.getAdjustmentRegister(ctx));
   const health = attempt(() => queries.getSourceHealth(ctx));
   const units = attempt(() => queries.listInventoryUnits(ctx));
   const events = attempt(() => queries.getScenarioEvents(ctx)) ?? [];
@@ -481,7 +490,13 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
             // difference — the deterministic core computes it; the UI
             // never does reconciliation arithmetic.
             potentialAdjusted: formatCents(recon.unexplainedCents),
-            proposedCount: recon.items.length,
+            // The potential adjusted figure applies EVERY identified item,
+            // so the count beside it is the identified count — but only
+            // some of those have an entry drafted, and "proposed" is this
+            // product's word for a drafted one. Both numbers are shown so
+            // the sentence cannot overstate either.
+            identifiedCount: recon.items.length,
+            draftedCount: register?.draftedCount ?? 0,
           },
         }
       : {}),

@@ -39,7 +39,7 @@ export interface GuardrailVerdict {
  * bare "post" reliably, which silently let "I will post it for you" through.
  */
 const ACTION_VERBS =
-  "approve|approved|approving|post|posted|posting|close|closed|closing|lock|locked|reopen|reopened|resolve|resolved|adjust|adjusted|write off|wrote off|written off|sign off|signed off";
+  "approve|approved|approving|post|posted|posting|close|closed|closing|lock|locked|reopen|reopened|resolve|resolved|adjust|adjusted|write off|wrote off|written off|sign off|signed off|sign|signed|signing|book|booked|booking|finalise|finalised|finalize|finalized|finalizing";
 
 const FORBIDDEN_ACTION_CLAIMS: readonly RegExp[] = [
   // First-person and passive claims of having acted, or of being about to…
@@ -47,7 +47,15 @@ const FORBIDDEN_ACTION_CLAIMS: readonly RegExp[] = [
   /\b(?:has|have|was|were|is|are)\s+(?:been\s+)?(?:approved|posted|signed off|written off)\b/i,
   // …and impersonal ones, which the six-phrase blocklist let through
   // ("this is approved", "consider it posted", "no further review needed").
-  /\bconsider (?:it|this|them) (?:approved|posted|closed|resolved|done)\b/i,
+  // "consider it posted" AND "consider the entries booked" — the object may
+  // be a noun phrase, not just a pronoun.
+  new RegExp(String.raw`\bconsider\b[^.]{0,40}\b(?:${ACTION_VERBS}|done)\b`, "i"),
+  // A state assertion about the period or the entries, in any voice:
+  // "the period is effectively signed", "the entries are booked".
+  new RegExp(
+    String.raw`\b(?:period|close|entries|entry|adjustment|adjustments|journal)\b[^.]{0,40}\b(?:is|are|was|were|has been|have been)\b[^.]{0,20}\b(?:${ACTION_VERBS})\b`,
+    "i",
+  ),
   /\bno (?:further |additional )?(?:review|approval|action) (?:is )?(?:needed|required)\b/i,
   /\b(?:safe|fine|ok(?:ay)?) to (?:approve|post|close|sign off)\b/i,
   /\b(?:I|we)\b[^.]{0,30}\b(?:select|selected|chose|chosen|drew|drawn|picked)\b[^.]{0,20}\bsample\b/i,
@@ -85,14 +93,29 @@ const FABRICATED_PRESENCE: readonly RegExp[] = [
  * fabricated figures freely.
  */
 const DIGIT_ANYWHERE = /\p{Nd}/u;
+/**
+ * Zero is a quantity. Omitting it let "the reserve balance is zero" through —
+ * a fabricated control figure standing exactly where the answer refuses to
+ * state one, which is the failure this check exists to prevent. "No" and
+ * "none" are quantities too when they modify a countable noun.
+ */
 const NUMBER_WORDS =
-  /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen|half|quarter)\b/i;
+  /\b(zero|nil|none|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen|half|quarter|single|couple)\b/i;
 
 /**
  * Prose that reads like a figure even without a numeral: a currency symbol
  * or a percent sign is a quantitative claim whatever follows it.
  */
 const QUANTITY_MARKERS = /[$£€%]|\bper ?cent\b/i;
+
+/**
+ * "There are no blockers left" is a count of zero stated in words, and it
+ * contradicts a close with seven of them. Scoped to countable close nouns
+ * so that qualitative prose ("no longer", "no such") stays available — the
+ * ban is on asserting HOW MANY, not on the word "no".
+ */
+const ZERO_COUNT_CLAIM =
+  /\bno\s+(?:\w+\s+){0,2}(?:items?|blockers?|exceptions?|units?|records?|differences?|adjustments?|entries|entry|variances?|balances?|provisions?|workpapers?)\b/i;
 
 /**
  * Record identifiers, by SHAPE rather than by an enumerated prefix list —
@@ -160,7 +183,12 @@ export function checkNarration(
    * results exactly" is then satisfied by construction rather than by
    * pattern-matching, and no wording, script or spelling can defeat it.
    */
-  if (DIGIT_ANYWHERE.test(narration) || NUMBER_WORDS.test(narration) || QUANTITY_MARKERS.test(narration)) {
+  if (
+    DIGIT_ANYWHERE.test(narration) ||
+    NUMBER_WORDS.test(narration) ||
+    QUANTITY_MARKERS.test(narration) ||
+    ZERO_COUNT_CLAIM.test(narration)
+  ) {
     violations.push("NUMERIC_DRIFT");
     detail.push(
       "Narration states a quantity. Figures belong to the structured answer, which is the only place they are guaranteed to match the tools.",
@@ -173,12 +201,19 @@ export function checkNarration(
     );
   }
 
-  // Prose must not contradict the answer's own status.
+  // Prose must not contradict the answer's own status. The vocabulary of
+  // finality is wider than "resolved": an open blocker described as
+  // concluded, settled or finalised is the same false claim in a different
+  // word, and the reader has no way to tell which one the engine checked.
   const status = interaction.answer?.status;
-  if (status !== undefined && /\bresolv|\bclosed\b|\bno longer open\b/i.test(narration)) {
+  const FINALITY =
+    /\bresolv|\bclosed\b|\bno longer open\b|\bconclud|\bsettled\b|\bfinalis|\binaliz|\bnothing (?:further |more |else )?(?:is |are |remains? )?(?:outstanding|remaining|left|to do|to resolve)\b|\bno (?:open|outstanding|remaining) (?:item|items|issue|issues)\b|\bfully (?:complete|completed|addressed|satisfied)\b/i;
+  if (status !== undefined && FINALITY.test(narration)) {
     if (!/RESOLVED/i.test(status)) {
       violations.push("FORBIDDEN_ACTION");
-      detail.push(`Narration calls the item resolved while the answer's status is "${status}"`);
+      detail.push(
+        `Narration calls the item resolved or concluded while the answer's status is "${status}"`,
+      );
     }
   }
 

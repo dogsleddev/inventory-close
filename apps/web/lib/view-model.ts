@@ -221,7 +221,10 @@ export interface OverviewData {
     readonly grossSubledger: string;
     readonly difference: string;
     readonly potentialAdjusted: string;
-    readonly proposedCount: number;
+    /** Reconciling items identified; the potential adjusted figure applies all of them. */
+    readonly identifiedCount: number;
+    /** Of those, the ones with an entry actually drafted. Never equal by assumption. */
+    readonly draftedCount: number;
   };
   readonly pbcPanel?:
     | {

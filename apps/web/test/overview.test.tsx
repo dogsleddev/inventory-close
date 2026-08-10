@@ -148,7 +148,18 @@ describe("Overview — close areas and reconciliation", () => {
     renderAs("CONTROLLER");
     expect(screen.getByText("$4,812,450")).toBeTruthy();
     expect(screen.getByText("$4,800,000")).toBeTruthy();
-    expect(screen.getAllByText(/3 proposed, none posted/).length).toBeGreaterThan(0);
+    // Read from the register, not written as a literal: the previous
+    // version of this line pinned "3 proposed", which called the identified
+    // count by the product's word for a DRAFTED entry and so kept the
+    // overstatement green for four stages.
+    const register = getQueries().getAdjustmentRegister(makeContext(userByRole("CONTROLLER"), "T-OV"));
+    expect(
+      screen.getAllByText(
+        new RegExp(
+          `${register.identifiedCount} identified,\\s*${register.draftedCount} drafted, none posted`,
+        ),
+      ).length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("$0")).toBeTruthy();
   });
 });

@@ -134,10 +134,36 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     asOf: input.asOf,
   };
 
+  /**
+   * Run identity binds EVERY controlled input docs/16 names — dataset,
+   * ruleset, individual rule versions, policy, configuration and the
+   * scenario script. It previously bound only the dataset hash, the policy
+   * version and the scenario flag, so bumping a rule version produced a
+   * materially different close under an identical run id: two runs sharing
+   * one identity is the thing a run manifest exists to make impossible.
+   *
+   * The row shape is folded in as well. `input.datasetHash` is supplied by
+   * the caller, so it is a CLAIM about the input rather than a measurement
+   * of it; counting the rows actually present costs nothing and catches an
+   * input mutated after `toCloseInput` built it, which the hash alone
+   * cannot see.
+   */
+  const rowShape = Object.fromEntries(
+    Object.entries(input)
+      .filter(([, v]) => Array.isArray(v))
+      .map(([k, v]) => [k, (v as readonly unknown[]).length]),
+  );
   const inputHash = hashValue({
     datasetHash: input.datasetHash,
+    datasetVersion: input.datasetVersion,
+    scenarioScript: input.scenarioScript,
+    rulesetVersion: RULESET_VERSION,
+    ruleVersions: Object.fromEntries(ALL_RULES.map((r) => [r.id, r.version])),
     policyVersion: policy.version,
+    configVersion: CONFIG_VERSION,
     applyScenario,
+    asOf: input.asOf,
+    rowShape,
   });
   const runIdValue = `RUN-${inputHash.slice(0, 12)}-${applyScenario ? "BASELINE" : "INITIAL"}`;
 
@@ -245,8 +271,10 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
 
   // Replay equivalence covers EVERY structured financial output (docs/16):
   // proposals, chains, indicators, PBC, and per-rule results included. Only
-  // LLM prose is excluded - none exists here.
-  const structuredOutput = {
+  // LLM prose is excluded - none exists here. The projection is built by
+  // `comparableSections` so the equivalence hash and the mismatch
+  // diagnostic read the identical set of fields.
+  const structuredOutput = comparableSections({
     exceptions,
     blockers,
     reconciliation,
@@ -260,10 +288,8 @@ export function runClose(input: CloseInput, options: RunCloseOptions = {}): Clos
     chains,
     managementIndicators,
     pbc,
-    ruleResults: Object.fromEntries(
-      ruleExecutions.map((e) => [String(e.ruleId), `${e.result}/${e.coverage}/${e.outputHash}`]),
-    ),
-  };
+    ruleExecutions,
+  });
 
   return {
     runManifest: {
@@ -320,7 +346,44 @@ export const REPLAY_COMPARED_SECTIONS = [
   "chains",
   "managementIndicators",
   "pbc",
+  // Per-rule result/coverage/output hash. It is folded into `outputHash`,
+  // so it decides the verdict; leaving it out of this list meant a replay
+  // whose only difference was a rule's COVERAGE reported MISMATCH and then
+  // named no section that differed. A verdict that cannot say what moved
+  // reads as a bug in the checker rather than a difference in the close.
+  "ruleResults",
 ] as const;
+
+/**
+ * The comparable projection of a run, in exactly the sections above. Built
+ * once and used both for the equivalence hash and for the mismatch
+ * diagnostic, so the two can never disagree about what was compared.
+ */
+function comparableSections(
+  run: Omit<CloseRunResult, "runManifest">,
+): Record<string, unknown> {
+  return {
+    exceptions: run.exceptions,
+    blockers: run.blockers,
+    reconciliation: run.reconciliation,
+    readiness: run.readiness,
+    aggregates: run.aggregates,
+    procurementMatches: run.procurementMatches,
+    countSummary: run.countSummary,
+    proposedAdjustments: run.proposedAdjustments,
+    adjustmentRegister: run.adjustmentRegister,
+    valuation: run.valuation,
+    chains: run.chains,
+    managementIndicators: run.managementIndicators,
+    pbc: run.pbc,
+    ruleResults: Object.fromEntries(
+      run.ruleExecutions.map((e) => [
+        String(e.ruleId),
+        `${e.result}/${e.coverage}/${e.outputHash}`,
+      ]),
+    ),
+  };
+}
 
 /**
  * Reproduce Close (CANONICAL_SPEC section 15): re-run and compare
@@ -333,11 +396,10 @@ export function reproduceClose(
   const match = baseline.runManifest.outputHash === replay.runManifest.outputHash;
   const mismatchPaths: string[] = [];
   if (!match) {
-    const keys = REPLAY_COMPARED_SECTIONS;
-    for (const key of keys) {
-      if (hashValue(baseline[key]) !== hashValue(replay[key])) {
-        mismatchPaths.push(key);
-      }
+    const a = comparableSections(baseline);
+    const b = comparableSections(replay);
+    for (const key of REPLAY_COMPARED_SECTIONS) {
+      if (hashValue(a[key]) !== hashValue(b[key])) mismatchPaths.push(key);
     }
   }
   return {

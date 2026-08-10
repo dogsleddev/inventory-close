@@ -153,10 +153,16 @@ describe("restricted screens render a restriction, never an empty screen", () =>
     // sensitivity gate, and the contract stays withheld.
     expect(Object.keys(data.evidenceRecords ?? {}).length).toBeGreaterThan(0);
     expect(data.evidenceState?.scopeNotice).toBeNull();
-    const contract = Object.values(data.evidenceRecords ?? {}).find(
+    // Asserted, not guarded: a conditional here passes silently the day the
+    // record stops being projected, which is exactly when the withholding
+    // it checks would go unverified.
+    const contracts = Object.values(data.evidenceRecords ?? {}).filter(
       (r) => r.kind === "CONTRACT",
     );
-    if (contract !== undefined) expect(contract.contentWithheld).toBe(true);
+    expect(contracts.length).toBeGreaterThan(0);
+    for (const contract of contracts) {
+      expect(contract.contentWithheld, `${contract.id} disclosed to the auditor`).toBe(true);
+    }
   });
 
   it("the controller's evidence sections carry no scope notice", () => {
