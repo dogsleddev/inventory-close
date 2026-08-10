@@ -15,7 +15,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 | Commit | `1c85866` (stage 10 + its verification remediation) |
 | Suite | **607 tests across 44 files, all passing** |
 | Typecheck / lint / build | green (`pnpm -r run typecheck` + `tsc -p test/tsconfig.json`, `eslint .`, `next build` — 14 routes) |
-| Dataset hash | `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06` |
+| Dataset hash | `672d7349c616f47888c7bd28fdf13a844884b3eaf153d32e45b8d4676f1a5ab0` (post pass-1 data remediation) |
 | Adversarial reviews | full tree at `f3f6f98` (12 lenses / 37 agents → 9 fixed) and the stage-10 public-surface fleet at `e3c952e` (7 lenses / 76 agents → 34 raw, **20 confirmed / 9 contested / 5 refuted**, 27 fixed) |
 
 > The run id and output hash changed at `30494c0`: run identity now binds every

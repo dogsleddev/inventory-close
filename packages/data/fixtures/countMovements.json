@@ -5,7 +5,7 @@
     "quantity": 4,
     "fromLocation": "RECEIVING",
     "toLocation": "PRIMARY_WAREHOUSE",
-    "movedAt": "2026-12-30T17:20:00Z",
+    "movedAt": "2027-01-02T17:20:00Z",
     "authorizedBy": "S. Ibarra",
     "reason": "Putaway of late December receipt"
   },
@@ -15,7 +15,7 @@
     "quantity": 2,
     "fromLocation": "RECEIVING",
     "toLocation": "PRIMARY_WAREHOUSE",
-    "movedAt": "2026-12-30T18:05:00Z",
+    "movedAt": "2027-01-02T18:05:00Z",
     "authorizedBy": "S. Ibarra",
     "reason": "Putaway of late December receipt"
   },
@@ -25,7 +25,7 @@
     "quantity": 3,
     "fromLocation": "PRIMARY_WAREHOUSE",
     "toLocation": "STAGING",
-    "movedAt": "2026-12-31T16:45:00Z",
+    "movedAt": "2027-01-03T16:45:00Z",
     "authorizedBy": "S. Ibarra",
     "reason": "Pick for January install project"
   },

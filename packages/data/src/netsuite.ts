@@ -91,7 +91,7 @@ function costLines(
 }
 
 function groupUnitsBySku(
-  units: readonly InventoryItemFixture[],
+  units: readonly Pick<InventoryItemFixture, "sku" | "serial">[],
 ): Map<string, { quantity: number; serials: string[] }> {
   const bySku = new Map<string, { quantity: number; serials: string[] }>();
   for (const u of units) {
@@ -149,12 +149,66 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
   const itemReceipts: ItemReceiptFixture[] = [];
   const vendorBills: VendorBillFixture[] = [];
 
+  // ---- Sold-chain planning ----
+  // Planned before the purchase side so every sold serial can be folded into
+  // a purchase batch: a serial the company sold during FY2026 must carry the
+  // same PO → receipt → bill acquisition history as the book population.
+  // The PRNG draw order here is part of determinism — do not reorder.
+  const SELLABLE = ["KE-M1", "KE-S1", "KE-E1", "KE-E2", "KE-X1"];
+  interface SoldChainPlan {
+    customer: string;
+    soNumber: string;
+    ifNumber: string;
+    invNumber: string;
+    orderDate: string;
+    shipDate: string;
+    deliveredDate: string;
+    invoiceDate: string;
+    bySku: Map<string, { quantity: number; serials: string[] }>;
+    serials: string[];
+  }
+  const soldChainPlans: SoldChainPlan[] = [];
+  for (let i = 0; i < 10; i++) {
+    const customer = CUSTOMERS[i % CUSTOMERS.length]!;
+    const orderDate = addDays("2026-11-03", i * 4);
+    const shipDate = addDays(orderDate, 3);
+    const deliveredDate = addDays(shipDate, 2);
+    const invoiceDate = addDays(deliveredDate, 1);
+    const unitCount = prng.int(2, 4);
+    const bySku = new Map<string, { quantity: number; serials: string[] }>();
+    const serials: string[] = [];
+    for (let n = 0; n < unitCount; n++) {
+      const sku = SELLABLE[prng.int(0, SELLABLE.length - 1)]!;
+      const serial = registry.mint(sku);
+      serials.push(serial);
+      let g = bySku.get(sku);
+      if (!g) {
+        g = { quantity: 0, serials: [] };
+        bySku.set(sku, g);
+      }
+      g.quantity += 1;
+      g.serials.push(serial);
+    }
+    soldChainPlans.push({
+      customer,
+      soNumber: `SO-26${101 + i}`,
+      ifNumber: `IF-26${1501 + i}`,
+      invNumber: `INV-2026-0${301 + i}`,
+      orderDate,
+      shipDate,
+      deliveredDate,
+      invoiceDate,
+      bySku,
+      serials,
+    });
+  }
+
   // ---- Purchase side: one PO/receipt/bill per (vendor, acquisition date) ----
   // Inbound-transit units and the EXC-014 timing unit get dedicated handling.
   const normal = units.filter(
     (u) => u.location !== "INBOUND_TRANSIT" && u.serial !== story.exc014Serial,
   );
-  const batches = new Map<string, InventoryItemFixture[]>();
+  const batches = new Map<string, Pick<InventoryItemFixture, "sku" | "serial">[]>();
   for (const u of normal) {
     const vendor = VENDOR_OF[u.sku];
     if (!vendor) throw new Error(`No vendor for SKU ${u.sku}`);
@@ -162,6 +216,33 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
     const list = batches.get(key);
     if (list) list.push(u);
     else batches.set(key, [u]);
+  }
+  // Fold every sold serial into the latest batch for its vendor received at
+  // least a week before the sale, so the sold unit's acquisition documents
+  // exist and predate its sales order.
+  for (const chain of soldChainPlans) {
+    const cutoff = addDays(chain.orderDate, -7);
+    for (const [sku, group] of chain.bySku) {
+      const vendor = VENDOR_OF[sku];
+      if (!vendor) throw new Error(`No vendor for SKU ${sku}`);
+      let bestKey: string | undefined;
+      let bestDate = "";
+      for (const key of batches.keys()) {
+        const [v, date] = key.split("|") as [string, string];
+        if (v !== vendor || date > cutoff) continue;
+        if (date > bestDate) {
+          bestKey = key;
+          bestDate = date;
+        }
+      }
+      if (bestKey === undefined) {
+        throw new Error(`No purchase batch predates sold chain ${chain.soNumber} for ${sku}`);
+      }
+      const list = batches.get(bestKey)!;
+      for (const serial of group.serials) {
+        list.push({ sku, serial });
+      }
+    }
   }
   let poSeq = 3000;
   let irSeq = 4000;
@@ -173,10 +254,12 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
     const [vendor, receiptDate] = key.split("|") as [string, string];
     const yy = receiptDate.slice(2, 4);
     const orderDate = addDays(receiptDate, -21);
+    const billDate = addDays(receiptDate, 7);
     const poNumber = `PO-${orderDate.slice(2, 4)}-${++poSeq}`;
     const irNumber = `IR-${yy}-${++irSeq}`;
-    const vbNumber = `VB-${yy}-${++vbSeq}`;
-    const billDate = addDays(receiptDate, 7);
+    // The bill's year prefix follows the bill date — a late-December receipt
+    // is billed in January and numbered VB-27-*.
+    const vbNumber = `VB-${billDate.slice(2, 4)}-${++vbSeq}`;
     const lines = costLines(groupUnitsBySku(batchUnits));
     purchaseOrders.push({
       sourceRef: mkRef("PURCHASE_ORDER", nextId(), poNumber, atTime(orderDate, "16:00:00")),
@@ -309,66 +392,43 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
   const soldChains: SoldChain[] = [];
 
   // Ten clean, fully-chained FY2026 sales (units sold before year end are not
-  // in the book population; their serials come from the same registry).
-  const SELLABLE = ["KE-M1", "KE-S1", "KE-E1", "KE-E2", "KE-X1"];
-  for (let i = 0; i < 10; i++) {
-    const customer = CUSTOMERS[i % CUSTOMERS.length]!;
-    const soNumber = `SO-26${101 + i}`;
-    const ifNumber = `IF-26${1501 + i}`;
-    const invNumber = `INV-2026-0${301 + i}`;
-    const orderDate = addDays("2026-11-03", i * 4);
-    const shipDate = addDays(orderDate, 3);
-    const deliveredDate = addDays(shipDate, 2);
-    const invoiceDate = addDays(deliveredDate, 1);
-    const unitCount = prng.int(2, 4);
-    const bySku = new Map<string, { quantity: number; serials: string[] }>();
-    const serials: string[] = [];
-    for (let n = 0; n < unitCount; n++) {
-      const sku = SELLABLE[prng.int(0, SELLABLE.length - 1)]!;
-      const serial = registry.mint(sku);
-      serials.push(serial);
-      let g = bySku.get(sku);
-      if (!g) {
-        g = { quantity: 0, serials: [] };
-        bySku.set(sku, g);
-      }
-      g.quantity += 1;
-      g.serials.push(serial);
-    }
-    const cost = costLines(bySku);
+  // in the book population; their serials come from the same registry, and
+  // their acquisition documents were folded into the purchase batches above).
+  for (const plan of soldChainPlans) {
+    const cost = costLines(plan.bySku);
     const priced = cost.map((l) => ({
       ...l,
       amountCents: Math.round((l.amountCents ?? 0) * 1.6),
     }));
     salesOrders.push({
-      sourceRef: mkRef("SALES_ORDER", nextId(), soNumber, atTime(orderDate, "17:00:00")),
-      transactionNumber: soNumber,
-      customer,
-      orderDate,
+      sourceRef: mkRef("SALES_ORDER", nextId(), plan.soNumber, atTime(plan.orderDate, "17:00:00")),
+      transactionNumber: plan.soNumber,
+      customer: plan.customer,
+      orderDate: plan.orderDate,
       lines: priced,
     });
     itemFulfillments.push({
-      sourceRef: mkRef("ITEM_FULFILLMENT", nextId(), ifNumber, atTime(shipDate, "18:00:00")),
-      transactionNumber: ifNumber,
-      salesOrderNumber: soNumber,
-      shipDate,
+      sourceRef: mkRef("ITEM_FULFILLMENT", nextId(), plan.ifNumber, atTime(plan.shipDate, "18:00:00")),
+      transactionNumber: plan.ifNumber,
+      salesOrderNumber: plan.soNumber,
+      shipDate: plan.shipDate,
       lines: cost,
     });
     customerInvoices.push({
-      sourceRef: mkRef("CUSTOMER_INVOICE", nextId(), invNumber, atTime(invoiceDate, "09:00:00")),
-      transactionNumber: invNumber,
-      salesOrderNumber: soNumber,
-      invoiceDate,
+      sourceRef: mkRef("CUSTOMER_INVOICE", nextId(), plan.invNumber, atTime(plan.invoiceDate, "09:00:00")),
+      transactionNumber: plan.invNumber,
+      salesOrderNumber: plan.soNumber,
+      invoiceDate: plan.invoiceDate,
       lines: priced,
     });
     soldChains.push({
-      salesOrderNumber: soNumber,
-      fulfillmentNumber: ifNumber,
-      invoiceNumber: invNumber,
-      customer,
-      serials,
-      shipDate,
-      deliveredDate,
+      salesOrderNumber: plan.soNumber,
+      fulfillmentNumber: plan.ifNumber,
+      invoiceNumber: plan.invNumber,
+      customer: plan.customer,
+      serials: plan.serials,
+      shipDate: plan.shipDate,
+      deliveredDate: plan.deliveredDate,
     });
   }
 
@@ -434,7 +494,12 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
         serials: chunk
           .filter((u) => skuByCode.get(u.sku)?.serialized)
           .map((u) => u.serial),
-        pickupDate: `2026-12-${28 + c}`,
+        // The carrier collects an order only after its last unit's book
+        // movement into Outbound Transit — pickup can never precede a move.
+        pickupDate: chunk.reduce(
+          (max, u) => ((u.lastMovementAt ?? "") > max ? u.lastMovementAt! : max),
+          "2026-12-28",
+        ),
       });
     }
   }

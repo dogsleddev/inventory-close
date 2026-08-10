@@ -4348,8 +4348,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8c9c12421a828e4068b3a000b41f2b3a16c6f432a2b1b909bc41b5009fbeb7a3"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-22"
   },
   {
     "serial": "KE-S1-4025",
@@ -4364,8 +4364,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d2b5de8273f0678bf2244d2ca08c2c333575169d9696a9a428d2752af6b8bcf1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-16"
   },
   {
     "serial": "KE-S1-5306",
@@ -4380,8 +4380,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3f2beb53412a38062fd70ee982ab8de34dc7910231e863b004a82e1251ddd6e3"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-03"
   },
   {
     "serial": "KE-S1-4398",
@@ -4396,7 +4396,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ee688debdfa65b2d4e21bf27dcb8ea8a8b9e7e0f70894d579f4361b12dfe2e77"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-28"
   },
   {
@@ -4412,8 +4412,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3702d6b8afcf13564a6851c0e8d2c3f5d26c1d571ebea78c0134824e5d443c2a"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-28"
   },
   {
     "serial": "KE-S1-5832",
@@ -4428,8 +4428,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "efc37f2df4036b25e10e9f87ec28d96119638289c9103961d3e4aa71e044a99c"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-23"
   },
   {
     "serial": "KE-S1-6156",
@@ -4444,8 +4444,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "95d148352c024a55bdd08232493e68402cc841267a115bd767edd600689c3b15"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-17"
   },
   {
     "serial": "KE-S1-8001",
@@ -4460,8 +4460,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e0196acdb8e5c25dac462dad9bee070b8082c94f936667017913b90280ef3f34"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-17"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-17"
   },
   {
     "serial": "KE-S1-9008",
@@ -4476,8 +4476,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "00e9519cc0df0c2eacd24d73dcf9cfd1e3480731daead7757d6c679f9902db42"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-03"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-03"
   },
   {
     "serial": "KE-S1-7207",
@@ -4492,8 +4492,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "95ff670111ce749f82299d3c09cd330b0a9dff02e33e3fcf855669c320434b32"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-23"
   },
   {
     "serial": "KE-S1-5096",
@@ -4508,8 +4508,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "55dd4359cdf761e2f06f0525d49cdbdb82871aed186502375a96f8849ebcf5b0"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-14"
   },
   {
     "serial": "KE-S1-6567",
@@ -4524,8 +4524,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "2178fd8fec35ccfc4117aac5610ed6e5c71966e18e8f40f0fe17b8b4bfeb874d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-25"
   },
   {
     "serial": "KE-S1-9896",
@@ -4540,8 +4540,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dfa87067fa12473ea9dc24f971f9e3c6b8df0795eb4871554d44cdb2edff61ab"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-06"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-06"
   },
   {
     "serial": "KE-S1-6264",
@@ -4556,8 +4556,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "b5a931e7ced98b53655e14d1eec85328f41b5acb79157b39a1cafcb62276fc67"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-09"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-S1-8630",
@@ -4572,7 +4572,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "cde1dd6ef0cb371db07b750817b7fdbfda1e0a9c9af0c1705a4844bcc403459a"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-13"
   },
   {
@@ -4588,8 +4588,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9f8d5369563c5581ac5a46fb081c0e0c69f12fdd6d756d5c724959efb07b21c3"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-18"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-18"
   },
   {
     "serial": "KE-S1-8625",
@@ -4604,8 +4604,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "629e3231b944d21d40607bb87209432d9dc20190c37fcb47621433339d4f2d67"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-23"
   },
   {
     "serial": "KE-S1-1289",
@@ -4620,8 +4620,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5cc58d1a5def2cfd04126877b53c678413680e7bbcd6e75239fc5c79df57b7f9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-09"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-09"
   },
   {
     "serial": "KE-S1-9172",
@@ -4636,8 +4636,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "7773e815e9f4449f05bd0d2b7c8aed1499f5f357c6a011999f2ed136895127f8"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-12"
   },
   {
     "serial": "KE-S1-1376",
@@ -4652,8 +4652,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9fe37d9e25aa5d58936638b87143b599b822f273320aa93e0d2b43d9fa2dc713"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-10"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-10"
   },
   {
     "serial": "KE-S1-6745",
@@ -4668,8 +4668,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9bb7ec56b20ec1ceb20b403a1a2bc963a72f5f7773296877b59276853cc0743d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-19"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-19"
   },
   {
     "serial": "KE-S1-8373",
@@ -4684,8 +4684,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "260738d71c6665187e7ba2670560c7614a8bd20d94a6fef759b6a0c15397f217"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-08"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-08"
   },
   {
     "serial": "KE-S1-1900",
@@ -4700,8 +4700,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6700f0ba1249fbda39b9962b859115897ef24a03ecab32d0c9fb558f915b99d5"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-05"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-05"
   },
   {
     "serial": "KE-S1-9602",
@@ -4716,8 +4716,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "16f49e3561005f3661cde96ee25fe8955b8fe3f6f2c46528dfdc35b2055e9a98"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-12"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-S1-8176",
@@ -4732,8 +4732,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "cf059d7705096f0bbf40a9d1e88a52bd689971502edc4b6aefdf9cdd1d0779d9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-10"
   },
   {
     "serial": "KE-S1-1924",
@@ -4748,8 +4748,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "c7de68d0aac6fb7b5e130bf1bd0184f9fd06f8a05ca1f7b749b82a8c2531687a"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-07"
   },
   {
     "serial": "KE-S1-1326",
@@ -4764,8 +4764,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8fa1afc45ae4d0853b01d7e849739b4e2dbff6db7b60e8abc0d06e6a5157526d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-22"
   },
   {
     "serial": "KE-S1-1403",
@@ -4780,8 +4780,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "971d113853d4691413134a52e49cea5def7025d857b37f01e635170737b68ea0"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-13"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-13"
   },
   {
     "serial": "KE-S1-4588",
@@ -4796,8 +4796,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8030fbf3541d55a1d714fd2809457976ac70bddeba4122032ac209cf0ce343ee"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-05"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-05"
   },
   {
     "serial": "KE-S1-6518",
@@ -4812,8 +4812,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "546bb0b086275568ed3c2caa5f8dcff3bb6112a9084c7e4d621e4d25ea78bf10"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-11"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-11"
   },
   {
     "serial": "KE-S1-7992",
@@ -4828,8 +4828,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e5dbad9acd8e130245053cd2cadcf32b1d58505ab4935105befe93d8b153e1d5"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-18"
   },
   {
     "serial": "KE-S1-4211",
@@ -4844,8 +4844,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "c8b8d6f628c522ed9049116691827cb4b60a3b1666a1744c0c18426005ec94b7"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-23"
   },
   {
     "serial": "KE-S1-8546",
@@ -4860,8 +4860,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0f2a1e472eb14d6bbfa94b427a4e7a31dff1b2c95b7e441caf2b4e635e625932"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-16"
   },
   {
     "serial": "KE-S1-9524",
@@ -4876,8 +4876,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "87bbf1be4ab11265e513ff20e0a33c1a1daa2f8e60ac55e0692866300a884484"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-04"
   },
   {
     "serial": "KE-S1-9880",
@@ -4892,8 +4892,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4f5aef90302009d4dcb92f95ab9d8d460ff6f00fd0b515a8674f4b85b3703cac"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-14"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-14"
   },
   {
     "serial": "KE-S1-9943",
@@ -4908,8 +4908,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f994a1188fd2164b92264d97de6dcfb2e78b2bb38f98e5da532990f6787f2ca9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-25"
   },
   {
     "serial": "KE-S1-1348",
@@ -4924,8 +4924,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "a3165d8fcce7c46b9abae475ae805d4ccebf7c1c3ddc52bd88df3458e642686d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-25"
   },
   {
     "serial": "KE-S1-1512",
@@ -4940,8 +4940,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6e93ddf63a4f10c1ea38a3a8cd0f1d6c431b2f9d842844df423e667835a7af29"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-11"
   },
   {
     "serial": "KE-S1-7096",
@@ -4956,8 +4956,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f8659648fc34bf8c3a06ad7aa52b5684476cdaacdaffdede25d14d4c92cd7a3d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-20"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-20"
   },
   {
     "serial": "KE-S1-9881",
@@ -4972,8 +4972,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "321535b9cc4ab72affbaf3f4571225caea9dc11a4553bae9881a635c2b6df607"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-03"
   },
   {
     "serial": "KE-S1-1572",
@@ -4988,8 +4988,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "abe3cee1e937ef5aaacb118792d8b0da35579c7e18a4a15f79dbd7eb3280d251"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-12"
   },
   {
     "serial": "KE-S1-4537",
@@ -5004,8 +5004,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "bcb8211901b86e9213cdf546ef58ba9221b00cbb8af1367bed21b9f3ad2876ce"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-06"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-06"
   },
   {
     "serial": "KE-S1-3826",
@@ -5020,8 +5020,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f2452a9997c2ed834cf65d2057ed85abf501056cf11873dfd621c45d65471e1e"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-01"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-01"
   },
   {
     "serial": "KE-S1-7290",
@@ -5036,8 +5036,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "276f79fe7122d20a3b0d896d790e7fb307cceb8bdb1a3b0ee4af877432bcf956"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-03"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-03"
   },
   {
     "serial": "KE-S1-9355",
@@ -5052,8 +5052,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "c603510b99d29bce489998cc1f1725cfdf1bf712df0c8e6de974c61e021953bd"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-23"
   },
   {
     "serial": "KE-S1-6913",
@@ -5068,8 +5068,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "52c58c3fb2b8f33f0352bc7f580aaf4c429fb775d0970e8dd35e8e46fb37d590"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-20"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-20"
   },
   {
     "serial": "KE-S1-8578",
@@ -5084,8 +5084,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "931ed6403971aaa3c5ffbe39bc91b8331f6085020233822e934cca89207638e9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-22"
   },
   {
     "serial": "KE-S1-4041",
@@ -5100,8 +5100,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "63a38214484e93608a2d8a9d4a18d0c70a9ae5461c2a5d8a6d96197bfb21fc63"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-06"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-S1-1766",
@@ -5116,8 +5116,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3788fdc392056826ca32587442b58c442147971352d036978a4755abcac75462"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-09"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-09"
   },
   {
     "serial": "KE-S1-4570",
@@ -5132,8 +5132,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "41b4cb5a57ea6ae1d6b1db2a1e94674c088c8b5ca1c24bd280a204db9de50570"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-20"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-20"
   },
   {
     "serial": "KE-S1-7016",
@@ -5148,8 +5148,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "99e73a884b24f034d2c36e815acd646f89220ce70c71db53896b8175c6a6e9d2"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-25"
   },
   {
     "serial": "KE-S1-4882",
@@ -5164,8 +5164,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "a21b20328747d94fcc1c1038bfe2814184ad2ac0820620aab46916952da719bc"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-24"
   },
   {
     "serial": "KE-S1-4722",
@@ -5180,8 +5180,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ba373a4648625e3b8cea1ae1d03de5d1d150cd0f178b9af963e99245eff1d9e4"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-28"
   },
   {
     "serial": "KE-S1-6794",
@@ -5196,8 +5196,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3024ed7b50d56014f3eab21f9927df89bcf5003882385ff867d3204f0a796a69"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-17"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-17"
   },
   {
     "serial": "KE-S1-1796",
@@ -5212,8 +5212,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fd478984d4f7279860fb885033dc24733d275e3422885f4ff6fe6d83da0df40e"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-19"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-19"
   },
   {
     "serial": "KE-S1-2195",
@@ -5228,8 +5228,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "c44ed4d59f1c011d02a90b2efd8c206a355299b569bd2422c002ae4b51ecdf6c"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-25"
   },
   {
     "serial": "KE-S1-5236",
@@ -5244,8 +5244,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5ba55a60903de81e7ec6c7dea97d6108281abbdc00d13bcb0d17cede431fef4d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-02"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-02"
   },
   {
     "serial": "KE-S1-9184",
@@ -5260,8 +5260,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "342b77d847ecb0a9c5366e9f740388d6e64c9c0a77b142626014f69476313f94"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-27"
   },
   {
     "serial": "KE-S1-5237",
@@ -5276,8 +5276,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "70a2c89b7da195fb77815d92b16673f5650d840a1f8b90374b3086511e4b4ac0"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-01"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-01"
   },
   {
     "serial": "KE-S1-2776",
@@ -5292,8 +5292,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "1742b26fb9f815c0d5810d7179fd2fb63c72872bfd6f6d081e49afd7b21993a1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-12"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-12"
   },
   {
     "serial": "KE-S1-5140",
@@ -5308,8 +5308,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fc0ffa3a5fdd6e7764dbc0b0ae5969400a42bcdec9d937986fe700b92826b890"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-13"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-13"
   },
   {
     "serial": "KE-S1-1236",
@@ -5324,8 +5324,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "df635bf089b32ce94485940859d8d65fbc9993aaba0dcc767c5322d828d33b84"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-12"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-12"
   },
   {
     "serial": "KE-S1-8014",
@@ -5340,8 +5340,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "280ec7756cdc47c506dc9206707d1afd74fdefd33afb5d422396286bbfcde29f"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-24"
   },
   {
     "serial": "KE-S1-7429",
@@ -5356,8 +5356,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5ec21401c64ea484b6c8cf7bda800e4c7a25cf20ef2ec51e46858f4f763fef4b"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-22"
   },
   {
     "serial": "KE-S1-4013",
@@ -5372,7 +5372,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4382653e0f60cd72256fbabdff2631b8c2a2c990cb33b87c9c159a47f6fb5bb6"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-17"
   },
   {
@@ -5388,8 +5388,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d1fbe9e3efcd5f3bfc651c5105eeb378b4a21654521e870501bcf7be7f673aba"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-16"
   },
   {
     "serial": "KE-S1-1851",
@@ -5404,8 +5404,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "877b70d636ec52163d79ad42f926ab9b373acff106de7d777a5a3a5496b93658"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-25"
   },
   {
     "serial": "KE-S1-9148",
@@ -5420,8 +5420,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "2f9cea23ae79c3095aef25d0eb709838d67799bf587e13c5cdb0d7634e384070"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-11"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-11"
   },
   {
     "serial": "KE-S1-2131",
@@ -5436,8 +5436,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f70f1d6a84c875dd595e19b3a5f31a931a609d3ca246e62d2bcf168b537330fb"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-05"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-05"
   },
   {
     "serial": "KE-S1-7680",
@@ -5452,8 +5452,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5b8991d965ede28f836d90493aad90b1ebcddc0fd2f7ab8ba7ad525ab9154462"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-14"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-14"
   },
   {
     "serial": "KE-S1-4977",
@@ -5468,8 +5468,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "7be3cab4acf2e1e689b0b3d1b03a1c44e93f24bb36d1cef4798b3a806c5f7a1b"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-21"
   },
   {
     "serial": "KE-S1-7816",
@@ -5484,8 +5484,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "19c6a5cbee0049b445c6e3d6a33b8e217a9c25f7d8a66e27ff47f26daf52f9d3"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-25"
   },
   {
     "serial": "KE-S1-7979",
@@ -5500,8 +5500,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "7db34b4d76a61caeadb8a695950bc71c96a627332ac4c278ce293f9e0b900b61"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-17"
   },
   {
     "serial": "KE-S1-3995",
@@ -5516,8 +5516,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "b6f7cff1d109aa31a03a12f2b611b0fcc5e953f6dd9ae6b12afa100521447a89"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-25"
   },
   {
     "serial": "KE-S1-6078",
@@ -5532,8 +5532,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e549bc59b65435dcfc5b3072a73277128603859e99cfa1741cd574050f5ea7a7"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-16"
   },
   {
     "serial": "KE-S1-8741",
@@ -5548,8 +5548,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d987b96ddd843a31e5ba836ee0e49dcd43080faba4c59f8f3ef56ca591aa89c8"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-02"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-02"
   },
   {
     "serial": "KE-S1-7174",
@@ -5564,8 +5564,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8f3fddefa04b696e6987a5804dc302998d7154dee55ccebc7917f726ab78a9ad"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-25"
   },
   {
     "serial": "KE-S1-6206",
@@ -5580,8 +5580,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0bb46be36bef74183418d690c88d1db03886566e9d9e37d889d36d6f916656e1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-05"
   },
   {
     "serial": "KE-S1-8229",
@@ -5596,8 +5596,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "00787aabd3f412d9aaeeb899c092cc2968244e913eb21886a1d230241c46e8ab"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-25"
   },
   {
     "serial": "KE-S1-9026",
@@ -5612,8 +5612,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8abbf2cd24332bda91804d4e6e34a42e68dd185cf797be9018572cf839e37275"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-20"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-20"
   },
   {
     "serial": "KE-S1-4415",
@@ -5628,8 +5628,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0319deffb3cb2023de5d29fd1b7f72f6c31ebd3468801da17e66866b1a0b1381"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-25"
   },
   {
     "serial": "KE-S1-1696",
@@ -5644,8 +5644,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6c04f383a609d2aadeb3d191988c9232ab315b93ae4f68b7b1587ca21e08bf36"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-16"
   },
   {
     "serial": "KE-S1-4141",
@@ -5660,8 +5660,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dd6a48ea999433958ce4b9ac97f9f88ed6e1bf044b3cf5fffe514646c5ac31da"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-09"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-S1-4578",
@@ -5676,8 +5676,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "732df12e274c73ff36604c4accfdbdfa75718286ac5d9676379cd6170141be6a"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-06"
   },
   {
     "serial": "KE-S1-9052",
@@ -5692,8 +5692,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "a0240ddda1549b80c3c3acb00d7802885992b986a52c58d3ff234fb5371093a1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-28"
   },
   {
     "serial": "KE-S1-8409",
@@ -5708,8 +5708,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "1acb26a915e29ea2ac4bd9bd3ddae3e3fee74e5afde437bdaae1acbc5f7678df"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-07"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-07"
   },
   {
     "serial": "KE-S1-5393",
@@ -5724,8 +5724,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "696f9c20917c37e59ea7596c2ae43a3a057173b14f3551d2562747abf5e7f213"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-19"
   },
   {
     "serial": "KE-S1-4223",
@@ -5740,8 +5740,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6277ac79550fba73bdcaf9bd1a298455cc1f955c5ca816794824de43bfcb8339"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-09"
   },
   {
     "serial": "KE-S1-1889",
@@ -5756,8 +5756,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3e4c373e9213c2478e9a6259378194e31ecb2342786718c6b2cd27c7e60794db"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-27"
   },
   {
     "serial": "KE-S1-7681",
@@ -5772,8 +5772,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "319aadeb07eafc94543ac5f522d8201dd72bc69976cb91f72d0d65a0883f18cf"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-16"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-16"
   },
   {
     "serial": "KE-S1-8792",
@@ -5788,8 +5788,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e28c2c33d0549eb552c6a939ff8e9b07e030833d02f554a7b88676c89169a031"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-24"
   },
   {
     "serial": "KE-S1-8342",
@@ -5804,8 +5804,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ba22607b950147bb71dd6e86c44ceda3339acf56b5efd4a410db36109813c6a1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-18"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-18"
   },
   {
     "serial": "KE-S1-7254",
@@ -5820,8 +5820,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "b52675d247eab7244a313d4cf90923c5bd73fbfbe408c40875d055c9722295f9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-15"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-S1-1668",
@@ -5836,8 +5836,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "91c39d2f133a2bd6904b221d3479648a796f8030e6321caf78c847013b81fad6"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-12"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-12"
   },
   {
     "serial": "KE-S1-2847",
@@ -5852,7 +5852,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "45d79cf18af733f8837f1a0da6b21270f60956a584fed7162ab4c74148f5cb70"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-08"
   },
   {
@@ -5868,8 +5868,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "31acf15beaf6fc9dc24c9a857ca102fde80b45ca6b92952672ce6bf021a1f8a9"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-15"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-S1-5880",
@@ -5884,8 +5884,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "88d121fb3f73dbc3105599694f55d02637190cffd68f0b8a5e3a86686e41a859"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-28"
   },
   {
     "serial": "KE-S1-9204",
@@ -5900,8 +5900,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "97d86e9c3171585f4a94ef1950147b7186676a75e3e0bc53f57245a5fd50a53f"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-20"
   },
   {
     "serial": "KE-S1-6694",
@@ -5916,8 +5916,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ede00d60e504a020ce1f85c31d1d1e51f90b41aaa2f5c898ddef341058a44654"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-08"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-08"
   },
   {
     "serial": "KE-S1-3270",
@@ -5932,8 +5932,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0ba2aa47f1e633d4c0c609d42ac874a3c153432ec67c5ea038915e0b5f243171"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-23"
   },
   {
     "serial": "KE-S1-9589",
@@ -5948,8 +5948,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "c4224ee8c2238beda79cbb1ce19cc6164af83839bca37890fab7da3800ac30ac"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-24"
   },
   {
     "serial": "KE-S1-2312",
@@ -5964,7 +5964,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e9b74f663e7e7c8bebbaebb75d36ab8a3db50e3a76f72412572b4673f742ccbb"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-05"
   },
   {
@@ -5980,8 +5980,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4b1c5fa45fbdba8fdd15437afccb5d07ed7a05f88d6ff237592a03e0d959f56f"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-10-23"
   },
   {
     "serial": "KE-S1-6551",
@@ -5996,8 +5996,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0ec6dd7369c0d2e40d5e07064682329b943720ed0b30b10c3f8781439220fe5c"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-04"
   },
   {
     "serial": "KE-S1-8617",
@@ -6012,8 +6012,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4db6ad55d735ac233db5cc83e3a0cddf8020b908e89d4f3f39fd74f3233c1206"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-28"
   },
   {
     "serial": "KE-S1-5699",
@@ -6028,8 +6028,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "2047f043edfc81a043eeed42abf5ca6554327cc9e10331bf5ecb85f26a4e1edd"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-28"
   },
   {
     "serial": "KE-S1-6799",
@@ -6044,8 +6044,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "10257d23b5112adbb537f405a804380174e9b1a4dbee5fc2417361700cb2e654"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-06"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-06"
   },
   {
     "serial": "KE-S1-2118",
@@ -6060,8 +6060,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "32a17528aeb49227219aa7be9bc276d06b3e026040ee157f261948e0c35739d0"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-05"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-05"
   },
   {
     "serial": "KE-S1-3331",
@@ -6076,8 +6076,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4c51425b39cde03d644fc06793f5de66ee1883a59f94103182f087e33f3066d0"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-26"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-26"
   },
   {
     "serial": "KE-S1-9384",
@@ -6092,8 +6092,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8f516898e78e5e39c1491ba9ef2797605bc2bcd244ffbff76aa37774d2b9bb99"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-04"
   },
   {
     "serial": "KE-S1-7915",
@@ -6108,8 +6108,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "de4fc8641fb16e2d6d953ad3f13bea48c40524130aafd2bd58d8125e1f45ea9d"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-03-28"
   },
   {
     "serial": "KE-S1-9958",
@@ -6124,8 +6124,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3ac0230d417cc04c9c395ba9c76264eebbf2f90bf028b31d6286303728034791"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-12-20"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-11-20"
   },
   {
     "serial": "KE-S1-2089",
@@ -6140,7 +6140,7 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f6bbd1bd6e86052d6ed3e35e00afdb8a2d881ecda9ed9bbc409c7be1748c097f"
     },
-    "acquiredAt": "2026-09-22",
+    "acquiredAt": "2026-02-22",
     "lastMovementAt": "2026-12-05"
   },
   {
@@ -6156,8 +6156,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dc6866095fd8f3a69a039e0089c4e823c30d786cf8b74b392d1709061610f888"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-23"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-07-23"
   },
   {
     "serial": "KE-S1-9050",
@@ -6172,8 +6172,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "956ffd9040f4b2e71337e1a09de0c2748edbb9c5a2a2bbcf0689bec4ad7e175b"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-28"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-25"
   },
   {
     "serial": "KE-S1-4781",
@@ -6188,8 +6188,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "b87b16a8f148986fb59534d4af76cede24bd0a7addc9f17237c8fa8c7e4a0183"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-11-06"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-08-06"
   },
   {
     "serial": "KE-S1-9611",
@@ -6204,8 +6204,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3b46e560e32645bb455a722675ca007073518bcb73c9c95b697bdb35414ec8ea"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-25"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-25"
   },
   {
     "serial": "KE-S1-1343",
@@ -6220,8 +6220,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dfbe34ef228d86294f0db6355c8b75e170d2ce8410e5f9021b2c6c0733ff88a1"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-27"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-02-27"
   },
   {
     "serial": "KE-S1-3655",
@@ -6236,8 +6236,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "47a6f4711cacc0be4ce5d239ff364d58d2b7953e3490c0e801b9d2bc6601919b"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-08"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-06-08"
   },
   {
     "serial": "KE-S1-7927",
@@ -6252,8 +6252,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "64f4ef173b80e5c83083213265379e7237568a08eb87b61cd184a8a9df5d7b05"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-09-22"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-04-04"
   },
   {
     "serial": "KE-S1-3079",
@@ -6268,8 +6268,8 @@
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "76b03a1ee9856dbd0a127e1291af346d3587f9f251edf3a51808cf1674251c7f"
     },
-    "acquiredAt": "2026-09-22",
-    "lastMovementAt": "2026-10-24"
+    "acquiredAt": "2026-02-22",
+    "lastMovementAt": "2026-05-24"
   },
   {
     "serial": "KE-E1-1667",
@@ -17293,7 +17293,7 @@
       "sourceHash": "2f73904c7009271195a8adadd07e95f18267767cf84eafeb0a1527ad02fd8ceb"
     },
     "acquiredAt": "2026-04-19",
-    "lastMovementAt": "2026-04-25"
+    "lastMovementAt": "2026-09-05"
   },
   {
     "serial": "KE-I1-7970",
@@ -17309,7 +17309,7 @@
       "sourceHash": "ddd9a1394aa0dd140d35b40214941e4c97dc8317318872f72bfd98810604efe6"
     },
     "acquiredAt": "2026-04-19",
-    "lastMovementAt": "2026-10-27"
+    "lastMovementAt": "2026-09-11"
   },
   {
     "serial": "KE-I1-9831",
@@ -17325,7 +17325,7 @@
       "sourceHash": "36eab2534885161054d51f8c29f16f7e560b7b861eeee56a5160e5a11a3e337a"
     },
     "acquiredAt": "2026-04-19",
-    "lastMovementAt": "2026-10-06"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-2305",
@@ -17341,7 +17341,7 @@
       "sourceHash": "6b1d02bc8c1c6945eee5252d7905838133cdafa40f1de55297c407e0eb534fdc"
     },
     "acquiredAt": "2026-04-19",
-    "lastMovementAt": "2026-08-24"
+    "lastMovementAt": "2026-10-11"
   },
   {
     "serial": "KE-E1-2510",
@@ -17357,7 +17357,7 @@
       "sourceHash": "3321d8f0bbe2b6a4578b76ba670cdf8f3504507c3f079adb70e16b6899989e96"
     },
     "acquiredAt": "2025-09-18",
-    "lastMovementAt": "2026-12-22"
+    "lastMovementAt": "2026-09-10"
   },
   {
     "serial": "KE-X1-6670",
@@ -17389,7 +17389,7 @@
       "sourceHash": "ac5d95454bdc44d1483c2a5e85c0ad61e22a45c33406c58f4de90dea827bddbc"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-11-22"
+    "lastMovementAt": "2026-09-09"
   },
   {
     "serial": "KE-X1-8272",
@@ -17405,7 +17405,7 @@
       "sourceHash": "3c7ef67db6e4b81a9b9a33aa11bb0f701aae798c811f415781b88513fc8294ec"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-10-10"
+    "lastMovementAt": "2026-11-19"
   },
   {
     "serial": "KE-X1-9582",
@@ -17421,7 +17421,7 @@
       "sourceHash": "1f75f27bd6d94676039f163dce79ebabcb4eb2ec20ce4c579e1addb49a5660e7"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-12-10"
+    "lastMovementAt": "2026-09-19"
   },
   {
     "serial": "KE-X1-2086",
@@ -17437,7 +17437,7 @@
       "sourceHash": "9ed34a3b0edcab3bd2606805f0a5dbe377396efbd9d272376dbf7032a3e5a235"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-12-13"
+    "lastMovementAt": "2026-09-14"
   },
   {
     "serial": "KE-X1-6568",
@@ -17453,7 +17453,7 @@
       "sourceHash": "9d80289117da79089e4d738be9647ef0eb9a6a10ace0bb2ce8313bf9862596fe"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-05-23"
+    "lastMovementAt": "2026-09-14"
   },
   {
     "serial": "KE-X1-1468",
@@ -17469,7 +17469,7 @@
       "sourceHash": "021d0141baf087130ddf0e06d4e5c1b7025409f2ecfbecf84ee493aeda2117c2"
     },
     "acquiredAt": "2026-04-26",
-    "lastMovementAt": "2026-10-23"
+    "lastMovementAt": "2026-12-09"
   },
   {
     "serial": "KE-X1-2791",
@@ -20973,7 +20973,7 @@
       "sourceHash": "ae214180bc499b1fad384e7e22dd480f4fc2bcfb013b778df7e9dc063c90dbb4"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-05-18"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-6024",
@@ -20989,7 +20989,7 @@
       "sourceHash": "828780f1c7ac7b3a5a632fadd85d8e0004621e1232d91b893c2774456ff36b5b"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-11-28"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-9297",
@@ -21005,7 +21005,7 @@
       "sourceHash": "496fd6cfc229ad760f9964055cfaca12719d8838400fa383b7d96dc3916998bf"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-03-11"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-2037",
@@ -21021,7 +21021,7 @@
       "sourceHash": "6fd171540b938b539d6ce28cc9126b6cf314b2c5b8708d3dcf412fadd375d183"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-09-03"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-6720",
@@ -21037,7 +21037,7 @@
       "sourceHash": "9e3f6902133e6a6217649f2227122dd29fb5031b8d545ada9eec34074f2ea7d2"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-09-01"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-3449",
@@ -21053,7 +21053,7 @@
       "sourceHash": "f6c25d732742ae4eaaec4c54a2b92c6ee2d41f94f2c6ee87a26b605f26339809"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-07-02"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-1346",
@@ -21069,7 +21069,7 @@
       "sourceHash": "2e0b3cd288c6c81784dd92e75be2714e408c0010e18beab2df261be7b8c505fe"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-11-12"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-1877",
@@ -21085,7 +21085,7 @@
       "sourceHash": "4ea45a2daf411e43bbedd74daa6cac7b60d2993bf71b93035eeaae334172f476"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-01-13"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-8671",
@@ -21101,7 +21101,7 @@
       "sourceHash": "c608cdf63e82b8fc9b26ed2f8d6fdd278560d5c8357c2f438ab2d16814d7d00d"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-11-21"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-8183",
@@ -21117,7 +21117,7 @@
       "sourceHash": "c7e612fe1a0383a570ca3f44397974e07f4039076210479c86771046a6302508"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-04-28"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-6152",
@@ -21133,7 +21133,7 @@
       "sourceHash": "36dc94791537e6c6586a016e370f5071bf8b1273f3c1d939cd99c7d8927dd76f"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-12-15"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-5343",
@@ -21149,7 +21149,7 @@
       "sourceHash": "0bf50da210b699d203e1a4a1fd9e333588af4636f587961ef4f86b4b0d1b7c37"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-08-24"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-2829",
@@ -21165,7 +21165,7 @@
       "sourceHash": "b89aad7713cb4bb41b31cb67c806edac7c2e74ab38634705649fb9276603aa50"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-08-07"
+    "lastMovementAt": "2026-09-06"
   },
   {
     "serial": "KE-I1-4066",
@@ -21181,7 +21181,7 @@
       "sourceHash": "3356dd13cd6453ae59f4204ba741e417112b5e1dd49cc20642aaa503ff120ee4"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-08-23"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-4702",
@@ -21197,7 +21197,7 @@
       "sourceHash": "58086d27adca4ded0a071c43f9799ba5a7d3d3be0333d9d20f5c9b3e6081b638"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-07-26"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-5090",
@@ -21213,7 +21213,7 @@
       "sourceHash": "55ceac12e34e1cbf73824aadb96337513bb9c01d17b2aea5dc3b550811bd1371"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-02-18"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-1977",
@@ -21229,7 +21229,7 @@
       "sourceHash": "264a562e7a62424c8668e358592ee181faef12bd75bf94179f22ba26ef63d993"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-02-01"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-7098",
@@ -21245,7 +21245,7 @@
       "sourceHash": "236fbed9f1a3c6dee89178da685ad76db64c26d6c8a3bd926bdcf68419b8c13d"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-09-23"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-8927",
@@ -21261,7 +21261,7 @@
       "sourceHash": "dd116e6f5111b1bf8fc24c265396fa48e8940790957b90eda056fd6b95f317f1"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-09-02"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-4867",
@@ -21277,7 +21277,7 @@
       "sourceHash": "a585486d4f8ac912477779d78061544d57b4f6350cd16ab051a89c869db0f251"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-03-11"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-7107",
@@ -21293,7 +21293,7 @@
       "sourceHash": "6b30a6106dde35123b774896c7c4e543fc0b33e3d9b3a38685b7d994fbc7e24f"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-08-26"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-5931",
@@ -21309,7 +21309,7 @@
       "sourceHash": "1807d58f32163f2c4a798f820b9864e86d886027ca572ccd2753c106f608bf83"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-02-07"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-2606",
@@ -21325,7 +21325,7 @@
       "sourceHash": "e7f7aecd9c8128baa7283471152ffb7483623de574cc49ef57b31940377ff766"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-07-23"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-5195",
@@ -21341,7 +21341,7 @@
       "sourceHash": "b400359424a255d41a03ba68ff5aed7080eb8c6e0adc70a1e409711bd71dd842"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-06-02"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-3475",
@@ -21357,7 +21357,7 @@
       "sourceHash": "c097a64e998589f47e4eb6be6b442567e7fb8967866de508fa73bc1f808c1c6e"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-06-07"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-4444",
@@ -21373,7 +21373,7 @@
       "sourceHash": "47f88429c52a2d9b621d1485a30db09ce60d39711c25749ff08385c98d48e3ae"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-05-10"
+    "lastMovementAt": "2026-10-09"
   },
   {
     "serial": "KE-I1-2411",
@@ -21389,7 +21389,7 @@
       "sourceHash": "a9ed85047e7fb350083bce22bdb3ef10a5163ecb908d62ff5d182cccd29070b1"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-05-05"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-4995",
@@ -21405,7 +21405,7 @@
       "sourceHash": "ae7b18ae04f20d967680a1f01cf2709c8d7253f30d77a0e3350f3f6fcad66ce0"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-12-09"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-8733",
@@ -21421,7 +21421,7 @@
       "sourceHash": "7055f9ca843c44e9f71954aaa0e3c301c62a2c2be32f4264e6156f09b74094f7"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-03-20"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-2816",
@@ -21437,7 +21437,7 @@
       "sourceHash": "dc2462f88f269f7532ccb6bd3dad79b69a4944bb93518a8219f3c30f96fe35ac"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-11-08"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-8271",
@@ -21453,7 +21453,7 @@
       "sourceHash": "9e02b011d51a98157535dbd3bbfafc43936339028f0747f76a4ad71c26eb2508"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-06-27"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-4394",
@@ -21469,7 +21469,7 @@
       "sourceHash": "e0c91146f2bf1177be2cbc57ed145c3575577ed63df0882fb5ebae4eff65d720"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-10-09"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-6599",
@@ -21485,7 +21485,7 @@
       "sourceHash": "937a6d61fb9bc3dd6433289a161cf3069b97f292efb8e82879703ef3b37cfc64"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-06-22"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-9504",
@@ -21501,7 +21501,7 @@
       "sourceHash": "2107621d929437cb25be4706cf266f022f74dd8f8ae7535e135ded9493c7d18c"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-12-21"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-5801",
@@ -21517,7 +21517,7 @@
       "sourceHash": "7ab0f71e5ab2d2cd8f4016f6a041372296ce782314d5da6bae9e7fd9f622f69f"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-04-12"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-3854",
@@ -21533,7 +21533,7 @@
       "sourceHash": "ba5b572cd7e6ca4e2f6142e38ef7fe1ebc21400c364e94a693e7fbe713685b0b"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-03-26"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-7127",
@@ -21549,7 +21549,7 @@
       "sourceHash": "eb4a928947dce2d94c39e181a14f2d2c3b8ac1683cf3e233cc1e0a0b07326bd9"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-03-22"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-7775",
@@ -21565,7 +21565,7 @@
       "sourceHash": "bf3f1e378925ccf1c55ef50705e27d6f7386317cbbf778e0c6cd81e600a15160"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-11-10"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-I1-8011",
@@ -21581,7 +21581,7 @@
       "sourceHash": "cc8ca32a193502dd1799d17efb161aa221cb5eda72645b10f7ea4791f4bedaf2"
     },
     "acquiredAt": "2026-01-11",
-    "lastMovementAt": "2026-04-14"
+    "lastMovementAt": "2026-11-12"
   },
   {
     "serial": "KE-S1-2003",
@@ -21597,7 +21597,7 @@
       "sourceHash": "3ac20cfdc98414863cd8b98d779b793051f48adda23c25f7ff2a2f4854de7dc6"
     },
     "acquiredAt": "2026-05-16",
-    "lastMovementAt": "2026-09-10"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-4337",
@@ -21613,7 +21613,7 @@
       "sourceHash": "7813a3dff2a6697e4c531a007b38413a679efa092c1761d9119b165454d10afa"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-09-21"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-1314",
@@ -21629,7 +21629,7 @@
       "sourceHash": "a96c452e9f1b7e9094357543ac76ce4db562693d97dff52148468c72e3619409"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-08-04"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-4655",
@@ -21645,7 +21645,7 @@
       "sourceHash": "fab078eb54351354ce1ab2036792230e41116919f9de0fe1a93cb4657a795208"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-07-14"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-9440",
@@ -21661,7 +21661,7 @@
       "sourceHash": "ec298358286d487018a0c5477ccce338cecbd5fb12cf0fa129618de68062b698"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-12-02"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-4090",
@@ -21677,7 +21677,7 @@
       "sourceHash": "f7967b30f8adbc64a1a6ce5c3d60b8bdc7ed8a6c31e388c1560687f17b251023"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-07-27"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-5940",
@@ -21693,7 +21693,7 @@
       "sourceHash": "70c6e0447349f6c16b6edeae75970c90b25b85ef19d22cd4228bf148689feed8"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-06-03"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-2820",
@@ -21709,7 +21709,7 @@
       "sourceHash": "f8bdabac3ff2dd26dca6e8e8d9d1ea3b972f1392f76df190514e748225d07d46"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-12-15"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-7822",
@@ -21725,7 +21725,7 @@
       "sourceHash": "35f856f69bf39e6014339db6f4ea73192c75aed361e0f4c74bd15e5149b05db6"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-05-09"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-8779",
@@ -21741,7 +21741,7 @@
       "sourceHash": "e41446d4a5f64375cbb19bfde9f10994217a49a0194684f0875ae6c1fca5e7d0"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-10-12"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-5137",
@@ -21757,7 +21757,7 @@
       "sourceHash": "fbfd4404511b06b21a76ba35aae98c86fd00333ad8ef63ee8857dbe434b181b4"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-10-17"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-3782",
@@ -21773,7 +21773,7 @@
       "sourceHash": "1ed70b714300087df6d4eb1a9329c3331007ec32422c4beea4bdc2a2daaa3410"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-08-27"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-6312",
@@ -21789,7 +21789,7 @@
       "sourceHash": "e22c48c45c52d2f0366c87bee568874af5d3442e3f48cebbbaf7f64c8f29d5fd"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-09-19"
+    "lastMovementAt": "2026-09-15"
   },
   {
     "serial": "KE-X1-9454",
@@ -21805,7 +21805,7 @@
       "sourceHash": "21430f7d10fe6b4a81f0292cdb26d762b6c23363a53dede0957ec5dec4336b6b"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-04-08"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-1158",
@@ -21821,7 +21821,7 @@
       "sourceHash": "330305273b417bacffdad8fd799e74bbe6e164e30866d580afba7acd9f971344"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-10-09"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-1037",
@@ -21837,7 +21837,7 @@
       "sourceHash": "1d0c7e344dada668fb5505472dbcb4548d9de63159c057561459615ecd5126b7"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-08-22"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-9771",
@@ -21853,7 +21853,7 @@
       "sourceHash": "7116a9b4e0efb65af4f0edbcdfbc2098e41de34179b0afab454b8cd6e3a9708f"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-07-27"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-3061",
@@ -21869,7 +21869,7 @@
       "sourceHash": "35523740ef6ff181c25e2d49498c1e0f6662f9a947e88207bff06a8a3b7dafeb"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-06-05"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-4726",
@@ -21885,7 +21885,7 @@
       "sourceHash": "434bc50833847272e23088d2b042a2ae59f0dccd399f9d16902ad8f09cc05e6f"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-07-28"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-8469",
@@ -21901,7 +21901,7 @@
       "sourceHash": "7c22eefba8cee0e0a94cf2ced152b8eac28447d73b3313004005864cb1e876f1"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-08-13"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-8107",
@@ -21917,7 +21917,7 @@
       "sourceHash": "74670180e41c2565518d4b5d04f8576a5e2ce299b6ace3fe9eade61aa34b1ad7"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-10-09"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KE-X1-3278",
@@ -21933,7 +21933,7 @@
       "sourceHash": "734fd600b2c964fd06a3ecb693af5fb4e45e425cc8f3c82b100674b8e449fb07"
     },
     "acquiredAt": "2026-03-08",
-    "lastMovementAt": "2026-08-18"
+    "lastMovementAt": "2026-10-18"
   },
   {
     "serial": "KV-B1-U0396",
@@ -22013,7 +22013,7 @@
       "sourceHash": "69cbbdcf4fea192109d83f57945712e118789e49a2d8b88b0cee75e5f097734d"
     },
     "acquiredAt": "2026-06-23",
-    "lastMovementAt": "2026-09-18"
+    "lastMovementAt": "2026-09-04"
   },
   {
     "serial": "KE-X1-9159",
@@ -22029,7 +22029,7 @@
       "sourceHash": "8c56d71c66ebc47e71cd3f400568cb7c1e561fac1bfb1b5e1a4d85f551340878"
     },
     "acquiredAt": "2026-06-12",
-    "lastMovementAt": "2026-09-21"
+    "lastMovementAt": "2026-10-10"
   },
   {
     "serial": "KE-Y1-1845",
@@ -22045,7 +22045,7 @@
       "sourceHash": "0c9661d2314dd9c85e0974e963f538648cb2a9f17cab6eec7520e1bc5a60dcd5"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-03-22"
+    "lastMovementAt": "2026-10-05"
   },
   {
     "serial": "KE-Y1-8184",
@@ -22061,7 +22061,7 @@
       "sourceHash": "df3f3d906fa1e3117856f7e8bdba2831492c25dd9b782d40451ff48536f7da13"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-10-21"
+    "lastMovementAt": "2026-11-07"
   },
   {
     "serial": "KE-Y1-1134",
@@ -22077,7 +22077,7 @@
       "sourceHash": "ff27f89150fe576de12e80b1a429ac7d3e850b7ce46dbf84061f08010cef4adb"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-11-20"
+    "lastMovementAt": "2026-11-04"
   },
   {
     "serial": "KE-Y1-8530",
@@ -22093,7 +22093,7 @@
       "sourceHash": "31962761ddbd96e9c6046c1682a701748976c509b5f760cc8c584a6bf3c96f4d"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-05-04"
+    "lastMovementAt": "2026-10-05"
   },
   {
     "serial": "KE-Y1-4542",
@@ -22109,7 +22109,7 @@
       "sourceHash": "63a5e13cc3707f80b59e771977294a9186cdb7b605285692d279e72b228c88c1"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-10-28"
+    "lastMovementAt": "2026-09-11"
   },
   {
     "serial": "KE-Y1-7229",
@@ -22125,7 +22125,7 @@
       "sourceHash": "59c4805e05a00b82f301b29bc91b51c3af63cede34646ab8f8b6919126bf059e"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-10-25"
+    "lastMovementAt": "2026-11-26"
   },
   {
     "serial": "KE-Y1-1470",
@@ -22141,7 +22141,7 @@
       "sourceHash": "3ad87fe30d900cc35026d2f6f322c191604d21b194d6447d584907503883c167"
     },
     "acquiredAt": "2025-11-08",
-    "lastMovementAt": "2026-09-01"
+    "lastMovementAt": "2026-10-02"
   },
   {
     "serial": "KV-D1-U0400",

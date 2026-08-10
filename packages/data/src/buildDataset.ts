@@ -141,6 +141,15 @@ export function buildDataset(seed: string = CANONICAL_GENERATOR_SEED): IcgDatase
   const operational = buildOperational(seed, unitsResult, netsuite);
   const scenarioEvents = buildScenarioEvents(unitsResult);
 
+  // Operational events own the book-movement story for installed and
+  // assigned units (see OperationalResult.unitPatches). Location, cost and
+  // classification never change here — only the movement date is aligned,
+  // so every allocation marginal and control total is untouched.
+  const patchedUnits = unitsResult.units.map((u) => {
+    const lastMovementAt = operational.unitPatches.get(u.serial);
+    return lastMovementAt !== undefined ? { ...u, lastMovementAt } : u;
+  });
+
   const skus = SKU_DEFS.map((s) => ({
     code: s.code,
     description: s.description,
@@ -152,7 +161,7 @@ export function buildDataset(seed: string = CANONICAL_GENERATOR_SEED): IcgDatase
     skus: parseAll(skuFixtureSchema, skus, "skus"),
     locations: parseAll(locationFixtureSchema, LOCATIONS, "locations"),
     parties: parseAll(partyFixtureSchema, PARTIES, "parties"),
-    inventoryUnits: parseAll(inventoryItemFixtureSchema, unitsResult.units, "inventoryUnits"),
+    inventoryUnits: parseAll(inventoryItemFixtureSchema, patchedUnits, "inventoryUnits"),
     purchaseOrders: parseAll(purchaseOrderFixtureSchema, netsuite.purchaseOrders, "purchaseOrders"),
     itemReceipts: parseAll(itemReceiptFixtureSchema, netsuite.itemReceipts, "itemReceipts"),
     vendorBills: parseAll(vendorBillFixtureSchema, netsuite.vendorBills, "vendorBills"),

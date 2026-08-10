@@ -191,7 +191,13 @@ export function buildUnits(seed: string): UnitsResult {
       }
       // One acquisition batch per cell×SKU keeps units aligned with a single
       // purchase receipt; the PRNG picks the batch month deterministically.
-      const month = months[prng.int(0, months.length - 1)]!;
+      // The warehouse KE-S1 batch must exist before its designed May cycle
+      // count (CNT-CC-2026-05, stories.test) — its pool stops at March.
+      const feasibleMonths =
+        cell.id === "WH_FH" && sku === "KE-S1"
+          ? months.filter((m) => m <= "2026-03")
+          : months;
+      const month = feasibleMonths[prng.int(0, feasibleMonths.length - 1)]!;
       const day =
         cell.id === "GIT_IN"
           ? prng.int(27, 29)

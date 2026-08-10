@@ -42,8 +42,7 @@
       "KE-I1-8183",
       "KE-I1-6152",
       "KE-I1-5343",
-      "KE-I1-2829",
-      "KE-I1-4066"
+      "KE-I1-2829"
     ],
     "customer": "Summit Ridge Health",
     "siteName": "Summit Ridge Health main site",
@@ -62,6 +61,7 @@
       "sourceHash": "065ab57cd95f996a9c48783dd67fac826040210894737c9c90f24b633af2db53"
     },
     "serials": [
+      "KE-I1-4066",
       "KE-I1-4702",
       "KE-I1-5090",
       "KE-I1-1977",
@@ -73,9 +73,7 @@
       "KE-I1-2606",
       "KE-I1-5195",
       "KE-I1-3475",
-      "KE-I1-4444",
-      "KE-I1-2411",
-      "KE-I1-4995"
+      "KE-I1-4444"
     ],
     "customer": "Copperline Grocers",
     "siteName": "Copperline Grocers main site",
@@ -94,6 +92,8 @@
       "sourceHash": "c48eed2e3fb9a6d9e77a3ec983ed8ff3f03ac2d0973cb23e06d0dfce3e7c2db4"
     },
     "serials": [
+      "KE-I1-2411",
+      "KE-I1-4995",
       "KE-I1-8733",
       "KE-I1-2816",
       "KE-I1-8271",
@@ -104,10 +104,7 @@
       "KE-I1-3854",
       "KE-I1-7127",
       "KE-I1-7775",
-      "KE-I1-8011",
-      "KE-S1-2003",
-      "KE-X1-4337",
-      "KE-X1-1314"
+      "KE-I1-8011"
     ],
     "customer": "Northgate Fulfillment",
     "siteName": "Northgate Fulfillment main site",
@@ -126,6 +123,9 @@
       "sourceHash": "6000a6455f592f630c16ec0e2203883c3b7e7a317ec607700627e5784317ff48"
     },
     "serials": [
+      "KE-S1-2003",
+      "KE-X1-4337",
+      "KE-X1-1314",
       "KE-X1-4655",
       "KE-X1-9440",
       "KE-X1-4090",
@@ -135,11 +135,7 @@
       "KE-X1-8779",
       "KE-X1-5137",
       "KE-X1-3782",
-      "KE-X1-6312",
-      "KE-X1-9454",
-      "KE-X1-1158",
-      "KE-X1-1037",
-      "KE-X1-9771"
+      "KE-X1-6312"
     ],
     "customer": "Redstone Manufacturing",
     "siteName": "Redstone Manufacturing main site",
@@ -158,19 +154,15 @@
       "sourceHash": "36741edeb8cbd67dd4ed7f2a245a81b1caced1b21499bd4464ed0b8a17381203"
     },
     "serials": [
+      "KE-X1-9454",
+      "KE-X1-1158",
+      "KE-X1-1037",
+      "KE-X1-9771",
       "KE-X1-3061",
       "KE-X1-4726",
       "KE-X1-8469",
       "KE-X1-8107",
-      "KE-X1-3278",
-      "KE-I1-9132",
-      "KE-X1-9159",
-      "KE-Y1-8184",
-      "KE-Y1-1134",
-      "KE-Y1-8530",
-      "KE-Y1-4542",
-      "KE-Y1-7229",
-      "KE-Y1-1470"
+      "KE-X1-3278"
     ],
     "customer": "Evergreen Campus Services",
     "siteName": "Evergreen Campus Services main site",

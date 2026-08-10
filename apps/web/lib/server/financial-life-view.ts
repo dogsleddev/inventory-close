@@ -38,7 +38,7 @@ import {
   carrierPhrase,
   gatherExceptionContext,
 } from "./exception-view";
-import { kindLabel, locationLabel, sourceLabel, titleCase } from "./humanize";
+import { classificationLabel, kindLabel, locationLabel, sourceLabel, titleCase } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -393,7 +393,7 @@ function assemblePhases(
               kind: "RECEIPT POSTING",
               date: formatDateShort(r.itemReceipt.receiptDate),
               title: "NetSuite receipt posted after period end",
-              meta: `On the year-end listing as ${titleCase(view.unit.classification)} · GL ${view.unit.glAccount} — recognition date not concluded`,
+              meta: `On the year-end listing as ${classificationLabel(view.unit.classification)} · GL ${view.unit.glAccount} — recognition date not concluded`,
               visual: "conf",
               glyph: "✕",
               recordId: r.itemReceipt.transactionNumber,
@@ -403,7 +403,7 @@ function assemblePhases(
               kind: "RECOGNITION",
               date: formatDateShort(r.itemReceipt.receiptDate),
               title: "Inventory recognized",
-              meta: `GL ${view.unit.glAccount} · ${titleCase(view.unit.classification)}`,
+              meta: `GL ${view.unit.glAccount} · ${classificationLabel(view.unit.classification)}`,
               visual: "acc",
               glyph: "●",
               recordId: r.itemReceipt.transactionNumber,
@@ -839,7 +839,7 @@ function assemblePhases(
         title: `${locationLabel(view.unit.location)} Inventory`,
         meta: conflict
           ? "Conflicts with deployment evidence"
-          : titleCase(view.unit.classification),
+          : classificationLabel(view.unit.classification),
         visual: conflict ? "conf" : "acc",
         glyph: conflict ? "✕" : "●",
         recordId: stateRecordId,
@@ -850,7 +850,7 @@ function assemblePhases(
       card({
         kind: "GL RELATIONSHIP",
         date: opts.periodEnd !== undefined ? formatDateShort(opts.periodEnd) : "At 12/31",
-        title: `${view.unit.glAccount} · ${titleCase(view.unit.classification)}`,
+        title: `${view.unit.glAccount} · ${classificationLabel(view.unit.classification)}`,
         meta:
           opts.grossSubledger !== null
             ? `In gross subledger ${opts.grossSubledger}`
@@ -1266,7 +1266,7 @@ export function buildFinancialLifeData(
       view.unit !== undefined
         ? {
             headline: `${locationLabel(view.unit.location)} Inventory`,
-            sub: `${titleCase(view.unit.classification)} · GL ${view.unit.glAccount}${periodEnd !== undefined ? ` · at ${formatDate(periodEnd)}` : ""}`,
+            sub: `${classificationLabel(view.unit.classification)} · GL ${view.unit.glAccount}${periodEnd !== undefined ? ` · at ${formatDate(periodEnd)}` : ""}`,
           }
         : {
             headline: "Not on the year-end listing",
@@ -1349,7 +1349,7 @@ export function buildFinancialLifeData(
       ? {
           rows: [
             { k: `Unit cost · ${view.unit.sku}`, v: formatCents(view.unit.unitCostCents) },
-            { k: "Classification", v: titleCase(view.unit.classification) },
+            { k: "Classification", v: classificationLabel(view.unit.classification) },
             { k: "GL account", v: view.unit.glAccount, mono: true },
             ...(readiness !== undefined
               ? [

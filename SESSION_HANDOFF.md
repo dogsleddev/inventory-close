@@ -71,7 +71,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
   off-by-one in the note, not a skipped test.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
-- Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
+- Committed dataset hash: `672d7349c616f47888c7bd28fdf13a844884b3eaf153d32e45b8d4676f1a5ab0`
+  (changed by the pass-1 data remediation; the locked financial baseline did not move).
 
 ### Stage status
 

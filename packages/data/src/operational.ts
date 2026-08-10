@@ -57,6 +57,13 @@ export interface OperationalResult {
   crmAccounts: CrmAccountFixture[];
   forecasts: ForecastFixture[];
   assignments: AssignmentFixture[];
+  /**
+   * Book-movement corrections derived from operational events: a unit that
+   * was installed at a customer or sent out on demo/loan last moved on the
+   * books when that event happened, not on an uncoordinated random date.
+   * Applied to the unit snapshot by buildDataset before fixtures are emitted.
+   */
+  unitPatches: Map<string, string>;
 }
 
 export function buildOperational(
@@ -66,6 +73,13 @@ export function buildOperational(
 ): OperationalResult {
   const { units, story } = unitsResult;
   const prng = createPrng(`${seed}:operational`);
+  // Separate stream for time-of-day variation so existing draws stay put.
+  const jitterPrng = createPrng(`${seed}:operational:jitter`);
+  const jitterTime = (startMinute: number, endMinute: number): string => {
+    const m = jitterPrng.int(startMinute, endMinute);
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}:00`;
+  };
+  const unitPatches = new Map<string, string>();
 
   // ---- FlightPath carrier shipments ----
   const carrierShipments: CarrierShipmentFixture[] = [];
@@ -85,7 +99,8 @@ export function buildOperational(
     ],
   });
 
-  // Clean FY2026 sale shipments, delivered before year end.
+  // Clean FY2026 sale shipments, delivered before year end. Event times vary
+  // per shipment — real carrier lanes do not repeat to the minute.
   netsuite.soldChains.forEach((chain, i) => {
     carrierShipments.push({
       id: `FP-88${150 + i}`,
@@ -94,9 +109,9 @@ export function buildOperational(
       itemFulfillmentNumber: chain.fulfillmentNumber,
       serials: [...chain.serials],
       events: [
-        { eventType: "PICKUP", occurredAt: atTime(chain.shipDate, "17:30:00"), location: "KestrelGrid Dock 2" },
-        { eventType: "IN_TRANSIT", occurredAt: atTime(addDays(chain.shipDate, 1), "05:00:00"), location: "FlightPath Hub — Reno" },
-        { eventType: "DELIVERED", occurredAt: atTime(chain.deliveredDate, "16:15:00"), location: `${chain.customer} receiving dock` },
+        { eventType: "PICKUP", occurredAt: atTime(chain.shipDate, jitterTime(16 * 60 + 15, 18 * 60 + 40)), location: "KestrelGrid Dock 2" },
+        { eventType: "IN_TRANSIT", occurredAt: atTime(addDays(chain.shipDate, 1), jitterTime(3 * 60 + 50, 6 * 60 + 30)), location: "FlightPath Hub — Reno" },
+        { eventType: "DELIVERED", occurredAt: atTime(chain.deliveredDate, jitterTime(13 * 60 + 40, 17 * 60 + 20)), location: `${chain.customer} receiving dock` },
       ],
     });
   });
@@ -109,7 +124,7 @@ export function buildOperational(
       carrier: "FlightPath Freight",
       serials: [...so.serials],
       events: [
-        { eventType: "PICKUP", occurredAt: atTime(so.pickupDate, "17:00:00"), location: "KestrelGrid Dock 2" },
+        { eventType: "PICKUP", occurredAt: atTime(so.pickupDate, jitterTime(15 * 60 + 30, 18 * 60 + 30)), location: "KestrelGrid Dock 2" },
         { eventType: "IN_TRANSIT", occurredAt: "2026-12-31T08:30:00Z", location: "FlightPath linehaul" },
       ],
     });
@@ -154,11 +169,13 @@ export function buildOperational(
     },
   ];
   // Customer-site company-owned fleet installs, grouped by customer.
+  // Loaner-classified units are excluded: a loaner's customer, dates and
+  // paperwork come from its assignment, never from a fleet install sweep.
   const csSerialized = units.filter(
     (u) =>
       u.location === "CUSTOMER_SITE" &&
-      skuByCode.get(u.sku)?.serialized &&
-      u.serial !== story.exc008Serial,
+      u.classification !== "LOANER" &&
+      skuByCode.get(u.sku)?.serialized,
   );
   const installCustomers = ["Summit Ridge Health", "Copperline Grocers", "Northgate Fulfillment", "Redstone Manufacturing", "Evergreen Campus Services"];
   const perGroup = Math.ceil(csSerialized.length / installCustomers.length);
@@ -176,6 +193,8 @@ export function buildOperational(
       installedBy: `DeployOps Crew ${1 + (g % 5)}`,
       status: "COMPLETE",
     });
+    // The unit's last book movement is the shipment to the install site.
+    for (const u of group) unitPatches.set(u.serial, day);
   });
   // EXC-008: the loaner KE-Y1 installed at the customer site in October.
   installations.push({
@@ -206,8 +225,10 @@ export function buildOperational(
         id: `TL-${serial}`,
         sourceRef: opRef("DEVICE_CLOUD", "TELEMETRY_SUMMARY", `TL-${serial}`, "2027-01-06T23:30:00Z"),
         serial,
-        firstOnlineAt: atTime(inst.installedAt.slice(0, 10), "22:30:00"),
-        lastSeenAt: "2027-01-06T23:00:00Z",
+        // Online the evening of the install (crews finish 19:00), check-in
+        // times varying per device rather than one repeated instant.
+        firstOnlineAt: atTime(inst.installedAt.slice(0, 10), jitterTime(19 * 60 + 40, 23 * 60 + 45)),
+        lastSeenAt: atTime("2027-01-06", jitterTime(19 * 60 + 30, 23 * 60 + 15)),
       });
     }
   }
@@ -372,8 +393,9 @@ export function buildOperational(
     // 0451/0452 are reserved for the EXC-009 pair; the counter skips them.
     if (rmaSeq === 451) rmaSeq = 453;
     let id = `RMA-2026-0${rmaSeq}`;
-    // The return arrived when the unit moved into the RMA area.
-    let receivedAt = atTime(u.lastMovementAt ?? "2026-12-10", "17:00:00");
+    // The return arrived when the unit moved into the RMA area; the intake
+    // desk logs it at a per-return time, not one repeated instant.
+    let receivedAt = atTime(u.lastMovementAt ?? "2026-12-10", jitterTime(14 * 60 + 30, 18 * 60 + 45));
     let reason = reasons[prng.int(0, reasons.length - 1)]!;
     let status: RmaRecordFixture["status"] = statuses[prng.int(0, statuses.length - 1)]!;
     let customer = CUSTOMERS[prng.int(0, CUSTOMERS.length - 1)]!;
@@ -521,6 +543,14 @@ export function buildOperational(
     });
   });
 
+  // A demo or loaner unit's last book movement is the day it went out on
+  // its assignment (EXC-010's hand-pinned 2026-05-31 is its startedAt, so
+  // this is an identity for the designed story). Assignments win over any
+  // earlier patch — an assigned unit's story is its assignment.
+  for (const a of assignments) {
+    unitPatches.set(a.serial, a.startedAt);
+  }
+
   return {
     carrierShipments,
     installations,
@@ -531,5 +561,6 @@ export function buildOperational(
     crmAccounts,
     forecasts,
     assignments,
+    unitPatches,
   };
 }

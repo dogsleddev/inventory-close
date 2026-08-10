@@ -1183,149 +1183,11 @@
       "recordType": "PURCHASE_ORDER",
       "internalId": "10115",
       "transactionNumber": "PO-26-3039",
-      "lastModifiedAt": "2026-02-22T16:00:00Z",
+      "lastModifiedAt": "2026-02-01T16:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dd666257d8805be8059c535d24891a3a3bad09410876200f9bcb68c81c0c91dc"
     },
     "transactionNumber": "PO-26-3039",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-Y1",
-        "quantity": 6,
-        "amountCents": 7680000,
-        "serials": [
-          "KE-Y1-2866",
-          "KE-Y1-1719",
-          "KE-Y1-4904",
-          "KE-Y1-4764",
-          "KE-Y1-3232",
-          "KE-Y1-6197"
-        ]
-      }
-    ],
-    "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-02-22"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "PURCHASE_ORDER",
-      "internalId": "10118",
-      "transactionNumber": "PO-26-3040",
-      "lastModifiedAt": "2026-04-25T16:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "d6a107ccf39ab6d70637e7e8ab5546d74e15bb93464659793a5489585944e025"
-    },
-    "transactionNumber": "PO-26-3040",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-S1",
-        "quantity": 1,
-        "amountCents": 240000,
-        "serials": [
-          "KE-S1-2003"
-        ]
-      }
-    ],
-    "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-04-25"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "PURCHASE_ORDER",
-      "internalId": "10121",
-      "transactionNumber": "PO-26-3041",
-      "lastModifiedAt": "2026-05-28T16:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "1aab59d5168c0afa39853c1adb6baaf26348b9c981da491808564c445ec39a83"
-    },
-    "transactionNumber": "PO-26-3041",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-M1",
-        "quantity": 1,
-        "amountCents": 135000,
-        "serials": [
-          "KE-M1-4109"
-        ]
-      }
-    ],
-    "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-05-28"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "PURCHASE_ORDER",
-      "internalId": "10124",
-      "transactionNumber": "PO-26-3042",
-      "lastModifiedAt": "2026-07-12T16:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "f0e70d0746344e37b68eb9f830a961dcdb898291f358a2c882a92385a8801592"
-    },
-    "transactionNumber": "PO-26-3042",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-E2",
-        "quantity": 1,
-        "amountCents": 740000,
-        "serials": [
-          "KE-E2-8276"
-        ]
-      }
-    ],
-    "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-07-12"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "PURCHASE_ORDER",
-      "internalId": "10127",
-      "transactionNumber": "PO-26-3043",
-      "lastModifiedAt": "2026-07-23T16:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "ae1b25f632b876f7454aecc5a0a15d0282207687ec2b9d2283810076d660b20d"
-    },
-    "transactionNumber": "PO-26-3043",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-Y1",
-        "quantity": 9,
-        "amountCents": 11520000,
-        "serials": [
-          "KE-Y1-9157",
-          "KE-Y1-8659",
-          "KE-Y1-9058",
-          "KE-Y1-4516",
-          "KE-Y1-7430",
-          "KE-Y1-3748",
-          "KE-Y1-7873",
-          "KE-Y1-1148",
-          "KE-Y1-1084"
-        ]
-      }
-    ],
-    "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-07-23"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "PURCHASE_ORDER",
-      "internalId": "10130",
-      "transactionNumber": "PO-26-3044",
-      "lastModifiedAt": "2026-09-01T16:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "b6dbf510b4491d955dfe26674c67316fcf379f2d49e77d62d1ee7d19d1ef3ab0"
-    },
-    "transactionNumber": "PO-26-3044",
     "lines": [
       {
         "lineId": "L1",
@@ -1458,7 +1320,145 @@
       }
     ],
     "vendor": "Meridian Contract Manufacturing",
-    "orderDate": "2026-09-01"
+    "orderDate": "2026-02-01"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "PURCHASE_ORDER",
+      "internalId": "10118",
+      "transactionNumber": "PO-26-3040",
+      "lastModifiedAt": "2026-02-22T16:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "d6a107ccf39ab6d70637e7e8ab5546d74e15bb93464659793a5489585944e025"
+    },
+    "transactionNumber": "PO-26-3040",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-Y1",
+        "quantity": 6,
+        "amountCents": 7680000,
+        "serials": [
+          "KE-Y1-2866",
+          "KE-Y1-1719",
+          "KE-Y1-4904",
+          "KE-Y1-4764",
+          "KE-Y1-3232",
+          "KE-Y1-6197"
+        ]
+      }
+    ],
+    "vendor": "Meridian Contract Manufacturing",
+    "orderDate": "2026-02-22"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "PURCHASE_ORDER",
+      "internalId": "10121",
+      "transactionNumber": "PO-26-3041",
+      "lastModifiedAt": "2026-04-25T16:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1aab59d5168c0afa39853c1adb6baaf26348b9c981da491808564c445ec39a83"
+    },
+    "transactionNumber": "PO-26-3041",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 240000,
+        "serials": [
+          "KE-S1-2003"
+        ]
+      }
+    ],
+    "vendor": "Meridian Contract Manufacturing",
+    "orderDate": "2026-04-25"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "PURCHASE_ORDER",
+      "internalId": "10124",
+      "transactionNumber": "PO-26-3042",
+      "lastModifiedAt": "2026-05-28T16:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f0e70d0746344e37b68eb9f830a961dcdb898291f358a2c882a92385a8801592"
+    },
+    "transactionNumber": "PO-26-3042",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 135000,
+        "serials": [
+          "KE-M1-4109"
+        ]
+      }
+    ],
+    "vendor": "Meridian Contract Manufacturing",
+    "orderDate": "2026-05-28"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "PURCHASE_ORDER",
+      "internalId": "10127",
+      "transactionNumber": "PO-26-3043",
+      "lastModifiedAt": "2026-07-12T16:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ae1b25f632b876f7454aecc5a0a15d0282207687ec2b9d2283810076d660b20d"
+    },
+    "transactionNumber": "PO-26-3043",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 740000,
+        "serials": [
+          "KE-E2-8276"
+        ]
+      }
+    ],
+    "vendor": "Meridian Contract Manufacturing",
+    "orderDate": "2026-07-12"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "PURCHASE_ORDER",
+      "internalId": "10130",
+      "transactionNumber": "PO-26-3044",
+      "lastModifiedAt": "2026-07-23T16:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b6dbf510b4491d955dfe26674c67316fcf379f2d49e77d62d1ee7d19d1ef3ab0"
+    },
+    "transactionNumber": "PO-26-3044",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-Y1",
+        "quantity": 9,
+        "amountCents": 11520000,
+        "serials": [
+          "KE-Y1-9157",
+          "KE-Y1-8659",
+          "KE-Y1-9058",
+          "KE-Y1-4516",
+          "KE-Y1-7430",
+          "KE-Y1-3748",
+          "KE-Y1-7873",
+          "KE-Y1-1148",
+          "KE-Y1-1084"
+        ]
+      }
+    ],
+    "vendor": "Meridian Contract Manufacturing",
+    "orderDate": "2026-07-23"
   },
   {
     "sourceRef": {
@@ -1500,8 +1500,8 @@
       {
         "lineId": "L1",
         "sku": "KE-E2",
-        "quantity": 154,
-        "amountCents": 113960000,
+        "quantity": 159,
+        "amountCents": 117660000,
         "serials": [
           "KE-E2-1048",
           "KE-E2-1051",
@@ -1656,7 +1656,39 @@
           "KE-E2-5423",
           "KE-E2-5758",
           "KE-E2-9760",
-          "KE-E2-7033"
+          "KE-E2-7033",
+          "KE-E2-6669",
+          "KE-E2-1662",
+          "KE-E2-2255",
+          "KE-E2-6417",
+          "KE-E2-8589"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 5,
+        "amountCents": 1200000,
+        "serials": [
+          "KE-S1-1271",
+          "KE-S1-4460",
+          "KE-S1-8383",
+          "KE-S1-5843",
+          "KE-S1-4077"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-M1",
+        "quantity": 6,
+        "amountCents": 810000,
+        "serials": [
+          "KE-M1-7771",
+          "KE-M1-3016",
+          "KE-M1-6449",
+          "KE-M1-3671",
+          "KE-M1-4748",
+          "KE-M1-9178"
         ]
       }
     ],
@@ -2615,6 +2647,24 @@
           "KE-I1-9807",
           "KE-I1-9628"
         ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 490000,
+        "serials": [
+          "KE-E1-3589"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 920000,
+        "serials": [
+          "KE-X1-8518"
+        ]
       }
     ],
     "vendor": "Volta Components Ltd",
@@ -2635,8 +2685,8 @@
       {
         "lineId": "L1",
         "sku": "KE-E1",
-        "quantity": 119,
-        "amountCents": 58310000,
+        "quantity": 127,
+        "amountCents": 62230000,
         "serials": [
           "KE-E1-1667",
           "KE-E1-5310",
@@ -2756,7 +2806,25 @@
           "KE-E1-7356",
           "KE-E1-3434",
           "KE-E1-6470",
-          "KE-E1-7436"
+          "KE-E1-7436",
+          "KE-E1-4430",
+          "KE-E1-5349",
+          "KE-E1-4281",
+          "KE-E1-4916",
+          "KE-E1-3799",
+          "KE-E1-5877",
+          "KE-E1-4268",
+          "KE-E1-5523"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-X1",
+        "quantity": 2,
+        "amountCents": 1840000,
+        "serials": [
+          "KE-X1-1157",
+          "KE-X1-5166"
         ]
       }
     ],

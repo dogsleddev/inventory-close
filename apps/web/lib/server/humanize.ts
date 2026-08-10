@@ -38,6 +38,19 @@ export function locationLabel(value: string): string {
   return LOCATION_NAMES.get(value) ?? titleCase(value);
 }
 
+/**
+ * Accounting classification → display copy. CANONICAL_SPEC §5 names the
+ * classes ("GIT", "RMA" stay acronyms); title-casing would render the
+ * nonsense labels "Git" and "Rma".
+ */
+export function classificationLabel(classification: string): string {
+  const special: Record<string, string> = {
+    GIT: "GIT",
+    RMA: "RMA",
+  };
+  return special[classification] ?? titleCase(classification);
+}
+
 /** Evidence/record kinds → display ("ITEM_FULFILLMENT" → "Item Fulfillment"). */
 export function kindLabel(kind: string): string {
   const special: Record<string, string> = {
