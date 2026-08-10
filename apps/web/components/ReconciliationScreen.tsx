@@ -94,9 +94,21 @@ export function ReconciliationScreen({
         ) : (
           <>
             <Panel>
-              <TabBar tabs={data.tabs} active={tab} onSelect={setTab} label="Reconciliation tabs" />
+              <TabBar
+                tabs={data.tabs}
+                active={tab}
+                onSelect={setTab}
+                label="Reconciliation tabs"
+                panelId="icg-recon-panel"
+              />
             </Panel>
 
+            <div
+              id="icg-recon-panel"
+              role="tabpanel"
+              aria-labelledby={`icg-recon-panel-tab-${tab}`}
+              style={{ display: "contents" }}
+            >
             {tab === "financial" ? (
               <Panel>
                 <div style={{ padding: "24px 20px" }}>
@@ -182,7 +194,7 @@ export function ReconciliationScreen({
                       </thead>
                       <tbody>
                         {data.procurement.rows.map((row) => (
-                          <tr key={row.po} data-selected={exceptionId === row.exceptionId}>
+                          <tr key={row.po} data-selected={row.exceptionId !== null && exceptionId === row.exceptionId}>
                             <td>
                               {row.exceptionId !== null ? (
                                 <button
@@ -211,21 +223,7 @@ export function ReconciliationScreen({
                             </td>
                             <td>
                               <span
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                  fontSize: "11px",
-                                  fontWeight: 600,
-                                  padding: "3px 9px",
-                                  borderRadius: "4px",
-                                  background:
-                                    row.close.variant === "aurora"
-                                      ? "var(--aurora-bg)"
-                                      : "var(--frost-bg)",
-                                  color:
-                                    row.close.variant === "aurora" ? "var(--aurora)" : "var(--frost)",
-                                }}
+                                className={`icg-close-capsule${row.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
                               >
                                 <span aria-hidden style={{ fontSize: "9px" }}>
                                   {row.close.glyph}
@@ -292,19 +290,16 @@ export function ReconciliationScreen({
                         </div>
                       </div>
                       <div className="icg-chain">
-                        {data.commercial.featured.nodes.map((node, i) => (
-                          <div key={node.type + i} className="icg-chain-seg" style={{ flex: node.flex }}>
-                            <button
-                              type="button"
-                              className={`icg-chain-node${
-                                node.visual === "missing"
-                                  ? " icg-chain-node--missing"
-                                  : node.visual === "conflict"
-                                    ? " icg-chain-node--conflict"
-                                    : ""
-                              }`}
-                              onClick={() => openRecord(node.evidenceId)}
-                            >
+                        {data.commercial.featured.nodes.map((node, i) => {
+                          const cls = `icg-chain-node${
+                            node.visual === "missing"
+                              ? " icg-chain-node--missing"
+                              : node.visual === "conflict"
+                                ? " icg-chain-node--conflict"
+                                : ""
+                          }`;
+                          const body = (
+                            <>
                               <span className="icg-chain-node-type">{node.type}</span>
                               <span className="icg-chain-node-value">{node.value}</span>
                               <span className="icg-chain-node-state">
@@ -312,15 +307,36 @@ export function ReconciliationScreen({
                                   {node.glyph}
                                 </span>
                                 {node.state}
+                                {node.visual === "missing" ? (
+                                  <span className="icg-sr-only"> — missing, required</span>
+                                ) : null}
                               </span>
-                            </button>
-                            {i < (data.commercial?.featured?.nodes.length ?? 0) - 1 ? (
-                              <span className="icg-chain-connector" aria-hidden>
-                                –
-                              </span>
-                            ) : null}
-                          </div>
-                        ))}
+                            </>
+                          );
+                          return (
+                            <div key={node.type + i} className="icg-chain-seg" style={{ flex: node.flex }}>
+                              {/* Components with no record behind them —
+                                  deliveries carried as a note, absences —
+                                  are states, not controls that do nothing. */}
+                              {node.evidenceId !== null ? (
+                                <button
+                                  type="button"
+                                  className={cls}
+                                  onClick={() => openRecord(node.evidenceId)}
+                                >
+                                  {body}
+                                </button>
+                              ) : (
+                                <div className={cls}>{body}</div>
+                              )}
+                              {i < (data.commercial?.featured?.nodes.length ?? 0) - 1 ? (
+                                <span className="icg-chain-connector" aria-hidden>
+                                  –
+                                </span>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     <div
@@ -448,7 +464,7 @@ export function ReconciliationScreen({
                       </thead>
                       <tbody>
                         {data.commercial.others.map((row) => (
-                          <tr key={row.subject} data-selected={exceptionId === row.exceptionId}>
+                          <tr key={row.subject} data-selected={row.exceptionId !== null && exceptionId === row.exceptionId}>
                             <td>
                               {row.exceptionId !== null ? (
                                 <button
@@ -525,13 +541,7 @@ export function ReconciliationScreen({
                         <Link
                           key={serial}
                           href={`/reconciliation?serial=${serial}`}
-                          className="icg-mono"
-                          style={{
-                            fontSize: "10.5px",
-                            border: "1px solid var(--hair)",
-                            borderRadius: "3px",
-                            padding: "3px 8px",
-                          }}
+                          className="icg-serial-chip"
                         >
                           {serial}
                         </Link>
@@ -571,6 +581,7 @@ export function ReconciliationScreen({
                 ) : null}
               </>
             ) : null}
+            </div>
           </>
         )}
       </main>
@@ -602,20 +613,8 @@ function ProcurementCardView({
         {card.exceptionId !== null ? (
           <button
             type="button"
+            className={`icg-close-capsule${card.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
             onClick={() => openException(card.exceptionId)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              fontSize: "11px",
-              fontWeight: 600,
-              padding: "3px 9px",
-              borderRadius: "4px",
-              border: "none",
-              cursor: "pointer",
-              background: card.close.variant === "aurora" ? "var(--aurora-bg)" : "var(--frost-bg)",
-              color: card.close.variant === "aurora" ? "var(--aurora)" : "var(--frost)",
-            }}
           >
             <span aria-hidden style={{ fontSize: "9px" }}>
               {card.close.glyph}
@@ -624,17 +623,7 @@ function ProcurementCardView({
           </button>
         ) : (
           <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              fontSize: "11px",
-              fontWeight: 600,
-              padding: "3px 9px",
-              borderRadius: "4px",
-              background: card.close.variant === "aurora" ? "var(--aurora-bg)" : "var(--frost-bg)",
-              color: card.close.variant === "aurora" ? "var(--aurora)" : "var(--frost)",
-            }}
+            className={`icg-close-capsule${card.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
           >
             <span aria-hidden style={{ fontSize: "9px" }}>
               {card.close.glyph}
@@ -684,13 +673,13 @@ function SerialIntegrityCard({
     <>
       <Panel>
         <div
-          style={{
-            borderTop: "3px solid var(--ember)",
-            padding: "14px 18px",
-            display: "grid",
-            gridTemplateColumns: "1fr 280px",
-            gap: "18px",
-          }}
+          className="icg-objhead"
+          style={
+            {
+              borderTop: "3px solid var(--ember)",
+              "--icg-objhead-cols": "1fr 280px",
+            } as CSSProperties
+          }
         >
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
@@ -722,14 +711,7 @@ function SerialIntegrityCard({
                 </span>
               )}
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: "14px",
-                marginTop: "13px",
-              }}
-            >
+            <div className="icg-facts" style={{ "--icg-facts-cols": 3 } as CSSProperties}>
               {card.facts.map((f) => (
                 <div key={f.label}>
                   <div className="icg-label">{f.label}</div>
@@ -750,7 +732,7 @@ function SerialIntegrityCard({
               ))}
             </div>
           </div>
-          <div style={{ borderLeft: "1px solid var(--hair)", paddingLeft: "16px" }}>
+          <div className="icg-objhead-rail">
             <div className="icg-label icg-label--md" style={{ marginBottom: "6px" }}>
               JUMP TO
             </div>

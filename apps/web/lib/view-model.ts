@@ -276,6 +276,8 @@ export interface LifePhase {
 }
 
 export interface LifeCycleRow {
+  /** Stable per-row identity — a serial can hold two rows in one plan. */
+  readonly key: string;
   readonly date: string;
   readonly plan: string;
   readonly snapshot: string;
@@ -322,6 +324,8 @@ export interface FinancialLifeData {
     readonly recordId: string | null;
   }[];
   readonly chainFootnote: string | null;
+  /** Set when the viewer's scope, not the data, emptied the record set. */
+  readonly recordScopeNotice: string | null;
   readonly accounting: {
     readonly rows: readonly { readonly k: string; readonly v: string; readonly mono?: boolean }[];
     readonly proposed: string;

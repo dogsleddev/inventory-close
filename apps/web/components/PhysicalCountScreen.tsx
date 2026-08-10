@@ -94,9 +94,21 @@ export function PhysicalCountScreen({
         ) : (
           <>
             <Panel>
-              <TabBar tabs={tabs} active={tab} onSelect={setTab} label="Physical Count tabs" />
+              <TabBar
+                tabs={tabs}
+                active={tab}
+                onSelect={setTab}
+                label="Physical Count tabs"
+                panelId="icg-count-panel"
+              />
             </Panel>
 
+            <div
+              id="icg-count-panel"
+              role="tabpanel"
+              aria-labelledby={`icg-count-panel-tab-${tab}`}
+              style={{ display: "contents" }}
+            >
             {tab === "year-end" ? (
               <>
                 <div className="icg-kpis icg-kpis--narrow">
@@ -186,7 +198,12 @@ export function PhysicalCountScreen({
                         </thead>
                         <tbody>
                           {data.variances.map((row) => (
-                            <tr key={row.key} data-selected={openId === row.exceptionId}>
+                            <tr
+                              key={row.key}
+                              data-selected={
+                                row.exceptionId !== null && openId === row.exceptionId
+                              }
+                            >
                               <td>
                                 {row.exceptionId !== null ? (
                                   <button
@@ -239,8 +256,8 @@ export function PhysicalCountScreen({
                     </div>
                     <div className="icg-panel-foot">
                       <span className="icg-soft" style={{ fontSize: "11px" }}>
-                        Sheet → Floor selections principally support Existence; Floor → Sheet
-                        selections principally support Completeness.
+                        These are management&apos;s first-pass count differences. Each row keeps
+                        its own conclusion and owner; the count did not resolve them.
                       </span>
                     </div>
                   </Panel>
@@ -521,6 +538,13 @@ export function PhysicalCountScreen({
                     }
                   />
                   <TestTable rows={data.auditorTests} openDrawer={setOpenId} />
+                  <div className="icg-panel-foot">
+                    <span className="icg-soft" style={{ fontSize: "11px" }}>
+                      Sheet → Floor selections principally support Existence; Floor → Sheet
+                      selections principally support Completeness. Gaurd records and supports
+                      these selections; it never makes them.
+                    </span>
+                  </div>
                 </Panel>
                 <Panel>
                   <PanelHead
@@ -563,7 +587,10 @@ export function PhysicalCountScreen({
                     </thead>
                     <tbody>
                       {data.movements.map((m) => (
-                        <tr key={m.id} data-selected={openId === m.exceptionId}>
+                        <tr
+                          key={m.id}
+                          data-selected={m.exceptionId !== null && openId === m.exceptionId}
+                        >
                           <td>
                             {m.exceptionId !== null ? (
                               <button
@@ -605,6 +632,7 @@ export function PhysicalCountScreen({
                 </div>
               </Panel>
             ) : null}
+            </div>
           </>
         )}
       </main>

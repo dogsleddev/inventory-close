@@ -65,6 +65,83 @@ describe("getCountDetail adjustments (stage 06)", () => {
   });
 });
 
+describe("stage-06 fleet regressions — record scoping", () => {
+  it("never hands the auditor a source document their evidence scope withholds", () => {
+    const auditorTitles = new Set(
+      queries.listEvidence(ctx("AUDITOR_READ_ONLY")).map((e) => e.title),
+    );
+    const graphTitles = new Set(ws.evidenceGraph.items.map((i) => i.title));
+    const life = queries.getFinancialLife(ctx("AUDITOR_READ_ONLY"), "KE-E2-1048");
+    const refs = Object.values(life.records).map(
+      (r) => (r as { id?: string; transactionNumber?: string }).id ??
+        (r as { transactionNumber?: string }).transactionNumber ?? "",
+    );
+    // A record that is evidence for some exception may only appear when that
+    // evidence is in scope — `records` must not be a side door around
+    // listEvidence / traceLineage.
+    const leaked = refs.filter((t) => graphTitles.has(t) && !auditorTitles.has(t));
+    expect(leaked).toEqual([]);
+    expect(queries.traceLineage(ctx("AUDITOR_READ_ONLY"), "EXC-001")).toBeUndefined();
+    // The controller, whose scope is full, still sees the whole chain.
+    const full = queries.getFinancialLife(ctx("CONTROLLER"), "KE-E2-1048");
+    expect(Object.keys(full.records).length).toBeGreaterThan(
+      Object.keys(life.records).length,
+    );
+    expect(full.records.salesOrder?.customer).toBeDefined();
+  });
+
+  it("scopes procurement documents the same way", () => {
+    const auditorTitles = new Set(
+      queries.listEvidence(ctx("AUDITOR_READ_ONLY")).map((e) => e.title),
+    );
+    const graphTitles = new Set(ws.evidenceGraph.items.map((i) => i.title));
+    for (const m of queries.getProcurementMatches(ctx("AUDITOR_READ_ONLY"))) {
+      const d = queries.getProcurementDetail(
+        ctx("AUDITOR_READ_ONLY"),
+        m.purchaseOrderNumber,
+      );
+      for (const ref of [
+        d.purchaseOrder?.transactionNumber,
+        d.itemReceipt?.transactionNumber,
+        d.vendorBill?.transactionNumber,
+      ]) {
+        if (ref === undefined) continue;
+        if (graphTitles.has(ref)) expect(auditorTitles.has(ref)).toBe(true);
+      }
+    }
+  });
+
+  it("sums document totals in the service so no caller adds money up", () => {
+    const life = queries.getFinancialLife(ctx("CONTROLLER"), "KE-E2-1048");
+    expect(life.recordTotals.salesOrderCents).toBeTypeOf("number");
+    expect(life.recordTotals.customerInvoiceCents).toBeTypeOf("number");
+    const match = queries
+      .getProcurementMatches(ctx("CONTROLLER"))
+      .find((m) => m.vendorBillNumber !== undefined);
+    const d = queries.getProcurementDetail(
+      ctx("CONTROLLER"),
+      match?.purchaseOrderNumber ?? "",
+    );
+    expect(d.totals.purchaseOrderCents).toBeTypeOf("number");
+    expect(d.totals.purchaseOrderQuantity).toBeTypeOf("number");
+    // A withheld document carries no total either.
+    const scoped = queries.getProcurementDetail(
+      ctx("AUDITOR_READ_ONLY"),
+      match?.purchaseOrderNumber ?? "",
+    );
+    if (scoped.purchaseOrder === undefined) {
+      expect(scoped.totals.purchaseOrderCents).toBeUndefined();
+    }
+  });
+
+  it("exposes the dataset's own location names instead of leaving them to the UI", () => {
+    const locations = queries.listLocations(ctx("CONTROLLER"));
+    const staging = locations.find((l) => l.id === "STAGING");
+    expect(staging?.name).toBe("Shipping / Install Staging");
+    expect(locations.length).toBeGreaterThan(4);
+  });
+});
+
 describe("getProcurementDetail (stage 06)", () => {
   it("returns the documents behind a match", () => {
     const match = queries
@@ -82,7 +159,12 @@ describe("getProcurementDetail (stage 06)", () => {
 
   it("returns nothing for an unknown purchase order", () => {
     const detail = queries.getProcurementDetail(ctx("CONTROLLER"), "PO-NONEXISTENT");
-    expect(detail).toEqual({});
+    expect(detail.purchaseOrder).toBeUndefined();
+    expect(detail.itemReceipt).toBeUndefined();
+    expect(detail.vendorBill).toBeUndefined();
+    // No documents means no totals — never a zero, which would read as a
+    // real figure.
+    expect(detail.totals).toEqual({});
   });
 
   it("keeps the match statuses independent: an incomplete native match can carry an open close question and vice versa", () => {

@@ -10,7 +10,12 @@ import type { DemoUser } from "@icg/data";
  * components to @icg/data fixtures.
  */
 
-const globalStore = globalThis as { __icgWorkspace?: Workspace };
+import { registerLocationNames } from "./humanize";
+
+const globalStore = globalThis as {
+  __icgWorkspace?: Workspace;
+  __icgLocationsRegistered?: boolean;
+};
 
 export function getWorkspace(): Workspace {
   // Survives Next dev-server module reloads without re-deriving the close.
@@ -19,7 +24,14 @@ export function getWorkspace(): Workspace {
 }
 
 export function getQueries(): QueryService {
-  return createQueryService(getWorkspace());
+  const queries = createQueryService(getWorkspace());
+  // Location display names belong to the dataset; register them once so
+  // locationLabel() reports what the data says rather than a transcription.
+  if (!globalStore.__icgLocationsRegistered) {
+    registerLocationNames(getWorkspace().dataset.locations);
+    globalStore.__icgLocationsRegistered = true;
+  }
+  return queries;
 }
 
 export const DEFAULT_USER_ID = "U-002"; // M. Reyes — Controller

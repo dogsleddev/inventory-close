@@ -102,6 +102,34 @@ function auditorVisibleEvidenceIds(ws: Workspace): ReadonlySet<string> {
   );
 }
 
+/** Record identity as the evidence graph keys it (kind is not needed here). */
+const identityKey = (ref: SourceRecordRef): string =>
+  `${ref.sourceSystem}|${ref.internalId}`;
+
+/**
+ * Source-document scoping for the stage-06 record projections.
+ *
+ * A source document that is ALSO evidence for some exception inherits that
+ * evidence's visibility: if the viewer's scope hides the evidence item,
+ * handing them the underlying fixture would be a side door around
+ * `listEvidence` / `traceLineage`. A document that is evidence for nothing
+ * is not governed by the workpaper model and stays readable under
+ * `close.read`, exactly as `listInventoryUnits` does.
+ */
+function makeRecordScope(
+  ws: Workspace,
+  user: DemoUser,
+): (ref: SourceRecordRef | undefined) => boolean {
+  if (!isAuditor(user)) return () => true;
+  const visible = auditorVisibleEvidenceIds(ws);
+  const hiddenIdentities = new Set(
+    ws.evidenceGraph.items
+      .filter((item) => item.sourceRef !== undefined && !visible.has(item.id))
+      .map((item) => identityKey(item.sourceRef as SourceRecordRef)),
+  );
+  return (ref) => ref === undefined || !hiddenIdentities.has(identityKey(ref));
+}
+
 function coverageWarnings(
   ws: Workspace,
   requiredSources: readonly string[],
@@ -199,6 +227,15 @@ export interface FinancialLifeView {
     readonly telemetry?: TelemetryFixture | undefined;
     readonly customerInvoice?: CustomerInvoiceFixture | undefined;
   };
+  /**
+   * Document totals in integer cents, summed here so no caller adds money
+   * up for display. Absent where a line omits its amount, or where the
+   * document itself is absent or out of the viewer's scope.
+   */
+  readonly recordTotals: {
+    readonly salesOrderCents?: number | undefined;
+    readonly customerInvoiceCents?: number | undefined;
+  };
 }
 
 /** PO ↔ IR ↔ VB source documents behind one procurement match (stage 06). */
@@ -206,6 +243,29 @@ export interface ProcurementDetail {
   readonly purchaseOrder?: PurchaseOrderFixture | undefined;
   readonly itemReceipt?: ItemReceiptFixture | undefined;
   readonly vendorBill?: VendorBillFixture | undefined;
+  /**
+   * Document totals in integer cents, summed HERE so no caller adds money up
+   * for display. Absent when any line omits its amount — a partial sum is
+   * not a total, and the UI must show the absence rather than a wrong figure.
+   */
+  readonly totals: {
+    readonly purchaseOrderCents?: number | undefined;
+    readonly vendorBillCents?: number | undefined;
+    readonly purchaseOrderQuantity?: number | undefined;
+  };
+}
+
+/** Sum of line amounts, or undefined when any line has no amount. */
+function documentTotalCents(
+  lines: readonly { amountCents?: number | undefined }[] | undefined,
+): number | undefined {
+  if (lines === undefined) return undefined;
+  let total = 0;
+  for (const line of lines) {
+    if (line.amountCents === undefined) return undefined;
+    total += line.amountCents;
+  }
+  return total;
 }
 
 const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
@@ -263,6 +323,16 @@ export function createQueryService(ws: Workspace) {
     },
 
     /**
+     * Location reference data (stage 06). The dataset carries each location's
+     * canonical display name; without this the UI would have to transcribe
+     * them, and transcribed names drift from the data they label.
+     */
+    listLocations(ctx: ServiceContext) {
+      authorize(ctx.user, "close.read");
+      return ws.dataset.locations;
+    },
+
+    /**
      * Global serial search (docs/11: one click to Financial Life). Searches
      * beyond the book listing so off-book observations (KE-X1-8842) and
      * sold serials are discoverable — each hit says where it was seen and
@@ -311,6 +381,7 @@ export function createQueryService(ws: Workspace) {
 
     getFinancialLife(ctx: ServiceContext, serial: string): FinancialLifeView {
       authorize(ctx.user, "close.read");
+      const inScope = makeRecordScope(ws, ctx.user);
       const d = ws.dataset;
       const unit = d.inventoryUnits.find((u) => u.serial === serial);
       const serialized =
@@ -416,16 +487,26 @@ export function createQueryService(ws: Workspace) {
           .filter((e) => e.finding.subjects.serials?.includes(serial))
           .map((e) => e.id),
         missing,
+        // Documents that are evidence the viewer's scope hides are withheld
+        // here too — `records` must never be a side door around listEvidence.
         records: {
-          ...(po ? { purchaseOrder: po } : {}),
-          ...(receipt ? { itemReceipt: receipt } : {}),
-          ...(bill ? { vendorBill: bill } : {}),
-          ...(so ? { salesOrder: so } : {}),
-          ...(iff ? { itemFulfillment: iff } : {}),
-          ...(shipment ? { carrierShipment: shipment } : {}),
-          ...(installation ? { installation } : {}),
-          ...(telemetry ? { telemetry } : {}),
-          ...(invoice ? { customerInvoice: invoice } : {}),
+          ...(po && inScope(po.sourceRef) ? { purchaseOrder: po } : {}),
+          ...(receipt && inScope(receipt.sourceRef) ? { itemReceipt: receipt } : {}),
+          ...(bill && inScope(bill.sourceRef) ? { vendorBill: bill } : {}),
+          ...(so && inScope(so.sourceRef) ? { salesOrder: so } : {}),
+          ...(iff && inScope(iff.sourceRef) ? { itemFulfillment: iff } : {}),
+          ...(shipment && inScope(shipment.sourceRef) ? { carrierShipment: shipment } : {}),
+          ...(installation && inScope(installation.sourceRef) ? { installation } : {}),
+          ...(telemetry && inScope(telemetry.sourceRef) ? { telemetry } : {}),
+          ...(invoice && inScope(invoice.sourceRef) ? { customerInvoice: invoice } : {}),
+        },
+        recordTotals: {
+          ...(so && inScope(so.sourceRef)
+            ? { salesOrderCents: documentTotalCents(so.lines) }
+            : {}),
+          ...(invoice && inScope(invoice.sourceRef)
+            ? { customerInvoiceCents: documentTotalCents(invoice.lines) }
+            : {}),
         },
       };
     },
@@ -468,6 +549,7 @@ export function createQueryService(ws: Workspace) {
      */
     getProcurementDetail(ctx: ServiceContext, poNumber: string): ProcurementDetail {
       authorize(ctx.user, "close.read");
+      const inScope = makeRecordScope(ws, ctx.user);
       const po = ws.dataset.purchaseOrders.find(
         (p) => p.transactionNumber === poNumber,
       );
@@ -477,10 +559,21 @@ export function createQueryService(ws: Workspace) {
       const bill = ws.dataset.vendorBills.find(
         (b) => b.purchaseOrderNumber === poNumber,
       );
+      const poVisible = po !== undefined && inScope(po.sourceRef);
+      const billVisible = bill !== undefined && inScope(bill.sourceRef);
       return {
-        ...(po ? { purchaseOrder: po } : {}),
-        ...(receipt ? { itemReceipt: receipt } : {}),
-        ...(bill ? { vendorBill: bill } : {}),
+        ...(poVisible ? { purchaseOrder: po } : {}),
+        ...(receipt && inScope(receipt.sourceRef) ? { itemReceipt: receipt } : {}),
+        ...(billVisible ? { vendorBill: bill } : {}),
+        totals: {
+          ...(poVisible
+            ? {
+                purchaseOrderCents: documentTotalCents(po.lines),
+                purchaseOrderQuantity: po.lines.reduce((n, l) => n + l.quantity, 0),
+              }
+            : {}),
+          ...(billVisible ? { vendorBillCents: documentTotalCents(bill.lines) } : {}),
+        },
       };
     },
 

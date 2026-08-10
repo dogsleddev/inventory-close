@@ -19,6 +19,7 @@ import {
   assembleEvidenceRecord,
   gatherExceptionContext,
 } from "./exception-view";
+import { countOutcome, countOutcomeDetail } from "./financial-life-view";
 import { locationLabel, titleCase } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
 
@@ -29,23 +30,32 @@ import { getQueries, makeContext, roleLabel } from "./workspace";
  * everywhere; neither is ever derived from the other here.
  */
 
-function totalAmountCents(
-  lines: readonly { amountCents?: number | undefined }[] | undefined,
-): number | undefined {
-  if (lines === undefined) return undefined;
-  let total = 0;
-  for (const l of lines) {
-    if (l.amountCents === undefined) return undefined;
-    total += l.amountCents;
-  }
-  return total;
-}
+/**
+ * Document totals arrive from `getProcurementDetail().totals` — the web app
+ * formats money, it never adds it up. An absent total renders as absent.
+ */
+const money = (cents: number | undefined): string | null =>
+  cents === undefined ? null : formatCents(cents);
 
-function closeCapsule(status: string): {
+/**
+ * The close-control capsule. "No close exception" is a negative claim, so it
+ * may only be made when no exception references the match at all — a match
+ * whose exception is RESOLVED still has one, and it may carry an unposted
+ * proposed adjustment that the reader must be able to reach.
+ */
+function closeCapsule(
+  status: string,
+  view?: ExceptionView | undefined,
+): {
   label: string;
   glyph: string;
   variant: "frost" | "aurora";
 } {
+  if (view !== undefined) {
+    return view.open
+      ? { label: statusView(view.exception.status).label, glyph: "◆", variant: "frost" }
+      : { label: statusView(view.exception.status).label, glyph: "✓", variant: "aurora" };
+  }
   return status === "PASS"
     ? { label: "No close exception", glyph: "✓", variant: "aurora" }
     : { label: "Review required", glyph: "◆", variant: "frost" };
@@ -111,7 +121,7 @@ export function buildReconciliationData(
   const detailFor = (po: string): ProcurementDetail => {
     let d = details.get(po);
     if (d === undefined) {
-      d = attempt(() => queries.getProcurementDetail(ctx, po)) ?? {};
+      d = attempt(() => queries.getProcurementDetail(ctx, po)) ?? { totals: {} };
       details.set(po, d);
     }
     return d;
@@ -131,14 +141,14 @@ export function buildReconciliationData(
         missing: true,
       };
     }
-    const amount = totalAmountCents(po.lines);
-    const qty = po.lines.reduce((n, l) => n + l.quantity, 0);
+    const amount = money(d.totals.purchaseOrderCents);
+    const qty = d.totals.purchaseOrderQuantity;
     const skus = [...new Set(po.lines.map((l) => l.sku))].join(", ");
     return {
       label: "PURCHASE ORDER",
       glyph: "✓",
       value: `${po.transactionNumber} · ${formatDateShort(po.orderDate)}`,
-      note: `${po.vendor} · ${qty} × ${skus}${amount !== undefined ? ` · ${formatCents(amount)}` : ""}`,
+      note: `${po.vendor}${qty !== undefined ? ` · ${qty} × ${skus}` : ""}${amount !== null ? ` · ${amount}` : ""}`,
       missing: false,
     };
   };
@@ -181,12 +191,12 @@ export function buildReconciliationData(
         missing: true,
       };
     }
-    const amount = totalAmountCents(vb.lines);
+    const amount = money(d.totals.vendorBillCents);
     return {
       label: "VENDOR BILL",
       glyph: "✓",
       value: `${vb.transactionNumber} · ${formatDateShort(vb.billDate)}`,
-      note: `Received and recorded${amount !== undefined ? ` · ${formatCents(amount)}` : ""}`,
+      note: `Received and recorded${amount !== null ? ` · ${amount}` : ""}`,
       missing: false,
     };
   };
@@ -200,23 +210,18 @@ export function buildReconciliationData(
     const match = matches.find((m) => m.purchaseOrderNumber === poNumber);
     const d = detailFor(poNumber);
     const po = d.purchaseOrder;
-    const qty = po?.lines.reduce((n, l) => n + l.quantity, 0);
+    const qty = d.totals.purchaseOrderQuantity;
     const skus = po !== undefined ? [...new Set(po.lines.map((l) => l.sku))].join(", ") : "";
-    const amount = totalAmountCents(po?.lines);
+    const amount = money(d.totals.purchaseOrderCents);
     const f = view?.exception.finding;
     return {
       key: poNumber,
       po: poNumber,
       title,
       qtyAmount:
-        qty !== undefined
-          ? `${qty} × ${skus}${amount !== undefined ? ` · ${formatCents(amount)}` : ""}`
-          : null,
+        qty !== undefined ? `${qty} × ${skus}${amount !== null ? ` · ${amount}` : ""}` : null,
       nsTag: `NS 3WM · ${match?.nativeNetsuiteMatchStatus ?? "—"}`,
-      close:
-        view !== undefined && view.open
-          ? { label: statusView(view.exception.status).label, glyph: "◆", variant: "frost" }
-          : closeCapsule(match?.closeMatchStatus ?? "PASS"),
+      close: closeCapsule(match?.closeMatchStatus ?? "PASS", view),
       ember: tone === "ember",
       legs: [poLeg(d), irLeg(d), vbLeg(d)],
       footnote:
@@ -281,7 +286,7 @@ export function buildReconciliationData(
     )
     .map((m) => ({
       m,
-      amount: totalAmountCents(detailFor(m.purchaseOrderNumber).purchaseOrder?.lines) ?? 0,
+      amount: detailFor(m.purchaseOrderNumber).totals.purchaseOrderCents ?? 0,
     }))
     .sort((a, b) =>
       b.amount !== a.amount
@@ -296,17 +301,24 @@ export function buildReconciliationData(
     );
   }
 
-  const procurementRows = matches.map((m) => ({
-    po: m.purchaseOrderNumber,
-    ir: m.itemReceiptNumber ?? "—",
-    vb: m.vendorBillNumber ?? "—",
-    native: `NS 3WM · ${m.nativeNetsuiteMatchStatus}`,
-    close: closeCapsule(m.closeMatchStatus),
-    exceptionId:
-      m.closeMatchStatus !== "PASS"
-        ? drawerFor(byTransaction(m.purchaseOrderNumber, m.itemReceiptNumber, m.vendorBillNumber))
-        : null,
-  }));
+  const procurementRows = matches.map((m) => {
+    // Every match is checked against the exception population, not only the
+    // close-open ones: a resolved exception is still an exception, and its
+    // row must reach it.
+    const view = byTransaction(
+      m.purchaseOrderNumber,
+      m.itemReceiptNumber,
+      m.vendorBillNumber,
+    );
+    return {
+      po: m.purchaseOrderNumber,
+      ir: m.itemReceiptNumber ?? "—",
+      vb: m.vendorBillNumber ?? "—",
+      native: `NS 3WM · ${m.nativeNetsuiteMatchStatus}`,
+      close: closeCapsule(m.closeMatchStatus, view),
+      exceptionId: drawerFor(view),
+    };
+  });
 
   /* ---------------- Commercial Chain tab ---------------- */
 
@@ -471,7 +483,13 @@ export function buildReconciliationData(
       notFound = `No source in the dataset references ${trimmed} — verified empty, not assumed.`;
     } else {
       const linked = exceptions.filter((e) => life.exceptions.includes(e.exception.id));
-      const yeRow = life.inventoryLife.countRows.find((r) => r.countType === "YEAR_END");
+      // Every year-end row, not the first: a serial counted in two locations
+      // has two, and reporting only one hides the reason it is an exception.
+      const yeRows = life.inventoryLife.countRows.filter(
+        (r) => r.countType === "YEAR_END",
+      );
+      const yeRow = yeRows[0];
+      const countClean = yeRows.length > 0 && yeRows.every((r) => r.variance === 0);
       const deployed =
         life.sellSide.installedAt ?? life.sellSide.firstOnlineAt;
       const chain =
@@ -551,7 +569,8 @@ export function buildReconciliationData(
 
       card = {
         serial: trimmed,
-        sku: life.unit?.sku ?? "—",
+        // Off-book serials still have a SKU on the observation that found them.
+        sku: life.unit?.sku ?? life.inventoryLife.countTests[0]?.sku ?? "—",
         carrying: life.unit !== undefined ? formatCents(life.unit.unitCostCents) : null,
         onBook: life.unit !== undefined,
         facts: [
@@ -572,18 +591,23 @@ export function buildReconciliationData(
                 ? "Customer site"
                 : observation !== undefined
                   ? locationLabel(observation.location)
-                  : yeRow !== undefined && yeRow.variance === 0
+                  : countClean && yeRow !== undefined
                     ? locationLabel(yeRow.location)
-                    : "No operational events",
+                    : (countOutcome(yeRows) ?? "No operational events"),
             sub:
               deployed !== undefined
                 ? `Installed${life.sellSide.firstOnlineAt !== undefined ? " and online" : ""} ${formatDateShort(deployed)}`
                 : observation !== undefined
                   ? observation.observation
-                  : yeRow !== undefined
+                  : countClean
                     ? "Matched in the year-end count"
-                    : "Nothing places this unit elsewhere",
-            ember: deployed !== undefined && life.unit !== undefined,
+                    : yeRows.length > 0
+                      ? countOutcomeDetail(yeRows)
+                      : "Nothing places this unit elsewhere",
+            // A count that did not find the unit is a flagged fact, not a quiet one.
+            ember:
+              (deployed !== undefined && life.unit !== undefined) ||
+              (yeRows.length > 0 && !countClean),
           },
           {
             label: "LAST COUNT",
@@ -594,9 +618,11 @@ export function buildReconciliationData(
                   : "Year-end"
                 : "None on file",
             sub:
-              yeRow !== undefined
-                ? `Variance ${yeRow.variance} · ${titleCase(yeRow.countType)} count`
-                : "No count rows reference this serial",
+              yeRows.length > 1
+                ? `${yeRows.length} year-end rows · ${yeRows.map((r) => `${locationLabel(r.location)} ${r.variance > 0 ? "+" : ""}${r.variance}`).join(", ")}`
+                : yeRow !== undefined
+                  ? `Variance ${yeRow.variance} · ${titleCase(yeRow.countType)} count`
+                  : "No count rows reference this serial",
             ember: false,
           },
         ],

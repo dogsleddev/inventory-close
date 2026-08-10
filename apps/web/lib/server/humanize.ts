@@ -20,13 +20,22 @@ export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-/** LOCATION / classification enums → display ("PRIMARY_WAREHOUSE" → "Primary Warehouse"). */
+/**
+ * Location id → display name. The dataset owns these names, so they are
+ * registered from `listLocations()` at page-build time rather than
+ * transcribed here; title-casing the id is only the fallback for an id the
+ * dataset does not describe.
+ */
+const LOCATION_NAMES = new Map<string, string>();
+
+export function registerLocationNames(
+  locations: readonly { id: string; name: string }[],
+): void {
+  for (const loc of locations) LOCATION_NAMES.set(loc.id, loc.name);
+}
+
 export function locationLabel(value: string): string {
-  const special: Record<string, string> = {
-    RMA_REPAIR: "RMA / Repair",
-    DAMAGED_HOLD: "Damaged / Hold",
-  };
-  return special[value] ?? titleCase(value);
+  return LOCATION_NAMES.get(value) ?? titleCase(value);
 }
 
 /** Evidence/record kinds → display ("ITEM_FULFILLMENT" → "Item Fulfillment"). */

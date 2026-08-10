@@ -10,6 +10,7 @@ import {
   Panel,
   PanelHead,
   RestrictedState,
+  ScopeNotice,
   StatusCapsule,
 } from "./kit";
 
@@ -90,12 +91,12 @@ export function FinancialLifeScreen({
         {h !== undefined ? (
           <Panel decision>
             <div
-              style={{
-                padding: "14px 18px",
-                display: "grid",
-                gridTemplateColumns: record !== undefined ? "1fr" : "1fr 300px",
-                gap: "20px",
-              }}
+              className="icg-objhead"
+              style={
+                record !== undefined
+                  ? ({ "--icg-objhead-cols": "1fr" } as CSSProperties)
+                  : undefined
+              }
             >
               <div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
@@ -121,14 +122,7 @@ export function FinancialLifeScreen({
                     {h.skuNote}
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                    gap: "14px",
-                    marginTop: "13px",
-                  }}
-                >
+                <div className="icg-facts">
                   <div>
                     <div className="icg-label">UNIT CARRYING VALUE</div>
                     <div className="icg-num" style={{ fontSize: "15px", fontWeight: 600, marginTop: "3px" }}>
@@ -208,15 +202,7 @@ export function FinancialLifeScreen({
                   )}
                 </div>
               </div>
-              <div
-                style={{
-                  borderLeft: record !== undefined ? undefined : "1px solid var(--hair)",
-                  paddingLeft: record !== undefined ? 0 : "18px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
+              <div className="icg-objhead-rail">
                 <div className="icg-label icg-label--md">CLOSE STATUS</div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                   {h.close.status !== null ? (
@@ -258,7 +244,7 @@ export function FinancialLifeScreen({
               {...(data.range !== null ? { sub: data.range } : {})}
               right={
                 <span className="icg-quiet" style={{ fontSize: "10.5px" }}>
-                  Every card opens its source record
+                  Cards with a source record open it
                 </span>
               }
             />
@@ -266,7 +252,9 @@ export function FinancialLifeScreen({
               className="icg-phases"
               style={
                 data.phases.length < 4
-                  ? ({ gridTemplateColumns: `repeat(${data.phases.length}, 1fr)` } as CSSProperties)
+                  ? ({
+                      "--icg-phase-cols": `repeat(${data.phases.length}, 1fr)`,
+                    } as CSSProperties)
                   : undefined
               }
             >
@@ -286,17 +274,23 @@ export function FinancialLifeScreen({
                       >
                         <EventCardBody e={e} />
                       </Link>
-                    ) : (
+                    ) : e.recordId !== null ? (
                       <button
                         key={e.key}
                         type="button"
                         className={`icg-event icg-event--${e.visual}`}
                         onClick={() => openRecord(e.recordId)}
-                        disabled={e.recordId === null}
-                        style={e.recordId === null ? { cursor: "default" } : undefined}
                       >
                         <EventCardBody e={e} />
                       </button>
+                    ) : (
+                      // No record behind this card — a state, not a control.
+                      // Rendering it as a disabled button would both lie about
+                      // what it does and remove it from the tab order, which
+                      // is where the missing-evidence card must stay reachable.
+                      <div key={e.key} className={`icg-event icg-event--${e.visual}`}>
+                        <EventCardBody e={e} />
+                      </div>
                     ),
                   )}
                 </div>
@@ -379,7 +373,7 @@ export function FinancialLifeScreen({
                     </thead>
                     <tbody>
                       {data.cycle.rows.map((row) => (
-                        <tr key={row.plan + row.date}>
+                        <tr key={row.key}>
                           <td className="icg-num">{row.date}</td>
                           <td>
                             <span className="icg-mono icg-soft" style={{ fontSize: "10px" }}>
@@ -448,47 +442,53 @@ export function FinancialLifeScreen({
                   }
                 />
                 <div style={{ padding: "10px 16px 12px", display: "flex", flexDirection: "column", gap: "5px" }}>
-                  {data.evidenceChain.map((row) => (
-                    <button
-                      key={row.label}
-                      type="button"
-                      onClick={() => openRecord(row.recordId)}
-                      disabled={row.recordId === null}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "9px",
-                        border:
-                          row.visual === "missing"
-                            ? "1.5px dashed var(--ember)"
-                            : row.visual === "conflict"
-                              ? "1px solid var(--ember-line)"
-                              : "1px solid var(--hair)",
-                        background:
-                          row.visual === "missing" || row.visual === "conflict"
-                            ? "var(--ember-bg)"
-                            : "transparent",
-                        color:
-                          row.visual === "missing" || row.visual === "conflict"
-                            ? "var(--ember)"
-                            : "var(--ink)",
-                        fontWeight: row.visual === "missing" ? 700 : 500,
-                        borderRadius: "5px",
-                        padding: "8px 11px",
-                        fontSize: "12px",
-                        cursor: row.recordId !== null ? "pointer" : "default",
-                        textAlign: "left",
-                      }}
-                    >
-                      <span aria-hidden style={{ fontSize: "9px" }}>
-                        {row.glyph}
-                      </span>
-                      <span style={{ flex: 1 }}>{row.label}</span>
-                      <span className="icg-mono" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>
-                        {row.tag}
-                      </span>
-                    </button>
-                  ))}
+                  {data.recordScopeNotice !== null ? (
+                    <ScopeNotice text={data.recordScopeNotice} />
+                  ) : null}
+                  {data.evidenceChain.map((row) => {
+                    const cls = `icg-chainrow${
+                      row.visual === "missing"
+                        ? " icg-chainrow--missing"
+                        : row.visual === "conflict"
+                          ? " icg-chainrow--conflict"
+                          : ""
+                    }`;
+                    const body = (
+                      <>
+                        <span aria-hidden style={{ fontSize: "9px" }}>
+                          {row.glyph}
+                        </span>
+                        <span style={{ flex: 1 }}>
+                          {row.label}
+                          {row.visual === "missing" ? (
+                            <span className="icg-sr-only"> — missing, required</span>
+                          ) : null}
+                        </span>
+                        <span
+                          className="icg-mono"
+                          style={{ fontSize: "9px", letterSpacing: "0.05em" }}
+                        >
+                          {row.tag}
+                        </span>
+                      </>
+                    );
+                    // A component with no record behind it is stated, not
+                    // offered as a control that silently does nothing.
+                    return row.recordId !== null ? (
+                      <button
+                        key={row.label}
+                        type="button"
+                        className={cls}
+                        onClick={() => openRecord(row.recordId)}
+                      >
+                        {body}
+                      </button>
+                    ) : (
+                      <div key={row.label} className={cls}>
+                        {body}
+                      </div>
+                    );
+                  })}
                   {data.chainFootnote !== null ? (
                     <div className="icg-quiet" style={{ fontSize: "10.5px", lineHeight: 1.5, marginTop: "4px" }}>
                       {data.chainFootnote}

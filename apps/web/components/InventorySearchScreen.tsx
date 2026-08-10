@@ -69,13 +69,7 @@ export function InventorySearchScreen({
                     <Link
                       key={n.serial}
                       href={`/inventory/${n.serial}`}
-                      className="icg-mono"
-                      style={{
-                        fontSize: "10.5px",
-                        border: "1px solid var(--hair)",
-                        borderRadius: "3px",
-                        padding: "3px 8px",
-                      }}
+                      className="icg-serial-chip"
                       title={n.note}
                     >
                       {n.serial}

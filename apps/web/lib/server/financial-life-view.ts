@@ -1,6 +1,7 @@
-import type { DemoUser } from "@icg/data";
+﻿import type { DemoUser } from "@icg/data";
 import type {
   CarrierShipmentFixture,
+  CountResultFixture,
   SourceRecordRef,
   TransactionLineFixture,
 } from "@icg/domain";
@@ -60,13 +61,39 @@ function lineQty(lines: readonly TransactionLineFixture[], sku: string | undefin
     .reduce((n, l) => n + l.quantity, 0);
 }
 
-function lineAmountCents(lines: readonly TransactionLineFixture[]): number | undefined {
-  let total = 0;
-  for (const l of lines) {
-    if (l.amountCents === undefined) return undefined;
-    total += l.amountCents;
-  }
-  return total;
+/**
+ * Document totals arrive from `getFinancialLife().recordTotals` — this layer
+ * formats money, it never adds it up. An absent total renders as absent.
+ */
+const money = (cents: number | undefined): string | null =>
+  cents === undefined ? null : formatCents(cents);
+
+/**
+ * What the year-end count actually found for one serial, stated from every
+ * row rather than the first. A count that failed to locate a unit IS physical
+ * evidence — it must never render as "no evidence", and one clean row does
+ * not make a clean count when a second row disagrees.
+ */
+export function countOutcome(
+  rows: readonly CountResultFixture[],
+): string | undefined {
+  if (rows.length === 0) return undefined;
+  const short = rows.filter((r) => r.variance < 0);
+  const over = rows.filter((r) => r.variance > 0);
+  if (short.length > 0 && over.length > 0) return "Counted in two locations";
+  if (short.length > 0) return "Not found in the year-end count";
+  if (over.length > 0) return "Found where the book does not carry it";
+  return undefined;
+}
+
+/** The per-row detail behind {@link countOutcome}, naming locations and bins. */
+export function countOutcomeDetail(rows: readonly CountResultFixture[]): string {
+  return rows
+    .map((r) => {
+      const where = `${locationLabel(r.location)}${r.bin !== undefined ? ` · ${r.bin}` : ""}`;
+      return `${where}: book ${r.snapshotQuantity}, counted ${r.countQuantity}`;
+    })
+    .join(" — ");
 }
 
 /** The carrier event that represents where a shipment stands (fixture shape). */
@@ -169,6 +196,7 @@ function assemblePhases(
     viewerRole: string;
     runId: string | undefined;
     adjustmentNote: string | null;
+    adjustmentRefs: readonly string[];
     evidenceRecordIds: ReadonlyMap<string, string>;
   },
 ): Assembled {
@@ -188,13 +216,28 @@ function assemblePhases(
   };
 
   const dates: string[] = [];
+  // Each card carries the ISO instant it happened, so ranges sort on real
+  // dates rather than on the order cards were pushed or the shape of their
+  // formatted label. Keys carry the index because two cards can legitimately
+  // share a kind and title (a serial counted in two locations).
+  let cardSeq = 0;
+  const cardDates = new Map<string, string>();
   const card = (c: Omit<LifeEventCard, "key">, at?: string): LifeEventCard => {
     if (at !== undefined) dates.push(at);
-    return { ...c, key: `${c.kind}:${c.title}` };
+    cardSeq += 1;
+    const key = `${c.kind}:${c.title}:${cardSeq}`;
+    if (at !== undefined) cardDates.set(key, at);
+    return { ...c, key };
   };
 
-  /* ---- Buy side ---- */
+  // The four phase columns, declared together so a card can be routed to the
+  // phase its subject belongs to rather than to whichever list exists yet.
   const buy: LifeEventCard[] = [];
+  const inv: LifeEventCard[] = [];
+  const sell: LifeEventCard[] = [];
+  const close: LifeEventCard[] = [];
+
+  /* ---- Buy side ---- */
   if (view.buySideTracking === "BATCH") {
     buy.push(
       card({
@@ -336,36 +379,57 @@ function assemblePhases(
   }
 
   /* ---- Inventory life ---- */
-  const inv: LifeEventCard[] = [];
   if (r.itemReceipt && view.unit) {
+    // A receipt posted after the balance-sheet date does not recognize the
+    // unit into the year-end book — the unit is on the listing because it is
+    // goods in transit, and whether title had passed is the open question.
+    // Stating a post-period date as the recognition date would answer it.
+    const postPeriod =
+      opts.periodEnd !== undefined && r.itemReceipt.receiptDate > opts.periodEnd;
     inv.push(
       card(
-        {
-          kind: "RECOGNITION",
-          date: formatDateShort(r.itemReceipt.receiptDate),
-          title: "Inventory recognized",
-          meta: `GL ${view.unit.glAccount} · ${titleCase(view.unit.classification)}`,
-          visual: "acc",
-          glyph: "●",
-          recordId: r.itemReceipt.transactionNumber,
-          href: null,
-        },
+        postPeriod
+          ? {
+              kind: "RECEIPT POSTING",
+              date: formatDateShort(r.itemReceipt.receiptDate),
+              title: "NetSuite receipt posted after period end",
+              meta: `On the year-end listing as ${titleCase(view.unit.classification)} · GL ${view.unit.glAccount} — recognition date not concluded`,
+              visual: "conf",
+              glyph: "✕",
+              recordId: r.itemReceipt.transactionNumber,
+              href: null,
+            }
+          : {
+              kind: "RECOGNITION",
+              date: formatDateShort(r.itemReceipt.receiptDate),
+              title: "Inventory recognized",
+              meta: `GL ${view.unit.glAccount} · ${titleCase(view.unit.classification)}`,
+              visual: "acc",
+              glyph: "●",
+              recordId: r.itemReceipt.transactionNumber,
+              href: null,
+            },
         r.itemReceipt.receiptDate,
       ),
     );
   }
   const yeRow = view.inventoryLife.countRows.find((row) => row.countType === "YEAR_END");
   if (view.unit) {
+    // The ERP inventory snapshot, not an observation of the unit. Drawing it
+    // as a "Physical event" would present NetSuite state as physical
+    // evidence — the one distinction this screen exists to keep (§6 row 1),
+    // on the very unit whose exception is that the two disagree. The count
+    // rows below are the physical evidence.
     inv.push(
       card({
-        kind: "LOCATION",
+        kind: "NETSUITE LOCATION",
         date:
           view.unit.lastMovementAt !== undefined
             ? formatDateShort(view.unit.lastMovementAt)
             : "At 12/31",
         title: locationLabel(view.unit.location),
-        meta: yeRow?.bin !== undefined ? `Bin ${yeRow.bin}` : null,
-        visual: "phy",
+        meta: `Book position${yeRow?.bin !== undefined ? ` · bin ${yeRow.bin}` : ""} — ERP record, not an observation`,
+        visual: "acc",
         glyph: "●",
         recordId: null,
         href: null,
@@ -453,13 +517,16 @@ function assemblePhases(
     );
   }
   if (opts.adjustmentNote !== null) {
+    const found = opts.adjustmentRefs.length > 0;
     inv.push(
       card({
         kind: "ADJUSTMENTS",
         date: "Checked",
         title: opts.adjustmentNote,
-        meta: "Verified empty — not zero-filled",
-        visual: "acc",
+        meta: found
+          ? opts.adjustmentRefs.join(" · ")
+          : "Checked against the count-linked adjustments — not zero-filled",
+        visual: found ? "acc" : "acc",
         glyph: "●",
         recordId: null,
         href: null,
@@ -468,17 +535,28 @@ function assemblePhases(
   }
 
   /* ---- Sell / deploy side ---- */
-  const sell: LifeEventCard[] = [];
+
+  // A missing requirement belongs to the phase of the question it blocks —
+  // a count gap is inventory life, a procurement gap is buy side. Filing them
+  // all under sell/deploy would assert a sell life the unit may never have had.
   for (const e of exceptions) {
     const contractGapId = opts.evidenceRecordIds.get(`${e.exception.id}:REQUIRED_FOR`);
+    const ruleId = e.exception.finding.ruleId;
+    const target = ruleId.startsWith("CNT-")
+      ? inv
+      : ruleId.startsWith("CUT-IN") || ruleId.startsWith("PROC-")
+        ? buy
+        : ruleId.startsWith("REC-") || ruleId.startsWith("GL-") || ruleId.startsWith("VAL-")
+          ? close
+          : sell;
     for (const req of e.exception.finding.evidenceRequirements) {
       if (!req.required || req.satisfied) continue;
-      sell.push(
+      target.push(
         card({
           kind: "REQUIRED EVIDENCE",
           date: "—",
           title: req.description,
-          meta: `MISSING · required for ${e.exception.finding.ruleId}`,
+          meta: `MISSING · required for ${ruleId}`,
           visual: "miss",
           glyph: "○",
           recordId: contractGapId ?? null,
@@ -489,7 +567,7 @@ function assemblePhases(
   }
   if (r.salesOrder) {
     const so = r.salesOrder;
-    const amount = lineAmountCents(so.lines);
+    const amount = money(view.recordTotals.salesOrderCents);
     const id = put(
       sourceRecord({
         ...common,
@@ -503,7 +581,7 @@ function assemblePhases(
         occurred: so.orderDate,
         rows: [
           { k: "Customer", v: so.customer },
-          ...(amount !== undefined ? [{ k: "Order amount", v: formatCents(amount) }] : []),
+          ...(amount !== null ? [{ k: "Order amount", v: amount }] : []),
         ],
         related,
       }),
@@ -692,7 +770,7 @@ function assemblePhases(
   }
   if (r.customerInvoice) {
     const invc = r.customerInvoice;
-    const amount = lineAmountCents(invc.lines);
+    const amount = money(view.recordTotals.customerInvoiceCents);
     const after =
       opts.periodEnd !== undefined && invc.invoiceDate > opts.periodEnd;
     const id = put(
@@ -707,7 +785,7 @@ function assemblePhases(
         sourceRef: invc.sourceRef,
         occurred: invc.invoiceDate,
         rows: [
-          ...(amount !== undefined ? [{ k: "Invoice amount", v: formatCents(amount) }] : []),
+          ...(amount !== null ? [{ k: "Invoice amount", v: amount }] : []),
           {
             k: "Establishes",
             v: "Billing evidence only — not ownership, relief, acceptance, or revenue",
@@ -722,7 +800,7 @@ function assemblePhases(
           kind: "CUSTOMER INVOICE",
           date: formatDateShort(invc.invoiceDate),
           title: invc.transactionNumber,
-          meta: `${amount !== undefined ? `${formatCents(amount)} · ` : ""}billing evidence only${after ? " · after period end" : ""}`,
+          meta: `${amount !== null ? `${amount} · ` : ""}billing evidence only${after ? " · after period end" : ""}`,
           visual: "acc",
           glyph: "●",
           recordId: id,
@@ -748,7 +826,6 @@ function assemblePhases(
   }
 
   /* ---- Accounting / close ---- */
-  const close: LifeEventCard[] = [];
   const conflict =
     view.unit !== undefined &&
     exceptions.some((e) => e.exception.finding.reasonCodes.includes(CONFLICT_REASON));
@@ -865,9 +942,14 @@ function assemblePhases(
   }
 
   const phases: LifePhase[] = [
-    { name: "BUY SIDE", range: phaseRange(buy), accent: false, events: buy },
-    { name: "INVENTORY LIFE", range: phaseRange(inv), accent: false, events: inv },
-    { name: "SELL / DEPLOY SIDE", range: phaseRange(sell), accent: false, events: sell },
+    { name: "BUY SIDE", range: phaseRange(buy, cardDates), accent: false, events: buy },
+    { name: "INVENTORY LIFE", range: phaseRange(inv, cardDates), accent: false, events: inv },
+    {
+      name: "SELL / DEPLOY SIDE",
+      range: phaseRange(sell, cardDates),
+      accent: false,
+      events: sell,
+    },
     {
       name: "ACCOUNTING / CLOSE",
       range: opts.periodEnd !== undefined ? `AT ${formatDate(opts.periodEnd).toUpperCase()}` : "AT PERIOD END",
@@ -887,12 +969,28 @@ function assemblePhases(
   return { phases, records, range };
 }
 
-function phaseRange(events: readonly LifeEventCard[]): string {
-  const dated = events.map((e) => e.date).filter((d) => /^[A-Z][a-z]{2}\./.test(d));
+/**
+ * The phase's date span, computed from the ISO instants behind its cards.
+ * Reading the formatted labels instead would sort by array order and would
+ * silently drop May, the one month the display format writes without a
+ * trailing period.
+ */
+function phaseRange(
+  events: readonly LifeEventCard[],
+  cardDates: ReadonlyMap<string, string>,
+): string {
+  const dated = events
+    .flatMap((e) => {
+      const at = cardDates.get(e.key);
+      return at !== undefined ? [at] : [];
+    })
+    .sort();
   const first = dated[0];
   const last = dated[dated.length - 1];
   if (first === undefined || last === undefined) return "";
-  return first === last ? first.toUpperCase() : `${first} – ${last}`.toUpperCase();
+  return first === last
+    ? formatDateShort(first).toUpperCase()
+    : `${formatDateShort(first)} – ${formatDateShort(last)}`.toUpperCase();
 }
 
 /** Count history rows for the unit's serial and its SKU × location cell. */
@@ -925,8 +1023,13 @@ function cycleRows(
       return {
         at: plan?.snapshotAt ?? "",
         row: {
+          // The count-detail id is the row's own identity: a serial counted
+          // in two locations has two rows in the same plan on the same date.
+          key:
+            row.externalCountDetailId ??
+            `${row.countPlanId}|${row.sku}|${row.location}|${row.bin ?? ""}`,
           date: plan !== undefined ? formatDate(plan.snapshotAt) : row.countPlanId,
-          plan: `${row.countPlanId}${row.serial !== undefined ? "" : ` · ${row.sku} cell`}`,
+          plan: `${row.countPlanId}${row.serial !== undefined ? ` · ${locationLabel(row.location)}` : ` · ${row.sku} cell`}`,
           snapshot: String(row.snapshotQuantity),
           counted: String(row.countQuantity),
           variance: String(row.variance),
@@ -970,6 +1073,7 @@ export function buildFinancialLifeData(
       cycle: null,
       evidenceChain: [],
       chainFootnote: null,
+      recordScopeNotice: null,
       accounting: null,
       records: {},
     };
@@ -995,6 +1099,7 @@ export function buildFinancialLifeData(
       cycle: null,
       evidenceChain: [],
       chainFootnote: null,
+      recordScopeNotice: null,
       accounting: null,
       records: {},
     };
@@ -1017,8 +1122,11 @@ export function buildFinancialLifeData(
   // state open these records, exactly as the exception screen does.
   const records: Record<string, EvidenceRecordView> = {};
   const evidenceRecordIds = new Map<string, string>();
+  // Whether the viewer's scope, rather than the data, emptied the evidence.
+  let evidenceOutOfScope = exceptions.length > 0;
   for (const e of exceptions) {
     const context = gatherExceptionContext(queries, ctx, e);
+    if (!context.evidenceOutOfScope) evidenceOutOfScope = false;
     for (const item of context.evidence) {
       records[item.id] = assembleEvidenceRecord(item, e, datasetVersion, user);
       if (item.linkType === "REQUIRED_FOR") {
@@ -1030,15 +1138,33 @@ export function buildFinancialLifeData(
     }
   }
 
-  // Per-serial inventory-adjustment check (fail-visible verified-empty).
+  // Inventory adjustments touching this unit. NetSuite adjustment lines are
+  // recorded at SKU × count-plan level and carry no serials, so a serial can
+  // only be tied to one through the count cell it was counted in — matching
+  // on `line.serials` would silently find nothing and report a false
+  // "verified empty". Where the unit is not on the book there is no cell to
+  // match, and the card says the check could not be made rather than passing.
+  const adjustmentCells = new Set(
+    view.inventoryLife.countRows.map((row) => `${row.countPlanId}|${row.sku}`),
+  );
   const serialAdjustments =
-    detail?.adjustments.filter((a) =>
-      a.lines.some((l) => l.serials?.includes(serial)),
-    ) ?? [];
+    view.unit === undefined
+      ? []
+      : (detail?.adjustments ?? []).filter(
+          (a) =>
+            a.relatedCountPlanId !== undefined &&
+            a.lines.some((l) =>
+              adjustmentCells.has(`${a.relatedCountPlanId}|${l.sku}`),
+            ),
+        );
   const adjustmentNote =
-    detail !== undefined && serialAdjustments.length === 0
-      ? "No inventory adjustments"
-      : null;
+    detail === undefined
+      ? null
+      : view.unit === undefined
+        ? "Adjustment history not applicable — no book record"
+        : serialAdjustments.length > 0
+          ? `${serialAdjustments.length} count-linked adjustment${serialAdjustments.length === 1 ? "" : "s"} on this unit's count cells`
+          : "No count-linked inventory adjustments";
 
   const assembled = assemblePhases(view, exceptions, {
     periodEnd,
@@ -1050,6 +1176,7 @@ export function buildFinancialLifeData(
     viewerRole: user.roles[0] ?? "—",
     runId: manifest?.runId,
     adjustmentNote,
+    adjustmentRefs: serialAdjustments.map((a) => a.transactionNumber),
     evidenceRecordIds,
   });
   Object.assign(assembled.records, records);
@@ -1063,6 +1190,9 @@ export function buildFinancialLifeData(
     deployedAt !== undefined && periodEnd !== undefined && deployedAt.slice(0, 10) <= periodEnd;
   const shipment = view.records.carrierShipment;
   const position = shipment !== undefined ? shipmentPosition(shipment) : undefined;
+  const yearEndRows = view.inventoryLife.countRows.filter(
+    (row) => row.countType === "YEAR_END",
+  );
 
   const physical = deployedBeforeEnd
     ? {
@@ -1077,19 +1207,26 @@ export function buildFinancialLifeData(
           ember: true,
         }
       : view.unit !== undefined
-        ? view.inventoryLife.countRows.some(
-            (row) => row.countType === "YEAR_END" && row.variance === 0,
-          )
+        ? // A count is physical evidence, and a count that failed to find the
+          // unit says so. "Matched" requires that NO year-end row for this
+          // serial carries a variance — one clean row is not a clean count.
+          yearEndRows.length > 0 && yearEndRows.every((row) => row.variance === 0)
           ? {
               headline: locationLabel(view.unit.location),
               sub: "Matched in the year-end count",
               ember: false,
             }
-          : {
-              headline: "No operational events in evidence",
-              sub: "Nothing places this unit elsewhere",
-              ember: false,
-            }
+          : yearEndRows.some((row) => row.variance !== 0)
+            ? {
+                headline: countOutcome(yearEndRows) ?? "Count variance recorded",
+                sub: countOutcomeDetail(yearEndRows),
+                ember: true,
+              }
+            : {
+                headline: "No operational events in evidence",
+                sub: "Nothing places this unit elsewhere",
+                ember: false,
+              }
         : {
             headline: "Observed off-book",
             sub:
@@ -1254,6 +1391,12 @@ export function buildFinancialLifeData(
     },
     evidenceChain,
     chainFootnote,
+    // Said out loud where the viewer's scope, not the data, left the chain
+    // without records behind it.
+    recordScopeNotice:
+      evidenceOutOfScope && evidenceChain.length > 0
+        ? "Evidence records for this unit's exceptions are outside your scope. Provided audit support lives in the Audit Package."
+        : null,
     accounting,
     records: assembled.records,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 import type { TabDef } from "../lib/view-model";
 import type { RiskView, StatusView } from "../lib/workflow-view";
 
@@ -178,26 +178,57 @@ export function NoRecordsState({ note }: { note: string }) {
 /**
  * Tab bar (stage 06) — ember underline, optional count. Client-side, no
  * reload; switching tabs never changes the object in an open drawer (§4).
+ *
+ * The tablist role promises a keyboard contract, so it is implemented here
+ * rather than declared and left unhonoured: one tab stop for the whole set
+ * (roving tabindex), Arrow keys move and select, Home/End jump to the ends.
+ * Each tab owns its panel by id so assistive tech can follow the pair.
  */
 export function TabBar({
   tabs,
   active,
   onSelect,
   label,
+  panelId,
 }: {
   tabs: readonly TabDef[];
   active: string;
   onSelect: (key: string) => void;
   label: string;
+  panelId: string;
 }) {
+  const move = (event: KeyboardEvent<HTMLDivElement>) => {
+    const keys = tabs.map((t) => t.key);
+    const i = keys.indexOf(active);
+    const go = (next: number) => {
+      event.preventDefault();
+      const at = (next + keys.length) % keys.length;
+      const key = keys[at];
+      if (key === undefined) return;
+      onSelect(key);
+      // Selection follows focus, so move focus with it.
+      const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>(
+        '[role="tab"]',
+      );
+      buttons[at]?.focus();
+    };
+    if (event.key === "ArrowRight") go(i + 1);
+    else if (event.key === "ArrowLeft") go(i - 1);
+    else if (event.key === "Home") go(0);
+    else if (event.key === "End") go(keys.length - 1);
+  };
+
   return (
-    <div className="icg-tabs" role="tablist" aria-label={label}>
+    <div className="icg-tabs" role="tablist" aria-label={label} onKeyDown={move}>
       {tabs.map((t) => (
         <button
           key={t.key}
           type="button"
           role="tab"
+          id={`${panelId}-tab-${t.key}`}
           aria-selected={t.key === active}
+          aria-controls={panelId}
+          tabIndex={t.key === active ? 0 : -1}
           className={`icg-tab${t.key === active ? " icg-tab--active" : ""}`}
           onClick={() => onSelect(t.key)}
         >
