@@ -12,11 +12,11 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 | | |
 |---|---|
-| Commit | `1c85866` (stage 10 + its verification remediation) |
-| Suite | **607 tests across 44 files, all passing** |
+| Commit | `fb496a0` (pass-1 data remediation) + the pass-2 fixes landing with this record |
+| Suite | **628 tests across 47 files, all passing** |
 | Typecheck / lint / build | green (`pnpm -r run typecheck` + `tsc -p test/tsconfig.json`, `eslint .`, `next build` — 14 routes) |
 | Dataset hash | `672d7349c616f47888c7bd28fdf13a844884b3eaf153d32e45b8d4676f1a5ab0` (post pass-1 data remediation) |
-| Adversarial reviews | full tree at `f3f6f98` (12 lenses / 37 agents → 9 fixed) and the stage-10 public-surface fleet at `e3c952e` (7 lenses / 76 agents → 34 raw, **20 confirmed / 9 contested / 5 refuted**, 27 fixed) |
+| Adversarial reviews | full tree at `f3f6f98` (12 lenses / 37 agents → 9 fixed); stage-10 public-surface fleet at `e3c952e` (7 lenses / 76 agents → 27 fixed); final data passes at `fa3526b`/`fb496a0` (49 + 42 agents — see the Final data passes section) |
 
 > The run id and output hash changed at `30494c0`: run identity now binds every
 > controlled input `docs/16` names (it previously bound only the dataset hash, the
@@ -134,12 +134,109 @@ permanent scan covers only the working tree.
 
 ---
 
+## Final data passes (owner request, 2026-08-10)
+
+The two passes requested before the repo goes public: one last adversarial pass at the
+fixture corpus itself, then a validation of every result the demo leads with. Working
+method for both: finder lenses → dedupe → two skeptics per finding (one told to refute
+and default to refuted, one told to reproduce by running code) at high effort, contested
+findings adjudicated inline.
+
+### Pass 1 — adversarial data pass (8 lenses, 49 agents, at `fa3526b`)
+
+The four areas no fleet had ever swept: cross-fixture referential integrity in both
+directions, per-serial story coherence for the ~1,485 background units, operational
+timeline realism, and fixture content vs what the screens humanize — plus the derived
+close vs spec. 27 raw findings → 20 deduped → **11 confirmed, 9 contested (1 adopted,
+8 refuted), 0 unverified**. Ten defects fixed in `fb496a0`, each with a category-level
+regression (`packages/data/test/pass1-regressions.test.ts`,
+`apps/web/test/pass1-classification.test.ts`):
+
+| Fixed | Class |
+|---|---|
+| The 28 sold-chain serials had no buy-side documents at all — false "missing acquisition" stories | dangling-reference (P1) |
+| Background loaners swept into another customer's fleet install, some loaned after "installation" | cross-fixture-conflict (P1) |
+| Movements MV-001..003 dated pre-snapshot but reflected in no book or count position | phantom-movement (P1) |
+| 15 outbound-GIT units picked up by the carrier before their book movement into transit | impossible-timeline (P1) |
+| Installed/assigned units' `lastMovementAt` uncoordinated with install/assignment dates | impossible-timeline (P1) |
+| 40 of 41 test counts citing a bin contradicting the same count's listing row | trace-contradiction (P2) |
+| Cycle-count quantities as pure PRNG noise, including counting stock not yet acquired | infeasible-quantity (P2) |
+| 41 of 42 test counts sharing two identical instants, rendered on the count screen | uniform-timestamp (P2) |
+| GIT/RMA classifications title-cased into "Git"/"Rma" on Financial Life | enum-unmapped (P2) |
+| Two January vendor bills numbered `VB-26-*`; identical transit fingerprints jittered | id-date-mismatch / uniform-gaps (P3) |
+
+Refuted on adjudication, recorded so they are not re-litigated: FP-88221's empty serial
+list (schema-forced for an all-batch shipment; the schema records serial trails only for
+serialized SKUs), inbound `acquiredAt` trailing carrier pickup (ordinary booking lag, not
+an impossible ordering), RMA returns without outbound history and undocumented
+damaged-hold stock (documented sparse-sampling design; `VAL-DMG-001` states it in code),
+background demo assignments without contracts (only the LOANER rule requires one), the
+August "recount scheduled" wording (September re-covers 9 of 11 cells), the
+`nextCountDue` cadence (the designed overdue example plus an authored year-end clamp),
+and the golden file's 16-field scope (every derived aggregate is gate-checked in
+`golden.test.ts`).
+
+The dataset hash moved to `672d7349…` because background fixture content changed;
+**no locked total moved** — the 46 control tests, 29 golden tests, and 6 golden-baseline
+tests pin every one.
+
+### Pass 2 — highlight-set validation (8 verifiers, 42 agents, at `fb496a0`)
+
+Every figure and claim the demo leads with, checked two ways: (a) re-derived from the
+fixtures through `buildDataset → toCloseInput → runClose`, (b) read on every surface
+that states it (fixtures → rules → services → screens → README → this file → User
+Guide → docs/CANONICAL_SPEC → golden/baseline.json).
+
+**All eight item groups derive exactly, and no two surfaces disagree on any number.**
+81.42% / 8142 bps readiness with all eight category scores derived from tier rules;
+15 exceptions 7 open / 8 resolved; 7 blockers / $198,950; $255,650 exposure;
+$4,812,450 − $4,800,000 = $12,450 with the three reconciling items netting to the
+adjusted $4,800,000; adjustments 3 identified / 2 drafted / 0 posted; PBC 17/21 = 80.95%
+with the corrected attention set; source health 91.67%; 1,500 book units / 1,065 count
+population / 1,061 matched / 4 variances / 6 movements / 24+18 test counts; and the
+EXC-001 signature story fact-for-fact from SO-26184 through INV-2027-00418 to
+CUT-OUT-001 REVIEW_REQUIRED and conclusion Open. **Reproduce Close returned MATCH** over
+the fourteen compared sections, and **Reset Demo restored every highlight figure** after
+evidence, comments, drafts, a review and a period lock. The four boundary claims verified
+mechanically true and consistently worded.
+
+17 findings → **12 confirmed, 5 refuted on adjudication, 0 unverified**. Every confirmed
+finding was wording or record staleness — none was a figure: this file's stale header and
+"thirteen sections" literal, SESSION_HANDOFF's stale rows and its four-noun stage-08
+bullet, a dead pre-formatted readiness string in the web view-model, the four-noun header
+comment in `answers.ts`, and the three-noun wording pact having no test. All fixed with
+this record; the pact is now pinned by `apps/web/test/pass2-wording-pact.test.ts`.
+
+### Register of documented conflicts (owner decision required, none blocking)
+
+Deliberately not fixed — each would change canonical spec wording or a locked total:
+
+1. **EXC-001 count rows vs the locked count baseline (P1, spec-internal).**
+   CANONICAL_SPEC §6 locks first pass at 1,061 matched / 4 variances over the 1,065
+   population; §8 locks the EXC-001 pair delivered 12/29 and installed 12/30 with book
+   location still Warehouse. Because the book location puts the pair in the count
+   population, the fixtures are forced to record them as physically found in the
+   warehouse at the 12/31 snapshot (`CD-0512`/`CD-0513`) — two days after installation
+   at the customer. Counting them missing (the physically true outcome) would make the
+   first pass 1,059/6 and give EXC-001 count-variance support §6 does not grant it.
+   Resolving this requires changing one locked value or accepting the tension.
+2. **§1 vs §11/docs on the Overview headline precision (P3).** §1 says the Overview must
+   "immediately show 81.42%"; docs/11, docs/12, the approved design export and the
+   shipped headline all use the one-decimal overview scale "81.4%" (the exact
+   "81.42% · 8142 bps" reads two lines below on the same screen).
+3. **§5 vs §9 on the EXC-014 item label (P3).** §5 calls the reconciling item "validated
+   receipt timing"; §9's locked exception table and the derived rule title both say
+   "PO/receipt/GL timing", which is what the bridge renders.
+
+---
+
 ## What the gate deliberately does not claim
 
-- **Replay equivalence covers structured output only.** Thirteen sections are compared
-  (`REPLAY_COMPARED_SECTIONS`); Ask Gaurd narration, working state and the audit trail are
-  excluded by design (CANONICAL_SPEC §15). The exclusions are printed next to every result
-  rather than left to the reader.
+- **Replay equivalence covers structured output only.** Fourteen sections are compared
+  (`REPLAY_COMPARED_SECTIONS` — thirteen from stage 09 plus `ruleResults`, which joined at
+  `30494c0`); Ask Gaurd narration, working state and the audit trail are excluded by design
+  (CANONICAL_SPEC §15). The exclusions are printed next to every result rather than left to
+  the reader.
 - **`SPEC_MANIFEST.json` is not enforced by any test.** It covers 44 spec files and must be
   recomputed by hand when one of them changes. Stage 10 edits the manifest-covered root
   `README.md`.

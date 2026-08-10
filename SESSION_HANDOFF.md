@@ -1,8 +1,8 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 09
-(HEAD `38a115c`).
+re-deriving decisions or breaking locked facts. Last refreshed 2026-08-10 after both
+final data passes (HEAD is the close-out commit following `fb496a0`).
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
@@ -11,33 +11,27 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
 ## 0. Start here
 
 **All ten code stages are COMPLETE, licensed (MIT, owner's choice), and tagged
-`v1.0.0-demo` at `868b072`.** The release gate is recorded in `QA_RELEASE_GATE.md`
-(no P0 open).
+`v1.0.0-demo` at `868b072`. Both final data passes are COMPLETE** — pass 1 (adversarial
+data, 49 agents, 10 defects fixed at `fb496a0`) and pass 2 (highlight-set validation,
+42 agents, all highlights valid and consistent; wording/staleness fixes in the close-out
+commit). The release gate is recorded in `QA_RELEASE_GATE.md` (no P0 open), including the
+**register of three documented spec conflicts awaiting an owner decision** — most notably
+the EXC-001 count rows forced by §6's locked 1,061/4 against §8's locked delivery
+timeline. Never resolve those by silently changing a locked value.
 
-**The next task is two final data passes, requested by the owner (2026-08-10):**
-
-1. **Pass 1 — one last adversarial pass at the DATA.** The fixture corpus itself:
-   cross-fixture referential integrity, per-serial story coherence, operational timeline
-   realism, and the derived close against `CANONICAL_SPEC.md`. See §8 for exactly what
-   prior reviews covered and where the headroom is.
-2. **Pass 2 — validate the highlighted results.** After pass 1's remediation lands: verify
-   that every figure and claim the demo highlights is consistent across every surface that
-   states it (dataset → rules → services → UI → README → QA_RELEASE_GATE → User Guide →
-   docs) and valid (re-derivable from the fixtures). §8 lists the highlight set.
-
-Run pass 2 only after pass 1 is committed — validating surfaces against data that is about
-to change would validate the wrong tree.
+**The next task is push public / deploy** (see §8). Before anything else:
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **607 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+   **628 tests across 47 files passing**. **Stop any `pnpm dev` server first** (see §7).
 
-**Both adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
+**All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
-public surface at `e3c952e` (7 lenses, 76 agents, 27 fixed — public copy, WCAG, responsive,
-deployment). See `QA_RELEASE_GATE.md` for both records.
+public surface at `e3c952e` (7 lenses, 76 agents, 27 fixed). Final data pass at `fa3526b`
+(8 lenses, 49 agents, 10 fixed). Highlight validation at `fb496a0` (8 verifiers, 42
+agents, no figure failed — wording fixes only). See `QA_RELEASE_GATE.md` for all records.
 
 ---
 
@@ -60,11 +54,11 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified after code stage 09)
+## 2. Current state (verified after both final data passes)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **607 tests across 44 files passing**; typecheck, lint, and production build all green
+- **628 tests across 47 files passing**; typecheck, lint, and production build all green
   (14 routes).
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
@@ -94,11 +88,16 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Full-tree review | Done (`30494c0`) — stages 01–09 reviewed together; 9 defects fixed |
 | Code 10 Polish/Public/Deploy | Done + fleet-verified (`e3c952e`, `1c85866`) — public README, User Guide, `.env.example`, `apps/web/vercel.json`, `.gitattributes`, 27 verification defects fixed |
 | LICENSE | Done — MIT (owner's choice), wired into README + package.json (`868b072`), tagged `v1.0.0-demo` |
-| Remaining | **Two final data passes** (owner request, see §0/§8), then push/deploy. |
+| Final data pass 1 | **Done** — adversarial data fleet, 10 defects fixed + category regressions (`fb496a0`) |
+| Final data pass 2 | **Done** — highlight validation, all valid/consistent; wording fixes in the close-out commit |
+| Remaining | **Push public / deploy** (see §8), plus the owner-decision register in `QA_RELEASE_GATE.md`. |
 
 ### Commit history (newest first)
 
 ```
+(close-out) Record both final data passes and refresh this handoff
+fb496a0 Pass 1 data remediation: 10 fleet-confirmed fixture defects fixed
+fa3526b Hand off: two final data passes are the next task
 868b072 Add the MIT license and wire it into the README and package.json
 cebb269 Record the stage-10 verification outcome and refresh the handoff
 1c85866 Stage 10 verification remediation: 27 defects fixed
@@ -394,70 +393,44 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-### Pass 1 — one last adversarial pass at the DATA
-
-**Where the headroom genuinely is.** The full-tree review's 12 lenses included accounting
-math (allocation, buildDataset, closeInput, the derived totals) and an attack on the
-authored interpretations (scenario events, allocation marginals, PBC baseline) — both
-cleared. But a dedicated fixture-by-fixture DATA lens was cut from that lens set, so no
-fleet has ever swept:
-
-- **Cross-fixture referential integrity end-to-end**: every PO↔IR↔VB, SO↔IF↔invoice,
-  serial↔count-row, serial↔carrier-shipment↔installation↔telemetry, GL entry↔reconciling
-  item, contract↔party, custodian statement↔third-party holding reference resolving both
-  directions, with no orphans and no dangling ids.
-- **Per-serial story coherence for the OTHER ~1,490 units** — the 15 exception serials are
-  golden-tested to death; the background population's buy-side dates, costs, locations and
-  count rows have never been story-checked (e.g. receipts before their PO dates, telemetry
-  from units never installed, units counted in locations they never moved to).
-- **Operational timeline realism**: carrier event trails (PICKUP→DELIVERED ordering),
-  installation-vs-delivery ordering, cycle-count cadence, movement authorization dates.
-- **Fixture content vs. what screens humanize**: party names, location display names,
-  document totals summing from their own lines.
-- Existing pins to build on: `packages/data/test/controls.test.ts` (46 tests, marginals),
-  `stories.test.ts` (27, the exception serials), `determinism.test.ts` (byte-for-byte).
-
-Working method: §6 (finder lenses → dedupe → two skeptics per finding at high effort →
-adjudicate contested inline → fix with category-level regressions → gate → commit). Tree
-is clean at `868b072` — commit BEFORE launching any fleet. Traps in §7 all still apply,
-especially: **never hand-edit `allocation.ts`**, fixtures must regenerate byte-for-byte
-(`pnpm --filter @icg/data generate`), story serials in `fixtures/story.json` are
-PRNG-derived not canonical, and if data and spec disagree, STOP and identify which is
-wrong — never silently change a canonical total.
-
-### Pass 2 — validate the highlighted results (run only after pass 1 is committed)
-
-The owner's highlight set — every figure/claim the demo leads with. For each: (a) it is
-re-derivable from the fixtures through `runClose`, and (b) it reads identically on every
-surface that states it (fixtures → rules → services → each screen → README →
-QA_RELEASE_GATE → User Guide → docs/CANONICAL_SPEC → golden/baseline.json):
-
-- 81.42% close readiness (8142 bps, half-up from 8141.65) · 7 blockers / $198,950 ·
-  $12,450 GL difference ($4,812,450 − $4,800,000) · 15 exceptions, 7 open / 8 resolved ·
-  $255,650 designed exposure · PBC 17/21 = 80.95% · source health 91.67% (825/900) ·
-  1,500 book units / $4.8M · count population 1,065, first pass 1,061 / 4 variances,
-  6 movements, 24+18 test counts · reconciling items −$2,900 / +$9,200 / −$18,750 →
-  adjusted GL $4,800,000 · adjustments 2 drafted of 3 identified, 0 posted.
-- The EXC-001 signature story: SO-26184 → IF-261972 shipped 12/27 → delivered 12/29 →
-  installed/online 12/30 → INV-2027-00418 dated 2027-01-02 → provision missing →
-  conclusion Open. Serials KE-E2-1048/1051, $14,800, CUT-OUT-001 REVIEW_REQUIRED.
-- Reproduce Close = MATCH; Reset Demo restores all of the above after mutation.
-- The boundary claims beside the numbers: nothing posts, auditor sees provided-only,
-  readiness ≠ audit assurance, AI-off identical answer.
-
-A mismatch between two surfaces is a finding even when both are "right" (rounded vs exact,
-stale wording, a figure quoted where it should be derived). Record both passes' outcomes
-in `QA_RELEASE_GATE.md` + this file, then commit.
-
-### After both passes
+**Both final data passes are complete** — full records, fix lists, refuted-finding
+register and the owner-decision register live in `QA_RELEASE_GATE.md` ("Final data
+passes"). What remains, in order:
 
 1. **Push public / deploy**: Vercel Root Directory = `apps/web`; no environment variables
    exist; `apps/web/vercel.json` carries the security headers.
-2. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
+2. **Owner decisions on the three documented conflicts** (register in
+   `QA_RELEASE_GATE.md`; never resolve by silently changing a locked value):
+   the EXC-001 count rows forced by §6's 1,061/4 against §8's delivery timeline (P1);
+   the §1 "81.42%" Overview headline vs the one-decimal overview scale everywhere else
+   (P3); the §5 "validated receipt timing" vs §9 "PO/receipt/GL timing" label (P3).
+   Editing `CANONICAL_SPEC.md` or any `docs/` file means recomputing its
+   `SPEC_MANIFEST.json` entry by hand (§7).
+3. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
    with the pinned stage-05 `complementary` contract, needs a design decision); a
    git-history credential scan in `test/` (history was verified clean by hand, but the
    permanent scan covers only the working tree); dark-theme capsule-contrast audit
    (light was measured and fixed; dark passed spot checks).
+
+**What the final data passes established that must not be undone (`fb496a0` + close-out):**
+
+- **Operational events own the movement story.** An installed unit's `lastMovementAt` is
+  its install day; an assigned unit's is its assignment start (`OperationalResult.unitPatches`).
+  Sold serials carry full PO→IR→VB history folded into real purchase batches. Carrier
+  pickups never precede book movements; pre-snapshot count-window movements must leave a
+  count-variance trace. Cycle-count quantities anchor on year-end cell levels capped by
+  company-wide acquired stock. All pinned by `packages/data/test/pass1-regressions.test.ts` —
+  a generator change that breaks a category fails there, not in a demo.
+- **Classification display names are CANONICAL_SPEC §5's own vocabulary** (`GIT` and `RMA`
+  stay acronyms) via `classificationLabel()`; `apps/web/test/pass1-classification.test.ts`
+  iterates every value the dataset carries.
+- **The three-noun wording pact is test-held** (`pass2-wording-pact.test.ts`): the Ask
+  Gaurd availability note and the User Guide share "Every figure, status and citation",
+  and the four-noun attribution may not appear in any shipped surface.
+- **Every highlight figure re-derives and reads identically on every surface** (pass-2
+  record). If you touch a surface that states a canonical figure, the cross-surface sweep
+  is the bar a re-check must clear; a mismatch between two surfaces is a finding even
+  when both are individually defensible.
 
 **What the stage-10 verification established that must not be undone (`1c85866`):**
 
@@ -561,10 +534,13 @@ in `QA_RELEASE_GATE.md` + this file, then commit.
   That bug shipped in stage 04, was fixed in `traceLineage` in stage 08, and then turned out to
   exist in a **second copy** in `commands.ts`. If a third copy of the value is ever added to an
   evidence shape, `redactRestricted()` is the one place that learns about it.
-- **Ask Gaurd's answer is deterministic; only `narration` is generative.** Every figure, status,
-  conclusion and citation is read from a tool result, so "numeric values must match tool results
-  exactly" holds by construction. There is no provider bound anywhere — the engine IS the answer,
-  which is why the "disable the AI provider" acceptance test is the normal case here.
+- **Ask Gaurd's answer is deterministic; only `narration` is generative.** Every figure, status
+  and citation is read from a tool result (the management-conclusion sentence is authored prose
+  in `answers.ts`, deliberately never attributed to a tool — conclusions are recorded by people),
+  so "numeric values must match tool results exactly" holds by construction. There is no provider
+  bound anywhere — the engine IS the answer, which is why the "disable the AI provider"
+  acceptance test is the normal case here. The three-noun wording pact between the availability
+  note and the User Guide is pinned by `apps/web/test/pass2-wording-pact.test.ts`.
 - **Narration may not carry figures or identifiers at all.** Five separate bypasses came from
   trying to decide whether a number in prose was the RIGHT number. That comparison is not
   reliably decidable across spellings, scripts and phrasings, so it is not attempted: quantities

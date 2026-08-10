@@ -13,11 +13,14 @@ import {
  * The deterministic answer engine (stage 08).
  *
  * "Deterministic Core, Generative Edge" is implemented literally here: every
- * figure, status, conclusion and citation in an answer is READ FROM TOOL
- * RESULTS, and a provider — when one exists at all — may only add prose
- * around them. That is why `docs/09`'s rule that "numeric values in material
- * status answers must match tool results exactly" needs no post-hoc check:
- * there is no path by which a number could come from anywhere else.
+ * figure, status and citation in an answer is READ FROM TOOL RESULTS, and a
+ * provider — when one exists at all — may only add prose around them. (The
+ * management-conclusion sentence is authored prose in this file, deliberately
+ * NOT attributed to a tool result — see the guardrails note on why
+ * conclusions are recorded by people, never produced by software.) That is
+ * why `docs/09`'s rule that "numeric values in material status answers must
+ * match tool results exactly" needs no post-hoc check: there is no path by
+ * which a number could come from anywhere else.
  *
  * It also means the acceptance test passes by construction rather than by a
  * parallel fallback implementation that could drift: with the provider

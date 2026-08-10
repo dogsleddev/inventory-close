@@ -466,7 +466,6 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     roleLabel: roleLabel(user),
     gate: {
       readinessOverview: formatBpsOverview(readiness.totalBasisPoints),
-      readinessExact: formatBpsExact(readiness.totalBasisPoints),
       bps: readiness.totalBasisPoints,
       categories,
       stats,

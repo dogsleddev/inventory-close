@@ -202,7 +202,6 @@ export interface OverviewData {
   readonly roleLabel: string;
   readonly gate?: {
     readonly readinessOverview: string;
-    readonly readinessExact: string;
     readonly bps: number;
     readonly categories: readonly GateCategory[];
     readonly stats: readonly KpiTile[];
