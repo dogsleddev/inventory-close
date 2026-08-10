@@ -111,7 +111,9 @@ Dataset `FY2026-DEMO-v1.1.0` · seed `ICG-FY2026-DEMO-002` · scenario `SCENARIO
 ## 4. Repo map
 
 ```
-CANONICAL_SPEC.md  docs/  prompts/  golden/  SPEC_MANIFEST.json  CHANGELOG.md   <- spec package, keep pristine
+CANONICAL_SPEC.md  README.md  CHANGELOG.md  SPEC_MANIFEST.json                 <- spec package,
+docs/  prompts/  golden/  data/README.md                                          keep pristine
+                                              (all 44 files are manifest-hashed; see traps in §7)
 design/00_master … 06_audit-ai/    <- approved design exports (self-extracting bundles)
 design/07_final/                   <- ICG-Design-Handoff.html (design 07 output, authoritative)
 design/IMPLEMENTATION_HANDOFF.md   <- markdown distillation of it; what code 05-07 read
@@ -156,8 +158,15 @@ The spec deferred these; they were authored during the build and are now pinned 
    unsupported, JE-2027-0012 +9,200 January posting) so rules derive the reconciliation.
 7. **Auditor scoping** — the auditor sees only evidence under **PROVIDED** workpapers; management
    indicators are never auditor-facing.
-8. **Not yet typed:** docs/06 objects for later stages (Contract, Shipment, CloseTask,
-   AiInteraction, …) arrive with their stages. This is deliberate staging, not an omission.
+8. **Not yet typed:** docs/06 objects for later stages (CloseTask/Readiness,
+   AiInteraction/ToolCall/Citation/Draft/Session, TechnicalAccountingReview/LegalReview, …) arrive
+   with their stages. This is deliberate staging, not an omission. **Contract and Shipment are
+   already typed** — `contractFixtureSchema` (provisions: OWNERSHIP_TRANSFER / ACCEPTANCE /
+   TITLE_RETENTION / CUSTODY / LOANER_TERMS / DEMO_TERMS / RETURN_TERMS, each PRESENT or MISSING)
+   and `carrierShipmentFixtureSchema` (PICKUP → DELIVERED event trail) in
+   `packages/domain/src/schemas/datasetFixtures.ts`, on `CloseInput` as `contracts` and
+   `carrierShipments`, read by the cutoff, ownership, commercial, and procurement rules.
+   Do not re-declare them.
 
 ---
 
@@ -208,6 +217,20 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - `exactOptionalPropertyTypes` is on: Zod-inferred optionals are `T | undefined`, so domain
   interfaces that receive fixture data must declare `?: T | undefined`.
 - ESLint dependency rules are scoped to `packages/*/src/**` — tests may import `@icg/data`.
+- **There is no UI test infrastructure yet, and the gate cannot tell you that.** `vitest.config.ts`
+  collects `packages/*/test/**` and `apps/*/test/**` with `environment: "node"`; no jsdom,
+  happy-dom, `@testing-library/*`, or React plugin is installed, and `apps/web` has no `test/`
+  directory. The include glob now matches `.test.ts` **and** `.test.tsx` so a UI test can never be
+  silently skipped — but a `.test.ts(x)` file placed outside a `test/` directory still matches
+  nothing and is ignored without warning. Stage 05 must install the browser-environment deps it
+  needs; until then a green gate says nothing about UI correctness.
+- **`SPEC_MANIFEST.json` is not enforced by anything.** No test, script, or gate step checks it —
+  typecheck/lint/test/build all stay green with a stale manifest. It covers 44 files:
+  `CANONICAL_SPEC.md`, `CHANGELOG.md`, root `README.md`, `data/README.md`, and everything under
+  `docs/`, `prompts/`, `golden/`. If you touch any of them you must recompute that entry's
+  `sha256` and `bytes` by hand (commit `cfbd22d` did exactly that). Note **stage 10 explicitly
+  asks you to update root `README.md`, which is manifest-covered.** To verify:
+  `$m = Get-Content SPEC_MANIFEST.json -Raw | ConvertFrom-Json; foreach ($f in $m.files) { if ((Get-FileHash $f.path -Algorithm SHA256).Hash.ToLower() -ne $f.sha256) { $f.path } }`
 - Subagent fleets can hit session usage limits; if verifiers die, their findings are **unverified,
   not refuted** — adjudicate them inline rather than trusting the tally.
 - Old session workflow journals (with full finding lists) live under
