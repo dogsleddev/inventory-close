@@ -5,16 +5,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0401",
-      "lastModifiedAt": "2026-11-07T17:00:00Z",
+      "lastModifiedAt": "2026-12-19T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "919653ebf9ad8f0aa8bb32cb2faa79ffa1ef795deda63393b071152e5d88d2c7"
     },
     "serial": "KE-I1-5799",
     "sku": "KE-I1",
-    "customer": "Northgate Fulfillment",
-    "receivedAt": "2026-11-07T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_REPAIR"
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-19T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0402",
@@ -22,16 +22,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0402",
-      "lastModifiedAt": "2026-11-14T17:00:00Z",
+      "lastModifiedAt": "2026-12-10T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "27b3c94d38f08aeee86c4d259dd241de7923e024c73db61ca960e00782f624ce"
     },
     "serial": "KE-I1-3816",
     "sku": "KE-I1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-11-14T17:00:00Z",
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-10T17:00:00Z",
     "reason": "Intermittent power fault",
-    "status": "RECEIVED"
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0403",
@@ -39,15 +39,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0403",
-      "lastModifiedAt": "2026-11-24T17:00:00Z",
+      "lastModifiedAt": "2026-12-14T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "37d33a001708dcd4c77b977673703e8ca2d1e5a6626c9100ed613b1aa199b04f"
     },
     "serial": "KE-I1-3325",
     "sku": "KE-I1",
-    "customer": "Halcyon Logistics",
-    "receivedAt": "2026-11-24T17:00:00Z",
-    "reason": "Intermittent power fault",
+    "customer": "Bluewater Foods Group",
+    "receivedAt": "2026-12-14T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
     "status": "IN_REPAIR"
   },
   {
@@ -56,14 +56,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0404",
-      "lastModifiedAt": "2026-11-25T17:00:00Z",
+      "lastModifiedAt": "2026-12-11T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "06a1804422fcb4b2542b8604761637d09c9b173a1506ec9f4371879546ae8eb2"
     },
     "serial": "KE-I1-8752",
     "sku": "KE-I1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-11-25T17:00:00Z",
+    "customer": "Evergreen Campus Services",
+    "receivedAt": "2026-12-11T17:00:00Z",
     "reason": "Field failure — diagnostics pending",
     "status": "IN_REPAIR"
   },
@@ -73,16 +73,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0405",
-      "lastModifiedAt": "2026-11-01T17:00:00Z",
+      "lastModifiedAt": "2026-12-13T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "a088ae9914bd4ae54986b5878fc6241454f8e65fbe360d08cccb81ea50851547"
     },
     "serial": "KE-I1-4886",
     "sku": "KE-I1",
     "customer": "Halcyon Logistics",
-    "receivedAt": "2026-11-01T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_EVALUATION"
+    "receivedAt": "2026-12-13T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0406",
@@ -90,15 +90,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0406",
-      "lastModifiedAt": "2026-09-15T17:00:00Z",
+      "lastModifiedAt": "2026-12-10T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9f8a80401c704aa2f6de2bba819bbb5c21d48031e06c421215ff00b95c0fbec4"
     },
     "serial": "KE-I1-2308",
     "sku": "KE-I1",
-    "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-09-15T17:00:00Z",
-    "reason": "Customer return — order error",
+    "customer": "Summit Ridge Health",
+    "receivedAt": "2026-12-10T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
     "status": "IN_REPAIR"
   },
   {
@@ -107,16 +107,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0407",
-      "lastModifiedAt": "2026-10-16T17:00:00Z",
+      "lastModifiedAt": "2026-12-14T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fad5731f69e0e70c55e89c3c5481fcb3c9c0f7f301029cbc3c1546deb1ef2f73"
     },
     "serial": "KE-E1-3232",
     "sku": "KE-E1",
     "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-10-16T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_EVALUATION"
+    "receivedAt": "2026-12-14T17:00:00Z",
+    "reason": "Customer return — order error",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0408",
@@ -124,16 +124,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0408",
-      "lastModifiedAt": "2026-11-27T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fc7f4c838f2a9efe3788d5d761d4670169aef4127962f122fcae4634a13a29ee"
     },
     "serial": "KE-X1-4219",
     "sku": "KE-X1",
-    "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-11-27T17:00:00Z",
+    "customer": "Northgate Fulfillment",
+    "receivedAt": "2026-12-07T17:00:00Z",
     "reason": "Field failure — diagnostics pending",
-    "status": "IN_REPAIR"
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0409",
@@ -141,16 +141,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0409",
-      "lastModifiedAt": "2026-10-17T17:00:00Z",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "b4368d349c9628ef72ed0b6d1308ed0cc0df18722a6c360a8246dba9fde2a0f4"
     },
     "serial": "KE-X1-3603",
     "sku": "KE-X1",
-    "customer": "Evergreen Campus Services",
-    "receivedAt": "2026-10-17T17:00:00Z",
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-05T17:00:00Z",
     "reason": "Intermittent power fault",
-    "status": "IN_REPAIR"
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0410",
@@ -158,16 +158,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0410",
-      "lastModifiedAt": "2026-09-17T17:00:00Z",
+      "lastModifiedAt": "2026-12-11T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "1b04f501c462fc3d135039ed7475e9003d976d3965854cb2d7a4187ce898eef3"
     },
     "serial": "KE-X1-6220",
     "sku": "KE-X1",
     "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-09-17T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "IN_EVALUATION"
+    "receivedAt": "2026-12-11T17:00:00Z",
+    "reason": "Customer return — order error",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0411",
@@ -175,16 +175,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0411",
-      "lastModifiedAt": "2026-11-16T17:00:00Z",
+      "lastModifiedAt": "2026-12-10T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "4aead5193e8e3a9cb49fdf06cf87c99a859ebbfddc8b09570b836cf8e2b947c4"
     },
     "serial": "KE-X1-8448",
     "sku": "KE-X1",
-    "customer": "Copperline Grocers",
-    "receivedAt": "2026-11-16T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "RECEIVED"
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-10T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0412",
@@ -192,16 +192,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0412",
-      "lastModifiedAt": "2026-12-12T17:00:00Z",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d835e2e086f9acfce6984b577435140ccf074ffddbd7a829df2555f6501ec465"
     },
     "serial": "KE-X1-3972",
     "sku": "KE-X1",
     "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-12-12T17:00:00Z",
+    "receivedAt": "2026-12-05T17:00:00Z",
     "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0413",
@@ -209,15 +209,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0413",
-      "lastModifiedAt": "2026-09-19T17:00:00Z",
+      "lastModifiedAt": "2026-12-21T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "2fdf76d8cac50d4bfeb4c20f3057d0df5a728e09d5742be5fd749e48dfd2ad8a"
     },
     "serial": "KE-X1-1589",
     "sku": "KE-X1",
     "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-09-19T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
+    "receivedAt": "2026-12-21T17:00:00Z",
+    "reason": "Intermittent power fault",
     "status": "RECEIVED"
   },
   {
@@ -226,16 +226,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0414",
-      "lastModifiedAt": "2026-11-09T17:00:00Z",
+      "lastModifiedAt": "2026-12-09T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0ff5b505d628f09eed88121dab604da5a804ea27b7fd1ea9fef02492b3d7c9a7"
     },
     "serial": "KE-X1-3835",
     "sku": "KE-X1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-11-09T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "IN_REPAIR"
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-09T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0415",
@@ -243,16 +243,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0415",
-      "lastModifiedAt": "2026-11-08T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "db47502372a65e80fce725abeee39a82689dc8a85e773e6ef62690ece450f251"
     },
     "serial": "KE-X1-5219",
     "sku": "KE-X1",
-    "customer": "Copperline Grocers",
-    "receivedAt": "2026-11-08T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "customer": "Evergreen Campus Services",
+    "receivedAt": "2026-12-12T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0416",
@@ -260,16 +260,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0416",
-      "lastModifiedAt": "2026-09-03T17:00:00Z",
+      "lastModifiedAt": "2026-12-08T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "dc859d1a3393f5b4023aa2a17564cf3a9587f5414d10b5b35b0ee1c486669448"
     },
     "serial": "KE-X1-7116",
     "sku": "KE-X1",
-    "customer": "Halcyon Logistics",
-    "receivedAt": "2026-09-03T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "RECEIVED"
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-08T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0417",
@@ -277,16 +277,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0417",
-      "lastModifiedAt": "2026-09-12T17:00:00Z",
+      "lastModifiedAt": "2026-12-11T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "602ff3d331f4f95d15bc77fea72045962a065e139cf0f7b52a32cc43dc7814c8"
     },
     "serial": "KE-X1-3011",
     "sku": "KE-X1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-09-12T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_EVALUATION"
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-11T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0418",
@@ -294,16 +294,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0418",
-      "lastModifiedAt": "2026-12-06T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f4c7017d53b509cd15a861becfdfc013112cf7d8853c370f2a774fefbea4d4e0"
     },
     "serial": "KE-X1-3668",
     "sku": "KE-X1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-12-06T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "IN_EVALUATION"
+    "customer": "Bluewater Foods Group",
+    "receivedAt": "2026-12-07T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0419",
@@ -311,16 +311,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0419",
-      "lastModifiedAt": "2026-12-25T17:00:00Z",
+      "lastModifiedAt": "2026-12-19T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "1b8416ef44de76a516377e6c61e02343b180bb111a0a3b5f8bb9222b6b84c466"
     },
     "serial": "KE-X1-5420",
     "sku": "KE-X1",
-    "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-12-25T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_EVALUATION"
+    "customer": "Northgate Fulfillment",
+    "receivedAt": "2026-12-19T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0420",
@@ -328,16 +328,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0420",
-      "lastModifiedAt": "2026-10-04T17:00:00Z",
+      "lastModifiedAt": "2026-12-16T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5320fbf4c56a619d0e86b937ad65d509256ef42150993dc7d46f285cfc00858e"
     },
     "serial": "KE-X1-7105",
     "sku": "KE-X1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-10-04T17:00:00Z",
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-16T17:00:00Z",
     "reason": "Firmware fault — repair queue",
-    "status": "IN_EVALUATION"
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0421",
@@ -345,16 +345,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0421",
-      "lastModifiedAt": "2026-11-20T17:00:00Z",
+      "lastModifiedAt": "2026-12-13T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "aafe22361a854771698eb4a6de518fd2690d7fcf35eeb76e206f02b60b700eb5"
     },
     "serial": "KE-X1-4376",
     "sku": "KE-X1",
-    "customer": "Halcyon Logistics",
-    "receivedAt": "2026-11-20T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_EVALUATION"
+    "customer": "Northgate Fulfillment",
+    "receivedAt": "2026-12-13T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0422",
@@ -362,16 +362,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0422",
-      "lastModifiedAt": "2026-12-10T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d77e446403e660a2a8b7c8e5a3b79fc5671080be3f5ee332bd9697afdbd78092"
     },
     "serial": "KE-X1-4515",
     "sku": "KE-X1",
-    "customer": "Halcyon Logistics",
-    "receivedAt": "2026-12-10T17:00:00Z",
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-07T17:00:00Z",
     "reason": "Field failure — diagnostics pending",
-    "status": "RECEIVED"
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0423",
@@ -379,16 +379,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0423",
-      "lastModifiedAt": "2026-12-27T17:00:00Z",
+      "lastModifiedAt": "2026-12-18T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "30e3d4434645b6e997b245ad74127ec0abf9c4ff6614340bad048384a6116cdf"
     },
     "serial": "KE-X1-9340",
     "sku": "KE-X1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-12-27T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "IN_REPAIR"
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-18T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0424",
@@ -396,16 +396,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0424",
-      "lastModifiedAt": "2026-10-25T17:00:00Z",
+      "lastModifiedAt": "2026-12-19T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9f32a15584fac538d70331fb3916ca36317b1e3206cc297e2c3d5e33461b16bb"
     },
     "serial": "KE-X1-7766",
     "sku": "KE-X1",
-    "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-10-25T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_REPAIR"
+    "customer": "Ironvale Robotics",
+    "receivedAt": "2026-12-19T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0425",
@@ -413,16 +413,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0425",
-      "lastModifiedAt": "2026-12-06T17:00:00Z",
+      "lastModifiedAt": "2026-12-13T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9986918d9b27bd7730d6d1bb69ea5a896d0023fb78f9afa250725024946eb6c4"
     },
     "serial": "KE-X1-9030",
     "sku": "KE-X1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-12-06T17:00:00Z",
-    "reason": "Camera gimbal fault",
-    "status": "IN_REPAIR"
+    "customer": "Copperline Grocers",
+    "receivedAt": "2026-12-13T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0426",
@@ -436,9 +436,9 @@
     },
     "serial": "KE-X1-3214",
     "sku": "KE-X1",
-    "customer": "Evergreen Campus Services",
+    "customer": "Summit Ridge Health",
     "receivedAt": "2026-12-16T17:00:00Z",
-    "reason": "Camera gimbal fault",
+    "reason": "Field failure — diagnostics pending",
     "status": "RECEIVED"
   },
   {
@@ -447,16 +447,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0427",
-      "lastModifiedAt": "2026-09-11T17:00:00Z",
+      "lastModifiedAt": "2026-12-13T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ef1dfb69f83210b2ee8c9543d38bae240a38c2d47040a5f644f549c5eb569d5c"
     },
     "serial": "KE-X1-5624",
     "sku": "KE-X1",
-    "customer": "Copperline Grocers",
-    "receivedAt": "2026-09-11T17:00:00Z",
-    "reason": "Camera gimbal fault",
-    "status": "RECEIVED"
+    "customer": "Ironvale Robotics",
+    "receivedAt": "2026-12-13T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0428",
@@ -464,16 +464,16 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0428",
-      "lastModifiedAt": "2026-10-25T17:00:00Z",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "5a13f137948217ddfa4ba3b776ae4452e326c653b3f419d02a9de40ec0b60203"
     },
     "serial": "KE-X1-5095",
     "sku": "KE-X1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-10-25T17:00:00Z",
-    "reason": "Camera gimbal fault",
-    "status": "IN_EVALUATION"
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-05T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0429",
@@ -481,15 +481,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0429",
-      "lastModifiedAt": "2026-12-06T17:00:00Z",
+      "lastModifiedAt": "2026-12-19T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6d8b459d999c0fa7297d8df46a4547d7973e7c560e7dc63492fbbd9ef5be5f12"
     },
     "serial": "KE-X1-7545",
     "sku": "KE-X1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-12-06T17:00:00Z",
-    "reason": "Intermittent power fault",
+    "customer": "Ironvale Robotics",
+    "receivedAt": "2026-12-19T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
     "status": "IN_REPAIR"
   },
   {
@@ -498,15 +498,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0430",
-      "lastModifiedAt": "2026-11-25T17:00:00Z",
+      "lastModifiedAt": "2026-12-17T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f2c4bb0c534a81158c1abfa51453806c85e889eea83cc8690ba5e49698d14ff6"
     },
     "sku": "KV-B1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-11-25T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_REPAIR"
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-17T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0431",
@@ -514,15 +514,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0431",
-      "lastModifiedAt": "2026-12-24T17:00:00Z",
+      "lastModifiedAt": "2026-12-17T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fab8a5590e5e9cabd928e933a594ef48af7d600d1bb2db61b586370e88a65173"
     },
     "sku": "KV-B1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-12-24T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "customer": "Evergreen Campus Services",
+    "receivedAt": "2026-12-17T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0432",
@@ -530,14 +530,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0432",
-      "lastModifiedAt": "2026-12-21T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "40cebf59e97c0f6016ff9a16f3954360c6132307f1c0d990bbae5a6c989d36db"
     },
     "sku": "KV-B1",
-    "customer": "Evergreen Campus Services",
-    "receivedAt": "2026-12-21T17:00:00Z",
-    "reason": "Intermittent power fault",
+    "customer": "Copperline Grocers",
+    "receivedAt": "2026-12-12T17:00:00Z",
+    "reason": "Camera gimbal fault",
     "status": "IN_REPAIR"
   },
   {
@@ -546,13 +546,13 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0433",
-      "lastModifiedAt": "2026-09-26T17:00:00Z",
+      "lastModifiedAt": "2026-12-15T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f92c3d1abe0df78a1c178f2a5edafac89325efae7f5463b5b1061fd378fbdc1b"
     },
     "sku": "KV-B1",
-    "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-09-26T17:00:00Z",
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-15T17:00:00Z",
     "reason": "Field failure — diagnostics pending",
     "status": "IN_EVALUATION"
   },
@@ -562,14 +562,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0434",
-      "lastModifiedAt": "2026-09-21T17:00:00Z",
+      "lastModifiedAt": "2026-12-06T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3b7f5488889fdc4ff9bae661e7c89cb141618dba80f0226a5b68e80ec0ffef44"
     },
     "sku": "KV-B1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-09-21T17:00:00Z",
-    "reason": "Intermittent power fault",
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-06T17:00:00Z",
+    "reason": "Customer return — order error",
     "status": "IN_REPAIR"
   },
   {
@@ -578,14 +578,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0435",
-      "lastModifiedAt": "2026-10-04T17:00:00Z",
+      "lastModifiedAt": "2026-12-13T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "56a178b17ddbd463732443b9cd59e30e1625015d59ede555eca3a643ed97c73a"
     },
     "sku": "KV-B1",
     "customer": "Halcyon Logistics",
-    "receivedAt": "2026-10-04T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
+    "receivedAt": "2026-12-13T17:00:00Z",
+    "reason": "Intermittent power fault",
     "status": "IN_EVALUATION"
   },
   {
@@ -594,15 +594,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0436",
-      "lastModifiedAt": "2026-10-01T17:00:00Z",
+      "lastModifiedAt": "2026-12-18T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d1f8a059f4b71abb9da8ea2a9a4ea2c0f8cb6cb4183981911414c5a2f86e6b87"
     },
     "sku": "KV-B1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-10-01T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "RECEIVED"
+    "customer": "Summit Ridge Health",
+    "receivedAt": "2026-12-18T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0437",
@@ -610,15 +610,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0437",
-      "lastModifiedAt": "2026-10-14T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e251195beec78f829abff9b34ca933ed525b9080098b45312dfcbb1c1e78e483"
     },
     "sku": "KV-B1",
-    "customer": "Northgate Fulfillment",
-    "receivedAt": "2026-10-14T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "customer": "Evergreen Campus Services",
+    "receivedAt": "2026-12-07T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0438",
@@ -626,14 +626,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0438",
-      "lastModifiedAt": "2026-11-14T17:00:00Z",
+      "lastModifiedAt": "2026-12-20T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "0d6b5647c1c14bfa0e72c2c74660c029d6e987455fd495c064a42ab2d4985e4b"
     },
     "sku": "KV-B1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-11-14T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-20T17:00:00Z",
+    "reason": "Intermittent power fault",
     "status": "RECEIVED"
   },
   {
@@ -642,14 +642,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0439",
-      "lastModifiedAt": "2026-11-07T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "7a4a3026255ee1e4381cebfb6924f9d60dd5676cf20a317096fe9036103355c5"
     },
     "sku": "KV-B1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-11-07T17:00:00Z",
-    "reason": "Intermittent power fault",
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-07T17:00:00Z",
+    "reason": "Camera gimbal fault",
     "status": "IN_EVALUATION"
   },
   {
@@ -658,15 +658,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0440",
-      "lastModifiedAt": "2026-11-23T17:00:00Z",
+      "lastModifiedAt": "2026-12-20T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "2ae92a51d5d71c850c85839ba567c84873b9234c5b9159a230110f6e388a19a0"
     },
     "sku": "KV-B1",
-    "customer": "Evergreen Campus Services",
-    "receivedAt": "2026-11-23T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "RECEIVED"
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-20T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0441",
@@ -674,14 +674,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0441",
-      "lastModifiedAt": "2026-09-16T17:00:00Z",
+      "lastModifiedAt": "2026-12-16T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f4858fb35f7e0eb4ec4a2d20e439b9effa885510f3ac01e07358bb4121423870"
     },
     "sku": "KV-B1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-09-16T17:00:00Z",
-    "reason": "Customer return — order error",
+    "customer": "Ironvale Robotics",
+    "receivedAt": "2026-12-16T17:00:00Z",
+    "reason": "Intermittent power fault",
     "status": "RECEIVED"
   },
   {
@@ -690,15 +690,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0442",
-      "lastModifiedAt": "2026-09-10T17:00:00Z",
+      "lastModifiedAt": "2026-12-15T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "75c46be98f2e33bab378e33f7e7d330f2db47d91009170b2192b90517b099b5f"
     },
     "sku": "KV-B1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-09-10T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "RECEIVED"
+    "customer": "Evergreen Campus Services",
+    "receivedAt": "2026-12-15T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0443",
@@ -706,14 +706,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0443",
-      "lastModifiedAt": "2026-09-11T17:00:00Z",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "9ca1c109a4d49918c3dc24ea68c948e8633a84e5647f5ee91c78920df6986fd1"
     },
     "sku": "KV-B1",
-    "customer": "Northgate Fulfillment",
-    "receivedAt": "2026-09-11T17:00:00Z",
-    "reason": "Camera gimbal fault",
+    "customer": "Summit Ridge Health",
+    "receivedAt": "2026-12-05T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
     "status": "RECEIVED"
   },
   {
@@ -722,14 +722,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0444",
-      "lastModifiedAt": "2026-10-07T17:00:00Z",
+      "lastModifiedAt": "2026-12-14T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "edfc6c6eb6e621d98b3d85b853fd4d4af49c9ce8f84a1550f360ed6de58bb66e"
     },
     "sku": "KV-B1",
     "customer": "Copperline Grocers",
-    "receivedAt": "2026-10-07T17:00:00Z",
-    "reason": "Camera gimbal fault",
+    "receivedAt": "2026-12-14T17:00:00Z",
+    "reason": "Intermittent power fault",
     "status": "RECEIVED"
   },
   {
@@ -738,15 +738,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0445",
-      "lastModifiedAt": "2026-11-19T17:00:00Z",
+      "lastModifiedAt": "2026-12-14T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "47e4b4087e7ea91de23f00fd433fea35281f9d54127ab7946e280d90d48586fa"
     },
     "sku": "KV-B1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-11-19T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "IN_REPAIR"
+    "customer": "Copperline Grocers",
+    "receivedAt": "2026-12-14T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0446",
@@ -754,14 +754,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0446",
-      "lastModifiedAt": "2026-11-02T17:00:00Z",
+      "lastModifiedAt": "2026-12-22T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "241b9501bee6065445293655f5cbfb1321845c388008a03b9d4aaf854356c218"
     },
     "sku": "KV-B1",
     "customer": "Copperline Grocers",
-    "receivedAt": "2026-11-02T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
+    "receivedAt": "2026-12-22T17:00:00Z",
+    "reason": "Camera gimbal fault",
     "status": "IN_REPAIR"
   },
   {
@@ -770,15 +770,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0447",
-      "lastModifiedAt": "2026-10-04T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6eb2ae65f829b0f8a49a95c518b5ba67299d831e2a0c87eee29bcc63ed0d18c5"
     },
     "sku": "KV-B1",
     "customer": "Evergreen Campus Services",
-    "receivedAt": "2026-10-04T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_EVALUATION"
+    "receivedAt": "2026-12-12T17:00:00Z",
+    "reason": "Firmware fault — repair queue",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0448",
@@ -786,15 +786,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0448",
-      "lastModifiedAt": "2026-09-26T17:00:00Z",
+      "lastModifiedAt": "2026-12-14T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "11ae45eddde9a305fb1130604b645d5d52d902e64ac286785e93ab1632292a3d"
     },
     "sku": "KV-B1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-09-26T17:00:00Z",
-    "reason": "Field failure — diagnostics pending",
-    "status": "IN_EVALUATION"
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-14T17:00:00Z",
+    "reason": "Camera gimbal fault",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0449",
@@ -802,15 +802,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0449",
-      "lastModifiedAt": "2026-10-11T17:00:00Z",
+      "lastModifiedAt": "2026-12-15T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "7c72431c6af9968bbcb0896e66e6389d196c46edae95c8a5335c8f29041fb3b6"
     },
     "sku": "KV-B1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-10-11T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_REPAIR"
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-15T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0450",
@@ -818,15 +818,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0450",
-      "lastModifiedAt": "2026-09-14T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8e4ba5277daf53c2736e5a9fca691f1c63de702a0f1c6a115b35d25c70f3b79c"
     },
     "sku": "KV-B1",
-    "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-09-14T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "IN_EVALUATION"
+    "customer": "Ironvale Robotics",
+    "receivedAt": "2026-12-12T17:00:00Z",
+    "reason": "Customer return — order error",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0453",
@@ -834,15 +834,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0453",
-      "lastModifiedAt": "2026-11-04T17:00:00Z",
+      "lastModifiedAt": "2026-12-17T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "87a017c77332df1da884c24c98c258c380f8fd962869c7c08dab8d452e5e35a6"
     },
     "sku": "KV-B1",
-    "customer": "Halcyon Logistics",
-    "receivedAt": "2026-11-04T17:00:00Z",
+    "customer": "Northgate Fulfillment",
+    "receivedAt": "2026-12-17T17:00:00Z",
     "reason": "Intermittent power fault",
-    "status": "RECEIVED"
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0454",
@@ -850,15 +850,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0454",
-      "lastModifiedAt": "2026-11-11T17:00:00Z",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d732808428ed814d71854f722b2172a58eb7aae4eb3da91529fa9c164e7fef93"
     },
     "sku": "KV-B1",
-    "customer": "Bluewater Foods Group",
-    "receivedAt": "2026-11-11T17:00:00Z",
-    "reason": "Customer return — order error",
-    "status": "IN_EVALUATION"
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-05T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0455",
@@ -866,15 +866,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0455",
-      "lastModifiedAt": "2026-12-19T17:00:00Z",
+      "lastModifiedAt": "2026-12-15T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "86489f07bdff5583ae6fbcd652a160b6f59a10e21672e27020dff1b193c4299a"
     },
     "sku": "KV-B1",
-    "customer": "Ironvale Robotics",
-    "receivedAt": "2026-12-19T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-15T17:00:00Z",
+    "reason": "Customer return — order error",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0456",
@@ -882,15 +882,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0456",
-      "lastModifiedAt": "2026-12-15T17:00:00Z",
+      "lastModifiedAt": "2026-12-16T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "6142aea8d1f2cf6a0b70af32afd461e102f4e2a0372f364f293697b038c8a2b3"
     },
     "sku": "KV-B1",
-    "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-12-15T17:00:00Z",
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-16T17:00:00Z",
     "reason": "Intermittent power fault",
-    "status": "IN_EVALUATION"
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0457",
@@ -898,15 +898,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0457",
-      "lastModifiedAt": "2026-09-24T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "da6a8cceefea95b1a562a5ddc01ecf4d30d19349b61b854f7e148bcbb71cc956"
     },
     "sku": "KV-B1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-09-24T17:00:00Z",
-    "reason": "Intermittent power fault",
-    "status": "RECEIVED"
+    "customer": "Lakeshore Retail Co",
+    "receivedAt": "2026-12-07T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0458",
@@ -914,15 +914,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0458",
-      "lastModifiedAt": "2026-09-06T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "1055a04c1ad0ab305f6a1b34dc6d88490e481f3113e9e7b6afaeab2d3065ce02"
     },
     "sku": "KV-B1",
-    "customer": "Evergreen Campus Services",
-    "receivedAt": "2026-09-06T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "IN_EVALUATION"
+    "customer": "Halcyon Logistics",
+    "receivedAt": "2026-12-12T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
+    "status": "IN_REPAIR"
   },
   {
     "id": "RMA-2026-0459",
@@ -930,13 +930,13 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0459",
-      "lastModifiedAt": "2026-09-11T17:00:00Z",
+      "lastModifiedAt": "2026-12-08T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d5c57ef7e6eabded083c2e3b70f9b5b8cb6e7dbc9f0579e1c089b3f6e51cb17f"
     },
     "sku": "KV-B1",
-    "customer": "Lakeshore Retail Co",
-    "receivedAt": "2026-09-11T17:00:00Z",
+    "customer": "Copperline Grocers",
+    "receivedAt": "2026-12-08T17:00:00Z",
     "reason": "Customer return — order error",
     "status": "RECEIVED"
   },
@@ -946,14 +946,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0460",
-      "lastModifiedAt": "2026-12-17T17:00:00Z",
+      "lastModifiedAt": "2026-12-07T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "f8a641b9d3bd53a538ecf12f2df677b07034e91693a8980a5e8156b1c9a56dac"
     },
     "sku": "KV-B1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-12-17T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
+    "customer": "Northgate Fulfillment",
+    "receivedAt": "2026-12-07T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
     "status": "RECEIVED"
   },
   {
@@ -962,15 +962,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0461",
-      "lastModifiedAt": "2026-10-24T17:00:00Z",
+      "lastModifiedAt": "2026-12-12T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "3d449fbfbbc734ddbe5f44c5114afac4692e932b733a50727956a4b13b918e3b"
     },
     "sku": "KV-B1",
-    "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-10-24T17:00:00Z",
+    "customer": "Bluewater Foods Group",
+    "receivedAt": "2026-12-12T17:00:00Z",
     "reason": "Intermittent power fault",
-    "status": "IN_REPAIR"
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0462",
@@ -978,15 +978,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0462",
-      "lastModifiedAt": "2026-09-23T17:00:00Z",
+      "lastModifiedAt": "2026-12-16T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "822350cf1fe2df3581001c4d6ebe1f11d36255ee8874e7ce63bab4ac8395d2e9"
     },
     "sku": "KV-B1",
-    "customer": "Silver Fir Hotels",
-    "receivedAt": "2026-09-23T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "IN_REPAIR"
+    "customer": "Bluewater Foods Group",
+    "receivedAt": "2026-12-16T17:00:00Z",
+    "reason": "Customer return — order error",
+    "status": "RECEIVED"
   },
   {
     "id": "RMA-2026-0463",
@@ -994,13 +994,13 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0463",
-      "lastModifiedAt": "2026-09-20T17:00:00Z",
+      "lastModifiedAt": "2026-12-20T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "283f3a6ab8d43b5d1fdcb76bc48702e75f11dc78ea5134214f6482a1be5d7809"
     },
     "sku": "KV-B1",
-    "customer": "Redstone Manufacturing",
-    "receivedAt": "2026-09-20T17:00:00Z",
+    "customer": "Silver Fir Hotels",
+    "receivedAt": "2026-12-20T17:00:00Z",
     "reason": "Camera gimbal fault",
     "status": "IN_EVALUATION"
   },
@@ -1010,14 +1010,14 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0464",
-      "lastModifiedAt": "2026-12-13T17:00:00Z",
+      "lastModifiedAt": "2026-12-18T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e31c6028ab7e995098daff54a94ec61b9354f3a4eae354f78ff24ad48413e01c"
     },
     "sku": "KV-F1",
-    "customer": "Summit Ridge Health",
-    "receivedAt": "2026-12-13T17:00:00Z",
-    "reason": "Customer return — order error",
+    "customer": "Redstone Manufacturing",
+    "receivedAt": "2026-12-18T17:00:00Z",
+    "reason": "Field failure — diagnostics pending",
     "status": "IN_EVALUATION"
   },
   {
@@ -1058,15 +1058,15 @@
       "sourceSystem": "RETURN_LOOP",
       "recordType": "RMA",
       "internalId": "RMA-2026-0467",
-      "lastModifiedAt": "2026-11-12T17:00:00Z",
+      "lastModifiedAt": "2026-12-22T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8be0929531538187c1dfe4b334d377ab7fdfffeee7bc0f33c92d8b59addd0390"
     },
     "sku": "KV-Z1",
-    "customer": "Northgate Fulfillment",
-    "receivedAt": "2026-11-12T17:00:00Z",
-    "reason": "Firmware fault — repair queue",
-    "status": "RECEIVED"
+    "customer": "Bluewater Foods Group",
+    "receivedAt": "2026-12-22T17:00:00Z",
+    "reason": "Intermittent power fault",
+    "status": "IN_EVALUATION"
   },
   {
     "id": "RMA-2026-0468",

@@ -3,7 +3,7 @@
  * canonical seed. Run via `pnpm --filter @icg/data generate`. The output is
  * deterministic: same seed, same bytes.
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDataset } from "../src/buildDataset.js";
@@ -11,6 +11,10 @@ import { buildDataset } from "../src/buildDataset.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(here, "..", "fixtures");
 mkdirSync(fixturesDir, { recursive: true });
+// Remove stale fixtures so renamed/dropped collections cannot linger.
+for (const f of readdirSync(fixturesDir)) {
+  if (f.endsWith(".json")) rmSync(join(fixturesDir, f));
+}
 
 const dataset = buildDataset();
 const { manifest, story, ...collections } = dataset;

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -41,6 +41,17 @@ describe("determinism", () => {
       const committed = JSON.parse(readFileSync(join(fixturesDir, `${name}.json`), "utf8"));
       expect(rows, `fixture collection ${name}`).toEqual(committed);
     }
+  });
+
+  it("has no stale or missing fixture files", () => {
+    const { manifest: _m, story: _s, ...collections } = buildDataset();
+    const expected = [...Object.keys(collections), "manifest", "story"]
+      .map((n) => `${n}.json`)
+      .sort();
+    const actual = readdirSync(fixturesDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort();
+    expect(actual).toEqual(expected);
   });
 
   it("pins the canonical serials regardless of PRNG state", () => {

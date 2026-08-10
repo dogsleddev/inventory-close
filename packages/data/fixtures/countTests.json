@@ -258,7 +258,7 @@
     "direction": "FLOOR_TO_SHEET",
     "sku": "KE-X1",
     "location": "RECEIVING",
-    "bin": "RCV-07",
+    "bin": "REC-07",
     "serial": "KE-X1-8842",
     "selectedBy": "Controller's Office",
     "recordedAt": "2027-01-02T20:40:00Z",

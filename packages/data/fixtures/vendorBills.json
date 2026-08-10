@@ -203,55 +203,11 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10030",
       "transactionNumber": "VB-26-5010",
-      "lastModifiedAt": "2026-01-17T12:00:00Z",
+      "lastModifiedAt": "2026-01-09T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "66754779c75795ce4110a673bd3f3916204aaec87b205070b92200bcaea67ea3"
     },
     "transactionNumber": "VB-26-5010",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KA-41",
-        "quantity": 3,
-        "amountCents": 360000
-      }
-    ],
-    "purchaseOrderNumber": "PO-25-3010",
-    "billDate": "2026-01-17"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10033",
-      "transactionNumber": "VB-26-5011",
-      "lastModifiedAt": "2026-03-04T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "cbbc0d4103d4a249872db1c7aefa55071c7e926bf5f7a536c772d282e984c970"
-    },
-    "transactionNumber": "VB-26-5011",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-F1",
-        "quantity": 1,
-        "amountCents": 87500
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3011",
-    "billDate": "2026-03-04"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10036",
-      "transactionNumber": "VB-26-5012",
-      "lastModifiedAt": "2026-03-09T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "d4dc72fd8b48a50fab0746492545a2f08ce408775a3d86053ecb164836ef77a5"
-    },
-    "transactionNumber": "VB-26-5012",
     "lines": [
       {
         "lineId": "L1",
@@ -260,8 +216,52 @@
         "amountCents": 1312500
       }
     ],
+    "purchaseOrderNumber": "PO-25-3010",
+    "billDate": "2026-01-09"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10033",
+      "transactionNumber": "VB-26-5011",
+      "lastModifiedAt": "2026-01-17T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "cbbc0d4103d4a249872db1c7aefa55071c7e926bf5f7a536c772d282e984c970"
+    },
+    "transactionNumber": "VB-26-5011",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KA-41",
+        "quantity": 3,
+        "amountCents": 360000
+      }
+    ],
+    "purchaseOrderNumber": "PO-25-3011",
+    "billDate": "2026-01-17"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10036",
+      "transactionNumber": "VB-26-5012",
+      "lastModifiedAt": "2026-03-04T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "d4dc72fd8b48a50fab0746492545a2f08ce408775a3d86053ecb164836ef77a5"
+    },
+    "transactionNumber": "VB-26-5012",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-F1",
+        "quantity": 1,
+        "amountCents": 87500
+      }
+    ],
     "purchaseOrderNumber": "PO-26-3012",
-    "billDate": "2026-03-09"
+    "billDate": "2026-03-04"
   },
   {
     "sourceRef": {
@@ -291,7 +291,7 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10042",
       "transactionNumber": "VB-26-5014",
-      "lastModifiedAt": "2026-03-20T12:00:00Z",
+      "lastModifiedAt": "2026-03-17T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "ddc5ecb6fc61217fca265918ec936c8789d4b4dfb9a9fffced8a4c5913d46422"
     },
@@ -300,12 +300,12 @@
       {
         "lineId": "L1",
         "sku": "KV-Z1",
-        "quantity": 1,
-        "amountCents": 145000
+        "quantity": 3,
+        "amountCents": 435000
       }
     ],
     "purchaseOrderNumber": "PO-26-3014",
-    "billDate": "2026-03-20"
+    "billDate": "2026-03-17"
   },
   {
     "sourceRef": {
@@ -313,7 +313,7 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10045",
       "transactionNumber": "VB-26-5015",
-      "lastModifiedAt": "2026-04-12T12:00:00Z",
+      "lastModifiedAt": "2026-03-20T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "fbb0f7d1af372832cf09c535367bb48c3e6f4463fa7417e524e65c95cc835c5b"
     },
@@ -321,13 +321,13 @@
     "lines": [
       {
         "lineId": "L1",
-        "sku": "KV-B1",
+        "sku": "KV-Z1",
         "quantity": 1,
-        "amountCents": 67500
+        "amountCents": 145000
       }
     ],
     "purchaseOrderNumber": "PO-26-3015",
-    "billDate": "2026-04-12"
+    "billDate": "2026-03-20"
   },
   {
     "sourceRef": {
@@ -335,165 +335,11 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10048",
       "transactionNumber": "VB-26-5016",
-      "lastModifiedAt": "2026-04-17T12:00:00Z",
+      "lastModifiedAt": "2026-03-21T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "a41c141d8473f9654f5055dd3bad60cec2565a500217b8408789082cd594b099"
     },
     "transactionNumber": "VB-26-5016",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KA-41",
-        "quantity": 20,
-        "amountCents": 2400000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3016",
-    "billDate": "2026-04-17"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10051",
-      "transactionNumber": "VB-26-5017",
-      "lastModifiedAt": "2026-05-15T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "e68771b739a17ec122a01edc2979628e22b4d65a48ce51e88c571f2751c69af7"
-    },
-    "transactionNumber": "VB-26-5017",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-Z1",
-        "quantity": 19,
-        "amountCents": 2755000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3017",
-    "billDate": "2026-05-15"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10054",
-      "transactionNumber": "VB-26-5018",
-      "lastModifiedAt": "2026-05-17T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "6eba1b3851093c64c1098928f1d10919e355f51a1ad4bdab8b538a978a498fa5"
-    },
-    "transactionNumber": "VB-26-5018",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-Z1",
-        "quantity": 3,
-        "amountCents": 435000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3018",
-    "billDate": "2026-05-17"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10057",
-      "transactionNumber": "VB-26-5019",
-      "lastModifiedAt": "2026-05-27T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "712c999621db6de0b1c47bcfdc71649f314fc5155efaab0af8113a3153e123f3"
-    },
-    "transactionNumber": "VB-26-5019",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-F1",
-        "quantity": 22,
-        "amountCents": 1925000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3019",
-    "billDate": "2026-05-27"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10060",
-      "transactionNumber": "VB-26-5020",
-      "lastModifiedAt": "2026-06-02T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "98379345841c820c2d57fc60b4377231471c8f44c9a0b9303fa13c4abbeab4f6"
-    },
-    "transactionNumber": "VB-26-5020",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-Z1",
-        "quantity": 4,
-        "amountCents": 580000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3020",
-    "billDate": "2026-06-02"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10063",
-      "transactionNumber": "VB-26-5021",
-      "lastModifiedAt": "2026-06-03T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "0cb75ee5c36fd71eedd7e8121fd60e301168cec6c1934383e191137b772e1993"
-    },
-    "transactionNumber": "VB-26-5021",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KA-41",
-        "quantity": 1,
-        "amountCents": 120000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3021",
-    "billDate": "2026-06-03"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10066",
-      "transactionNumber": "VB-26-5022",
-      "lastModifiedAt": "2026-06-10T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "89c3fd5bfd4251bad7eb6b3e5037e754809bbc4e60cee940e0134f9b8b9233b5"
-    },
-    "transactionNumber": "VB-26-5022",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-D1",
-        "quantity": 9,
-        "amountCents": 382500
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3022",
-    "billDate": "2026-06-10"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10069",
-      "transactionNumber": "VB-26-5023",
-      "lastModifiedAt": "2026-06-21T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "7565e153085787d81d4a1746e93f54fbf4ca34aee8f48478e526498b85f2772d"
-    },
-    "transactionNumber": "VB-26-5023",
     "lines": [
       {
         "lineId": "L1",
@@ -502,20 +348,20 @@
         "amountCents": 135000
       }
     ],
-    "purchaseOrderNumber": "PO-26-3023",
-    "billDate": "2026-06-21"
+    "purchaseOrderNumber": "PO-26-3016",
+    "billDate": "2026-03-21"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10072",
-      "transactionNumber": "VB-26-5024",
-      "lastModifiedAt": "2026-06-22T12:00:00Z",
+      "internalId": "10051",
+      "transactionNumber": "VB-26-5017",
+      "lastModifiedAt": "2026-03-22T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "f7efb039557313f3df5ee4cd720eceab1cdfecbbe3366c1c65c71422b9037773"
+      "sourceHash": "e68771b739a17ec122a01edc2979628e22b4d65a48ce51e88c571f2751c69af7"
     },
-    "transactionNumber": "VB-26-5024",
+    "transactionNumber": "VB-26-5017",
     "lines": [
       {
         "lineId": "L1",
@@ -524,20 +370,86 @@
         "amountCents": 87500
       }
     ],
-    "purchaseOrderNumber": "PO-26-3024",
-    "billDate": "2026-06-22"
+    "purchaseOrderNumber": "PO-26-3017",
+    "billDate": "2026-03-22"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10075",
-      "transactionNumber": "VB-26-5025",
-      "lastModifiedAt": "2026-08-21T12:00:00Z",
+      "internalId": "10054",
+      "transactionNumber": "VB-26-5018",
+      "lastModifiedAt": "2026-04-12T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "6e44d54edab965ae56d8d145281e96dbb9990aa56e422f66da1e928e5889e995"
+      "sourceHash": "6eba1b3851093c64c1098928f1d10919e355f51a1ad4bdab8b538a978a498fa5"
     },
-    "transactionNumber": "VB-26-5025",
+    "transactionNumber": "VB-26-5018",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-B1",
+        "quantity": 1,
+        "amountCents": 67500
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3018",
+    "billDate": "2026-04-12"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10057",
+      "transactionNumber": "VB-26-5019",
+      "lastModifiedAt": "2026-04-17T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "712c999621db6de0b1c47bcfdc71649f314fc5155efaab0af8113a3153e123f3"
+    },
+    "transactionNumber": "VB-26-5019",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KA-41",
+        "quantity": 20,
+        "amountCents": 2400000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3019",
+    "billDate": "2026-04-17"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10060",
+      "transactionNumber": "VB-26-5020",
+      "lastModifiedAt": "2026-05-15T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "98379345841c820c2d57fc60b4377231471c8f44c9a0b9303fa13c4abbeab4f6"
+    },
+    "transactionNumber": "VB-26-5020",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-Z1",
+        "quantity": 19,
+        "amountCents": 2755000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3020",
+    "billDate": "2026-05-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10063",
+      "transactionNumber": "VB-26-5021",
+      "lastModifiedAt": "2026-05-21T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0cb75ee5c36fd71eedd7e8121fd60e301168cec6c1934383e191137b772e1993"
+    },
+    "transactionNumber": "VB-26-5021",
     "lines": [
       {
         "lineId": "L1",
@@ -546,8 +458,96 @@
         "amountCents": 2160000
       }
     ],
+    "purchaseOrderNumber": "PO-26-3021",
+    "billDate": "2026-05-21"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10066",
+      "transactionNumber": "VB-26-5022",
+      "lastModifiedAt": "2026-05-27T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "89c3fd5bfd4251bad7eb6b3e5037e754809bbc4e60cee940e0134f9b8b9233b5"
+    },
+    "transactionNumber": "VB-26-5022",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-F1",
+        "quantity": 22,
+        "amountCents": 1925000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3022",
+    "billDate": "2026-05-27"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10069",
+      "transactionNumber": "VB-26-5023",
+      "lastModifiedAt": "2026-06-02T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "7565e153085787d81d4a1746e93f54fbf4ca34aee8f48478e526498b85f2772d"
+    },
+    "transactionNumber": "VB-26-5023",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-Z1",
+        "quantity": 4,
+        "amountCents": 580000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3023",
+    "billDate": "2026-06-02"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10072",
+      "transactionNumber": "VB-26-5024",
+      "lastModifiedAt": "2026-06-03T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f7efb039557313f3df5ee4cd720eceab1cdfecbbe3366c1c65c71422b9037773"
+    },
+    "transactionNumber": "VB-26-5024",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KA-41",
+        "quantity": 1,
+        "amountCents": 120000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3024",
+    "billDate": "2026-06-03"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10075",
+      "transactionNumber": "VB-26-5025",
+      "lastModifiedAt": "2026-06-10T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6e44d54edab965ae56d8d145281e96dbb9990aa56e422f66da1e928e5889e995"
+    },
+    "transactionNumber": "VB-26-5025",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-D1",
+        "quantity": 9,
+        "amountCents": 382500
+      }
+    ],
     "purchaseOrderNumber": "PO-26-3025",
-    "billDate": "2026-08-21"
+    "billDate": "2026-06-10"
   },
   {
     "sourceRef": {
@@ -555,7 +555,7 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10078",
       "transactionNumber": "VB-26-5026",
-      "lastModifiedAt": "2026-10-13T12:00:00Z",
+      "lastModifiedAt": "2026-06-13T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8ecc0a736ea6a7faeed27be79219c59388ac5e77e62bbd7ab16625a79204d699"
     },
@@ -569,7 +569,7 @@
       }
     ],
     "purchaseOrderNumber": "PO-26-3026",
-    "billDate": "2026-10-13"
+    "billDate": "2026-06-13"
   },
   {
     "sourceRef": {
@@ -577,55 +577,11 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10081",
       "transactionNumber": "VB-26-5027",
-      "lastModifiedAt": "2026-10-28T12:00:00Z",
+      "lastModifiedAt": "2026-07-02T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "8ab816da94ba480a59436a7f83690b13c881ddf53e1162bcecdb5e42830e4f97"
     },
     "transactionNumber": "VB-26-5027",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KV-B1",
-        "quantity": 24,
-        "amountCents": 1620000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3027",
-    "billDate": "2026-10-28"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10084",
-      "transactionNumber": "VB-26-5028",
-      "lastModifiedAt": "2026-11-01T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "0238bb6a14d2b9bbe2e83f6704c527b45c35f5e2ee7020a3fe94331974d42e1d"
-    },
-    "transactionNumber": "VB-26-5028",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KG-K1",
-        "quantity": 23,
-        "amountCents": 3335000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3028",
-    "billDate": "2026-11-01"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10087",
-      "transactionNumber": "VB-26-5029",
-      "lastModifiedAt": "2026-12-02T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "0a4a6d5886d65f992a18dde99d7c159e973081e67876409a485eb3da20612542"
-    },
-    "transactionNumber": "VB-26-5029",
     "lines": [
       {
         "lineId": "L1",
@@ -634,8 +590,52 @@
         "amountCents": 145000
       }
     ],
+    "purchaseOrderNumber": "PO-26-3027",
+    "billDate": "2026-07-02"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10084",
+      "transactionNumber": "VB-26-5028",
+      "lastModifiedAt": "2026-10-28T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0238bb6a14d2b9bbe2e83f6704c527b45c35f5e2ee7020a3fe94331974d42e1d"
+    },
+    "transactionNumber": "VB-26-5028",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-B1",
+        "quantity": 24,
+        "amountCents": 1620000
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3028",
+    "billDate": "2026-10-28"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10087",
+      "transactionNumber": "VB-26-5029",
+      "lastModifiedAt": "2026-11-01T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0a4a6d5886d65f992a18dde99d7c159e973081e67876409a485eb3da20612542"
+    },
+    "transactionNumber": "VB-26-5029",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KG-K1",
+        "quantity": 23,
+        "amountCents": 3335000
+      }
+    ],
     "purchaseOrderNumber": "PO-26-3029",
-    "billDate": "2026-12-02"
+    "billDate": "2026-11-01"
   },
   {
     "sourceRef": {
@@ -1055,11 +1055,42 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10105",
       "transactionNumber": "VB-25-5035",
-      "lastModifiedAt": "2025-12-04T12:00:00Z",
+      "lastModifiedAt": "2025-11-15T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "06edca733ca6a3d1f744e0c4a33eddfe441d4cfed38a205fb935fc679f4b0918"
     },
     "transactionNumber": "VB-25-5035",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-Y1",
+        "quantity": 7,
+        "amountCents": 8960000,
+        "serials": [
+          "KE-Y1-1845",
+          "KE-Y1-8184",
+          "KE-Y1-1134",
+          "KE-Y1-8530",
+          "KE-Y1-4542",
+          "KE-Y1-7229",
+          "KE-Y1-1470"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-25-3035",
+    "billDate": "2025-11-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10108",
+      "transactionNumber": "VB-25-5036",
+      "lastModifiedAt": "2025-12-04T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f05b08a24da5c80dad7abae46d4408d743319b5d8342856be046960285160688"
+    },
+    "transactionNumber": "VB-25-5036",
     "lines": [
       {
         "lineId": "L1",
@@ -1092,39 +1123,8 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3035",
-    "billDate": "2025-12-04"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10108",
-      "transactionNumber": "VB-26-5036",
-      "lastModifiedAt": "2026-01-15T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "9e2756fffa9d097420a223d140c4c309b71cf74b3bf216536df43afec4bbdc87"
-    },
-    "transactionNumber": "VB-26-5036",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-Y1",
-        "quantity": 7,
-        "amountCents": 8960000,
-        "serials": [
-          "KE-Y1-1845",
-          "KE-Y1-8184",
-          "KE-Y1-1134",
-          "KE-Y1-8530",
-          "KE-Y1-4542",
-          "KE-Y1-7229",
-          "KE-Y1-1470"
-        ]
-      }
-    ],
     "purchaseOrderNumber": "PO-25-3036",
-    "billDate": "2026-01-15"
+    "billDate": "2025-12-04"
   },
   {
     "sourceRef": {
@@ -1132,36 +1132,11 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10111",
       "transactionNumber": "VB-26-5037",
-      "lastModifiedAt": "2026-02-20T12:00:00Z",
+      "lastModifiedAt": "2026-01-09T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "aef758d7729baf4dee34e27e7e016321efb0bec7f0527c6970c7ece6a41b9e1a"
     },
     "transactionNumber": "VB-26-5037",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-Y1",
-        "quantity": 1,
-        "amountCents": 1280000,
-        "serials": [
-          "KE-Y1-7854"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3037",
-    "billDate": "2026-02-20"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10114",
-      "transactionNumber": "VB-26-5038",
-      "lastModifiedAt": "2026-04-09T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "e5e9d3a6301beec7e4c50bc0a94254e2a1548a359620d3d1dd1cc0c2728c8c61"
-    },
-    "transactionNumber": "VB-26-5038",
     "lines": [
       {
         "lineId": "L1",
@@ -1174,8 +1149,33 @@
         ]
       }
     ],
+    "purchaseOrderNumber": "PO-25-3037",
+    "billDate": "2026-01-09"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10114",
+      "transactionNumber": "VB-26-5038",
+      "lastModifiedAt": "2026-02-20T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e5e9d3a6301beec7e4c50bc0a94254e2a1548a359620d3d1dd1cc0c2728c8c61"
+    },
+    "transactionNumber": "VB-26-5038",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-Y1",
+        "quantity": 1,
+        "amountCents": 1280000,
+        "serials": [
+          "KE-Y1-7854"
+        ]
+      }
+    ],
     "purchaseOrderNumber": "PO-26-3038",
-    "billDate": "2026-04-09"
+    "billDate": "2026-02-20"
   },
   {
     "sourceRef": {
@@ -1183,7 +1183,7 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10117",
       "transactionNumber": "VB-26-5039",
-      "lastModifiedAt": "2026-05-22T12:00:00Z",
+      "lastModifiedAt": "2026-03-22T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d542d68f4510f17ae605012f6ac0c610365ad0777bb6895ff20d59260c698ec3"
     },
@@ -1205,7 +1205,7 @@
       }
     ],
     "purchaseOrderNumber": "PO-26-3039",
-    "billDate": "2026-05-22"
+    "billDate": "2026-03-22"
   },
   {
     "sourceRef": {
@@ -1213,11 +1213,36 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10120",
       "transactionNumber": "VB-26-5040",
-      "lastModifiedAt": "2026-06-25T12:00:00Z",
+      "lastModifiedAt": "2026-05-23T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "e1e4314809a1cd8c003ae16841de9a60f830131d297ae4377ec8a497f706b512"
     },
     "transactionNumber": "VB-26-5040",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 240000,
+        "serials": [
+          "KE-S1-2003"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3040",
+    "billDate": "2026-05-23"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10123",
+      "transactionNumber": "VB-26-5041",
+      "lastModifiedAt": "2026-06-25T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "9353a3fbfcac89161913c7f942b31c5d13aea3ee84d6d7777179df9291f2283a"
+    },
+    "transactionNumber": "VB-26-5041",
     "lines": [
       {
         "lineId": "L1",
@@ -1229,20 +1254,45 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3040",
+    "purchaseOrderNumber": "PO-26-3041",
     "billDate": "2026-06-25"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10123",
-      "transactionNumber": "VB-26-5041",
+      "internalId": "10126",
+      "transactionNumber": "VB-26-5042",
+      "lastModifiedAt": "2026-08-09T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "94367c844c46565f1de57e18d53ddbca4e1813a5a56abde1e01454184055ce52"
+    },
+    "transactionNumber": "VB-26-5042",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 740000,
+        "serials": [
+          "KE-E2-8276"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3042",
+    "billDate": "2026-08-09"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10129",
+      "transactionNumber": "VB-26-5043",
       "lastModifiedAt": "2026-08-20T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "9353a3fbfcac89161913c7f942b31c5d13aea3ee84d6d7777179df9291f2283a"
+      "sourceHash": "cdf4c901a277ad35818be37bc402913d3405de9668a8b2d44091496c2e3ae4e1"
     },
-    "transactionNumber": "VB-26-5041",
+    "transactionNumber": "VB-26-5043",
     "lines": [
       {
         "lineId": "L1",
@@ -1262,45 +1312,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3041",
+    "purchaseOrderNumber": "PO-26-3043",
     "billDate": "2026-08-20"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10126",
-      "transactionNumber": "VB-26-5042",
-      "lastModifiedAt": "2026-09-23T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "94367c844c46565f1de57e18d53ddbca4e1813a5a56abde1e01454184055ce52"
-    },
-    "transactionNumber": "VB-26-5042",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-S1",
-        "quantity": 1,
-        "amountCents": 240000,
-        "serials": [
-          "KE-S1-2003"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3042",
-    "billDate": "2026-09-23"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10129",
-      "transactionNumber": "VB-26-5043",
+      "internalId": "10132",
+      "transactionNumber": "VB-26-5044",
       "lastModifiedAt": "2026-09-29T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "cdf4c901a277ad35818be37bc402913d3405de9668a8b2d44091496c2e3ae4e1"
+      "sourceHash": "a93d5a60383b9288ae066ba3f34e568a184015bfc85babda732786defc2444b4"
     },
-    "transactionNumber": "VB-26-5043",
+    "transactionNumber": "VB-26-5044",
     "lines": [
       {
         "lineId": "L1",
@@ -1432,20 +1457,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3043",
+    "purchaseOrderNumber": "PO-26-3044",
     "billDate": "2026-09-29"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10132",
-      "transactionNumber": "VB-26-5044",
+      "internalId": "10135",
+      "transactionNumber": "VB-26-5045",
       "lastModifiedAt": "2026-10-09T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a93d5a60383b9288ae066ba3f34e568a184015bfc85babda732786defc2444b4"
+      "sourceHash": "5c261c82113506fcb37c3f74bc66af3092e73368b3c38d700e5136ddf868cecc"
     },
-    "transactionNumber": "VB-26-5044",
+    "transactionNumber": "VB-26-5045",
     "lines": [
       {
         "lineId": "L1",
@@ -1455,31 +1480,22 @@
         "serials": [
           "KE-S1-9002"
         ]
-      },
-      {
-        "lineId": "L2",
-        "sku": "KE-E2",
-        "quantity": 1,
-        "amountCents": 740000,
-        "serials": [
-          "KE-E2-8276"
-        ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3044",
+    "purchaseOrderNumber": "PO-26-3045",
     "billDate": "2026-10-09"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10135",
-      "transactionNumber": "VB-26-5045",
+      "internalId": "10138",
+      "transactionNumber": "VB-26-5046",
       "lastModifiedAt": "2026-10-18T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "5c261c82113506fcb37c3f74bc66af3092e73368b3c38d700e5136ddf868cecc"
+      "sourceHash": "e0189135ddd15ace6e337414590f0875123a17624dba40e71bdfafbc5920dabf"
     },
-    "transactionNumber": "VB-26-5045",
+    "transactionNumber": "VB-26-5046",
     "lines": [
       {
         "lineId": "L1",
@@ -1644,20 +1660,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3045",
+    "purchaseOrderNumber": "PO-26-3046",
     "billDate": "2026-10-18"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10138",
-      "transactionNumber": "VB-26-5046",
+      "internalId": "10141",
+      "transactionNumber": "VB-26-5047",
       "lastModifiedAt": "2026-12-29T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "e0189135ddd15ace6e337414590f0875123a17624dba40e71bdfafbc5920dabf"
+      "sourceHash": "059bd7b5e5da17c068faf3bff17f27ed29fa6a1b5395cafd43d9e3b8478551f2"
     },
-    "transactionNumber": "VB-26-5046",
+    "transactionNumber": "VB-26-5047",
     "lines": [
       {
         "lineId": "L1",
@@ -1669,20 +1685,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3046",
+    "purchaseOrderNumber": "PO-26-3047",
     "billDate": "2026-12-29"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10141",
-      "transactionNumber": "VB-25-5047",
+      "internalId": "10144",
+      "transactionNumber": "VB-25-5048",
       "lastModifiedAt": "2025-05-30T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "f64a8fe27688cfbf7e421f7b52063a9c9d43338b82354b705c794cff8eb181b3"
+      "sourceHash": "a901e0549d491ef05ac8505193b051316c35c3f26197e7bee3b35fb2e4ac9759"
     },
-    "transactionNumber": "VB-25-5047",
+    "transactionNumber": "VB-25-5048",
     "lines": [
       {
         "lineId": "L1",
@@ -1694,20 +1710,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3047",
+    "purchaseOrderNumber": "PO-25-3048",
     "billDate": "2025-05-30"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10144",
-      "transactionNumber": "VB-25-5048",
+      "internalId": "10147",
+      "transactionNumber": "VB-25-5049",
       "lastModifiedAt": "2025-06-25T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a901e0549d491ef05ac8505193b051316c35c3f26197e7bee3b35fb2e4ac9759"
+      "sourceHash": "374ded67310e6bd97ae2ddd8479e8870e92241712430c6f60f282c4333de6d4a"
     },
-    "transactionNumber": "VB-25-5048",
+    "transactionNumber": "VB-25-5049",
     "lines": [
       {
         "lineId": "L1",
@@ -1716,20 +1732,20 @@
         "amountCents": 82500
       }
     ],
-    "purchaseOrderNumber": "PO-25-3048",
+    "purchaseOrderNumber": "PO-25-3049",
     "billDate": "2025-06-25"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10147",
-      "transactionNumber": "VB-25-5049",
+      "internalId": "10150",
+      "transactionNumber": "VB-25-5050",
       "lastModifiedAt": "2025-09-13T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "374ded67310e6bd97ae2ddd8479e8870e92241712430c6f60f282c4333de6d4a"
+      "sourceHash": "31791a234f703401d7849fc2bd118c2264b3c0635a3d3f449689f33cfce943e7"
     },
-    "transactionNumber": "VB-25-5049",
+    "transactionNumber": "VB-25-5050",
     "lines": [
       {
         "lineId": "L1",
@@ -1762,20 +1778,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3049",
+    "purchaseOrderNumber": "PO-25-3050",
     "billDate": "2025-09-13"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10150",
-      "transactionNumber": "VB-25-5050",
+      "internalId": "10153",
+      "transactionNumber": "VB-25-5051",
       "lastModifiedAt": "2025-09-23T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "31791a234f703401d7849fc2bd118c2264b3c0635a3d3f449689f33cfce943e7"
+      "sourceHash": "2aeb230dfa365b634038ee845ebcecff0b8f93f112cab6b97917068584d6adfa"
     },
-    "transactionNumber": "VB-25-5050",
+    "transactionNumber": "VB-25-5051",
     "lines": [
       {
         "lineId": "L1",
@@ -1808,20 +1824,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3050",
+    "purchaseOrderNumber": "PO-25-3051",
     "billDate": "2025-09-23"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10153",
-      "transactionNumber": "VB-25-5051",
+      "internalId": "10156",
+      "transactionNumber": "VB-25-5052",
       "lastModifiedAt": "2025-09-25T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "2aeb230dfa365b634038ee845ebcecff0b8f93f112cab6b97917068584d6adfa"
+      "sourceHash": "a0856ebc66ec6b4f44221d80e87ce96277ad8277ec8e88f5e16cca4f96082a78"
     },
-    "transactionNumber": "VB-25-5051",
+    "transactionNumber": "VB-25-5052",
     "lines": [
       {
         "lineId": "L1",
@@ -1833,20 +1849,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3051",
+    "purchaseOrderNumber": "PO-25-3052",
     "billDate": "2025-09-25"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10156",
-      "transactionNumber": "VB-25-5052",
+      "internalId": "10159",
+      "transactionNumber": "VB-25-5053",
       "lastModifiedAt": "2025-10-01T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a0856ebc66ec6b4f44221d80e87ce96277ad8277ec8e88f5e16cca4f96082a78"
+      "sourceHash": "365ab144cf266da239249d23d40e28323df703a3600c01df0c7887f262bfab00"
     },
-    "transactionNumber": "VB-25-5052",
+    "transactionNumber": "VB-25-5053",
     "lines": [
       {
         "lineId": "L1",
@@ -1858,20 +1874,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3052",
+    "purchaseOrderNumber": "PO-25-3053",
     "billDate": "2025-10-01"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10159",
-      "transactionNumber": "VB-25-5053",
+      "internalId": "10162",
+      "transactionNumber": "VB-25-5054",
       "lastModifiedAt": "2025-11-14T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "365ab144cf266da239249d23d40e28323df703a3600c01df0c7887f262bfab00"
+      "sourceHash": "2aafad3b412f4338c0ba8329d534d2da0b8b8595cca021ae75432220c383a919"
     },
-    "transactionNumber": "VB-25-5053",
+    "transactionNumber": "VB-25-5054",
     "lines": [
       {
         "lineId": "L1",
@@ -1880,20 +1896,42 @@
         "amountCents": 330000
       }
     ],
-    "purchaseOrderNumber": "PO-25-3053",
+    "purchaseOrderNumber": "PO-25-3054",
     "billDate": "2025-11-14"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10162",
-      "transactionNumber": "VB-26-5054",
-      "lastModifiedAt": "2026-01-16T12:00:00Z",
+      "internalId": "10165",
+      "transactionNumber": "VB-25-5055",
+      "lastModifiedAt": "2025-11-15T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "158810929ca9b9f68aff2441bad1db78e12c7e746d262b7a2ca621f03b7fc47d"
+      "sourceHash": "bd9e98a6833e54000ce22498e918ef25bc19ad54703bb0e924f8f26a62ab91a3"
     },
-    "transactionNumber": "VB-26-5054",
+    "transactionNumber": "VB-25-5055",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KR-U1",
+        "quantity": 34,
+        "amountCents": 2805000
+      }
+    ],
+    "purchaseOrderNumber": "PO-25-3055",
+    "billDate": "2025-11-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10168",
+      "transactionNumber": "VB-25-5056",
+      "lastModifiedAt": "2025-11-16T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "da833b1f527799fb8369c5378c462d847dc28b3ab975fd045a391b5b5469a166"
+    },
+    "transactionNumber": "VB-25-5056",
     "lines": [
       {
         "lineId": "L1",
@@ -1905,20 +1943,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-25-3054",
-    "billDate": "2026-01-16"
+    "purchaseOrderNumber": "PO-25-3056",
+    "billDate": "2025-11-16"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10165",
-      "transactionNumber": "VB-26-5055",
-      "lastModifiedAt": "2026-01-27T12:00:00Z",
+      "internalId": "10171",
+      "transactionNumber": "VB-25-5057",
+      "lastModifiedAt": "2025-11-27T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "01f9a16101ba80ea795a93246898a1c84b29354a6adadb267be7e9172c9f2ea7"
+      "sourceHash": "841263d7fd1380fd3f2b0a32abff7e7b9225908adc9787af82549ce823c76903"
     },
-    "transactionNumber": "VB-26-5055",
+    "transactionNumber": "VB-25-5057",
     "lines": [
       {
         "lineId": "L1",
@@ -1927,56 +1965,8 @@
         "amountCents": 82500
       }
     ],
-    "purchaseOrderNumber": "PO-25-3055",
-    "billDate": "2026-01-27"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10168",
-      "transactionNumber": "VB-26-5056",
-      "lastModifiedAt": "2026-02-15T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "b2241dbbb4b5aa7f6a178ace12d85c94c03bbc8d14afd0f69fc550615744cd9f"
-    },
-    "transactionNumber": "VB-26-5056",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KR-U1",
-        "quantity": 34,
-        "amountCents": 2805000
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3056",
-    "billDate": "2026-02-15"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10171",
-      "transactionNumber": "VB-26-5057",
-      "lastModifiedAt": "2026-02-24T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "7c7189844a839b262bcab35b5bcac183be0cb08ade10f4b073dcab3445432ca3"
-    },
-    "transactionNumber": "VB-26-5057",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-X1",
-        "quantity": 2,
-        "amountCents": 1840000,
-        "serials": [
-          "KE-X1-2917",
-          "KE-X1-1802"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3057",
-    "billDate": "2026-02-24"
+    "purchaseOrderNumber": "PO-25-3057",
+    "billDate": "2025-11-27"
   },
   {
     "sourceRef": {
@@ -1984,53 +1974,11 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10174",
       "transactionNumber": "VB-26-5058",
-      "lastModifiedAt": "2026-02-27T12:00:00Z",
+      "lastModifiedAt": "2026-01-18T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "10ca6d40e504d5098f363f2def9efe2d2f4508a8f0d20ec586d1524dbf0addad"
     },
     "transactionNumber": "VB-26-5058",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-X1",
-        "quantity": 18,
-        "amountCents": 16560000,
-        "serials": [
-          "KE-X1-8854",
-          "KE-X1-9983",
-          "KE-X1-1834",
-          "KE-X1-7242",
-          "KE-X1-9930",
-          "KE-X1-1373",
-          "KE-X1-4355",
-          "KE-X1-9452",
-          "KE-X1-1678",
-          "KE-X1-2254",
-          "KE-X1-7146",
-          "KE-X1-5959",
-          "KE-X1-3515",
-          "KE-X1-1804",
-          "KE-X1-9649",
-          "KE-X1-5198",
-          "KE-X1-2136",
-          "KE-X1-7494"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3058",
-    "billDate": "2026-02-27"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10177",
-      "transactionNumber": "VB-26-5059",
-      "lastModifiedAt": "2026-03-18T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "20447e3801613a5d54c5c9789e6c2dc45d82f9aedb20cd918e782f1f6170b464"
-    },
-    "transactionNumber": "VB-26-5059",
     "lines": [
       {
         "lineId": "L1",
@@ -2080,74 +2028,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3059",
-    "billDate": "2026-03-18"
+    "purchaseOrderNumber": "PO-25-3058",
+    "billDate": "2026-01-18"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10180",
-      "transactionNumber": "VB-26-5060",
-      "lastModifiedAt": "2026-04-11T12:00:00Z",
+      "internalId": "10177",
+      "transactionNumber": "VB-26-5059",
+      "lastModifiedAt": "2026-02-01T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "d8541904211019a630629213510bada52623cdc5ed2fcd3e4d334ea9afc283cf"
+      "sourceHash": "20447e3801613a5d54c5c9789e6c2dc45d82f9aedb20cd918e782f1f6170b464"
     },
-    "transactionNumber": "VB-26-5060",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-E1",
-        "quantity": 1,
-        "amountCents": 490000,
-        "serials": [
-          "KE-E1-2925"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3060",
-    "billDate": "2026-04-11"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10183",
-      "transactionNumber": "VB-26-5061",
-      "lastModifiedAt": "2026-04-12T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "7183f1f4079b76c096c7a3a14dcdbf6850e3892b2f8b290eaf1b34f99459899b"
-    },
-    "transactionNumber": "VB-26-5061",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-E1",
-        "quantity": 5,
-        "amountCents": 2450000,
-        "serials": [
-          "KE-E1-4778",
-          "KE-E1-7566",
-          "KE-E1-9443",
-          "KE-E1-9611",
-          "KE-E1-6087"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3061",
-    "billDate": "2026-04-12"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10186",
-      "transactionNumber": "VB-26-5062",
-      "lastModifiedAt": "2026-05-02T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a426a800d252c81faede1acc1632f5343300802841968988070c4ef4a6e74e59"
-    },
-    "transactionNumber": "VB-26-5062",
+    "transactionNumber": "VB-26-5059",
     "lines": [
       {
         "lineId": "L1",
@@ -2164,45 +2058,88 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3062",
-    "billDate": "2026-05-02"
+    "purchaseOrderNumber": "PO-26-3059",
+    "billDate": "2026-02-01"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10189",
-      "transactionNumber": "VB-26-5063",
-      "lastModifiedAt": "2026-05-14T12:00:00Z",
+      "internalId": "10180",
+      "transactionNumber": "VB-26-5060",
+      "lastModifiedAt": "2026-02-24T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "1e5c67e6c80a2b30d2fe1dd41a7d5d7cfcf941e5f7e303c98e279ef3bc5d75b5"
+      "sourceHash": "d8541904211019a630629213510bada52623cdc5ed2fcd3e4d334ea9afc283cf"
     },
-    "transactionNumber": "VB-26-5063",
+    "transactionNumber": "VB-26-5060",
     "lines": [
       {
         "lineId": "L1",
-        "sku": "KE-E1",
-        "quantity": 1,
-        "amountCents": 490000,
+        "sku": "KE-X1",
+        "quantity": 2,
+        "amountCents": 1840000,
         "serials": [
-          "KE-E1-1978"
+          "KE-X1-2917",
+          "KE-X1-1802"
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3063",
-    "billDate": "2026-05-14"
+    "purchaseOrderNumber": "PO-26-3060",
+    "billDate": "2026-02-24"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10192",
-      "transactionNumber": "VB-26-5064",
-      "lastModifiedAt": "2026-05-15T12:00:00Z",
+      "internalId": "10183",
+      "transactionNumber": "VB-26-5061",
+      "lastModifiedAt": "2026-02-27T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "30d5bb87d5f664a30c1c5589dea953062a14f2b6470801f39b29b29e010f392f"
+      "sourceHash": "7183f1f4079b76c096c7a3a14dcdbf6850e3892b2f8b290eaf1b34f99459899b"
     },
-    "transactionNumber": "VB-26-5064",
+    "transactionNumber": "VB-26-5061",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 18,
+        "amountCents": 16560000,
+        "serials": [
+          "KE-X1-8854",
+          "KE-X1-9983",
+          "KE-X1-1834",
+          "KE-X1-7242",
+          "KE-X1-9930",
+          "KE-X1-1373",
+          "KE-X1-4355",
+          "KE-X1-9452",
+          "KE-X1-1678",
+          "KE-X1-2254",
+          "KE-X1-7146",
+          "KE-X1-5959",
+          "KE-X1-3515",
+          "KE-X1-1804",
+          "KE-X1-9649",
+          "KE-X1-5198",
+          "KE-X1-2136",
+          "KE-X1-7494"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3061",
+    "billDate": "2026-02-27"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10186",
+      "transactionNumber": "VB-26-5062",
+      "lastModifiedAt": "2026-03-15T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a426a800d252c81faede1acc1632f5343300802841968988070c4ef4a6e74e59"
+    },
+    "transactionNumber": "VB-26-5062",
     "lines": [
       {
         "lineId": "L1",
@@ -2234,8 +2171,58 @@
         ]
       }
     ],
+    "purchaseOrderNumber": "PO-26-3062",
+    "billDate": "2026-03-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10189",
+      "transactionNumber": "VB-26-5063",
+      "lastModifiedAt": "2026-03-30T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1e5c67e6c80a2b30d2fe1dd41a7d5d7cfcf941e5f7e303c98e279ef3bc5d75b5"
+    },
+    "transactionNumber": "VB-26-5063",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-I1",
+        "quantity": 1,
+        "amountCents": 70000,
+        "serials": [
+          "KE-I1-1201"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3063",
+    "billDate": "2026-03-30"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10192",
+      "transactionNumber": "VB-26-5064",
+      "lastModifiedAt": "2026-04-11T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "30d5bb87d5f664a30c1c5589dea953062a14f2b6470801f39b29b29e010f392f"
+    },
+    "transactionNumber": "VB-26-5064",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 490000,
+        "serials": [
+          "KE-E1-2925"
+        ]
+      }
+    ],
     "purchaseOrderNumber": "PO-26-3064",
-    "billDate": "2026-05-15"
+    "billDate": "2026-04-11"
   },
   {
     "sourceRef": {
@@ -2243,11 +2230,257 @@
       "recordType": "VENDOR_BILL",
       "internalId": "10195",
       "transactionNumber": "VB-26-5065",
-      "lastModifiedAt": "2026-07-04T12:00:00Z",
+      "lastModifiedAt": "2026-04-12T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
       "sourceHash": "d7dd5b2a3c549e5b2d78cc0292bcde307c79dd634c1a74b795a39e6b929179d3"
     },
     "transactionNumber": "VB-26-5065",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 5,
+        "amountCents": 2450000,
+        "serials": [
+          "KE-E1-4778",
+          "KE-E1-7566",
+          "KE-E1-9443",
+          "KE-E1-9611",
+          "KE-E1-6087"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3065",
+    "billDate": "2026-04-12"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10198",
+      "transactionNumber": "VB-26-5066",
+      "lastModifiedAt": "2026-04-26T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "80216e9ed116d2000ab80d4daf09370191c37f45505b5674112ba9c8d132eb15"
+    },
+    "transactionNumber": "VB-26-5066",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-I1",
+        "quantity": 4,
+        "amountCents": 280000,
+        "serials": [
+          "KE-I1-1371",
+          "KE-I1-7970",
+          "KE-I1-9831",
+          "KE-I1-2305"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3066",
+    "billDate": "2026-04-26"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10201",
+      "transactionNumber": "VB-26-5067",
+      "lastModifiedAt": "2026-04-27T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6a7d9537d803b2ee19e03993c30c4a07936898afe5ea9f2d61e4ea7a2ca671b8"
+    },
+    "transactionNumber": "VB-26-5067",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KR-U1",
+        "quantity": 1,
+        "amountCents": 82500
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3067",
+    "billDate": "2026-04-27"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10204",
+      "transactionNumber": "VB-26-5068",
+      "lastModifiedAt": "2026-05-03T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6e9b3fe08cd5216ed4104e2112222a8ad2727445dc01d6749ece6f78a6040a3d"
+    },
+    "transactionNumber": "VB-26-5068",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 21,
+        "amountCents": 19320000,
+        "serials": [
+          "KE-X1-6670",
+          "KE-X1-9757",
+          "KE-X1-8272",
+          "KE-X1-9582",
+          "KE-X1-2086",
+          "KE-X1-6568",
+          "KE-X1-1468",
+          "KE-X1-2791",
+          "KE-X1-8772",
+          "KE-X1-9875",
+          "KE-X1-5665",
+          "KE-X1-4005",
+          "KE-X1-2024",
+          "KE-X1-8235",
+          "KE-X1-2910",
+          "KE-X1-2386",
+          "KE-X1-7363",
+          "KE-X1-3699",
+          "KE-X1-6922",
+          "KE-X1-3044",
+          "KE-X1-4697"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3068",
+    "billDate": "2026-05-03"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10207",
+      "transactionNumber": "VB-26-5069",
+      "lastModifiedAt": "2026-05-14T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4ec9b718514d4ead7973e8fcb6ba1ebfef777619941023d593032816e933da42"
+    },
+    "transactionNumber": "VB-26-5069",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 490000,
+        "serials": [
+          "KE-E1-1978"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3069",
+    "billDate": "2026-05-14"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10210",
+      "transactionNumber": "VB-26-5070",
+      "lastModifiedAt": "2026-05-15T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ec01b380cff7421d0b86d299705ee0481a87a54323e3782a275ff0a83c70e3bd"
+    },
+    "transactionNumber": "VB-26-5070",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KR-U1",
+        "quantity": 1,
+        "amountCents": 82500
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3070",
+    "billDate": "2026-05-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10213",
+      "transactionNumber": "VB-26-5071",
+      "lastModifiedAt": "2026-06-03T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a037386853a806ae2c03a90a0a4297645b2d74590941d7336fa918bcd2053bbe"
+    },
+    "transactionNumber": "VB-26-5071",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 490000,
+        "serials": [
+          "KE-E1-3232"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3071",
+    "billDate": "2026-06-03"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10216",
+      "transactionNumber": "VB-26-5072",
+      "lastModifiedAt": "2026-06-19T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1dbd54b5a71e94f27a667c7219aa010490758454a5c63e9030fb06ff7a6797d2"
+    },
+    "transactionNumber": "VB-26-5072",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 920000,
+        "serials": [
+          "KE-X1-9159"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3072",
+    "billDate": "2026-06-19"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10219",
+      "transactionNumber": "VB-26-5073",
+      "lastModifiedAt": "2026-06-30T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "98e2fb4d4766ebaeff24c9c6de3eda1f540802ae8b75f4783125762ec70814cf"
+    },
+    "transactionNumber": "VB-26-5073",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-I1",
+        "quantity": 1,
+        "amountCents": 70000,
+        "serials": [
+          "KE-I1-9132"
+        ]
+      }
+    ],
+    "purchaseOrderNumber": "PO-26-3073",
+    "billDate": "2026-06-30"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "VENDOR_BILL",
+      "internalId": "10222",
+      "transactionNumber": "VB-26-5074",
+      "lastModifiedAt": "2026-07-04T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4773d69b83146850f9068c4dfea7b5e07db9f1a65a53a7d4c9b8add8e1339658"
+    },
+    "transactionNumber": "VB-26-5074",
     "lines": [
       {
         "lineId": "L1",
@@ -2259,42 +2492,45 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3065",
+    "purchaseOrderNumber": "PO-26-3074",
     "billDate": "2026-07-04"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10198",
-      "transactionNumber": "VB-26-5066",
-      "lastModifiedAt": "2026-09-15T12:00:00Z",
+      "internalId": "10225",
+      "transactionNumber": "VB-26-5075",
+      "lastModifiedAt": "2026-08-26T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "80216e9ed116d2000ab80d4daf09370191c37f45505b5674112ba9c8d132eb15"
+      "sourceHash": "80ed4c1782addd3dc0241d5cf5399b7d0d1e81a0fcccc9bede44300511731353"
     },
-    "transactionNumber": "VB-26-5066",
+    "transactionNumber": "VB-26-5075",
     "lines": [
       {
         "lineId": "L1",
-        "sku": "KR-U1",
+        "sku": "KE-E1",
         "quantity": 1,
-        "amountCents": 82500
+        "amountCents": 490000,
+        "serials": [
+          "KE-E1-3335"
+        ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3066",
-    "billDate": "2026-09-15"
+    "purchaseOrderNumber": "PO-26-3075",
+    "billDate": "2026-08-26"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10201",
-      "transactionNumber": "VB-26-5067",
+      "internalId": "10228",
+      "transactionNumber": "VB-26-5076",
       "lastModifiedAt": "2026-09-25T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "6a7d9537d803b2ee19e03993c30c4a07936898afe5ea9f2d61e4ea7a2ca671b8"
+      "sourceHash": "0e7f439dc08f5768dfadf2aa999e6d0a867ff91937919885447122637c88296d"
     },
-    "transactionNumber": "VB-26-5067",
+    "transactionNumber": "VB-26-5076",
     "lines": [
       {
         "lineId": "L1",
@@ -2355,95 +2591,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3067",
+    "purchaseOrderNumber": "PO-26-3076",
     "billDate": "2026-09-25"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10204",
-      "transactionNumber": "VB-26-5068",
-      "lastModifiedAt": "2026-09-30T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "6e9b3fe08cd5216ed4104e2112222a8ad2727445dc01d6749ece6f78a6040a3d"
-    },
-    "transactionNumber": "VB-26-5068",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-I1",
-        "quantity": 1,
-        "amountCents": 70000,
-        "serials": [
-          "KE-I1-1201"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3068",
-    "billDate": "2026-09-30"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10207",
-      "transactionNumber": "VB-26-5069",
-      "lastModifiedAt": "2026-10-04T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "4ec9b718514d4ead7973e8fcb6ba1ebfef777619941023d593032816e933da42"
-    },
-    "transactionNumber": "VB-26-5069",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-E1",
-        "quantity": 1,
-        "amountCents": 490000,
-        "serials": [
-          "KE-E1-3232"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3069",
-    "billDate": "2026-10-04"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10210",
-      "transactionNumber": "VB-26-5070",
-      "lastModifiedAt": "2026-10-19T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "ec01b380cff7421d0b86d299705ee0481a87a54323e3782a275ff0a83c70e3bd"
-    },
-    "transactionNumber": "VB-26-5070",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-X1",
-        "quantity": 1,
-        "amountCents": 920000,
-        "serials": [
-          "KE-X1-9159"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3070",
-    "billDate": "2026-10-19"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10213",
-      "transactionNumber": "VB-26-5071",
+      "internalId": "10231",
+      "transactionNumber": "VB-26-5077",
       "lastModifiedAt": "2026-10-22T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a037386853a806ae2c03a90a0a4297645b2d74590941d7336fa918bcd2053bbe"
+      "sourceHash": "406e9b7cee12dd5d746401bad5211836d6bee3c441970240922792ce557c92f4"
     },
-    "transactionNumber": "VB-26-5071",
+    "transactionNumber": "VB-26-5077",
     "lines": [
       {
         "lineId": "L1",
@@ -2456,20 +2617,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3071",
+    "purchaseOrderNumber": "PO-26-3077",
     "billDate": "2026-10-22"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10216",
-      "transactionNumber": "VB-26-5072",
+      "internalId": "10234",
+      "transactionNumber": "VB-26-5078",
       "lastModifiedAt": "2026-11-09T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "1dbd54b5a71e94f27a667c7219aa010490758454a5c63e9030fb06ff7a6797d2"
+      "sourceHash": "04248befb73a835190225c7051fdade3d73116e40c78bc7e1b9ff5455ed982c9"
     },
-    "transactionNumber": "VB-26-5072",
+    "transactionNumber": "VB-26-5078",
     "lines": [
       {
         "lineId": "L1",
@@ -2599,149 +2760,20 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3072",
+    "purchaseOrderNumber": "PO-26-3078",
     "billDate": "2026-11-09"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10219",
-      "transactionNumber": "VB-26-5073",
-      "lastModifiedAt": "2026-11-26T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "98e2fb4d4766ebaeff24c9c6de3eda1f540802ae8b75f4783125762ec70814cf"
-    },
-    "transactionNumber": "VB-26-5073",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-I1",
-        "quantity": 4,
-        "amountCents": 280000,
-        "serials": [
-          "KE-I1-1371",
-          "KE-I1-7970",
-          "KE-I1-9831",
-          "KE-I1-2305"
-        ]
-      },
-      {
-        "lineId": "L2",
-        "sku": "KE-E1",
-        "quantity": 1,
-        "amountCents": 490000,
-        "serials": [
-          "KE-E1-3335"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3073",
-    "billDate": "2026-11-26"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10222",
-      "transactionNumber": "VB-26-5074",
-      "lastModifiedAt": "2026-11-27T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "4773d69b83146850f9068c4dfea7b5e07db9f1a65a53a7d4c9b8add8e1339658"
-    },
-    "transactionNumber": "VB-26-5074",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KR-U1",
-        "quantity": 1,
-        "amountCents": 82500
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3074",
-    "billDate": "2026-11-27"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10225",
-      "transactionNumber": "VB-26-5075",
-      "lastModifiedAt": "2026-11-30T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "80ed4c1782addd3dc0241d5cf5399b7d0d1e81a0fcccc9bede44300511731353"
-    },
-    "transactionNumber": "VB-26-5075",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-I1",
-        "quantity": 1,
-        "amountCents": 70000,
-        "serials": [
-          "KE-I1-9132"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3075",
-    "billDate": "2026-11-30"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10228",
-      "transactionNumber": "VB-26-5076",
-      "lastModifiedAt": "2026-12-03T12:00:00Z",
-      "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "0e7f439dc08f5768dfadf2aa999e6d0a867ff91937919885447122637c88296d"
-    },
-    "transactionNumber": "VB-26-5076",
-    "lines": [
-      {
-        "lineId": "L1",
-        "sku": "KE-X1",
-        "quantity": 21,
-        "amountCents": 19320000,
-        "serials": [
-          "KE-X1-6670",
-          "KE-X1-9757",
-          "KE-X1-8272",
-          "KE-X1-9582",
-          "KE-X1-2086",
-          "KE-X1-6568",
-          "KE-X1-1468",
-          "KE-X1-2791",
-          "KE-X1-8772",
-          "KE-X1-9875",
-          "KE-X1-5665",
-          "KE-X1-4005",
-          "KE-X1-2024",
-          "KE-X1-8235",
-          "KE-X1-2910",
-          "KE-X1-2386",
-          "KE-X1-7363",
-          "KE-X1-3699",
-          "KE-X1-6922",
-          "KE-X1-3044",
-          "KE-X1-4697"
-        ]
-      }
-    ],
-    "purchaseOrderNumber": "PO-26-3076",
-    "billDate": "2026-12-03"
-  },
-  {
-    "sourceRef": {
-      "sourceSystem": "NETSUITE_ERP",
-      "recordType": "VENDOR_BILL",
-      "internalId": "10231",
-      "transactionNumber": "VB-26-5077",
+      "internalId": "10237",
+      "transactionNumber": "VB-26-5079",
       "lastModifiedAt": "2026-12-25T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "406e9b7cee12dd5d746401bad5211836d6bee3c441970240922792ce557c92f4"
+      "sourceHash": "9f540f824bfc2a585a2502a13d2bd130ff8b0095a9b95012bd502378db54c4d6"
     },
-    "transactionNumber": "VB-26-5077",
+    "transactionNumber": "VB-26-5079",
     "lines": [
       {
         "lineId": "L1",
@@ -2768,18 +2800,18 @@
         ]
       }
     ],
-    "purchaseOrderNumber": "PO-26-3077",
+    "purchaseOrderNumber": "PO-26-3079",
     "billDate": "2026-12-25"
   },
   {
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10234",
+      "internalId": "10240",
       "transactionNumber": "VB-26-2431",
       "lastModifiedAt": "2026-12-31T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "5d2a4cf3f87ad2d9eebe04bb417d160d2223b0f92db4ba1e1414f3508072e34c"
+      "sourceHash": "d9b78e73a20a2d66eca6d704f0a45fde3a63ddbfa1e0a011ae65c5e315697997"
     },
     "transactionNumber": "VB-26-2431",
     "lines": [
@@ -2800,11 +2832,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10236",
+      "internalId": "10242",
       "transactionNumber": "VB-26-2419",
       "lastModifiedAt": "2026-12-30T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "a378bf23c58175b940c1edb9d5ac9461426aa78af8a8f5d629c3daff8f9569fc"
+      "sourceHash": "0501bab8402bd128f06d01eb86688a179369af67ea199fae4eb72621e8507e00"
     },
     "transactionNumber": "VB-26-2419",
     "lines": [
@@ -2827,11 +2859,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10239",
+      "internalId": "10245",
       "transactionNumber": "VB-26-2441",
       "lastModifiedAt": "2026-12-27T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "9fa98f8c2fdb4e8623c80dad50b49c0c2c876c30e57da882c903aa02b4043c41"
+      "sourceHash": "e7cfaa8ce6fd45ac18aa8d33034c6a5ed4a999775de88cccd83c898c7baf46d1"
     },
     "transactionNumber": "VB-26-2441",
     "lines": [
@@ -2855,11 +2887,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10242",
+      "internalId": "10248",
       "transactionNumber": "VB-26-2442",
       "lastModifiedAt": "2026-12-28T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "6a521da322938579102bc6ae867fca70ceec809e4499af9eb9be141b3bf4d626"
+      "sourceHash": "540bc44796148f7fde1e9d2cc6ce9df98a159aa0d5493bd0f02153e5482200ce"
     },
     "transactionNumber": "VB-26-2442",
     "lines": [
@@ -2881,11 +2913,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "VENDOR_BILL",
-      "internalId": "10245",
+      "internalId": "10251",
       "transactionNumber": "VB-26-2443",
       "lastModifiedAt": "2026-12-29T12:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "e7b8d801a74d1f417394de2ef266d504aedbf37fe9a2a14d7e85efd83e25edb4"
+      "sourceHash": "d24124e7916a81d39d6e5dd8bb913c974be24f65673addbd0a25dd7ef2c88acb"
     },
     "transactionNumber": "VB-26-2443",
     "lines": [

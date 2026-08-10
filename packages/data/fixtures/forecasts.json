@@ -11,7 +11,7 @@
     },
     "sku": "KE-I1",
     "horizonMonths": 12,
-    "forecastUnits": 92
+    "forecastUnits": 97
   },
   {
     "id": "FC-002",
@@ -40,7 +40,7 @@
     },
     "sku": "KE-S1",
     "horizonMonths": 12,
-    "forecastUnits": 124
+    "forecastUnits": 135
   },
   {
     "id": "FC-004",
@@ -54,7 +54,7 @@
     },
     "sku": "KE-E1",
     "horizonMonths": 12,
-    "forecastUnits": 122
+    "forecastUnits": 135
   },
   {
     "id": "FC-005",
@@ -68,7 +68,7 @@
     },
     "sku": "KE-E2",
     "horizonMonths": 12,
-    "forecastUnits": 198
+    "forecastUnits": 111
   },
   {
     "id": "FC-006",
@@ -82,7 +82,7 @@
     },
     "sku": "KE-X1",
     "horizonMonths": 12,
-    "forecastUnits": 100
+    "forecastUnits": 152
   },
   {
     "id": "FC-007",
@@ -96,7 +96,7 @@
     },
     "sku": "KE-Y1",
     "horizonMonths": 12,
-    "forecastUnits": 27
+    "forecastUnits": 23
   },
   {
     "id": "FC-008",
@@ -110,7 +110,7 @@
     },
     "sku": "KV-D1",
     "horizonMonths": 12,
-    "forecastUnits": 158
+    "forecastUnits": 177
   },
   {
     "id": "FC-009",
@@ -124,7 +124,7 @@
     },
     "sku": "KV-B1",
     "horizonMonths": 12,
-    "forecastUnits": 72
+    "forecastUnits": 61
   },
   {
     "id": "FC-010",
@@ -138,7 +138,7 @@
     },
     "sku": "KV-F1",
     "horizonMonths": 12,
-    "forecastUnits": 29
+    "forecastUnits": 26
   },
   {
     "id": "FC-011",
@@ -152,7 +152,7 @@
     },
     "sku": "KV-Z1",
     "horizonMonths": 12,
-    "forecastUnits": 35
+    "forecastUnits": 30
   },
   {
     "id": "FC-012",
@@ -166,7 +166,7 @@
     },
     "sku": "KA-41",
     "horizonMonths": 12,
-    "forecastUnits": 134
+    "forecastUnits": 83
   },
   {
     "id": "FC-013",
@@ -180,7 +180,7 @@
     },
     "sku": "KR-U1",
     "horizonMonths": 12,
-    "forecastUnits": 41
+    "forecastUnits": 34
   },
   {
     "id": "FC-014",
@@ -194,6 +194,6 @@
     },
     "sku": "KG-K1",
     "horizonMonths": 12,
-    "forecastUnits": 15
+    "forecastUnits": 24
   }
 ]

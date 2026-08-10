@@ -356,7 +356,8 @@ export function buildOperational(
     // 0451/0452 are reserved for the EXC-009 pair; the counter skips them.
     if (rmaSeq === 451) rmaSeq = 453;
     let id = `RMA-2026-0${rmaSeq}`;
-    let receivedAt = atTime(`2026-${String(prng.int(9, 12)).padStart(2, "0")}-${String(prng.int(1, 27)).padStart(2, "0")}`, "17:00:00");
+    // The return arrived when the unit moved into the RMA area.
+    let receivedAt = atTime(u.lastMovementAt ?? "2026-12-10", "17:00:00");
     let reason = reasons[prng.int(0, reasons.length - 1)]!;
     let status: RmaRecordFixture["status"] = statuses[prng.int(0, statuses.length - 1)]!;
     let customer = CUSTOMERS[prng.int(0, CUSTOMERS.length - 1)]!;

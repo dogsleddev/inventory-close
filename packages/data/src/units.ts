@@ -104,9 +104,21 @@ function acquisitionMonths(cellId: string): readonly string[] {
       // 2025 — the 365+ day aging input for VAL-EO-001.
       return ["2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08"];
     case "RCV_FH":
-      return ["2026-12"];
     case "GIT_IN":
       return ["2026-12"];
+    case "DL_DEMO":
+    case "DL_LOANER":
+      // Demo/loaner stock must exist before its assignments start (the
+      // earliest designed assignment is EXC-010's 2026-05-31 demo).
+      return ["2025-09", "2025-11", "2026-01", "2026-02", "2026-03", "2026-04"];
+    case "CS_FH":
+    case "CS_LOANER":
+      // Customer-site units are installed from September on.
+      return ["2025-09", "2025-11", "2026-01", "2026-03", "2026-05", "2026-06"];
+    case "RMA_RMA":
+    case "DMG_DMG":
+      // Returns arrive September–December; units were acquired earlier.
+      return ["2025-09", "2025-11", "2026-01", "2026-03", "2026-05", "2026-08"];
     default:
       return [
         "2025-09", "2025-11", "2026-01", "2026-02", "2026-03", "2026-04",
@@ -131,10 +143,12 @@ function lastMovement(cellId: string, acquiredAt: string, prng: Prng): string {
       return acquiredAt;
     default: {
       // Some later movement in 2026, never before acquisition.
-      const acquiredMonth = Number(acquiredAt.slice(5, 7));
       const acquiredYear = Number(acquiredAt.slice(0, 4));
+      const acquiredMonth = Number(acquiredAt.slice(5, 7));
+      const acquiredDay = Number(acquiredAt.slice(8, 10));
       const month = acquiredYear < 2026 ? prng.int(1, 12) : prng.int(Math.min(acquiredMonth, 12), 12);
-      return `2026-${String(month).padStart(2, "0")}-${String(prng.int(1, 28)).padStart(2, "0")}`;
+      const minDay = acquiredYear === 2026 && month === acquiredMonth ? acquiredDay : 1;
+      return `2026-${String(month).padStart(2, "0")}-${String(prng.int(minDay, 28)).padStart(2, "0")}`;
     }
   }
 }
@@ -179,9 +193,11 @@ export function buildUnits(seed: string): UnitsResult {
       // purchase receipt; the PRNG picks the batch month deterministically.
       const month = months[prng.int(0, months.length - 1)]!;
       const day =
-        cell.id === "RCV_FH" || cell.id === "GIT_IN"
-          ? prng.int(18, 29)
-          : prng.int(2, 27);
+        cell.id === "GIT_IN"
+          ? prng.int(27, 29)
+          : cell.id === "RCV_FH"
+            ? prng.int(18, 29)
+            : prng.int(2, 27);
       const acquiredAt = `${month}-${String(day).padStart(2, "0")}`;
 
       for (let i = 0; i < count; i++) {
@@ -247,6 +263,29 @@ export function buildUnits(seed: string): UnitsResult {
       }
     }
   }
+
+  // Story-date coherence: units tied to canonical dated events carry those
+  // dates rather than their batch dates.
+  const patch = (serial: string, p: Partial<InventoryItemFixture>) => {
+    const i = units.findIndex((u) => u.serial === serial);
+    if (i >= 0) units[i] = { ...units[i]!, ...p };
+  };
+  for (const s of story.exc002Serials) {
+    // EXC-002: vendor shipped 12/29; booked to GIT on the December bill.
+    patch(s, { acquiredAt: "2026-12-29", lastMovementAt: "2026-12-29" });
+  }
+  // EXC-014: received 12/30 on IR-26-2214.
+  patch(story.exc014Serial, { acquiredAt: "2026-12-30", lastMovementAt: "2026-12-30" });
+  // EXC-012: damaged return received 12/19 (RMA-2026-0468).
+  patch(story.exc012Serial, { lastMovementAt: "2026-12-19" });
+  // EXC-009: the two duplicated KV-Z1 returns arrived 12/22.
+  let kvz1InRma = 0;
+  units.forEach((u, i) => {
+    if (u.sku === "KV-Z1" && u.location === "RMA_REPAIR" && kvz1InRma < 2) {
+      kvz1InRma += 1;
+      units[i] = { ...u, lastMovementAt: "2026-12-22" };
+    }
+  });
 
   if (units.length !== 1500) {
     throw new Error(`Expected 1500 units, generated ${units.length}`);

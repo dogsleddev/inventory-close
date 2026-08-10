@@ -114,7 +114,7 @@ export function buildCounts(seed: string, unitsResult: UnitsResult): CountsResul
     countType: "YEAR_END",
     sku: "KE-E2",
     location: "STAGING",
-    bin: "STG-04",
+    bin: "STA-04",
     serial: story.exc013Serial,
     snapshotQuantity: 0,
     countQuantity: 1,
@@ -142,7 +142,7 @@ export function buildCounts(seed: string, unitsResult: UnitsResult): CountsResul
         direction,
         sku: "KE-X1",
         location: "RECEIVING",
-        bin: "RCV-07",
+        bin: "REC-07",
         serial: SERIAL_EXC004_OFF_BOOK,
         selectedBy: "Controller's Office",
         recordedAt: "2027-01-02T20:40:00Z",
@@ -262,28 +262,50 @@ export function buildCounts(seed: string, unitsResult: UnitsResult): CountsResul
       nextCountDue:
         month === 7 ? "2026-11-15" : `2026-${String(Math.min(month + 3, 12)).padStart(2, "0")}-15`,
     });
+    // Designed rows are placed explicitly so the stories always generate:
+    // February KV-B1 variance (adjusted via ADJ-2026-0058), May KE-S1
+    // variance (the 05R recount resolves it), July KR-U1@Demo/Loaner clean
+    // count (its LAST count — the overdue example, due 11/15 with no later
+    // count), September + November KV-D1@Receiving (repeat variance cell).
+    const designed: readonly { sku: string; location: string; variance: number }[] =
+      month === 2
+        ? [{ sku: "KV-B1", location: "RECEIVING", variance: -1 }]
+        : month === 5
+          ? [{ sku: "KE-S1", location: "PRIMARY_WAREHOUSE", variance: -1 }]
+          : month === 7
+            ? [{ sku: "KR-U1", location: "DEMO_LOANER", variance: 0 }]
+            : month === 9
+              ? [{ sku: "KV-D1", location: "RECEIVING", variance: -2 }]
+              : month === 11
+                ? [{ sku: "KV-D1", location: "RECEIVING", variance: -1 }]
+                : [];
     const rowCount = cyclePrng.int(8, 12);
-    for (let r = 0; r < rowCount; r++) {
+    const rows: { sku: string; location: string; variance: number }[] = [...designed];
+    const used = new Set(designed.map((c) => `${c.sku}|${c.location}`));
+    for (let r = 0; rows.length < rowCount && r < cycleCells.length; r++) {
       const cell = cycleCells[(month + r) % cycleCells.length]!;
+      const key = `${cell.sku}|${cell.location}`;
+      if (used.has(key)) continue;
+      // Keep the overdue example true: KR-U1@Demo/Loaner is never cycle-
+      // counted after July.
+      if (cell.sku === "KR-U1" && cell.location === "DEMO_LOANER" && month > 7) continue;
+      used.add(key);
+      rows.push({ ...cell, variance: 0 });
+    }
+    for (const row of rows) {
       const snapshotQuantity = cyclePrng.int(4, 40);
-      // Designed variances: February KV-B1 (adjusted via ADJ-2026-0058),
-      // May KE-S1 (recount resolves), September + November KV-D1@Receiving
-      // (repeat variance cell).
-      let variance = 0;
-      if (month === 2 && cell.sku === "KV-B1" && cell.location === "RECEIVING") variance = -1;
-      if (month === 5 && cell.sku === "KE-S1" && r === 0) variance = -1;
-      if (month === 9 && cell.sku === "KV-D1" && cell.location === "RECEIVING") variance = -2;
-      if (month === 11 && cell.sku === "KV-D1" && cell.location === "RECEIVING") variance = -1;
       results.push({
         countPlanId: planId,
         countType: "CYCLE",
-        sku: cell.sku,
-        location: cell.location,
-        bin: bin(cell.location),
+        sku: row.sku,
+        location: row.location,
+        bin: bin(row.location),
         snapshotQuantity,
-        countQuantity: snapshotQuantity + variance,
-        ...(month === 2 && variance !== 0 ? { adjustedQuantity: snapshotQuantity + variance } : {}),
-        variance,
+        countQuantity: snapshotQuantity + row.variance,
+        ...(month === 2 && row.variance !== 0
+          ? { adjustedQuantity: snapshotQuantity + row.variance }
+          : {}),
+        variance: row.variance,
         externalCountDetailId: detailId(),
       });
     }

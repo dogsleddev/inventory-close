@@ -3,11 +3,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "INVENTORY_ADJUSTMENT",
-      "internalId": "10283",
+      "internalId": "10289",
       "transactionNumber": "ADJ-2026-0058",
       "lastModifiedAt": "2026-02-20T17:00:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "cd1807a67c3bc7f664cd1595949dd70f2e875f82e46c3bf0aba3461a61234bc0"
+      "sourceHash": "d8fbf9556cee70958b47d23af51c8b957cdc409da265297d2fd1e0c318873b99"
     },
     "transactionNumber": "ADJ-2026-0058",
     "adjustmentDate": "2026-02-20",
@@ -27,11 +27,11 @@
     "sourceRef": {
       "sourceSystem": "NETSUITE_ERP",
       "recordType": "INVENTORY_ADJUSTMENT",
-      "internalId": "10284",
+      "internalId": "10290",
       "transactionNumber": "ADJ-2026-0312",
       "lastModifiedAt": "2026-12-28T16:40:00Z",
       "retrievedAt": "2027-01-07T06:00:00Z",
-      "sourceHash": "f9a5c29f1a068c1c2bf35428d10fb60b30e6358acff0452f5caace611a91d598"
+      "sourceHash": "e57b1c81f900005c359ea3ab7fd160e07a2b3f733362c70266b4b25f91021d4a"
     },
     "transactionNumber": "ADJ-2026-0312",
     "adjustmentDate": "2026-12-28",

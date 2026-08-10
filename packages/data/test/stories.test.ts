@@ -224,6 +224,63 @@ describe("EXC-011 — slow-moving KE-M1 under valuation review", () => {
   });
 });
 
+describe("timeline coherence", () => {
+  it("never moves a unit before it was acquired", () => {
+    for (const u of d.inventoryUnits) {
+      expect(
+        (u.lastMovementAt ?? u.acquiredAt ?? "") >= (u.acquiredAt ?? ""),
+        `${u.serial}: moved ${u.lastMovementAt} before acquired ${u.acquiredAt}`,
+      ).toBe(true);
+    }
+  });
+
+  it("never assigns or installs a unit before it was acquired", () => {
+    const bySerial = new Map(d.inventoryUnits.map((u) => [u.serial, u]));
+    for (const a of d.assignments) {
+      const u = bySerial.get(a.serial);
+      expect(a.startedAt >= (u?.acquiredAt ?? ""), `${a.id} predates acquisition`).toBe(true);
+    }
+    for (const inst of d.installations) {
+      for (const serial of inst.serials) {
+        const u = bySerial.get(serial);
+        if (!u) continue; // EXC-001 units ship from stock acquired earlier
+        expect(
+          inst.installedAt.slice(0, 10) >= (u.acquiredAt ?? ""),
+          `${inst.id}/${serial} installed before acquisition`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("dates RMA receipts to the unit's movement into the RMA area", () => {
+    const bySerial = new Map(d.inventoryUnits.map((u) => [u.serial, u]));
+    for (const r of d.rmaRecords) {
+      if (!r.serial) continue;
+      const u = bySerial.get(r.serial);
+      if (!u || u.location !== "RMA_REPAIR") continue;
+      expect(r.receivedAt.slice(0, 10)).toBe(u.lastMovementAt);
+    }
+  });
+
+  it("generates every designed cycle-count story deterministically", () => {
+    const row = (planId: string, sku: string, location: string) =>
+      d.countResults.find(
+        (r) => r.countPlanId === planId && r.sku === sku && r.location === location,
+      );
+    expect(row("CNT-CC-2026-02", "KV-B1", "RECEIVING")?.variance).toBe(-1);
+    expect(row("CNT-CC-2026-02", "KV-B1", "RECEIVING")?.adjustedQuantity).toBeDefined();
+    expect(row("CNT-CC-2026-05", "KE-S1", "PRIMARY_WAREHOUSE")?.variance).toBe(-1);
+    expect(row("CNT-CC-2026-05R", "KE-S1", "PRIMARY_WAREHOUSE")?.variance).toBe(0);
+    expect(row("CNT-CC-2026-09", "KV-D1", "RECEIVING")?.variance).toBe(-2);
+    expect(row("CNT-CC-2026-11", "KV-D1", "RECEIVING")?.variance).toBe(-1);
+    // Overdue example: KR-U1@Demo/Loaner last counted July (due 11/15).
+    expect(row("CNT-CC-2026-07", "KR-U1", "DEMO_LOANER")).toBeDefined();
+    for (const later of ["08", "09", "10", "11"]) {
+      expect(row(`CNT-CC-2026-${later}`, "KR-U1", "DEMO_LOANER")).toBeUndefined();
+    }
+  });
+});
+
 describe("scenario script", () => {
   it("is SCENARIO-EVENTS-v1.1.0, ordered, and references facts rather than exceptions", () => {
     expect(d.scenarioEvents).toHaveLength(10);
