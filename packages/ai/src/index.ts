@@ -21,3 +21,11 @@ export interface AiProviderAdapter {
   readonly modelVersion: string;
   complete(messages: readonly AiMessage[]): Promise<AiMessage>;
 }
+
+export * from "./types.js";
+export { createToolSession, runTool } from "./tools.js";
+export type { AiToolContext, AiToolResult, AiToolSession } from "./tools.js";
+export { answerQuestion } from "./answers.js";
+export type { AiQuestionContext } from "./answers.js";
+export { checkNarration, fenceUntrusted, withNarration } from "./guardrails.js";
+export type { GuardrailVerdict, GuardrailViolation } from "./guardrails.js";

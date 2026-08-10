@@ -283,6 +283,24 @@ export interface PbcPackageItem extends PbcItemOut {
   readonly currentStateHash: string;
 }
 
+/**
+ * One custodian's company-owned holdings (stage 08). `supported` is false
+ * when a close exception stands against the holding — never inferred from
+ * the confirmation state alone, so the rule stays the single authority on
+ * whether a holding is a problem.
+ */
+export interface ThirdPartyHolding {
+  readonly custodian: string;
+  readonly units: number;
+  readonly valueCents: number;
+  readonly skus: readonly string[];
+  readonly confirmation: "NOT_REQUESTED" | "REQUESTED" | "RESPONDED";
+  readonly requestedAt?: string | undefined;
+  readonly respondedAt?: string | undefined;
+  readonly exceptionId?: string | undefined;
+  readonly supported: boolean;
+}
+
 /** PO ↔ IR ↔ VB source documents behind one procurement match (stage 06). */
 export interface ProcurementDetail {
   readonly purchaseOrder?: PurchaseOrderFixture | undefined;
@@ -643,6 +661,68 @@ export function createQueryService(ws: Workspace) {
       };
     },
 
+    /**
+     * Third-party custodian holdings (stage 08).
+     *
+     * TPI-CONF-001 computes each custodian's unit count and exposure and then
+     * keeps only the exposure on the finding — the count survives solely
+     * inside its `whyFlagged` sentence. Ask Gaurd must answer "Redwood, 14
+     * units, $92,400" from structured data, and recovering a figure by
+     * parsing prose is exactly what this architecture forbids. So the
+     * grouping is exposed here, alongside the confirmation state that makes
+     * a holding unsupported.
+     */
+    getThirdPartyHoldings(ctx: ServiceContext): readonly ThirdPartyHolding[] {
+      authorize(ctx.user, "close.read");
+      const byCustodian = new Map<string, { units: number; valueCents: number; skus: Set<string> }>();
+      for (const unit of ws.dataset.inventoryUnits) {
+        if (unit.custodian === undefined) continue;
+        const entry = byCustodian.get(unit.custodian) ?? {
+          units: 0,
+          valueCents: 0,
+          skus: new Set<string>(),
+        };
+        entry.units += 1;
+        entry.valueCents += unit.unitCostCents;
+        entry.skus.add(unit.sku);
+        byCustodian.set(unit.custodian, entry);
+      }
+      return [...byCustodian.entries()]
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([custodian, holding]) => {
+          const statement = ws.dataset.custodianStatements.find(
+            (s) => s.custodian === custodian,
+          );
+          const exception = ws.close.exceptions.find(
+            (e) =>
+              e.finding.ruleId === "TPI-CONF-001" &&
+              e.finding.subjects.custodian === custodian,
+          );
+          return {
+            custodian,
+            units: holding.units,
+            valueCents: holding.valueCents,
+            skus: [...holding.skus].sort(),
+            // Requested-and-unanswered is weaker than confirmed but stronger
+            // than never-requested; the three states stay distinct.
+            confirmation:
+              statement === undefined
+                ? ("NOT_REQUESTED" as const)
+                : statement.respondedAt === undefined
+                  ? ("REQUESTED" as const)
+                  : ("RESPONDED" as const),
+            ...(statement?.requestedAt !== undefined
+              ? { requestedAt: statement.requestedAt }
+              : {}),
+            ...(statement?.respondedAt !== undefined
+              ? { respondedAt: statement.respondedAt }
+              : {}),
+            ...(exception !== undefined ? { exceptionId: exception.id } : {}),
+            supported: exception === undefined,
+          };
+        });
+    },
+
     getCommercialChains(ctx: ServiceContext): readonly TransactionChain[] {
       authorize(ctx.user, "close.read");
       return ws.close.chains;
@@ -685,12 +765,24 @@ export function createQueryService(ws: Workspace) {
       if (!lineage) return undefined;
       // Restricted content is redacted here exactly as in listEvidence —
       // lineage must never be a side door around sensitivity.
+      //
+      // `content` is NOT the only copy. EvidenceItem also carries
+      // `originalValue`, the value as retrieved, and the fixture pipeline is
+      // an IDENTITY transformation — so the original is byte-identical to the
+      // content it mirrors. Clearing one and spreading the other leaked the
+      // whole restricted payload (found by the stage-08 adversarial suite:
+      // a WAREHOUSE user could read EXC-001's contract provisions through
+      // lineage). Both copies go; the HASHES stay, because they disclose
+      // nothing and lineage integrity depends on them.
       return {
         ...lineage,
         evidence: lineage.evidence.map(({ item, linkType }) =>
           canReadContent(ctx.user, item.sensitivity)
             ? { item, linkType }
-            : { item: { ...item, content: undefined }, linkType },
+            : {
+                item: { ...item, content: undefined, originalValue: undefined },
+                linkType,
+              },
         ),
       };
     },

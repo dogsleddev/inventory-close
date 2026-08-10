@@ -106,6 +106,36 @@ describe("3. restricted contract content withheld correctly", () => {
     }
   });
 
+  it("redacts EVERY copy of restricted content in lineage, not just `content`", () => {
+    // Found by the stage-08 adversarial suite. EvidenceItem carries the
+    // retrieved value twice — `content` and `originalValue` — and the
+    // fixture pipeline is an IDENTITY transformation, so they are
+    // byte-identical. Clearing one while spreading the other disclosed the
+    // whole restricted payload to any role holding evidence.read.
+    for (const role of ["WAREHOUSE", "SUPPLY_CHAIN", "FPA", "PREPARER"] as const) {
+      const lineage = queries.traceLineage(ctx(role), "EXC-001");
+      expect(lineage, `${role} cannot trace EXC-001`).toBeDefined();
+      for (const { item } of lineage!.evidence) {
+        if (item.sensitivity === "STANDARD") continue;
+        expect(item.content, `${role} read ${item.id}.content`).toBeUndefined();
+        expect(
+          item.originalValue,
+          `${role} read ${item.id}.originalValue`,
+        ).toBeUndefined();
+      }
+      // Nothing in the serialized lineage names a contract provision.
+      expect(JSON.stringify(lineage)).not.toMatch(/OWNERSHIP_TRANSFER|TITLE_RETENTION/);
+    }
+    // Not vacuous: a privileged role still receives both copies and the
+    // hashes are preserved for everyone.
+    const legal = queries.traceLineage(ctx("LEGAL"), "EXC-001");
+    expect(JSON.stringify(legal)).toMatch(/OWNERSHIP_TRANSFER/);
+    for (const { item } of queries.traceLineage(ctx("WAREHOUSE"), "EXC-001")!.evidence) {
+      expect(item.contentHash).toBeTruthy();
+      expect(item.originalHash).toBeTruthy();
+    }
+  });
+
   it("lineage traversal is not a side door around restricted content", () => {
     const asWarehouse = queries.traceLineage(ctx("WAREHOUSE"), "EXC-001");
     const contract = asWarehouse?.evidence.find((e) => e.item.sensitivity === "RESTRICTED");

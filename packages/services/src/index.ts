@@ -30,6 +30,7 @@ export type {
   SerialSearchHit,
   ServiceContext,
   SourceCoverageWarning,
+  ThirdPartyHolding,
 } from "./queries.js";
 export { hasProvidedVersion, versionsFor } from "./pbc.js";
 export type { PbcVersion, PbcVersionState } from "./pbc.js";
