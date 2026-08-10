@@ -6,6 +6,24 @@ import { afterEach } from "vitest";
 import { userByRole } from "@icg/data";
 import { OverviewScreen } from "../components/OverviewScreen";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
+import { askGaurdData } from "../lib/server/ask-view";
+import { getQueries, makeContext } from "../lib/server/workspace";
+
+/**
+ * Ask Gaurd reaches its answer through a server action. Replacing the action
+ * with a direct call to the same server function exercises the REAL engine
+ * and the real services — only the network boundary is removed.
+ */
+vi.mock("../app/actions", () => ({
+  setRole: vi.fn(async () => {}),
+  askGaurd: async (question: string, scope: { exceptionId?: string; serial?: string }) =>
+    askGaurdData(userByRole("CONTROLLER"), question, scope, "T-ASK"),
+}));
+
+function services() {
+  const user = userByRole("CONTROLLER");
+  return { queries: getQueries(), ctx: makeContext(user, "T-OVERVIEW") };
+}
 
 /**
  * Overview golden UI tests. The screen renders REAL service output (no
@@ -156,18 +174,23 @@ describe("Overview — role-aware surfaces (fail-visible, never silently empty)"
   });
 });
 
-describe("Overview — Ask Gaurd deterministic fallback (stage 05 shell)", () => {
-  it("answers with the deterministic blocker facts when AI is unavailable", async () => {
+describe("Overview — Ask Gaurd answers deterministically", () => {
+  it("answers the sign-off question from the close's own figures", async () => {
     const user = userEvent.setup();
+    const { queries, ctx } = services();
+    const blockers = queries.getBlockers(ctx);
     renderAs("CONTROLLER");
     await user.click(screen.getByRole("button", { name: "Ask Gaurd" }));
-    await user.click(screen.getByRole("button", { name: "What prevents sign-off?" }));
-    const drawer = within(screen.getByLabelText("Ask Gaurd", { selector: "aside" }));
-    expect(drawer.getByText("AI explanation unavailable")).toBeTruthy();
-    expect(drawer.getByText("7 blockers")).toBeTruthy();
-    expect(
-      drawer.getByText("EXC-001, EXC-002, EXC-003, EXC-004, EXC-007, EXC-011, EXC-015"),
-    ).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "What prevents Controller sign-off?" }));
+
+    const drawer = within(await screen.findByLabelText("Ask Gaurd", { selector: "aside" }));
+    expect(await drawer.findByText("Sign-off is blocked")).toBeTruthy();
+    expect(drawer.getByText(String(blockers.length))).toBeTruthy();
+    for (const b of blockers) {
+      expect(drawer.getAllByText(new RegExp(b.exceptionId)).length).toBeGreaterThan(0);
+    }
+    // No provider ran, and the drawer says so rather than implying one did.
+    expect(drawer.getByText(/None — deterministic answer/)).toBeTruthy();
     expect(drawer.getByText(/Chat input is not evidence/)).toBeTruthy();
   });
 });

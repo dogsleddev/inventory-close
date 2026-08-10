@@ -9,9 +9,11 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import type { ShellData } from "../lib/view-model";
+import type { AskResult, ShellData } from "../lib/view-model";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_KEY, type Theme } from "../lib/theme";
+import { AskGaurd, type AskState } from "./AskGaurd";
+import { askGaurd } from "../app/actions";
 
 /**
  * Application shell (design 01): nav rail, global header, workspace, and
@@ -40,13 +42,30 @@ export interface AppShellProps {
   readonly onCloseDrawer?: () => void;
   readonly askSuggestions: readonly string[];
   readonly askContext: string;
+  /** What "this" refers to when the drawer is opened on an object. */
+  readonly askScope?: { exceptionId?: string | undefined; serial?: string | undefined };
+  /**
+   * Defaults to the real server action, so every screen gets a working
+   * assistant without threading a prop through twelve components. Tests
+   * override it to answer without a server round trip.
+   */
+  readonly askAction?: (
+    question: string,
+    scope: { exceptionId?: string; serial?: string },
+  ) => Promise<AskResult>;
   readonly children: ReactNode;
 }
 
 export function AppShell(props: AppShellProps) {
   const { shell } = props;
   const [askOpen, setAskOpen] = useState(false);
-  const [asked, setAsked] = useState<string | null>(null);
+  /**
+   * The answer lives HERE, not inside Ask Gaurd, because opening an object
+   * drawer closes Ask Gaurd (drawer arbitration, §4). If the answer lived in
+   * the drawer, following a citation would destroy it — so it is lifted, and
+   * reopening Ask Gaurd shows the same answer again.
+   */
+  const [asked, setAsked] = useState<AskState | null>(null);
   const [roleOpen, setRoleOpen] = useState(false);
   const [, startTransition] = useTransition();
   const roleRef = useRef<HTMLDivElement | null>(null);
@@ -366,78 +385,14 @@ export function AppShell(props: AppShellProps) {
               ⟩
             </button>
           </div>
-          <div className="icg-ask-context">
-            <div className="icg-label icg-label--md">CONTEXT</div>
-            <div style={{ fontSize: "11.5px", marginTop: "2px" }}>{props.askContext}</div>
-          </div>
-          <div className="icg-ask-scroll">
-            <div className="icg-label icg-label--md">SUGGESTED</div>
-            {props.askSuggestions.map((q) => (
-              <button
-                key={q}
-                type="button"
-                className="icg-ask-suggestion"
-                onClick={() => setAsked(q)}
-              >
-                {q}
-              </button>
-            ))}
-            {asked !== null ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginTop: "4px" }}>
-                <div
-                  style={{
-                    alignSelf: "flex-end",
-                    maxWidth: "88%",
-                    background: "var(--panel-3)",
-                    borderRadius: "8px 8px 2px 8px",
-                    padding: "7px 11px",
-                    fontSize: "12px",
-                  }}
-                >
-                  {asked}
-                </div>
-                <div className="icg-state" role="status">
-                  <span
-                    className="icg-state-glyph icg-state-glyph--solid"
-                    style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
-                    aria-hidden
-                  >
-                    G
-                  </span>
-                  <div>
-                    <div className="icg-state-title">AI explanation unavailable</div>
-                    <div className="icg-state-note">
-                      The assistant arrives in a later stage. The deterministic answer stands
-                      {shell.askFallback !== null ? (
-                        <>
-                          : <strong>{shell.askFallback.blockerCount} blockers</strong> ·{" "}
-                          <strong className="icg-num">{shell.askFallback.exposure}</strong> ·{" "}
-                          <span className="icg-mono" style={{ fontSize: "10.5px" }}>
-                            {shell.askFallback.blockerIds}
-                          </span>
-                        </>
-                      ) : null}
-                      . Close work is unaffected.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <div className="icg-ask-input">
-            <div className="icg-ask-input-box">
-              <span style={{ fontSize: "11.5px", flex: 1 }} className="icg-quiet">
-                Ask about this close…
-              </span>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--frost)" }} aria-hidden>
-                →
-              </span>
-            </div>
-            <div className="icg-ask-disclaimer">
-              Investigation only, over authorized data. Chat input is not evidence; answers
-              are not approval.
-            </div>
-          </div>
+          <AskGaurd
+            context={props.askContext}
+            suggestions={props.askSuggestions}
+            scope={props.askScope ?? {}}
+            state={asked}
+            onState={setAsked}
+            askAction={props.askAction ?? askGaurd}
+          />
         </aside>
       ) : null}
 

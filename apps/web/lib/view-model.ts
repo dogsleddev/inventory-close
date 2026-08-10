@@ -45,6 +45,60 @@ export interface Restricted {
 }
 export const RESTRICTED: Restricted = { restricted: true };
 
+/* ------------------------------------------------------------------ */
+/* Stage 08 — Ask Gaurd                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One rendered figure. The value arrives from @icg/ai as integer cents or
+ * basis points and is formatted HERE, so the assistant and the screens can
+ * never disagree about what a number looks like.
+ */
+export interface AskFigure {
+  readonly label: string;
+  readonly value: string;
+}
+
+export interface AskCitation {
+  readonly label: string;
+  readonly href: string | null;
+  readonly missing: boolean;
+}
+
+/** The material-answer contract (docs/09), pre-formatted and JSON-safe. */
+export interface AskAnswerView {
+  readonly question: string;
+  readonly mode: string;
+  readonly status: string;
+  readonly knownFacts: readonly AskFigure[];
+  readonly conflictingEvidence: readonly string[];
+  readonly missingEvidence: readonly string[];
+  readonly assertions: readonly string[];
+  readonly exposure: AskFigure | null;
+  readonly managementConclusion: string;
+  readonly nextAction: string;
+  readonly citations: readonly AskCitation[];
+  /** Provider prose, when a provider ran AND its output passed guardrails. */
+  readonly narration: string | null;
+}
+
+export interface AskRefusalView {
+  readonly question: string;
+  readonly reason: string;
+  readonly title: string;
+  readonly message: string;
+  readonly stillVisible: readonly string[];
+}
+
+/** Exactly one of `answer` / `refusal` is set — never both, never neither. */
+export interface AskResult {
+  readonly answer: AskAnswerView | null;
+  readonly refusal: AskRefusalView | null;
+  /** Which tools ran, for the Audit Details line under the answer. */
+  readonly toolsUsed: readonly string[];
+  readonly versions: readonly { readonly k: string; readonly v: string }[];
+}
+
 export interface KpiTile {
   readonly label: string;
   readonly value: string;

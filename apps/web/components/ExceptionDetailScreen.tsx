@@ -56,12 +56,18 @@ export function ExceptionDetailScreen({
         <EvidenceDrawerPanel key={record.id} record={record} onClose={() => setEvidenceId(null)} />
       ) : undefined,
     askSuggestions: [
-      "Why is this open?",
+      // The design's exact demo question, carrying the unit's own serial
+      // (prompts/design/06: "Why is KE-E2-1048 still open?").
+      data.header?.primarySerial != null
+        ? `Why is ${data.header.primarySerial} still open?`
+        : "Why is this still open?",
       "What evidence is missing?",
       "What does NetSuite say?",
       "Which assertions are affected?",
     ],
     askContext: `${data.id} · ${data.header?.primarySerial ?? ""}`.trim(),
+    // "Why is this still open?" resolves against THIS exception.
+    askScope: { exceptionId: data.id },
   } as const;
 
   if (data.restricted || !data.found || data.header === undefined) {

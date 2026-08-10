@@ -44,10 +44,13 @@ export function OverviewScreen({
           <ExceptionDrawer data={drawerData} onClose={() => setOpenId(null)} />
         ) : undefined
       }
+      // The five defaults from prompts/design/06 Part B.
       askSuggestions={[
-        "What prevents sign-off?",
-        "Does inventory tie to the GL?",
-        "What is unsupported at third parties?",
+        "What prevents Controller sign-off?",
+        "Why doesn't inventory tie?",
+        "Show largest unresolved exposures.",
+        "Which evidence is still missing?",
+        "Which PBC items are not ready?",
       ]}
       askContext="FY2026 Inventory Close · Overview"
     >

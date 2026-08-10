@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
+    "@icg/ai": "workspace:*",
     "@icg/data": "workspace:*",
     "@icg/domain": "workspace:*",
     "@icg/rules": "workspace:*",

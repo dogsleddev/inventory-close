@@ -57,6 +57,7 @@ export function FinancialLifeScreen({
       "Which evidence is missing?",
     ],
     askContext: `${data.serial} · Financial Life`,
+    askScope: { serial: data.serial },
   } as const;
 
   if (data.restricted || !data.found) {
