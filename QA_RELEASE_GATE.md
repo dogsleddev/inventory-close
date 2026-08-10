@@ -12,11 +12,11 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 | | |
 |---|---|
-| Commit | `30494c0` (stage 09 + full-tree review remediation) |
-| Suite | **597 tests across 44 files, all passing** |
-| Typecheck / lint / build | green (`pnpm -r run typecheck` + `tsc -p test/tsconfig.json`, `eslint .`, `next build`) |
+| Commit | `1c85866` (stage 10 + its verification remediation) |
+| Suite | **607 tests across 44 files, all passing** |
+| Typecheck / lint / build | green (`pnpm -r run typecheck` + `tsc -p test/tsconfig.json`, `eslint .`, `next build` — 14 routes) |
 | Dataset hash | `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06` |
-| Adversarial review | full tree, 12 lenses × 37 agents — 12 raw → **5 confirmed / 4 contested / 3 refuted**, all 9 fixed |
+| Adversarial reviews | full tree at `f3f6f98` (12 lenses / 37 agents → 9 fixed) and the stage-10 public-surface fleet at `e3c952e` (7 lenses / 76 agents → 34 raw, **20 confirmed / 9 contested / 5 refuted**, 27 fixed) |
 
 > The run id and output hash changed at `30494c0`: run identity now binds every
 > controlled input `docs/16` names (it previously bound only the dataset hash, the
@@ -104,6 +104,33 @@ the failure occur. Recorded so they are not re-litigated.
 **The one thin area:** no lens performed a real WCAG/keyboard/contrast audit. The a11y
 lens checked the interaction contract (row activation, drawer focus, touch targets) and
 test quality, which is narrower than accessibility. Worth a dedicated pass in stage 10.
+
+---
+
+## Stage-10 public-surface verification (7 lenses, 76 agents, at `e3c952e`)
+
+The dedicated pass the full-tree review owed: public-copy boundaries, README truthfulness,
+WCAG/keyboard/contrast, responsive degradation at real viewports, the demo path, and
+deployment readiness. 34 raw findings → 20 confirmed, 9 contested (7 adjudicated real),
+5 refuted. All 27 real defects fixed in `1c85866`. The synthesis named the pattern:
+**the repository's claims were more precise than its enforcement** — every defect was a
+document, copy string, or stylesheet asserting a guarantee the tree did not mechanically
+hold. Nothing was found against a financial figure, a permission, or a determinism claim.
+
+The load-bearing fixes: the README and the Ask Gaurd availability note both attributed
+*conclusions* to software (the one boundary the product defines itself against — both were
+single-word edits); half the credential scan named config files that did not exist and
+`collect()` swallowed the miss; the SYNTHETIC DEMO disclosure rendered under the header
+KPIs at 1366×768; the sign-off gate's six headline figures rendered at zero width on a
+phone; all 13 nav links were nameless below 1280px (WCAG 4.1.2 Level A); and the `<1024`
+read-only rule was defeated by an inline style — and then nearly again by the fix's own
+selector specificity, which is why the regression pins the mechanism, not the instance.
+
+**Still open, deliberately (P2):** the Ask Gaurd drawer behaves modally (tab trap) but
+carries `complementary` semantics with no `aria-modal`/`inert` — the stage-05 interaction
+contract pins the current shape, so this needs a design decision rather than a patch.
+Git history was verified clean of credential shapes (`git log --all -p`), but the
+permanent scan covers only the working tree.
 
 ---
 

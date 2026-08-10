@@ -10,22 +10,22 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
 
 ## 0. Start here
 
-**The next task is code stage 10 — final polish and deployment.** Stage 09 is committed, the
-whole build has been adversarially reviewed, and the release gate is recorded in
-`QA_RELEASE_GATE.md` (no P0 open).
+**All ten code stages are COMPLETE.** Stage 10 (public README, User Guide, deployment
+config) and its public-surface verification fleet are committed; the release gate is
+recorded in `QA_RELEASE_GATE.md` (no P0 open). The one decision still owed is the
+**LICENSE** — the repo has none, which means a public push grants nobody any rights; that
+choice belongs to the owner and was deliberately not made by the build.
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **597 tests passing**. **Stop any `pnpm dev` server first** (see §7).
-3. Follow `prompts/code/10_FINAL_POLISH_AND_DEPLOYMENT.md`. All figures come from
-   `@icg/services`; no accounting logic in components or prompts; no hard-coded totals.
+   **607 tests passing**. **Stop any `pnpm dev` server first** (see §7).
 
-**The full-tree review is done** (`30494c0`): 12 lenses over stages 01–09, 12 raw findings →
-5 confirmed / 4 contested / 3 refuted, all nine real ones fixed. Eight of the twelve lenses
-examined their area and found nothing — see `QA_RELEASE_GATE.md` for which, because that is a
-result worth having and not a gap to re-investigate.
+**Both adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
+eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
+public surface at `e3c952e` (7 lenses, 76 agents, 27 fixed — public copy, WCAG, responsive,
+deployment). See `QA_RELEASE_GATE.md` for both records.
 
 ---
 
@@ -52,7 +52,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **597 tests across 44 files passing**; typecheck, lint, and production build all green.
+- **607 tests across 44 files passing**; typecheck, lint, and production build all green
+  (14 routes).
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
@@ -78,11 +79,15 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 08 Ask Gaurd | Done + fleet-reviewed (`2eaab1e`, `e343f2e`, `4552c9b`) — tools, deterministic answers, guardrails, drawer |
 | Code 09 Reset/Replay/QA | Done + fleet-reviewed (`38a115c`, `30494c0`) — Reset + Reproduce Close controls, package manifest, `/cutoff` + `/ownership`, `?tab=` deep links, AI-off statement, repo-wide QA scans, `QA_RELEASE_GATE.md` |
 | Full-tree review | Done (`30494c0`) — stages 01–09 reviewed together; 9 defects fixed |
-| Code 10 | Not started. **Final polish / deployment is next** — see §8. |
+| Code 10 Polish/Public/Deploy | Done + fleet-verified (`e3c952e`, `1c85866`) — public README, User Guide, `.env.example`, `apps/web/vercel.json`, `.gitattributes`, 27 verification defects fixed |
+| Remaining | **LICENSE decision** (owner's call), then push/deploy — see §8. |
 
 ### Commit history (newest first)
 
 ```
+1c85866 Stage 10 verification remediation: 27 defects fixed
+e3c952e Code stage 10: public README, User Guide, deployment config
+64d0819 Record the full-tree review outcome and the invariants it established
 30494c0 Full-tree review remediation: 9 defects fixed
 f3f6f98 Refresh SESSION_HANDOFF.md for code stage 10
 38a115c Code stage 09: demo reset, replay, deep routes, and the QA release gate
@@ -373,10 +378,38 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Run the stage-09 fleet review** against `38a115c` (§6). Every stage so far has produced
-   confirmed defects; stage 09 has not been reviewed.
-2. **Code 10 — final polish and deployment.** Note stage 10 edits the manifest-covered root
-   `README.md`; see the `SPEC_MANIFEST.json` trap in §7.
+1. **Choose a LICENSE** (owner's decision) — without one, a public repository grants nobody
+   any rights, which defeats publishing. Then push to a public remote.
+2. **Deploy**: on Vercel, set the project Root Directory to `apps/web`; no environment
+   variables exist. `apps/web/vercel.json` carries the security headers.
+3. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
+   with the pinned stage-05 `complementary` contract, needs a design decision); a
+   git-history credential scan in `test/` (history was verified clean by hand, but the
+   permanent scan covers only the working tree); dark-theme capsule-contrast audit
+   (light was measured and fixed; dark passed spot checks).
+
+**What the stage-10 verification established that must not be undone (`1c85866`):**
+
+- **Conclusions are never attributed to software.** Figures and statuses are derived;
+  conclusions are recorded by people. Both the README thesis and the Ask Gaurd
+  availability note carried the four-noun version ("figure, status, conclusion and
+  citation"); the three-noun version is now pinned on both surfaces.
+- **The read-only rule's mechanism is unqualified-selector + file-order.** An inline
+  `display` defeated `.icg-action-conclude { display: none }`; the first fix recreated
+  the same defeat via `div.`-qualified specificity. The regression pins the mechanism.
+- **A scan that names a file must fail when the file is missing.** The credential scan's
+  config roots listed `.js`/`.ts` names for `.mjs` files and covered nothing for a stage;
+  `CONFIG_ROOTS` now has an existence assertion.
+- **Every wide band collapses below 1024** — the `MUST_COLLAPSE` list in
+  `fulltree-regressions.test.tsx` is the contract; a new multi-column band joins it. No
+  inline `gridTemplateColumns` may carry ≥240px of fixed track (same test).
+- **Nav labels leave the layout via the clip pattern, never `display:none`** — all 13
+  links were nameless below 1280 (WCAG 4.1.2 A).
+- **`--quiet` and the `*-text` accent tokens are AA-measured.** The disclaimers render in
+  `--quiet`; the capsules and risk-high text use `--ember-text`/`--aurora-text`/
+  `--frost-text`/`--warn-text`, computed against their own tinted chips.
+- **The SYNTHETIC DEMO tag wraps, never overlaps** — it is the mandated disclosure, and
+  it was illegible at 1366×768, the most common laptop width.
 
 **What the full-tree review established that later stages must not undo (`30494c0`):**
 
