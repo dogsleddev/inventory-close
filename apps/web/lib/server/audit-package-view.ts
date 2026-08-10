@@ -314,7 +314,19 @@ export function buildAuditPackageData(
       ],
       workpaper: {
         lineage,
-        note: "Every figure in this workpaper traces to a source record. Follow one without leaving the product.",
+        // The note states only what the rendered trace shows. Six of the 21
+        // workpapers depend on a close-state slice rather than an exception,
+        // so their trace is one node — asserting "every figure traces to a
+        // source record" over that would be the claim-over-proxy defect this
+        // build keeps hunting, on the screen whose pitch is traceability.
+        note: (() => {
+          if (lineage.length > 1)
+            return "This workpaper's figures trace from the request through the close exception to the source records shown here.";
+          const slices = selected.dependsOn.filter((dep) => !dep.startsWith("EXC-"));
+          return slices.length > 0
+            ? `${selected.id} is prepared against the ${slices.join(", ")} close-state slice${slices.length === 1 ? "" : "s"}, not against an exception, so it has no exception-to-source path to draw.`
+            : `${selected.id} has no traceable path to show here.`;
+        })(),
         terminates,
         // The chain has related exceptions but none of them resolved to a
         // lineage: the path was truncated by SCOPE, not by the data ending.

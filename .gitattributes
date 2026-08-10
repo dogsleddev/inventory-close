@@ -1,0 +1,6 @@
+# Line endings are part of this repository's identity: SPEC_MANIFEST.json pins
+# the sha256 of 44 spec files, and Git for Windows' installer default
+# (core.autocrlf=true) rewrites every text file to CRLF on checkout — which
+# mismatches all 44 hashes on a byte-identical clone. Every tracked file is
+# text, so one rule normalizes the lot.
+* text=auto eol=lf

@@ -974,11 +974,8 @@ function SerialIntegrityCard({
             {card.chainRows.map((row) => (
               <div
                 key={row.type + row.value}
+                className="icg-chainrow-grid"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "150px 1fr 130px",
-                  gap: "10px",
-                  alignItems: "baseline",
                   padding: "6px 0",
                   borderBottom: "1px solid var(--hair)",
                   color: row.missing ? "var(--ember)" : undefined,

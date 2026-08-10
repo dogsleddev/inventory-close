@@ -262,8 +262,15 @@ export function withNarration(
  * There is no provider bound in this product, so "AI unavailable" is not a
  * degraded mode to fall back to — it is the running mode. What the reader
  * needs to know is that nothing in the answer came from a model: every
- * figure, status, conclusion and citation was read from a tool result, and
- * the only field a provider could ever write is narration.
+ * figure, status and citation was read from a tool result, and the only
+ * field a provider could ever write is narration.
+ *
+ * "Conclusion" is deliberately NOT in that list. The management conclusion
+ * sentence is authored prose in answers.ts describing what the close state
+ * holds (usually that no conclusion has been recorded) — attributing it to
+ * a tool result would claim provenance it does not have, in the same breath
+ * the note uses to establish provenance. The same three-noun wording ships
+ * on the User Guide; the two must not drift apart again.
  */
 export interface AiAvailability {
   readonly providerBound: boolean;
@@ -278,9 +285,9 @@ export function describeAvailability(interaction: AiInteraction): AiAvailability
     providerBound,
     narrationAvailable,
     note: !providerBound
-      ? "No language model is bound. Every figure, status, conclusion and citation in this answer was read from a tool result, so the answer is identical with AI unavailable."
+      ? "No language model is bound. Every figure, status and citation in this answer was read from a tool result, so the answer is identical with AI unavailable."
       : narrationAvailable
-        ? "A provider added the explanatory prose only. Every figure, status, conclusion and citation was read from a tool result."
+        ? "A provider added the explanatory prose only. Every figure, status and citation was read from a tool result."
         : "The provider's prose was withheld by the guardrails. The answer below is unchanged — narration is the only thing a provider can contribute.",
   };
 }

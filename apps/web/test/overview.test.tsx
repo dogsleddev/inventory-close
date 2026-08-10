@@ -75,7 +75,10 @@ describe("Overview — 10-second acceptance (canonical figures above the fold)",
 
   it("routes the primary CTA to EXC-001 (the 60-second demo path)", () => {
     renderAs("CONTROLLER");
-    const cta = screen.getByRole("link", { name: "Review highest-risk cutoff item" });
+    // "Signature", not "highest-risk": the product's own ranked panels put
+    // EXC-002 above EXC-001 on this very screen, so the superlative was a
+    // claim the screen itself contradicted one scroll below.
+    const cta = screen.getByRole("link", { name: "Review the signature cutoff item" });
     expect(cta.getAttribute("href")).toBe("/exceptions/EXC-001");
   });
 });

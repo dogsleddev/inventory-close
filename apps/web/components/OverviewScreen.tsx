@@ -113,11 +113,13 @@ export function OverviewScreen({
                     className="icg-btn icg-btn--primary"
                     style={{ display: "inline-flex", alignItems: "center" }}
                   >
-                    Review highest-risk cutoff item
+                    Review the signature cutoff item
                   </Link>
+                  {/* No inline `display` — see the read-only rule note on
+                      the exception screen. */}
                   <div
                     className="icg-action-conclude"
-                    style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+                    style={{ flexDirection: "column", gap: "2px" }}
                   >
                     <button type="button" className="icg-btn icg-btn--disabled" disabled>
                       Record management sign-off

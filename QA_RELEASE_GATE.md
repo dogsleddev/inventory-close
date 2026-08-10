@@ -120,5 +120,6 @@ test quality, which is narrower than accessibility. Worth a dedicated pass in st
   nothing in this product records what an audit team concluded.
 - **Nothing is posted.** `posted` is structurally `false`, `postedCount` is typed `0`, and no
   command service method writes to any source system.
-- **`/evidence`, `/assumptions` and `/user-guide` remain the shell's not-designed state.**
-  They are P2 in `docs/13`; the demo path does not traverse them.
+- **`/evidence` and `/assumptions` remain the shell's not-designed state.** They are P2 in
+  `docs/13`; the demo path does not traverse them. `/user-guide` was built in stage 10 —
+  the rail's START HERE badge now lands on a real page.

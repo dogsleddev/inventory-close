@@ -19,12 +19,19 @@
   --ink: #0e1116;
   --inv: #f7f0de;
   --soft: rgba(14, 17, 22, 0.62);
-  --quiet: rgba(14, 17, 22, 0.42);
+  --quiet: rgba(14, 17, 22, 0.6); /* AA: 4.76 on panel, 4.57 on bg */
   --hair: rgba(14, 17, 22, 0.14);
   --hair-2: rgba(14, 17, 22, 0.24);
   --ember: #c25431;
   --ember-strong: #96351b;
   --ember-bg: rgba(194, 84, 49, 0.1);
+  /* Small-text variants: the raw accents sit at 3.1-3.9:1 on their tinted
+     chips in this light palette. Chips and risk text use these; large
+     numerals and borders keep the brand accents. */
+  --ember-text: #a03f20;
+  --aurora-text: #1d6b52;
+  --frost-text: #3a607f;
+  --warn-text: #6f4f16;
   --ember-line: rgba(194, 84, 49, 0.38);
   --aurora: #2a8e6d;
   --aurora-bg: rgba(42, 142, 109, 0.12);
@@ -53,12 +60,17 @@
   --ink: #f2ead8;
   --inv: #0e1116;
   --soft: rgba(242, 234, 216, 0.62);
-  --quiet: rgba(242, 234, 216, 0.45);
+  --quiet: rgba(242, 234, 216, 0.58); /* AA on both dark surfaces */
   --hair: rgba(242, 234, 216, 0.12);
   --hair-2: rgba(242, 234, 216, 0.22);
   --ember: #e66a3c;
   --ember-strong: #f0906b;
   --ember-bg: rgba(230, 106, 60, 0.14);
+  /* Dark accents already clear AA on their tints. */
+  --ember-text: var(--ember);
+  --aurora-text: var(--aurora);
+  --frost-text: var(--frost);
+  --warn-text: var(--warn);
   --ember-line: rgba(230, 106, 60, 0.42);
   --aurora: #6fe0b4;
   --aurora-bg: rgba(111, 224, 180, 0.12);
@@ -329,12 +341,20 @@ button {
   align-items: center;
   gap: 14px;
   flex-shrink: 0;
+  /* Lets .icg-header-right drop to its own row at phone widths instead of
+     being clipped off the app frame (Reset Demo lives there). */
+  flex-wrap: wrap;
 }
 .icg-crumbs {
   display: flex;
   align-items: baseline;
   gap: 10px;
   min-width: 0;
+  /* Children are nowrap; without this they SPILL under the header KPIs at
+     ~1366px and the SYNTHETIC DEMO disclosure becomes illegible. Wrapping
+     is inert when everything fits. */
+  flex-wrap: wrap;
+  row-gap: 2px;
 }
 .icg-crumb-org {
   font-family: var(--font-mono);
@@ -630,25 +650,25 @@ button {
 }
 .icg-capsule--waiting {
   background: var(--warn-bg);
-  color: var(--warn);
+  color: var(--warn-text);
 }
 .icg-capsule--review {
   background: var(--frost-bg);
-  color: var(--frost);
+  color: var(--frost-text);
 }
 .icg-capsule--resolved {
   background: var(--aurora-bg);
-  color: var(--aurora);
+  color: var(--aurora-text);
 }
 /* Proposed-vs-posted rule: a proposal never inherits a posted treatment. */
 .icg-capsule--proposed {
   background: var(--aurora-bg);
-  color: var(--aurora);
+  color: var(--aurora-text);
   border: 1px dashed var(--aurora-line);
 }
 .icg-capsule--attention {
   background: var(--warn-bg);
-  color: var(--warn);
+  color: var(--warn-text);
 }
 
 /* ============ Risk indicator (plain text weight, never a filled badge) ==== */
@@ -666,7 +686,7 @@ button {
   color: var(--ember-strong);
 }
 .icg-risk--high {
-  color: var(--ember);
+  color: var(--ember-text);
 }
 .icg-risk--medium {
   color: var(--warn);
@@ -2158,6 +2178,13 @@ a.icg-ask-cite:hover {
   min-width: 260px;
   background: var(--panel);
 }
+/* The inner input's outline is suppressed, so the CONTAINER must carry the
+   focus ring — same pattern as .icg-ask-input-box. The one outline:none in
+   this file is only legal because of this rule. */
+.icg-lookup:focus-within {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
+}
 .icg-lookup input {
   border: none;
   background: transparent;
@@ -2188,14 +2215,14 @@ a.icg-ask-cite:hover {
   border-radius: 4px;
   border: none;
   background: var(--frost-bg);
-  color: var(--frost);
+  color: var(--frost-text);
 }
 button.icg-close-capsule {
   cursor: pointer;
 }
 .icg-close-capsule--aurora {
   background: var(--aurora-bg);
-  color: var(--aurora);
+  color: var(--aurora-text);
 }
 
 /* Evidence-chain row (Financial Life right column). */
@@ -2277,6 +2304,25 @@ button.icg-close-capsule {
   font-size: 9px;
   color: var(--quiet);
   white-space: nowrap;
+}
+
+/* Conclusion / evidence-request action clusters. The display lives HERE and
+   never inline: the <1024 read-only rule removes these, and an inline
+   `display` would outrank it silently. */
+/* Unqualified on purpose: the <1024 read-only override must win on file
+   order, and a more specific selector here would defeat it exactly the way
+   the inline style did. */
+.icg-action-conclude {
+  display: flex;
+}
+
+/* Serial-integrity chain rows: type · value · state. The tracks live here,
+   not inline, so the phone breakpoint can restack them. */
+.icg-chainrow-grid {
+  display: grid;
+  grid-template-columns: 150px 1fr 130px;
+  gap: 10px;
+  align-items: baseline;
 }
 
 /* ============ Demo controls, AI state, package manifest (stage 09) ============ */
@@ -2390,12 +2436,26 @@ button.icg-close-capsule {
   }
   .icg-rail-brand-name,
   .icg-rail-company,
-  .icg-nav-label,
   .icg-nav-badge,
   .icg-nav-start,
   .icg-rail-health,
   .icg-rail-user-meta {
     display: none;
+  }
+  /* The label leaves the LAYOUT, never the accessibility tree: display:none
+     here made all 13 nav links nameless below 1280 (WCAG 4.1.2). The number
+     is the sole visible identifier in the collapsed rail, so it also stops
+     being decorative-contrast. */
+  .icg-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .icg-nav-num {
+    color: rgba(242, 234, 216, 0.72);
   }
   .icg-split {
     grid-template-columns: 1fr;
@@ -2443,6 +2503,47 @@ button.icg-close-capsule {
      evidence-request actions are removed, not disabled. */
   .icg-action-conclude {
     display: none;
+  }
+  /* Every multi-column band collapses here. Missing rules did not "degrade"
+     these panels — grid tracks resolved to 0px and the sign-off gate's six
+     headline figures were clipped away entirely at phone widths. */
+  .icg-gate,
+  .icg-three-layer,
+  .icg-split {
+    grid-template-columns: 1fr;
+  }
+  .icg-kpis,
+  .icg-kpis--quad,
+  .icg-kpis--narrow,
+  .icg-layer-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* The chain keeps its reading order and wraps; proportional node widths
+     are a desktop metaphor, legibility is the phone requirement. */
+  .icg-chain {
+    flex-wrap: wrap;
+  }
+  .icg-chain > * {
+    min-width: 148px;
+  }
+  .icg-chainrow-grid {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  /* The header control cluster is wider than a phone. It wraps within
+     itself rather than running off the clipped app frame — Reset Demo and
+     the theme toggle must stay reachable (README and the guide point at
+     them). */
+  .icg-header-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 6px;
+    min-width: 0;
+    /* As a flex item it sizes to max-content (~550px), so without a
+       ceiling its own wrap never engages and the controls run off the
+       frame anyway. */
+    max-width: 100%;
+    flex-shrink: 1;
   }
   /* A drawer OVERLAYS the workspace here instead of sitting beside it. As
      a static flex sibling it is 320–340px of a 375px row, which left the

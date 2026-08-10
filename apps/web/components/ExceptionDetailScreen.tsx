@@ -109,12 +109,16 @@ export function ExceptionDetailScreen({
         {/* 1 · Header / status — the screen's one decision panel */}
         <Panel decision>
           <div
-            style={{
-              padding: "14px 18px",
-              display: "grid",
-              gridTemplateColumns: record !== undefined ? "1fr" : "1fr 300px",
-              gap: "20px",
-            }}
+            className="icg-split"
+            style={
+              {
+                padding: "14px 18px",
+                gap: "20px",
+                // Only the ratio inline — the breakpoints must still be able
+                // to collapse this split (icg.css responsive contract).
+                "--icg-split-cols": record !== undefined ? "1fr" : "1fr 300px",
+              } as CSSProperties
+            }
           >
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
@@ -247,9 +251,12 @@ export function ExceptionDetailScreen({
                   {h.nextActionParty}
                 </div>
               </div>
+              {/* No inline `display`: it would outrank the <1024 read-only
+                  rule (.icg-action-conclude { display: none }), which must
+                  REMOVE these actions, not merely intend to. */}
               <div
                 className="icg-action-conclude"
-                style={{ display: "flex", gap: "7px", marginTop: "2px" }}
+                style={{ gap: "7px", marginTop: "2px" }}
               >
                 <button type="button" className="icg-btn icg-btn--primary">
                   Record conclusion
@@ -486,12 +493,14 @@ export function ExceptionDetailScreen({
         {data.whyFlagged !== undefined ? (
           <Panel>
             <div
-              style={{
-                padding: "14px 18px",
-                display: "grid",
-                gridTemplateColumns: record !== undefined ? "1fr" : "1fr 340px",
-                gap: "20px",
-              }}
+              className="icg-split"
+              style={
+                {
+                  padding: "14px 18px",
+                  gap: "20px",
+                  "--icg-split-cols": record !== undefined ? "1fr" : "1fr 340px",
+                } as CSSProperties
+              }
             >
               <div>
                 <h2 className="icg-panel-title">Why this was flagged</h2>

@@ -27,7 +27,7 @@ const DEMO_STEPS: readonly { step: string; where: string; href: string; what: st
     step: "2",
     where: "EXC-001",
     href: "/exceptions/EXC-001",
-    what: "The highest-risk cutoff item, opened from the Overview's primary action.",
+    what: "The signature cutoff exception, opened from the Overview's primary action.",
   },
   {
     step: "3",
@@ -39,7 +39,7 @@ const DEMO_STEPS: readonly { step: string; where: string; href: string; what: st
     step: "4",
     where: "Transaction chain",
     href: "/exceptions/EXC-001",
-    what: "Component coverage of the commercial chain, with the missing contract drawn largest. Completeness is a count, never a confidence score.",
+    what: "Component coverage of the commercial chain, with the missing contract drawn in ember dash. Completeness is a count, never a confidence score.",
   },
   {
     step: "5",

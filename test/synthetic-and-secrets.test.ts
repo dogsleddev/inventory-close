@@ -14,12 +14,38 @@ import { collect, SHIPPED_SOURCE_ROOTS, SOURCE_EXTENSIONS } from "./repo-scan";
 
 const dataset = buildDataset();
 const source = collect(SHIPPED_SOURCE_ROOTS, SOURCE_EXTENSIONS);
-const config = collect(
-  ["package.json", "vitest.config.ts", "eslint.config.js", "apps/web/next.config.ts"],
-  [".json", ".ts", ".js"],
-);
+
+/**
+ * Configuration files, enumerated by exact path. The first version of this
+ * list named `eslint.config.js` and `apps/web/next.config.ts` — neither
+ * exists (the real files are `.mjs`) — and `collect()` swallowed the miss,
+ * so half the credential scan silently covered nothing while two public
+ * documents claimed it covered everything. Hence the existence assertion
+ * below: a renamed config must fail this file, never fall out of it.
+ */
+const CONFIG_ROOTS = [
+  "package.json",
+  "vitest.config.ts",
+  "eslint.config.mjs",
+  "apps/web/next.config.mjs",
+  "apps/web/vercel.json",
+  ".env.example",
+  ".gitattributes",
+];
+const config = collect(CONFIG_ROOTS, [".json", ".ts", ".js", ".mjs", ".example", ".gitattributes"]);
 
 const files = [...source, ...config];
+
+describe("the config half of the scan covers what it names", () => {
+  it("resolves every enumerated config root", () => {
+    for (const root of CONFIG_ROOTS) {
+      expect(
+        config.some((f) => f.path === root),
+        `${root} did not resolve — the credential scan silently lost a file it claims to cover`,
+      ).toBe(true);
+    }
+  });
+});
 
 function scan(pattern: RegExp): string[] {
   const found: string[] = [];
@@ -56,9 +82,19 @@ describe("nothing in the tree is a credential", () => {
 
   it("binds no AI provider and reads no provider credential", () => {
     // The close works with AI off because there is nothing to turn on:
-    // no provider SDK is imported and no key is read anywhere.
-    expect(scan(/process\.env\.[A-Z_]*(?:KEY|SECRET|TOKEN)/g)).toEqual([]);
-    expect(scan(/@anthropic-ai\/|\bopenai\b/gi)).toEqual([]);
+    // no provider SDK is imported and no key is read anywhere. ONE file may
+    // name the SDKs: eslint.config.mjs, which bans them — the enforcement
+    // site is exempted by exact path so a dependency added to any
+    // package.json still trips the scan.
+    const enforcementSite = "eslint.config.mjs";
+    const hits = (pattern: RegExp) =>
+      scan(pattern).filter((h) => !h.startsWith(`${enforcementSite}:`));
+    expect(hits(/process\.env\.[A-Z_]*(?:KEY|SECRET|TOKEN)/g)).toEqual([]);
+    expect(hits(/@anthropic-ai\/|\bopenai\b/gi)).toEqual([]);
+    // And the exemption itself must stay a ban, not become an import.
+    const eslintConfig = files.find((f) => f.path === enforcementSite);
+    expect(eslintConfig?.text).toMatch(/no-restricted|paths|patterns/);
+    expect(eslintConfig?.text).not.toMatch(/from\s+["']@anthropic-ai\//);
   });
 });
 

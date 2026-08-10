@@ -33,8 +33,9 @@ Software does not resolve that. A controller does.
 
 ### Deterministic Core, Generative Edge
 
-Every figure, status and conclusion is produced by versioned, pure rule functions over an
-immutable dataset. The assistant may *explain* a control result; it may never *create* one.
+Every figure and status is produced by versioned, pure rule functions over an immutable
+dataset; conclusions are recorded by people, and the software never records one for them.
+The assistant may *explain* a control result; it may never *create* one.
 No AI provider is bound anywhere in this repository — Ask Gaurd's answers are read from the
 same services the screens use, so the product behaves identically with AI unavailable, and
 the UI says so on every answer.
@@ -95,10 +96,15 @@ packages/
   audit           Append-only audit log — no update or delete API exists.
   services        Query and command services, demo reset, redaction, PBC versions, replay.
   ai              Ask Gaurd: approved tools, deterministic answer engine, guardrails.
+  mcp             Deliberately inert placeholder for a future MCP adapter. Nothing imports it.
 ```
 
-Dependency direction is enforced by lint and tests: **UI / Ask Gaurd → services → domain and
-rules → repositories**. Money is integer cents; readiness is integer basis points. Rules are
+The intended dependency direction is **UI / Ask Gaurd → services → domain and rules →
+repositories**. The deterministic core's half is lint- and test-enforced — `domain` imports
+no other `@icg` package and `rules` imports `domain` only, with a dependency allowlist and a
+relative-path-escape scan; the web app's discipline (components read services, never rules)
+is held by review and by the view-model layer rather than by a lint rule. Money is integer
+cents; readiness is integer basis points. Rules are
 pure — no clocks, no randomness, no I/O — and return PASS / FAIL / REVIEW_REQUIRED /
 INCOMPLETE / NOT_APPLICABLE with evidence coverage tracked separately. **Missing required
 evidence never becomes PASS.**
@@ -122,6 +128,13 @@ only and explains why the list is empty.
 pnpm --filter @icg/web build && pnpm --filter @icg/web start   # production
 ```
 
+### Deploying
+
+The app deploys anywhere Next.js runs. On Vercel: import the repository, set the project's
+**Root Directory to `apps/web`**, and deploy — the workspace install runs from the repo root
+automatically, `apps/web/vercel.json` carries the security headers, and there are no
+environment variables to configure.
+
 ---
 
 ## Testing
@@ -136,9 +149,9 @@ matrix from `docs/14_QA_ACCEPTANCE_CRITERIA.md` with the test evidence for each 
 Beyond the usual unit and UI coverage, the suite pins the things that make this product what
 it claims to be: the golden accounting scenarios and every locked control total, dataset
 reproducibility byte-for-byte from the seed, the read-only NetSuite boundary, permissions and
-segregation of duties, adversarial Ask Gaurd tests, and repo-wide scans under `test/` that
-fail the build if any identifier in shipped source has gone stale or if anything
-credential-shaped appears.
+segregation of duties, adversarial Ask Gaurd tests, and scans under `test/` that fail
+`pnpm test` if any identifier in shipped source has gone stale or if anything
+credential-shaped appears in the shipped source and configuration files they enumerate.
 
 ---
 
