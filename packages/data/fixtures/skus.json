@@ -1,0 +1,86 @@
+[
+  {
+    "code": "KE-I1",
+    "description": "KestrelEdge I1 Indoor Node",
+    "unitCostCents": 70000,
+    "serialized": true
+  },
+  {
+    "code": "KE-M1",
+    "description": "KestrelEdge M1 Mast Unit",
+    "unitCostCents": 135000,
+    "serialized": true
+  },
+  {
+    "code": "KE-S1",
+    "description": "KestrelEdge S1 Sensor Array",
+    "unitCostCents": 240000,
+    "serialized": true
+  },
+  {
+    "code": "KE-E1",
+    "description": "KestrelEdge E1 Edge Server",
+    "unitCostCents": 490000,
+    "serialized": true
+  },
+  {
+    "code": "KE-E2",
+    "description": "KestrelEdge E2 Edge Server",
+    "unitCostCents": 740000,
+    "serialized": true
+  },
+  {
+    "code": "KE-X1",
+    "description": "KestrelEdge X1 Compute Cluster",
+    "unitCostCents": 920000,
+    "serialized": true
+  },
+  {
+    "code": "KE-Y1",
+    "description": "KestrelEdge Y1 Perimeter System",
+    "unitCostCents": 1280000,
+    "serialized": true
+  },
+  {
+    "code": "KV-D1",
+    "description": "KestrelVision D1 Dome Camera",
+    "unitCostCents": 42500,
+    "serialized": false
+  },
+  {
+    "code": "KV-B1",
+    "description": "KestrelVision B1 Bullet Camera",
+    "unitCostCents": 67500,
+    "serialized": false
+  },
+  {
+    "code": "KV-F1",
+    "description": "KestrelVision F1 Fisheye Camera",
+    "unitCostCents": 87500,
+    "serialized": false
+  },
+  {
+    "code": "KV-Z1",
+    "description": "KestrelVision Z1 PTZ Camera",
+    "unitCostCents": 145000,
+    "serialized": false
+  },
+  {
+    "code": "KA-41",
+    "description": "KestrelAccess 41 Door Controller",
+    "unitCostCents": 120000,
+    "serialized": false
+  },
+  {
+    "code": "KR-U1",
+    "description": "KestrelRelay U1 Uplink Gateway",
+    "unitCostCents": 82500,
+    "serialized": false
+  },
+  {
+    "code": "KG-K1",
+    "description": "KestrelGrid K1 Site Kit",
+    "unitCostCents": 145000,
+    "serialized": false
+  }
+]

@@ -1,0 +1,543 @@
+[
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10247",
+      "transactionNumber": "SO-26101",
+      "lastModifiedAt": "2026-11-03T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "7fa47e2a7932cb816b7f2ae70f4e7b9ab7286da614158e636f4acd81cc3e5c66"
+    },
+    "transactionNumber": "SO-26101",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-3589"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-1271"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-7771"
+        ]
+      }
+    ],
+    "customer": "Bluewater Foods Group",
+    "orderDate": "2026-11-03"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10250",
+      "transactionNumber": "SO-26102",
+      "lastModifiedAt": "2026-11-07T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6e57ac49bc0c3bc50043c3cdfc2b714d904d96ac7045e03707cda61734180807"
+    },
+    "transactionNumber": "SO-26102",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-8518"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 2,
+        "amountCents": 768000,
+        "serials": [
+          "KE-S1-4460",
+          "KE-S1-8383"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-6669"
+        ]
+      }
+    ],
+    "customer": "Summit Ridge Health",
+    "orderDate": "2026-11-07"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10253",
+      "transactionNumber": "SO-26103",
+      "lastModifiedAt": "2026-11-11T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e56f1420579b5a3219b31aa6d30e599f9d50c479714535e12666da89e06c1ecd"
+    },
+    "transactionNumber": "SO-26103",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-3016"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 2,
+        "amountCents": 1568000,
+        "serials": [
+          "KE-E1-4430",
+          "KE-E1-5349"
+        ]
+      }
+    ],
+    "customer": "Ironvale Robotics",
+    "orderDate": "2026-11-11"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10256",
+      "transactionNumber": "SO-26104",
+      "lastModifiedAt": "2026-11-15T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1f4f49c2dd2a95a9ec4103a24d01bcbb2214789b83b168f5341b2849c139ac67"
+    },
+    "transactionNumber": "SO-26104",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-1662"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-4281"
+        ]
+      }
+    ],
+    "customer": "Copperline Grocers",
+    "orderDate": "2026-11-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10259",
+      "transactionNumber": "SO-26105",
+      "lastModifiedAt": "2026-11-19T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5507fb89d1462d45b286ebaefab4576e5a5db587cc0c08d0bd456337ad3141e8"
+    },
+    "transactionNumber": "SO-26105",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-1157"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-4916"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-5843"
+        ]
+      }
+    ],
+    "customer": "Northgate Fulfillment",
+    "orderDate": "2026-11-19"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10262",
+      "transactionNumber": "SO-26106",
+      "lastModifiedAt": "2026-11-23T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e8f5a9ed17f9308a252bad651f977c9c8ee364ebf2faa66f10aaa56698df4078"
+    },
+    "transactionNumber": "SO-26106",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-3799"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-M1",
+        "quantity": 2,
+        "amountCents": 432000,
+        "serials": [
+          "KE-M1-6449",
+          "KE-M1-3671"
+        ]
+      }
+    ],
+    "customer": "Silver Fir Hotels",
+    "orderDate": "2026-11-23"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10265",
+      "transactionNumber": "SO-26107",
+      "lastModifiedAt": "2026-11-27T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c7c2a35addffe17f2e005ca2bf7dec17939f4a9da1234d79269fcb22dc0fe954"
+    },
+    "transactionNumber": "SO-26107",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-2255"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-4077"
+        ]
+      }
+    ],
+    "customer": "Redstone Manufacturing",
+    "orderDate": "2026-11-27"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10268",
+      "transactionNumber": "SO-26108",
+      "lastModifiedAt": "2026-12-01T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ec8cd49bde875db9d3fad94c8c2b618b8aad20e8e7f874a19866d185aea12222"
+    },
+    "transactionNumber": "SO-26108",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-4748"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-6417"
+        ]
+      }
+    ],
+    "customer": "Lakeshore Retail Co",
+    "orderDate": "2026-12-01"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10271",
+      "transactionNumber": "SO-26109",
+      "lastModifiedAt": "2026-12-05T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f841ec267a74981e78efe1679d982bfa44a27c40693c850da4bf0e6e78b0141a"
+    },
+    "transactionNumber": "SO-26109",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-5877"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-9178"
+        ]
+      }
+    ],
+    "customer": "Evergreen Campus Services",
+    "orderDate": "2026-12-05"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10274",
+      "transactionNumber": "SO-26110",
+      "lastModifiedAt": "2026-12-09T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ad2a2a301e5e7c4320d2f8528fb8cf8b8f6538d5e852643e59919b23f22534a8"
+    },
+    "transactionNumber": "SO-26110",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 2,
+        "amountCents": 1568000,
+        "serials": [
+          "KE-E1-4268",
+          "KE-E1-5523"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-5166"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-8589"
+        ]
+      }
+    ],
+    "customer": "Halcyon Logistics",
+    "orderDate": "2026-12-09"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10277",
+      "transactionNumber": "SO-26184",
+      "lastModifiedAt": "2026-12-22T17:10:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "99eeaf1805c7cc7ae39e758e3ea0cd7e3c032d91b7a839ce3c794ba47dca05cb"
+    },
+    "transactionNumber": "SO-26184",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 2,
+        "amountCents": 2368000,
+        "serials": [
+          "KE-E2-1048",
+          "KE-E2-1051"
+        ]
+      }
+    ],
+    "customer": "Bluewater Foods Group",
+    "orderDate": "2026-12-22"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10280",
+      "transactionNumber": "SO-26190",
+      "lastModifiedAt": "2026-12-18T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "812a97b28b97468c5082d573a1c4970b6acadfaa3149a764c644e54e87ad6a36"
+    },
+    "transactionNumber": "SO-26190",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-I1",
+        "quantity": 2,
+        "amountCents": 224000,
+        "serials": [
+          "KE-I1-9807",
+          "KE-I1-9628"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-2925"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-X1",
+        "quantity": 17,
+        "amountCents": 25024000,
+        "serials": [
+          "KE-X1-8809",
+          "KE-X1-5064",
+          "KE-X1-3199",
+          "KE-X1-6865",
+          "KE-X1-4925",
+          "KE-X1-1401",
+          "KE-X1-6601",
+          "KE-X1-6554",
+          "KE-X1-2142",
+          "KE-X1-3167",
+          "KE-X1-8055",
+          "KE-X1-9583",
+          "KE-X1-2836",
+          "KE-X1-6173",
+          "KE-X1-7327",
+          "KE-X1-3786",
+          "KE-X1-7354"
+        ]
+      }
+    ],
+    "customer": "Copperline Grocers",
+    "orderDate": "2026-12-18"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10281",
+      "transactionNumber": "SO-26191",
+      "lastModifiedAt": "2026-12-19T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f4e6f6ae99ad464bd649410f8fd366bbfa3c6d96752d42755df157d87dc6ea68"
+    },
+    "transactionNumber": "SO-26191",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 5,
+        "amountCents": 7360000,
+        "serials": [
+          "KE-X1-2096",
+          "KE-X1-5656",
+          "KE-X1-3693",
+          "KE-X1-9465",
+          "KE-X1-7049"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KV-D1",
+        "quantity": 9,
+        "amountCents": 612000
+      },
+      {
+        "lineId": "L3",
+        "sku": "KV-B1",
+        "quantity": 6,
+        "amountCents": 648000
+      }
+    ],
+    "customer": "Northgate Fulfillment",
+    "orderDate": "2026-12-19"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "SALES_ORDER",
+      "internalId": "10282",
+      "transactionNumber": "SO-26192",
+      "lastModifiedAt": "2026-12-20T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "93bdad545cb98f0fa072f5d66882fee774d1ca0ba45b1d5853d37f8c7dc727a5"
+    },
+    "transactionNumber": "SO-26192",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-B1",
+        "quantity": 18,
+        "amountCents": 1944000
+      },
+      {
+        "lineId": "L2",
+        "sku": "KV-Z1",
+        "quantity": 1,
+        "amountCents": 232000
+      },
+      {
+        "lineId": "L3",
+        "sku": "KA-41",
+        "quantity": 1,
+        "amountCents": 192000
+      }
+    ],
+    "customer": "Silver Fir Hotels",
+    "orderDate": "2026-12-20"
+  }
+]

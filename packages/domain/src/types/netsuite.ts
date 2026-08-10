@@ -2,6 +2,7 @@ import type { IsoDate, IsoDateTime } from "../dates.js";
 import type { Cents } from "../money.js";
 import type {
   CountTestDirection,
+  CountTestSelectionSource,
   CountType,
   RuleResult,
 } from "../enums.js";
@@ -122,19 +123,21 @@ export interface InventoryCountAdjustment {
 }
 
 /**
- * An external-auditor test-count selection (CANONICAL_SPEC §6). The app
- * records and supports these; it never selects them — the auditor
- * independently determines procedures and samples (docs/03).
+ * A test-count selection (CANONICAL_SPEC §6, docs/07): 24 management-selected
+ * plus 18 auditor-selected in the baseline. Auditor selections are recorded
+ * and supported by the app; it never makes them — the auditor independently
+ * determines procedures and samples (docs/03).
  */
 export interface CountTest {
   readonly id: string;
   readonly countPlanId: string;
+  readonly selectionSource: CountTestSelectionSource;
   readonly direction: CountTestDirection;
   readonly sku: SkuCode;
   readonly location: LocationId;
   readonly bin?: string;
   readonly serial?: SerialNumberId;
-  /** The external auditor — recorded verbatim, not a Gaurd user. */
+  /** For auditor tests: the external auditor, recorded verbatim, not a Gaurd user. */
   readonly selectedBy: string;
   readonly recordedAt: IsoDateTime;
 }

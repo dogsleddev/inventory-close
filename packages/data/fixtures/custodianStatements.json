@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ST-001",
+    "custodian": "Redwood Installation Services",
+    "asOf": "2026-12-31",
+    "requestedAt": "2026-12-28T17:00:00Z"
+  },
+  {
+    "id": "ST-002",
+    "custodian": "Beacon Field Services",
+    "asOf": "2026-12-31",
+    "requestedAt": "2026-12-28T17:00:00Z",
+    "respondedAt": "2027-01-02T15:30:00Z",
+    "lines": [
+      {
+        "sku": "KA-41",
+        "quantity": 1
+      },
+      {
+        "sku": "KE-E1",
+        "quantity": 1
+      },
+      {
+        "sku": "KE-I1",
+        "quantity": 50
+      },
+      {
+        "sku": "KE-M1",
+        "quantity": 1
+      },
+      {
+        "sku": "KE-X1",
+        "quantity": 12
+      },
+      {
+        "sku": "KV-F1",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "id": "ST-003",
+    "custodian": "Meridian Contract Manufacturing",
+    "asOf": "2026-12-31",
+    "requestedAt": "2026-12-28T17:00:00Z",
+    "respondedAt": "2027-01-02T19:10:00Z",
+    "lines": [
+      {
+        "sku": "KE-Y1",
+        "quantity": 9
+      },
+      {
+        "sku": "KV-B1",
+        "quantity": 1
+      },
+      {
+        "sku": "KV-D1",
+        "quantity": 40
+      }
+    ]
+  }
+]

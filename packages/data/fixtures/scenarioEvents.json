@@ -1,0 +1,190 @@
+[
+  {
+    "id": "SE-001",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 1,
+    "occurredAt": "2027-01-02T18:30:00Z",
+    "eventType": "TIMING_VALIDATED",
+    "description": "January GL posting JE-2027-0012 ties to IR-26-2214 received 2026-12-30; receipt-to-GL difference validated as timing",
+    "subjects": {
+      "serials": [
+        "KE-X1-6904"
+      ],
+      "transactionNumbers": [
+        "IR-26-2214",
+        "JE-2027-0012"
+      ],
+      "glAccount": "1200",
+      "amountCents": 920000
+    },
+    "recordedBy": "L. Whitfield"
+  },
+  {
+    "id": "SE-002",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 2,
+    "occurredAt": "2027-01-02T21:10:00Z",
+    "eventType": "DUPLICATE_IDENTIFIED",
+    "description": "JE-2026-0790 re-adds the same two KV-Z1 returns already restocked by ADJ-2026-0312 (RMA-2026-0451, RMA-2026-0452), and was posted to 1200 instead of 1230",
+    "subjects": {
+      "skus": [
+        "KV-Z1"
+      ],
+      "transactionNumbers": [
+        "JE-2026-0790",
+        "ADJ-2026-0312"
+      ],
+      "documentRefs": [
+        "RMA-2026-0451",
+        "RMA-2026-0452"
+      ],
+      "glAccount": "1200",
+      "amountCents": 290000
+    },
+    "recordedBy": "L. Whitfield"
+  },
+  {
+    "id": "SE-003",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 3,
+    "occurredAt": "2027-01-03T16:20:00Z",
+    "eventType": "ADJUSTMENT_PROPOSED",
+    "description": "Draft JE-PROP-001 proposed: reverse duplicate JE-2026-0790 (credit 1200 $2,900); pending approval — no auto-posting",
+    "subjects": {
+      "transactionNumbers": [
+        "JE-PROP-001",
+        "JE-2026-0790"
+      ],
+      "glAccount": "1200",
+      "amountCents": -290000
+    },
+    "recordedBy": "T. Okafor"
+  },
+  {
+    "id": "SE-004",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 4,
+    "occurredAt": "2027-01-03T16:40:00Z",
+    "eventType": "ADJUSTMENT_PROPOSED",
+    "description": "Draft JE-PROP-002 proposed: record IR-26-2214 in the 12/31 GL (debit 1200 $9,200); pending approval — no auto-posting",
+    "subjects": {
+      "serials": [
+        "KE-X1-6904"
+      ],
+      "transactionNumbers": [
+        "JE-PROP-002",
+        "IR-26-2214"
+      ],
+      "glAccount": "1200",
+      "amountCents": 920000
+    },
+    "recordedBy": "T. Okafor"
+  },
+  {
+    "id": "SE-005",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 5,
+    "occurredAt": "2027-01-03T18:05:00Z",
+    "eventType": "RECOUNT_COMPLETED",
+    "description": "Supervised recount of KV-Z1 at Primary Warehouse found 19 of 19 — two units were shelved in an adjacent bin; first-pass variance fully explained",
+    "subjects": {
+      "skus": [
+        "KV-Z1"
+      ],
+      "locations": [
+        "PRIMARY_WAREHOUSE"
+      ],
+      "countPlanId": "CNT-YE-2026"
+    },
+    "recordedBy": "R. Calloway"
+  },
+  {
+    "id": "SE-006",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 6,
+    "occurredAt": "2027-01-03T19:15:00Z",
+    "eventType": "MOVEMENT_VALIDATED",
+    "description": "Authorized movement MV-004 places KE-E2-8904 in Staging during the count window; snapshot position reconciled with no quantity impact",
+    "subjects": {
+      "serials": [
+        "KE-E2-8904"
+      ],
+      "documentRefs": [
+        "MV-004"
+      ],
+      "countPlanId": "CNT-YE-2026"
+    },
+    "recordedBy": "S. Ibarra"
+  },
+  {
+    "id": "SE-007",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 7,
+    "occurredAt": "2027-01-04T17:30:00Z",
+    "eventType": "DATA_QUALITY_CORRECTED",
+    "description": "Duplicate WMS bin record for KE-E2-1986 voided; serial physically verified in Primary Warehouse only — one unit, one location",
+    "subjects": {
+      "serials": [
+        "KE-E2-1986"
+      ],
+      "locations": [
+        "PRIMARY_WAREHOUSE",
+        "STAGING"
+      ],
+      "countPlanId": "CNT-YE-2026"
+    },
+    "recordedBy": "R. Calloway"
+  },
+  {
+    "id": "SE-008",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 8,
+    "occurredAt": "2027-01-04T20:00:00Z",
+    "eventType": "CONTRACT_LOCATED",
+    "description": "Title-retention addendum LA-2026-118-ADD-2 located for loaner KE-Y1-1845 at Silver Fir Hotels; company ownership documented",
+    "subjects": {
+      "serials": [
+        "KE-Y1-1845"
+      ],
+      "documentRefs": [
+        "LA-2026-118-ADD-2",
+        "CT-002"
+      ]
+    },
+    "recordedBy": "D. Marsh"
+  },
+  {
+    "id": "SE-009",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 9,
+    "occurredAt": "2027-01-05T17:45:00Z",
+    "eventType": "POLICY_REVIEW_CONCLUDED",
+    "description": "Demo unit KE-X1-6670 on assignment 214 days (policy threshold 180); condition verified current-generation and recoverable — no adjustment required",
+    "subjects": {
+      "serials": [
+        "KE-X1-6670"
+      ],
+      "documentRefs": [
+        "CT-003"
+      ]
+    },
+    "recordedBy": "L. Whitfield"
+  },
+  {
+    "id": "SE-010",
+    "script": "SCENARIO-EVENTS-v1.1.0",
+    "seq": 10,
+    "occurredAt": "2027-01-05T19:10:00Z",
+    "eventType": "DAMAGE_ASSESSED",
+    "description": "Damaged return KE-E1-3335 (RMA-2026-0468) assessed repairable; estimated recovery exceeds carrying value — no write-down required",
+    "subjects": {
+      "serials": [
+        "KE-E1-3335"
+      ],
+      "documentRefs": [
+        "RMA-2026-0468"
+      ]
+    },
+    "recordedBy": "L. Whitfield"
+  }
+]

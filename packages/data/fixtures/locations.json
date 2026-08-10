@@ -1,0 +1,46 @@
+[
+  {
+    "id": "PRIMARY_WAREHOUSE",
+    "name": "Primary Warehouse"
+  },
+  {
+    "id": "RECEIVING",
+    "name": "Receiving"
+  },
+  {
+    "id": "STAGING",
+    "name": "Shipping / Install Staging"
+  },
+  {
+    "id": "INBOUND_TRANSIT",
+    "name": "Inbound In Transit"
+  },
+  {
+    "id": "OUTBOUND_TRANSIT",
+    "name": "Outbound In Transit"
+  },
+  {
+    "id": "DEMO_LOANER",
+    "name": "Demo / Loaner Pool"
+  },
+  {
+    "id": "RMA_REPAIR",
+    "name": "RMA / Repair"
+  },
+  {
+    "id": "THIRD_PARTY_CUSTODY",
+    "name": "Third-Party Custody"
+  },
+  {
+    "id": "CUSTOMER_SITE",
+    "name": "Customer Site (Company-Owned)"
+  },
+  {
+    "id": "DAMAGED_HOLD",
+    "name": "Damaged / Hold"
+  },
+  {
+    "id": "CONTRACT_MANUFACTURER",
+    "name": "Contract Manufacturer / Vendor"
+  }
+]

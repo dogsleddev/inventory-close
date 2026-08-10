@@ -1,0 +1,199 @@
+[
+  {
+    "id": "FC-001",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-001",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1ed5a796340e23181d6694eb7b759cab59f57a85e68f0b7cfc9be56f3fb153b7"
+    },
+    "sku": "KE-I1",
+    "horizonMonths": 12,
+    "forecastUnits": 92
+  },
+  {
+    "id": "FC-002",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-002",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "59805a3f3bb58fe7973b7763c52a92b4dbec825af782657829d649fc596f01f4"
+    },
+    "sku": "KE-M1",
+    "horizonMonths": 12,
+    "forecastUnits": 8,
+    "note": "KE-M2 transition announced Q3 FY2026; forecast reduced to residual service demand"
+  },
+  {
+    "id": "FC-003",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-003",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3e88d97ef59ca018cf19d8113cb5e9a861ce8fa48e7c6504bab79ce952575c9b"
+    },
+    "sku": "KE-S1",
+    "horizonMonths": 12,
+    "forecastUnits": 124
+  },
+  {
+    "id": "FC-004",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-004",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "bff7047acaf6ded8a71be04bba1596cea0b024cae51d9904c12dbb1fd4795fa4"
+    },
+    "sku": "KE-E1",
+    "horizonMonths": 12,
+    "forecastUnits": 122
+  },
+  {
+    "id": "FC-005",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-005",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "89912773d41b8f71a5f4897020a2e81a55fd346409192d35cc5da7e81a491725"
+    },
+    "sku": "KE-E2",
+    "horizonMonths": 12,
+    "forecastUnits": 198
+  },
+  {
+    "id": "FC-006",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-006",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "66afdef0f59356d6b8407778bd52084ece2bb5efef4bb9ef6884e1ab2a8e0e57"
+    },
+    "sku": "KE-X1",
+    "horizonMonths": 12,
+    "forecastUnits": 100
+  },
+  {
+    "id": "FC-007",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-007",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "89fd6cc264fefceeacba10512fce8aeb7a91b38041b50b404982fc04995d290b"
+    },
+    "sku": "KE-Y1",
+    "horizonMonths": 12,
+    "forecastUnits": 27
+  },
+  {
+    "id": "FC-008",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-008",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0008a9d0de38470f400c4074215dd6fdb509d64ebe0bae40158c41eb5cb5440e"
+    },
+    "sku": "KV-D1",
+    "horizonMonths": 12,
+    "forecastUnits": 158
+  },
+  {
+    "id": "FC-009",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-009",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4df6e4222c11081ae6f245e34650a39cbc01da5e8e4d95e1a842b66463c52081"
+    },
+    "sku": "KV-B1",
+    "horizonMonths": 12,
+    "forecastUnits": 72
+  },
+  {
+    "id": "FC-010",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-010",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "284ac06ed3ef86230f1c2f8abd3bd95f0eec67c749581c3cd49c6185d47acfa9"
+    },
+    "sku": "KV-F1",
+    "horizonMonths": 12,
+    "forecastUnits": 29
+  },
+  {
+    "id": "FC-011",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-011",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0d04af00321d9e9a48ce32c0cda0a531371245ba0fb4367e1c651645320a811a"
+    },
+    "sku": "KV-Z1",
+    "horizonMonths": 12,
+    "forecastUnits": 35
+  },
+  {
+    "id": "FC-012",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-012",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ec9941f53e227e46503edee47d537ef8a6cb102f0705f8e39d21285055e850db"
+    },
+    "sku": "KA-41",
+    "horizonMonths": 12,
+    "forecastUnits": 134
+  },
+  {
+    "id": "FC-013",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-013",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0143a93b80df25b11bc6f26da3037d1f250de43d71d0201764f82f1ecaffb101"
+    },
+    "sku": "KR-U1",
+    "horizonMonths": 12,
+    "forecastUnits": 41
+  },
+  {
+    "id": "FC-014",
+    "sourceRef": {
+      "sourceSystem": "FORECAST_PLATFORM",
+      "recordType": "DEMAND_FORECAST",
+      "internalId": "FC-014",
+      "lastModifiedAt": "2027-01-05T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "32a9b6b38b7b75333184d1b9cef177b132df4f3c559d39554a3221acd1ce86be"
+    },
+    "sku": "KG-K1",
+    "horizonMonths": 12,
+    "forecastUnits": 15
+  }
+]

@@ -1,0 +1,151 @@
+[
+  {
+    "id": "AS-D001",
+    "kind": "DEMO",
+    "serial": "KE-I1-1371",
+    "customer": "Bluewater Foods Group",
+    "startedAt": "2026-12-23"
+  },
+  {
+    "id": "AS-D002",
+    "kind": "DEMO",
+    "serial": "KE-I1-7970",
+    "customer": "Summit Ridge Health",
+    "startedAt": "2026-10-25"
+  },
+  {
+    "id": "AS-D003",
+    "kind": "DEMO",
+    "serial": "KE-I1-9831",
+    "customer": "Ironvale Robotics",
+    "startedAt": "2026-11-20"
+  },
+  {
+    "id": "AS-D004",
+    "kind": "DEMO",
+    "serial": "KE-I1-2305",
+    "customer": "Copperline Grocers",
+    "startedAt": "2026-12-27"
+  },
+  {
+    "id": "AS-D005",
+    "kind": "DEMO",
+    "serial": "KE-E1-2510",
+    "customer": "Northgate Fulfillment",
+    "startedAt": "2026-09-07"
+  },
+  {
+    "id": "AS-D006",
+    "kind": "DEMO",
+    "serial": "KE-X1-6670",
+    "customer": "Ironvale Robotics",
+    "startedAt": "2026-05-31",
+    "contractId": "CT-003"
+  },
+  {
+    "id": "AS-D007",
+    "kind": "DEMO",
+    "serial": "KE-X1-9757",
+    "customer": "Redstone Manufacturing",
+    "startedAt": "2026-11-25"
+  },
+  {
+    "id": "AS-D008",
+    "kind": "DEMO",
+    "serial": "KE-X1-8272",
+    "customer": "Lakeshore Retail Co",
+    "startedAt": "2026-09-21"
+  },
+  {
+    "id": "AS-D009",
+    "kind": "DEMO",
+    "serial": "KE-X1-9582",
+    "customer": "Evergreen Campus Services",
+    "startedAt": "2026-10-26"
+  },
+  {
+    "id": "AS-D010",
+    "kind": "DEMO",
+    "serial": "KE-X1-2086",
+    "customer": "Halcyon Logistics",
+    "startedAt": "2026-09-13"
+  },
+  {
+    "id": "AS-D011",
+    "kind": "DEMO",
+    "serial": "KE-X1-6568",
+    "customer": "Bluewater Foods Group",
+    "startedAt": "2026-12-10"
+  },
+  {
+    "id": "AS-D012",
+    "kind": "DEMO",
+    "serial": "KE-X1-1468",
+    "customer": "Summit Ridge Health",
+    "startedAt": "2026-09-22"
+  },
+  {
+    "id": "AS-L001",
+    "kind": "LOANER",
+    "serial": "KE-I1-9132",
+    "customer": "Ironvale Robotics",
+    "startedAt": "2026-10-07"
+  },
+  {
+    "id": "AS-L002",
+    "kind": "LOANER",
+    "serial": "KE-X1-9159",
+    "customer": "Copperline Grocers",
+    "startedAt": "2026-10-01"
+  },
+  {
+    "id": "AS-L003",
+    "kind": "LOANER",
+    "serial": "KE-Y1-1845",
+    "customer": "Silver Fir Hotels",
+    "startedAt": "2026-10-05",
+    "contractId": "CT-002"
+  },
+  {
+    "id": "AS-L004",
+    "kind": "LOANER",
+    "serial": "KE-Y1-8184",
+    "customer": "Silver Fir Hotels",
+    "startedAt": "2026-09-18"
+  },
+  {
+    "id": "AS-L005",
+    "kind": "LOANER",
+    "serial": "KE-Y1-1134",
+    "customer": "Redstone Manufacturing",
+    "startedAt": "2026-09-09"
+  },
+  {
+    "id": "AS-L006",
+    "kind": "LOANER",
+    "serial": "KE-Y1-8530",
+    "customer": "Lakeshore Retail Co",
+    "startedAt": "2026-09-05"
+  },
+  {
+    "id": "AS-L007",
+    "kind": "LOANER",
+    "serial": "KE-Y1-4542",
+    "customer": "Evergreen Campus Services",
+    "startedAt": "2026-08-21"
+  },
+  {
+    "id": "AS-L008",
+    "kind": "LOANER",
+    "serial": "KE-Y1-7229",
+    "customer": "Halcyon Logistics",
+    "startedAt": "2026-08-19"
+  },
+  {
+    "id": "AS-L009",
+    "kind": "LOANER",
+    "serial": "KE-Y1-1470",
+    "customer": "Bluewater Foods Group",
+    "startedAt": "2026-08-04"
+  }
+]

@@ -47,6 +47,8 @@ export const skuFixtureSchema = z.object({
   code: z.string().regex(/^K[A-Z]-[A-Z0-9]+$/, "expected a K*-* SKU code"),
   description: z.string().min(1),
   unitCostCents: integerCentsSchema.positive(),
+  /** KE-* hardware is serialized; accessories are counted by quantity. */
+  serialized: z.boolean().optional(),
 });
 
 export const locationFixtureSchema = z.object({
@@ -62,6 +64,11 @@ export const inventoryItemFixtureSchema = z.object({
   classification: z.enum(ACCOUNTING_CLASSIFICATIONS),
   unitCostCents: integerCentsSchema.positive(),
   sourceRef: sourceRecordRefSchema.optional(),
+  /** Aging inputs (VAL-EO-001, DEMO-AGE-001): when acquired / last moved. */
+  acquiredAt: isoDateSchema.optional(),
+  lastMovementAt: isoDateSchema.optional(),
+  /** Custodian holding the unit (third-party custody / CM locations only). */
+  custodian: z.string().min(1).optional(),
 });
 
 export const glBalanceFixtureSchema = z.object({

@@ -1,0 +1,1010 @@
+[
+  {
+    "id": "TL-KE-E2-1048",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-E2-1048",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "00c65ed6a5bb5fddd811a8e54b31b824f53f2721a863db05b81e5c2114f7ef3e"
+    },
+    "serial": "KE-E2-1048",
+    "firstOnlineAt": "2026-12-30T21:05:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-E2-1051",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-E2-1051",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3c106c23216a5d8f8a63b6f5452cad41054c918c080a46e0cc61e19d892cead0"
+    },
+    "serial": "KE-E2-1051",
+    "firstOnlineAt": "2026-12-30T21:05:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8309",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8309",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c4b339f52d812048d4c0492b37c6127d865799f797c776370a26371d578aefae"
+    },
+    "serial": "KE-I1-8309",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-6024",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-6024",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "9c1990eac45fa4044b7bd5414c782cced488ddbed7689b1a35fad67fb2cd9a35"
+    },
+    "serial": "KE-I1-6024",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-9297",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-9297",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b67ab8096ff87b464026d921ab5c717a8df4aa822c07d926f2fdc2dd9a6ea631"
+    },
+    "serial": "KE-I1-9297",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-2037",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-2037",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "922149e44c46198769bce3654a1d8815f6a24bbad0354b28b22ec97e39b1155c"
+    },
+    "serial": "KE-I1-2037",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-6720",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-6720",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2352d66d3504021e7ac606d8396aa0a3fdc32293d1b2314be8ec2ddc668ac3aa"
+    },
+    "serial": "KE-I1-6720",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-3449",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-3449",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "85907d19d423a92497effeb72b9db5276ebce92fc097290449ed18307954fad2"
+    },
+    "serial": "KE-I1-3449",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-1346",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-1346",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4755103dadeb8aea2a3830dae5f9450030030f674de821b4fda4b5c98e78516e"
+    },
+    "serial": "KE-I1-1346",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-1877",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-1877",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "00d059f9711e43de1600f940f9ebb108d13afda941feec7042726292fe97561d"
+    },
+    "serial": "KE-I1-1877",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8671",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8671",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f11f3ea2581347b1a6bd9aec3127eedda15b8cba3cd27279a75f892bb1548c45"
+    },
+    "serial": "KE-I1-8671",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8183",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8183",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ddfc780b06b7e6331b52ee6c276058fd7c4d3905fa1aef676426e0859fe3764a"
+    },
+    "serial": "KE-I1-8183",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-6152",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-6152",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "da541ebf48cdc63c8fe19573e4346c912f89bd774c524f3164041a705d48cbda"
+    },
+    "serial": "KE-I1-6152",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-5343",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-5343",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "7553c11d8bda9b8c70eb1a15d15c77fc93696c65da0d624cb5ccba35ebe8c80d"
+    },
+    "serial": "KE-I1-5343",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-2829",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-2829",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c471ae87091fe239c5da7797052caf316608ceac4dd3cbe7cdc1bf4968efdcf5"
+    },
+    "serial": "KE-I1-2829",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4066",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4066",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "452ee265795e8c29528505a6a96c86dfa7eabac9a8387b54c2c1f5db4baf8175"
+    },
+    "serial": "KE-I1-4066",
+    "firstOnlineAt": "2026-09-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4702",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4702",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f41957d4fb469d5b04e6144afc2e1f8946d89013b0c2f2998cf97cdd34807c6a"
+    },
+    "serial": "KE-I1-4702",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-5090",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-5090",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0696396b293c25bdcd68005d17ffaeebb36261327b342da2b78cd6b34682ad7b"
+    },
+    "serial": "KE-I1-5090",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-1977",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-1977",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f73962d1bf6894fb478bc026484f2f1031c3c92c7e453daa696fbc4d2afa3864"
+    },
+    "serial": "KE-I1-1977",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-7098",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-7098",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c6a12157afa7627453467f48c790c780996aecf71bdd534fc5e102d790cfa8f6"
+    },
+    "serial": "KE-I1-7098",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8927",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8927",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "d3fee2abfd144d619fab75e57e8a9b49cb5262575797d327bd44ce013907fbc3"
+    },
+    "serial": "KE-I1-8927",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4867",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4867",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c69ed89865b7aa0cc881364257bac5d786157ac97ac9800e2d9aa21f93e8f94c"
+    },
+    "serial": "KE-I1-4867",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-7107",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-7107",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "94fa0127afc2015378616ca13e3442253971d841a8510f27c4ba820f839719d0"
+    },
+    "serial": "KE-I1-7107",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-5931",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-5931",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "104edd7c4a2cbbfcda7332bde9492013238bb9221b0f622469ff25f34ec4ef8b"
+    },
+    "serial": "KE-I1-5931",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-2606",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-2606",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "75a4bbb626952358ed2d01bdb0a4646bf7e8bd673a405ae86630aabb93a54bf5"
+    },
+    "serial": "KE-I1-2606",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-5195",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-5195",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f6897d14db364210a1cc3425eff38f3b7ee4d803a230c2e347abcd2a77e189de"
+    },
+    "serial": "KE-I1-5195",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-3475",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-3475",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ce9eaeee9dc002c43b47171cbfd0eb93724119acfd1b0259cfd35964e54322ae"
+    },
+    "serial": "KE-I1-3475",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4444",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4444",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b748b99501ff2ecde30bfdf56c5704d051a8d27da993691b7b7234965c242967"
+    },
+    "serial": "KE-I1-4444",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-2411",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-2411",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c73282a7cae342b54d5b0bc0e84383268c7e93ec311f679ea2e8298b9d183e5f"
+    },
+    "serial": "KE-I1-2411",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4995",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4995",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "d0d8eac452270869853d1a323fd3ce4a5b2ca99bd50f471caf0aac20fc2a4c7a"
+    },
+    "serial": "KE-I1-4995",
+    "firstOnlineAt": "2026-10-09T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8733",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8733",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8de73eaa313957c20ef3926f4ac569bc0b688eecb4ed1ff0e9274df3482b6f04"
+    },
+    "serial": "KE-I1-8733",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-2816",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-2816",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "569302ae93dac1be6b426a7eec67980a4273018f212b507aa133c74aee2bcd30"
+    },
+    "serial": "KE-I1-2816",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8271",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8271",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a85889680607760aa27a6d8fab00b11f4c51681400e1384c29e0bc958b027fdf"
+    },
+    "serial": "KE-I1-8271",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-4394",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-4394",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "66cccb55d2ed182445aafb33f471b81b72e68dcfe98d63f03d7e56de15485ae1"
+    },
+    "serial": "KE-I1-4394",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-6599",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-6599",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a816d721bbf3a11b750ccc7f302f8819a7be476d55fc74a017c65d085a9e89d7"
+    },
+    "serial": "KE-I1-6599",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-9504",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-9504",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2b253c29cec7e01c383892d84cd0aaaf776f1befb698cf7d18e9fb671aa4adea"
+    },
+    "serial": "KE-I1-9504",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-5801",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-5801",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "099924939b3531ae8809c41219550744d1605883eb1cb62a86d538c16a6f9363"
+    },
+    "serial": "KE-I1-5801",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-3854",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-3854",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a16067c6be8e404c20c4962a9ca14d53389320cee444ff3d066f984d1af16c69"
+    },
+    "serial": "KE-I1-3854",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-7127",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-7127",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1b62645002999dcb2c0f823e455ab2380805e17e137c1c007ba88eca4b888937"
+    },
+    "serial": "KE-I1-7127",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-7775",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-7775",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f94b2cc5412679d85747cb25189e323fa6221c2fd4dfa1209a992f9519c64b09"
+    },
+    "serial": "KE-I1-7775",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-8011",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-8011",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "05ca335d8c6d2057f0a58e9837daa2791b7646bd9c357e278eeaa00496af4497"
+    },
+    "serial": "KE-I1-8011",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-S1-2003",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-S1-2003",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "03db074e276c73c51ee59f849f95bfaed7da05bbe5d32c61374d538c92095058"
+    },
+    "serial": "KE-S1-2003",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-4337",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-4337",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "434d7aa38b879cf4552be51bbe72315bdafe29230f8992ec28909c09be5bf6bc"
+    },
+    "serial": "KE-X1-4337",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-1314",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-1314",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8df0ede6e01f01398ae6d447a6d2f2057ae7051e62480edd9b83154e278ffd02"
+    },
+    "serial": "KE-X1-1314",
+    "firstOnlineAt": "2026-11-12T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-4655",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-4655",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "76d3dbdd29cca8dd0d367c2ca331426808211b96879f5c6e6a3e47e788051c83"
+    },
+    "serial": "KE-X1-4655",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-9440",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-9440",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a44c03cf88be6104104ba253c92712f0abe2e4682c41482b7f3fe35ccdb73ded"
+    },
+    "serial": "KE-X1-9440",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-4090",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-4090",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b76b7c691ce94e1057fccdcd973578c408fbfb89083059eb772c3102d007179a"
+    },
+    "serial": "KE-X1-4090",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-5940",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-5940",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "458cf033ea00c4718d80d9f53b45d4b612fcf14eba02eca1f32808f0af214b09"
+    },
+    "serial": "KE-X1-5940",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-2820",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-2820",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f3d431301d8248c24c3f094912bc428bda48dbbe35262ca45b91eb8c664a1f3d"
+    },
+    "serial": "KE-X1-2820",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-7822",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-7822",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e6bfaf93330e86b18e39a5ec67512c640899d770b747fd1d2edf007e302638b4"
+    },
+    "serial": "KE-X1-7822",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-8779",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-8779",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "68b42273f27296757998cdadb724d6a8c532f114c3031ce3b3835ecc2e0d169b"
+    },
+    "serial": "KE-X1-8779",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-5137",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-5137",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "145be8dc1f80d7fc28ef8fecbd8398ef79c4dbf0794f4f0c8ae6cef089eb6ed0"
+    },
+    "serial": "KE-X1-5137",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-3782",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-3782",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "93531eba459c06e09a7d8f9ea38bdb77e1f6afc9e232208e5c8523abc686ccc6"
+    },
+    "serial": "KE-X1-3782",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-6312",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-6312",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "7394ae32859e92a45f7642a16db91b4172599ee481ee082547768d0e44524855"
+    },
+    "serial": "KE-X1-6312",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-9454",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-9454",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5c403c21eb3a80490f763fc9e650ad2cb381e69fc66ca18200616cd9679d2dd9"
+    },
+    "serial": "KE-X1-9454",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-1158",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-1158",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e2bb9dba23ec9ec9394f166e787bbd0300b1ac028bb624475775bf515a861108"
+    },
+    "serial": "KE-X1-1158",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-1037",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-1037",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "77abc6f2d73d9862018b599df3dd2bdb027dda0ef443eeb16009154702b2d0fb"
+    },
+    "serial": "KE-X1-1037",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-9771",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-9771",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f9d0bf86fbfbe717b938c7120636ac59b44fb9cc197c55142a55276266c175c0"
+    },
+    "serial": "KE-X1-9771",
+    "firstOnlineAt": "2026-09-15T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-3061",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-3061",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "363e2e9a77d196ad587da4c92df680610de16e145880d3c21ad188079632925b"
+    },
+    "serial": "KE-X1-3061",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-4726",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-4726",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "cc2dddecb0ab3d6aba0fcaaf9899e20bc9878def548791d6dca9c7ccc83319e8"
+    },
+    "serial": "KE-X1-4726",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-8469",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-8469",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b11feade11bd639e862b9784bc20dc68ca149c6b3ab4e7d33fee80604a6e0fd0"
+    },
+    "serial": "KE-X1-8469",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-8107",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-8107",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ad3a289a4497c0dffcb46812d70982b37f9d9784373d45a0f73c50c1dba4ffa8"
+    },
+    "serial": "KE-X1-8107",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-3278",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-3278",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "730a4091387a69b7755dc809c4092d15b1c51f982970059f7e0c719e9499ef5d"
+    },
+    "serial": "KE-X1-3278",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-I1-9132",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-I1-9132",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1b367defcc4b5e3c9e976587e3d60309c3a253a544a267240d930bf61901dc07"
+    },
+    "serial": "KE-I1-9132",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-X1-9159",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-X1-9159",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c67dfb3e79e6d9c1c3e64f3b079e4c59f6f1376592d125f3e4a06f7b99eaf9fd"
+    },
+    "serial": "KE-X1-9159",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-8184",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-8184",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "daeb15e8bf3e1611dcbf1d427f29ad243d93fa542e2d96b2022db37bbcad791c"
+    },
+    "serial": "KE-Y1-8184",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-1134",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-1134",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "27248d17e6a13b39bc9f943cb9e9dfb4d519f3d0219f4b700b847433a47099bf"
+    },
+    "serial": "KE-Y1-1134",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-8530",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-8530",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "9a188d4635f4e6eb07da4e3a345a0dcdfd7ae33a09265ecefe0b8a6c213a73e2"
+    },
+    "serial": "KE-Y1-8530",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-4542",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-4542",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "548a38e36b846ea786e3398f0ae2d20ca91dcc8efa78b3dfb15270f725fccaaf"
+    },
+    "serial": "KE-Y1-4542",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-7229",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-7229",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8e7909528b8ed4c1f2d7374ea147f182541b3e0e6613f6f66ba30030e02bb347"
+    },
+    "serial": "KE-Y1-7229",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-1470",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-1470",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "51972417adb36a3e825c94edc8340913ec44cc1b161af365ac7992af4e7fa712"
+    },
+    "serial": "KE-Y1-1470",
+    "firstOnlineAt": "2026-10-18T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  },
+  {
+    "id": "TL-KE-Y1-1845",
+    "sourceRef": {
+      "sourceSystem": "DEVICE_CLOUD",
+      "recordType": "TELEMETRY_SUMMARY",
+      "internalId": "TL-KE-Y1-1845",
+      "lastModifiedAt": "2027-01-06T23:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "fa5ba04fb0bf38699748e74761e12c3e8994a4e6eb894935a43e1cffde28324b"
+    },
+    "serial": "KE-Y1-1845",
+    "firstOnlineAt": "2026-10-06T22:30:00Z",
+    "lastSeenAt": "2027-01-06T23:00:00Z"
+  }
+]

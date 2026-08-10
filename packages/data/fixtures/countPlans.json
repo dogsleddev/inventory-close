@@ -1,0 +1,246 @@
+[
+  {
+    "id": "CNT-YE-2026",
+    "countType": "YEAR_END",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "60001",
+      "transactionNumber": "IC-26-0412",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c467af355c989bafce8d8d6f13c9fce2e17d687c7ec1e7944e6595f85feb5439"
+    },
+    "externalId": "IC-26-0412",
+    "snapshotAt": "2026-12-31T23:59:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2027-01-05T18:00:00Z"
+  },
+  {
+    "id": "CNT-CC-2026-01",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61001",
+      "transactionNumber": "IC-26-0101",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0d91a38c9ccf6d41c8585a67b1a037a6c23d4fce34faed09b757e3b5680b739e"
+    },
+    "externalId": "IC-26-0101",
+    "snapshotAt": "2026-01-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-01-20T18:00:00Z",
+    "nextCountDue": "2026-04-15"
+  },
+  {
+    "id": "CNT-CC-2026-02",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61002",
+      "transactionNumber": "IC-26-0102",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c0819dd8395e0b75c34f65aa4b968484501939ff202d750ae3d2806e8fddbaa6"
+    },
+    "externalId": "IC-26-0102",
+    "snapshotAt": "2026-02-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-02-20T18:00:00Z",
+    "nextCountDue": "2026-05-15"
+  },
+  {
+    "id": "CNT-CC-2026-03",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61003",
+      "transactionNumber": "IC-26-0103",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "eda0be5e2f771a09f5a9a5c1f1e70067393f543f9b5b605f8f2b748a6f9a2a68"
+    },
+    "externalId": "IC-26-0103",
+    "snapshotAt": "2026-03-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-03-20T18:00:00Z",
+    "nextCountDue": "2026-06-15"
+  },
+  {
+    "id": "CNT-CC-2026-04",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61004",
+      "transactionNumber": "IC-26-0104",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f26a1d38f97b10b9f83d97c9f9762946527cf84071a0c63e42140de218686dbb"
+    },
+    "externalId": "IC-26-0104",
+    "snapshotAt": "2026-04-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-04-20T18:00:00Z",
+    "nextCountDue": "2026-07-15"
+  },
+  {
+    "id": "CNT-CC-2026-05",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61005",
+      "transactionNumber": "IC-26-0105",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "35e34feea26bd08798a8889639b92176a41b03a14e182b6c863fe0a8f7b8d3b0"
+    },
+    "externalId": "IC-26-0105",
+    "snapshotAt": "2026-05-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-05-20T18:00:00Z",
+    "nextCountDue": "2026-08-15"
+  },
+  {
+    "id": "CNT-CC-2026-06",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61006",
+      "transactionNumber": "IC-26-0106",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c9b07bde82e409d36ea648a74dafa04c9050b3ec1d9d6a454fa2f703a3c905e7"
+    },
+    "externalId": "IC-26-0106",
+    "snapshotAt": "2026-06-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-06-20T18:00:00Z",
+    "nextCountDue": "2026-09-15"
+  },
+  {
+    "id": "CNT-CC-2026-07",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61007",
+      "transactionNumber": "IC-26-0107",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8d58286a2ece69088c121e8ac6877016ad0c7b6afa5491a57757570140c0e0bc"
+    },
+    "externalId": "IC-26-0107",
+    "snapshotAt": "2026-07-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-07-20T18:00:00Z",
+    "nextCountDue": "2026-11-15"
+  },
+  {
+    "id": "CNT-CC-2026-08",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61008",
+      "transactionNumber": "IC-26-0108",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "365785cc2d63e3e68b10fb6a757a3bf23cd6dd0ebe0ce02952dffc841ac7e90e"
+    },
+    "externalId": "IC-26-0108",
+    "snapshotAt": "2026-08-15T06:00:00Z",
+    "sourceStatus": "REJECTED",
+    "rejectedReason": "Blind count protocol not followed; recount scheduled",
+    "nextCountDue": "2026-11-15"
+  },
+  {
+    "id": "CNT-CC-2026-09",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61009",
+      "transactionNumber": "IC-26-0109",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5325498b274aa6cb2b40a797cba2365d57b6fdcae5847c2f7676a8d3c9077524"
+    },
+    "externalId": "IC-26-0109",
+    "snapshotAt": "2026-09-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-09-20T18:00:00Z",
+    "nextCountDue": "2026-12-15"
+  },
+  {
+    "id": "CNT-CC-2026-10",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61010",
+      "transactionNumber": "IC-26-0110",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "55751355d439bcb812f745b17ba0c225ec9472f013c367578cd8188661573592"
+    },
+    "externalId": "IC-26-0110",
+    "snapshotAt": "2026-10-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-10-20T18:00:00Z",
+    "nextCountDue": "2026-12-15"
+  },
+  {
+    "id": "CNT-CC-2026-11",
+    "countType": "CYCLE",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61011",
+      "transactionNumber": "IC-26-0111",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4504f41286a55b047afc8ad5748104a9ea8a76ee645bd50973e3d9e5e58103d5"
+    },
+    "externalId": "IC-26-0111",
+    "snapshotAt": "2026-11-15T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-11-20T18:00:00Z",
+    "nextCountDue": "2026-12-15"
+  },
+  {
+    "id": "CNT-CC-2026-05R",
+    "countType": "SPOT",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "INVENTORY_COUNT",
+      "internalId": "61500",
+      "transactionNumber": "IC-26-0155",
+      "lastModifiedAt": "2027-01-05T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "858ca18dab1cb5daf6ccbbabeb2a8992e2be71344d0098a8af488c97ea5188b0"
+    },
+    "externalId": "IC-26-0155",
+    "snapshotAt": "2026-05-22T06:00:00Z",
+    "sourceStatus": "COMPLETED",
+    "approvedBy": "R. Calloway",
+    "approvedAt": "2026-05-24T18:00:00Z"
+  }
+]

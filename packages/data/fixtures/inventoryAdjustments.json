@@ -1,0 +1,49 @@
+[
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "10283",
+      "transactionNumber": "ADJ-2026-0058",
+      "lastModifiedAt": "2026-02-20T17:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "cd1807a67c3bc7f664cd1595949dd70f2e875f82e46c3bf0aba3461a61234bc0"
+    },
+    "transactionNumber": "ADJ-2026-0058",
+    "adjustmentDate": "2026-02-20",
+    "glAccount": "1200",
+    "reason": "Cycle count variance write-off — approved after recount",
+    "relatedCountPlanId": "CNT-CC-2026-02",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-B1",
+        "quantity": 1,
+        "amountCents": -67500
+      }
+    ]
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "10284",
+      "transactionNumber": "ADJ-2026-0312",
+      "lastModifiedAt": "2026-12-28T16:40:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f9a5c29f1a068c1c2bf35428d10fb60b30e6358acff0452f5caace611a91d598"
+    },
+    "transactionNumber": "ADJ-2026-0312",
+    "adjustmentDate": "2026-12-28",
+    "glAccount": "1230",
+    "reason": "RMA return to stock — RMA-2026-0451 / RMA-2026-0452",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KV-Z1",
+        "quantity": 2,
+        "amountCents": 290000
+      }
+    ]
+  }
+]

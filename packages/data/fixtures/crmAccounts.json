@@ -1,0 +1,142 @@
+[
+  {
+    "id": "AC-001",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-001",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c86f458e0866d314ada233efe01a0a726d1c94c542320e9d1c52dcf23e11e9c2"
+    },
+    "name": "Bluewater Foods Group",
+    "segment": "Food & Beverage",
+    "region": "West"
+  },
+  {
+    "id": "AC-002",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-002",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "aa4aff1194fe440544804e7dbdb875f53d3bbdb41a28d836c5c71fe6b76331d1"
+    },
+    "name": "Summit Ridge Health",
+    "segment": "Healthcare",
+    "region": "Mountain"
+  },
+  {
+    "id": "AC-003",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-003",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ed2c3b1cc710244be39661f17a1396474d5e85d0e6e461c25eee8176c44d1242"
+    },
+    "name": "Ironvale Robotics",
+    "segment": "Industrial",
+    "region": "Central"
+  },
+  {
+    "id": "AC-004",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-004",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "dd3f600b5153280eafe8c55ed1a6050a063c02a149ba861fd89eb1edec7bdcf2"
+    },
+    "name": "Copperline Grocers",
+    "segment": "Retail",
+    "region": "Northeast"
+  },
+  {
+    "id": "AC-005",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-005",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2a19bc05ab150a94b4cd96a76a0643753e906f4f39880de2aecf5973aec29e3a"
+    },
+    "name": "Northgate Fulfillment",
+    "segment": "Hospitality",
+    "region": "West"
+  },
+  {
+    "id": "AC-006",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-006",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1035b65a262b6d152e99832c45baa8cd4eeab54f0c2d10f2ab83424ef85215a1"
+    },
+    "name": "Silver Fir Hotels",
+    "segment": "Logistics",
+    "region": "Mountain"
+  },
+  {
+    "id": "AC-007",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-007",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b1b005694b96909b7ac9c35156af3ea0ada6ea594fa88fbfb76556974aaf36e9"
+    },
+    "name": "Redstone Manufacturing",
+    "segment": "Food & Beverage",
+    "region": "Central"
+  },
+  {
+    "id": "AC-008",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-008",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "31a950ccbd7e68e3e570e53befe4b16b03fddeea237f1cc755e849b6c2817b2d"
+    },
+    "name": "Lakeshore Retail Co",
+    "segment": "Healthcare",
+    "region": "Northeast"
+  },
+  {
+    "id": "AC-009",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-009",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8167a3ed9c5ae2c4ad2caa0981e469f9621300e872bc4a08e6c60508534e5dd0"
+    },
+    "name": "Evergreen Campus Services",
+    "segment": "Industrial",
+    "region": "West"
+  },
+  {
+    "id": "AC-010",
+    "sourceRef": {
+      "sourceSystem": "KESTREL_CRM",
+      "recordType": "ACCOUNT",
+      "internalId": "AC-010",
+      "lastModifiedAt": "2027-01-06T12:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3a03321b5538894449b8851312b535e33c9b01feb7d05b81592468cde4eb9350"
+    },
+    "name": "Halcyon Logistics",
+    "segment": "Retail",
+    "region": "Mountain"
+  }
+]

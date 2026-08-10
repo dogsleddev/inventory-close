@@ -1,0 +1,82 @@
+[
+  {
+    "id": "V-001",
+    "kind": "VENDOR",
+    "name": "Meridian Contract Manufacturing"
+  },
+  {
+    "id": "V-002",
+    "kind": "VENDOR",
+    "name": "Volta Components Ltd"
+  },
+  {
+    "id": "V-003",
+    "kind": "VENDOR",
+    "name": "Cascade Systems Assembly"
+  },
+  {
+    "id": "CU-001",
+    "kind": "CUSTOMER",
+    "name": "Bluewater Foods Group"
+  },
+  {
+    "id": "CU-002",
+    "kind": "CUSTOMER",
+    "name": "Summit Ridge Health"
+  },
+  {
+    "id": "CU-003",
+    "kind": "CUSTOMER",
+    "name": "Ironvale Robotics"
+  },
+  {
+    "id": "CU-004",
+    "kind": "CUSTOMER",
+    "name": "Copperline Grocers"
+  },
+  {
+    "id": "CU-005",
+    "kind": "CUSTOMER",
+    "name": "Northgate Fulfillment"
+  },
+  {
+    "id": "CU-006",
+    "kind": "CUSTOMER",
+    "name": "Silver Fir Hotels"
+  },
+  {
+    "id": "CU-007",
+    "kind": "CUSTOMER",
+    "name": "Redstone Manufacturing"
+  },
+  {
+    "id": "CU-008",
+    "kind": "CUSTOMER",
+    "name": "Lakeshore Retail Co"
+  },
+  {
+    "id": "CU-009",
+    "kind": "CUSTOMER",
+    "name": "Evergreen Campus Services"
+  },
+  {
+    "id": "CU-010",
+    "kind": "CUSTOMER",
+    "name": "Halcyon Logistics"
+  },
+  {
+    "id": "TP-001",
+    "kind": "CUSTODIAN",
+    "name": "Redwood Installation Services"
+  },
+  {
+    "id": "TP-002",
+    "kind": "CUSTODIAN",
+    "name": "Beacon Field Services"
+  },
+  {
+    "id": "TP-003",
+    "kind": "CONTRACT_MANUFACTURER",
+    "name": "Meridian Contract Manufacturing"
+  }
+]

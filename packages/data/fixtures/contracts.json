@@ -1,0 +1,307 @@
+[
+  {
+    "id": "CT-001",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "MSA-2026-041",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "39607f0640dc6ca25b248d80b30e2f5b5519b13efa4c1a8feb350e6161faa081"
+    },
+    "counterparty": "Bluewater Foods Group",
+    "title": "Master Purchase Agreement MSA-2026-041",
+    "effectiveDate": "2026-03-15",
+    "provisions": [
+      {
+        "provisionType": "RETURN_TERMS",
+        "status": "PRESENT",
+        "documentRef": "MSA-2026-041 §9"
+      },
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "MISSING"
+      },
+      {
+        "provisionType": "ACCEPTANCE",
+        "status": "MISSING"
+      }
+    ]
+  },
+  {
+    "id": "CT-002",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "LN-2026-118",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6ade78815c904636b6520ac4c76695b8ff1bd19e9f65cbb41630552cf6fadb79"
+    },
+    "counterparty": "Silver Fir Hotels",
+    "title": "Equipment Loaner Agreement LN-2026-118",
+    "effectiveDate": "2026-10-01",
+    "provisions": [
+      {
+        "provisionType": "LOANER_TERMS",
+        "status": "PRESENT",
+        "documentRef": "LA-2026-118"
+      },
+      {
+        "provisionType": "TITLE_RETENTION",
+        "status": "PRESENT",
+        "documentRef": "LA-2026-118-ADD-2"
+      }
+    ]
+  },
+  {
+    "id": "CT-003",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "DEMO-2026-072",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f9372425cbb94096638476a81a327eef5497dcd635a460ba3d24052da58e5e2b"
+    },
+    "counterparty": "Ironvale Robotics",
+    "title": "Demonstration Evaluation Agreement",
+    "effectiveDate": "2026-05-28",
+    "provisions": [
+      {
+        "provisionType": "DEMO_TERMS",
+        "status": "PRESENT",
+        "documentRef": "DEMO-2026-072 §3"
+      },
+      {
+        "provisionType": "TITLE_RETENTION",
+        "status": "PRESENT",
+        "documentRef": "DEMO-2026-072 §4"
+      }
+    ]
+  },
+  {
+    "id": "CT-004",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "CUST-2025-009",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "879e8f5542702d70c1f2014d0f9c2d57021fe36397a7380c7a30db493f711d72"
+    },
+    "counterparty": "Redwood Installation Services",
+    "title": "Field Custody & Installation Services Agreement",
+    "effectiveDate": "2025-11-01",
+    "provisions": [
+      {
+        "provisionType": "CUSTODY",
+        "status": "PRESENT",
+        "documentRef": "CUST-2025-009 §2"
+      }
+    ]
+  },
+  {
+    "id": "CT-005",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "CUST-2025-014",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2705e305ae89007628dce94e4732d35e686b2b951224953b0ec4d5468a26c255"
+    },
+    "counterparty": "Beacon Field Services",
+    "title": "Field Services Custody Agreement",
+    "effectiveDate": "2025-08-12",
+    "provisions": [
+      {
+        "provisionType": "CUSTODY",
+        "status": "PRESENT",
+        "documentRef": "CUST-2025-014 §2"
+      }
+    ]
+  },
+  {
+    "id": "CT-006",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "CM-2025-002",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5985acc1c795af5b495c4f63e043bd89cb1b1ed602a89a65a6118c9f390a34c3"
+    },
+    "counterparty": "Meridian Contract Manufacturing",
+    "title": "Contract Manufacturing & Consignment Agreement",
+    "effectiveDate": "2025-05-01",
+    "provisions": [
+      {
+        "provisionType": "CUSTODY",
+        "status": "PRESENT",
+        "documentRef": "CM-2025-002 §6"
+      }
+    ]
+  },
+  {
+    "id": "CT-007",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "SUP-2025-011",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "652f3071d6c431fc698d2a563b20979a532edd22594007f6c05110f76ded94fd"
+    },
+    "counterparty": "Volta Components Ltd",
+    "title": "Supply Agreement — FOB Origin",
+    "effectiveDate": "2025-02-10",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "SUP-2025-011 §5"
+      }
+    ]
+  },
+  {
+    "id": "CT-008",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "SUP-2025-004",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3fdb60337b2bfb98977053f7fce4eb37efe29df65e0013675a37c62a2b465fca"
+    },
+    "counterparty": "Meridian Contract Manufacturing",
+    "title": "Supply Agreement",
+    "effectiveDate": "2025-01-20",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "SUP-2025-004 §5"
+      }
+    ]
+  },
+  {
+    "id": "CT-009",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "SUP-2025-019",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "74db9d5e9b5bbc1d5d93bf387e83150515dcfd72c1e52ca9bb1c25d51de75771"
+    },
+    "counterparty": "Cascade Systems Assembly",
+    "title": "Supply Agreement",
+    "effectiveDate": "2025-04-02",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "SUP-2025-019 §5"
+      }
+    ]
+  },
+  {
+    "id": "CT-010",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "RID-2026-118",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "859daffbe77e7700ff6ded6d3eb334fa28de039049fccc4e0a8acd7c60b27846"
+    },
+    "counterparty": "Volta Components Ltd",
+    "title": "Freight & Title Rider — PO-26-1187",
+    "effectiveDate": "2026-12-15",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "MISSING"
+      }
+    ]
+  },
+  {
+    "id": "CT-011",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "MSA-2025-030",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "511367e2e8a79e17aac8ebf605aa08548dcd705cda4feecb755ded972af6de61"
+    },
+    "counterparty": "Summit Ridge Health",
+    "title": "Master Purchase Agreement",
+    "effectiveDate": "2025-06-15",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "MSA-2025-030 §7"
+      },
+      {
+        "provisionType": "ACCEPTANCE",
+        "status": "PRESENT",
+        "documentRef": "MSA-2025-030 §8"
+      }
+    ]
+  },
+  {
+    "id": "CT-012",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "MSA-2025-041",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f58512ea1420979bf49db3b21abce114a8d6eae3112c34ed81bfc5c00535e8da"
+    },
+    "counterparty": "Northgate Fulfillment",
+    "title": "Master Purchase Agreement",
+    "effectiveDate": "2025-09-01",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "MSA-2025-041 §7"
+      },
+      {
+        "provisionType": "ACCEPTANCE",
+        "status": "PRESENT",
+        "documentRef": "MSA-2025-041 §8"
+      }
+    ]
+  },
+  {
+    "id": "CT-013",
+    "sourceRef": {
+      "sourceSystem": "ACCORD_VAULT",
+      "recordType": "CONTRACT",
+      "internalId": "MSA-2026-007",
+      "lastModifiedAt": "2026-12-24T11:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "63e67a97d6acdfc7aae0c509313d63df20c75c5981a0e26ece7815ef9a2d486a"
+    },
+    "counterparty": "Lakeshore Retail Co",
+    "title": "Master Purchase Agreement",
+    "effectiveDate": "2026-01-22",
+    "provisions": [
+      {
+        "provisionType": "OWNERSHIP_TRANSFER",
+        "status": "PRESENT",
+        "documentRef": "MSA-2026-007 §7"
+      },
+      {
+        "provisionType": "ACCEPTANCE",
+        "status": "PRESENT",
+        "documentRef": "MSA-2026-007 §8"
+      }
+    ]
+  }
+]

@@ -5,10 +5,17 @@
   "type": "module",
   "description": "Deterministic dataset generator, fixtures, and repository adapters (seed adapter first, PostgreSQL-ready) (Stage 02).",
   "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc --noEmit" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "tsx scripts/generate.ts"
+  },
   "dependencies": {
     "@icg/domain": "workspace:*",
     "zod": "^3.24.1"
   },
-  "devDependencies": { "typescript": "^5.7.2" }
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
 }

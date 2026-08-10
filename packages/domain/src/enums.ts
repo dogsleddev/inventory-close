@@ -190,6 +190,15 @@ export const COUNT_TEST_DIRECTIONS = [
 export type CountTestDirection = (typeof COUNT_TEST_DIRECTIONS)[number];
 
 /**
+ * docs/07 — 42 test counts total: 24 management-selected, 18 auditor-selected.
+ * Management tests are a management control; auditor selections are recorded
+ * and supported but never made by Gaurd.
+ */
+export const COUNT_TEST_SELECTION_SOURCES = ["MANAGEMENT", "AUDITOR"] as const;
+export type CountTestSelectionSource =
+  (typeof COUNT_TEST_SELECTION_SOURCES)[number];
+
+/**
  * Transaction-chain completeness (CANONICAL_SPEC §2): component coverage,
  * never an accounting-confidence score.
  */

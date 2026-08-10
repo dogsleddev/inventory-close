@@ -1,0 +1,55 @@
+[
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_ENTRY",
+      "internalId": "10285",
+      "transactionNumber": "JE-2026-0790",
+      "lastModifiedAt": "2026-12-29T15:10:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "06c22ca2e050adb7901324eb4c70e796eb800c6b901c2d68c98a6713143db37e"
+    },
+    "transactionNumber": "JE-2026-0790",
+    "postedDate": "2026-12-29",
+    "account": "1200",
+    "amountCents": 290000,
+    "memo": "RMA return re-add — KV-Z1 x2 (RMA-2026-0451, RMA-2026-0452)",
+    "enteredBy": "T. Okafor",
+    "supportRef": "RMA-2026-0451"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_ENTRY",
+      "internalId": "10286",
+      "transactionNumber": "JE-2026-0847",
+      "lastModifiedAt": "2026-12-31T22:55:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1f56031da5a2fe78b645517523537b9ddef7f03e89abc3c3a8602f1ddb1efe44"
+    },
+    "transactionNumber": "JE-2026-0847",
+    "postedDate": "2026-12-31",
+    "account": "1200",
+    "amountCents": 1875000,
+    "memo": "Year-end inventory true-up",
+    "enteredBy": "T. Okafor"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_ENTRY",
+      "internalId": "10287",
+      "transactionNumber": "JE-2027-0012",
+      "lastModifiedAt": "2027-01-02T07:15:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "152be43447a04bd12baa51b82c7ae34464a55eca1d042dff785c42deb6744b0b"
+    },
+    "transactionNumber": "JE-2027-0012",
+    "postedDate": "2027-01-02",
+    "account": "1200",
+    "amountCents": 920000,
+    "memo": "Receipt posting for IR-26-2214 — December batch interface delay",
+    "enteredBy": "SYSTEM-BATCH",
+    "supportRef": "IR-26-2214"
+  }
+]

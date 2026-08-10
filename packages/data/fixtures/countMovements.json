@@ -1,0 +1,63 @@
+[
+  {
+    "id": "MV-001",
+    "sku": "KV-D1",
+    "quantity": 4,
+    "fromLocation": "RECEIVING",
+    "toLocation": "PRIMARY_WAREHOUSE",
+    "movedAt": "2026-12-30T17:20:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Putaway of late December receipt"
+  },
+  {
+    "id": "MV-002",
+    "sku": "KV-B1",
+    "quantity": 2,
+    "fromLocation": "RECEIVING",
+    "toLocation": "PRIMARY_WAREHOUSE",
+    "movedAt": "2026-12-30T18:05:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Putaway of late December receipt"
+  },
+  {
+    "id": "MV-003",
+    "sku": "KA-41",
+    "quantity": 3,
+    "fromLocation": "PRIMARY_WAREHOUSE",
+    "toLocation": "STAGING",
+    "movedAt": "2026-12-31T16:45:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Pick for January install project"
+  },
+  {
+    "id": "MV-004",
+    "serial": "KE-E2-8904",
+    "sku": "KE-E2",
+    "quantity": 1,
+    "fromLocation": "PRIMARY_WAREHOUSE",
+    "toLocation": "STAGING",
+    "movedAt": "2026-12-31T21:15:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Staged for January installation — customer project"
+  },
+  {
+    "id": "MV-005",
+    "sku": "KV-F1",
+    "quantity": 1,
+    "fromLocation": "RMA_REPAIR",
+    "toLocation": "PRIMARY_WAREHOUSE",
+    "movedAt": "2027-01-02T16:10:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Repair complete — return to stock"
+  },
+  {
+    "id": "MV-006",
+    "sku": "KR-U1",
+    "quantity": 2,
+    "fromLocation": "STAGING",
+    "toLocation": "PRIMARY_WAREHOUSE",
+    "movedAt": "2027-01-04T15:30:00Z",
+    "authorizedBy": "S. Ibarra",
+    "reason": "Project descoped — return to stock"
+  }
+]

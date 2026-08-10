@@ -1,0 +1,200 @@
+[
+  {
+    "id": "INST-2688",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2688",
+      "lastModifiedAt": "2026-12-30T20:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "25988e96943f75675dc3fe7b84e227f60cabac80df0d13ba651e986ee8882b70"
+    },
+    "serials": [
+      "KE-E2-1048",
+      "KE-E2-1051"
+    ],
+    "customer": "Bluewater Foods Group",
+    "siteName": "Bluewater Harbor Distribution Center",
+    "installedAt": "2026-12-30T19:30:00Z",
+    "installedBy": "DeployOps Crew 7",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2600",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2600",
+      "lastModifiedAt": "2026-09-06T22:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a67050337633ff90fc430baf8a891e82f61e334d08022f5b09018d26d22e3490"
+    },
+    "serials": [
+      "KE-I1-8309",
+      "KE-I1-6024",
+      "KE-I1-9297",
+      "KE-I1-2037",
+      "KE-I1-6720",
+      "KE-I1-3449",
+      "KE-I1-1346",
+      "KE-I1-1877",
+      "KE-I1-8671",
+      "KE-I1-8183",
+      "KE-I1-6152",
+      "KE-I1-5343",
+      "KE-I1-2829",
+      "KE-I1-4066"
+    ],
+    "customer": "Summit Ridge Health",
+    "siteName": "Summit Ridge Health main site",
+    "installedAt": "2026-09-06T19:00:00Z",
+    "installedBy": "DeployOps Crew 1",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2601",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2601",
+      "lastModifiedAt": "2026-10-09T22:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "065ab57cd95f996a9c48783dd67fac826040210894737c9c90f24b633af2db53"
+    },
+    "serials": [
+      "KE-I1-4702",
+      "KE-I1-5090",
+      "KE-I1-1977",
+      "KE-I1-7098",
+      "KE-I1-8927",
+      "KE-I1-4867",
+      "KE-I1-7107",
+      "KE-I1-5931",
+      "KE-I1-2606",
+      "KE-I1-5195",
+      "KE-I1-3475",
+      "KE-I1-4444",
+      "KE-I1-2411",
+      "KE-I1-4995"
+    ],
+    "customer": "Copperline Grocers",
+    "siteName": "Copperline Grocers main site",
+    "installedAt": "2026-10-09T19:00:00Z",
+    "installedBy": "DeployOps Crew 2",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2602",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2602",
+      "lastModifiedAt": "2026-11-12T22:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c48eed2e3fb9a6d9e77a3ec983ed8ff3f03ac2d0973cb23e06d0dfce3e7c2db4"
+    },
+    "serials": [
+      "KE-I1-8733",
+      "KE-I1-2816",
+      "KE-I1-8271",
+      "KE-I1-4394",
+      "KE-I1-6599",
+      "KE-I1-9504",
+      "KE-I1-5801",
+      "KE-I1-3854",
+      "KE-I1-7127",
+      "KE-I1-7775",
+      "KE-I1-8011",
+      "KE-S1-2003",
+      "KE-X1-4337",
+      "KE-X1-1314"
+    ],
+    "customer": "Northgate Fulfillment",
+    "siteName": "Northgate Fulfillment main site",
+    "installedAt": "2026-11-12T19:00:00Z",
+    "installedBy": "DeployOps Crew 3",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2603",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2603",
+      "lastModifiedAt": "2026-09-15T22:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6000a6455f592f630c16ec0e2203883c3b7e7a317ec607700627e5784317ff48"
+    },
+    "serials": [
+      "KE-X1-4655",
+      "KE-X1-9440",
+      "KE-X1-4090",
+      "KE-X1-5940",
+      "KE-X1-2820",
+      "KE-X1-7822",
+      "KE-X1-8779",
+      "KE-X1-5137",
+      "KE-X1-3782",
+      "KE-X1-6312",
+      "KE-X1-9454",
+      "KE-X1-1158",
+      "KE-X1-1037",
+      "KE-X1-9771"
+    ],
+    "customer": "Redstone Manufacturing",
+    "siteName": "Redstone Manufacturing main site",
+    "installedAt": "2026-09-15T19:00:00Z",
+    "installedBy": "DeployOps Crew 4",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2604",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2604",
+      "lastModifiedAt": "2026-10-18T22:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "36741edeb8cbd67dd4ed7f2a245a81b1caced1b21499bd4464ed0b8a17381203"
+    },
+    "serials": [
+      "KE-X1-3061",
+      "KE-X1-4726",
+      "KE-X1-8469",
+      "KE-X1-8107",
+      "KE-X1-3278",
+      "KE-I1-9132",
+      "KE-X1-9159",
+      "KE-Y1-8184",
+      "KE-Y1-1134",
+      "KE-Y1-8530",
+      "KE-Y1-4542",
+      "KE-Y1-7229",
+      "KE-Y1-1470"
+    ],
+    "customer": "Evergreen Campus Services",
+    "siteName": "Evergreen Campus Services main site",
+    "installedAt": "2026-10-18T19:00:00Z",
+    "installedBy": "DeployOps Crew 5",
+    "status": "COMPLETE"
+  },
+  {
+    "id": "INST-2641",
+    "sourceRef": {
+      "sourceSystem": "DEPLOY_OPS",
+      "recordType": "INSTALLATION",
+      "internalId": "INST-2641",
+      "lastModifiedAt": "2026-10-06T21:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "cfec0084657704e66bfa4417bea69bcd7e1c75f253cc7d355a2a38445f15b266"
+    },
+    "serials": [
+      "KE-Y1-1845"
+    ],
+    "customer": "Silver Fir Hotels",
+    "siteName": "Silver Fir Hotels — Lakeview property",
+    "installedAt": "2026-10-06T18:45:00Z",
+    "installedBy": "DeployOps Crew 3",
+    "status": "COMPLETE"
+  }
+]

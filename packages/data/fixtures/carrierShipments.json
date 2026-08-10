@@ -1,0 +1,558 @@
+[
+  {
+    "id": "FP-88213",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88213",
+      "lastModifiedAt": "2026-12-29T17:45:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "eacf46a55dd0218ad4fe085c50abc723e5f0cf7082154e579846eee1d492d5fe"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261972",
+    "serials": [
+      "KE-E2-1048",
+      "KE-E2-1051"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-27T18:20:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-28T04:10:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "OUT_FOR_DELIVERY",
+        "occurredAt": "2026-12-29T14:05:00Z",
+        "location": "Harbor District"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-12-29T17:41:00Z",
+        "location": "Bluewater Foods Distribution Center"
+      }
+    ]
+  },
+  {
+    "id": "FP-88150",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88150",
+      "lastModifiedAt": "2026-11-08T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "35d53bf335ce535318d2a1e572c4b9009dceeb498a4281d104887329937af0eb"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261501",
+    "serials": [
+      "KE-E1-3589",
+      "KE-S1-1271",
+      "KE-M1-7771"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-06T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-07T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-08T16:15:00Z",
+        "location": "Bluewater Foods Group receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88151",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88151",
+      "lastModifiedAt": "2026-11-12T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "70fe186ddb6845a7fb756608cff608a5c1d1e401be02f52eac2563829361237b"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261502",
+    "serials": [
+      "KE-X1-8518",
+      "KE-S1-4460",
+      "KE-E2-6669",
+      "KE-S1-8383"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-10T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-11T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-12T16:15:00Z",
+        "location": "Summit Ridge Health receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88152",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88152",
+      "lastModifiedAt": "2026-11-16T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "704a84d05914c7338028f66f06661f8a675e18b3d52b9ec1b55cc63d343b7f34"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261503",
+    "serials": [
+      "KE-M1-3016",
+      "KE-E1-4430",
+      "KE-E1-5349"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-14T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-15T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-16T16:15:00Z",
+        "location": "Ironvale Robotics receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88153",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88153",
+      "lastModifiedAt": "2026-11-20T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "52151e5a3f8fd9bc7750af9041945ad0497c00fd11ba1c9d71ff8032881a88c4"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261504",
+    "serials": [
+      "KE-E2-1662",
+      "KE-E1-4281"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-18T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-19T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-20T16:15:00Z",
+        "location": "Copperline Grocers receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88154",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88154",
+      "lastModifiedAt": "2026-11-24T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5aed674b07aea833512f60ef35ea70f24e78af9016867cbd1c1f9f62e9811d6f"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261505",
+    "serials": [
+      "KE-X1-1157",
+      "KE-E1-4916",
+      "KE-S1-5843"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-22T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-23T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-24T16:15:00Z",
+        "location": "Northgate Fulfillment receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88155",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88155",
+      "lastModifiedAt": "2026-11-28T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "551cb07905e96e5139f2951559a3b0736cf950a82a27b4fca3178724bf590648"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261506",
+    "serials": [
+      "KE-E1-3799",
+      "KE-M1-6449",
+      "KE-M1-3671"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-26T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-11-27T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-11-28T16:15:00Z",
+        "location": "Silver Fir Hotels receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88156",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88156",
+      "lastModifiedAt": "2026-12-02T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3173cb2c58f2a03dc8c71f3915b9a9c48abafdfc222e518d2903fdc3be51fb17"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261507",
+    "serials": [
+      "KE-E2-2255",
+      "KE-S1-4077"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-11-30T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-01T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-12-02T16:15:00Z",
+        "location": "Redstone Manufacturing receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88157",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88157",
+      "lastModifiedAt": "2026-12-06T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "452db0f46838670e98b3ac1bc76bafa1c2ba46f5efab959a2b30ce1c41432deb"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261508",
+    "serials": [
+      "KE-M1-4748",
+      "KE-E2-6417"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-04T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-05T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-12-06T16:15:00Z",
+        "location": "Lakeshore Retail Co receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88158",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88158",
+      "lastModifiedAt": "2026-12-10T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "291d106a0975e058e1cdcc6133e3d94a14354d258c7e75f3bc113028fdddb870"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261509",
+    "serials": [
+      "KE-E1-5877",
+      "KE-M1-9178"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-08T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-09T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-12-10T16:15:00Z",
+        "location": "Evergreen Campus Services receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88159",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88159",
+      "lastModifiedAt": "2026-12-14T18:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3e0b88f50868cd5df72ec0a6177e256e673fa80ae9967b07c401fc1bb71a5cdb"
+    },
+    "carrier": "FlightPath Freight",
+    "itemFulfillmentNumber": "IF-261510",
+    "serials": [
+      "KE-E1-4268",
+      "KE-X1-5166",
+      "KE-E2-8589",
+      "KE-E1-5523"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-12T17:30:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-13T05:00:00Z",
+        "location": "FlightPath Hub — Reno"
+      },
+      {
+        "eventType": "DELIVERED",
+        "occurredAt": "2026-12-14T16:15:00Z",
+        "location": "Halcyon Logistics receiving dock"
+      }
+    ]
+  },
+  {
+    "id": "FP-88219",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88219",
+      "lastModifiedAt": "2026-12-31T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "fda25a6dae5cb5cab4cc8f8f201fe53ecf7edbc2842f77d0f96397e5cf991c00"
+    },
+    "carrier": "FlightPath Freight",
+    "serials": [
+      "KE-I1-9807",
+      "KE-I1-9628",
+      "KE-E1-2925",
+      "KE-X1-8809",
+      "KE-X1-5064",
+      "KE-X1-3199",
+      "KE-X1-6865",
+      "KE-X1-4925",
+      "KE-X1-1401",
+      "KE-X1-6601",
+      "KE-X1-6554",
+      "KE-X1-2142",
+      "KE-X1-3167",
+      "KE-X1-8055",
+      "KE-X1-9583",
+      "KE-X1-2836",
+      "KE-X1-6173",
+      "KE-X1-7327",
+      "KE-X1-3786",
+      "KE-X1-7354"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-28T17:00:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-31T08:30:00Z",
+        "location": "FlightPath linehaul"
+      }
+    ]
+  },
+  {
+    "id": "FP-88220",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88220",
+      "lastModifiedAt": "2026-12-31T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2c4c1ac6503ec2e9aee9b10cc17d0668c7191c4e53b7b7b6f4477bf99ce95b54"
+    },
+    "carrier": "FlightPath Freight",
+    "serials": [
+      "KE-X1-2096",
+      "KE-X1-5656",
+      "KE-X1-3693",
+      "KE-X1-9465",
+      "KE-X1-7049"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-29T17:00:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-31T08:30:00Z",
+        "location": "FlightPath linehaul"
+      }
+    ]
+  },
+  {
+    "id": "FP-88221",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-88221",
+      "lastModifiedAt": "2026-12-31T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "26627954ad1f1b724eb30684ca2a9fce85f7775388a30db0634b88e512fda1dd"
+    },
+    "carrier": "FlightPath Freight",
+    "serials": [],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-30T17:00:00Z",
+        "location": "KestrelGrid Dock 2"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-31T08:30:00Z",
+        "location": "FlightPath linehaul"
+      }
+    ]
+  },
+  {
+    "id": "FP-IN-2291",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-IN-2291",
+      "lastModifiedAt": "2026-12-31T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "9c0419acabf966bc1d99ab669b4a7fb20e8c9514a456a4035db50163fe3c9e88"
+    },
+    "carrier": "FlightPath Freight",
+    "serials": [
+      "KE-X1-9025",
+      "KE-X1-9880",
+      "KE-X1-9866"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-29T15:00:00Z",
+        "location": "Volta Components dock"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-31T06:00:00Z",
+        "location": "FlightPath linehaul"
+      }
+    ]
+  },
+  {
+    "id": "FP-IN-2288",
+    "sourceRef": {
+      "sourceSystem": "FLIGHTPATH",
+      "recordType": "CARRIER_SHIPMENT",
+      "internalId": "FP-IN-2288",
+      "lastModifiedAt": "2026-12-31T08:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "4ca10f1e58570b14db2bb289f455813cadcac6f79c2c3867ed85377a454c5b80"
+    },
+    "carrier": "FlightPath Freight",
+    "serials": [
+      "KE-E1-9506",
+      "KE-X1-2388",
+      "KE-X1-6107",
+      "KE-X1-6448",
+      "KE-X1-1917",
+      "KE-X1-1425",
+      "KE-X1-6001",
+      "KE-X1-4745",
+      "KE-X1-8371",
+      "KE-X1-6403",
+      "KE-Y1-5584",
+      "KE-Y1-6093"
+    ],
+    "events": [
+      {
+        "eventType": "PICKUP",
+        "occurredAt": "2026-12-27T16:00:00Z",
+        "location": "Vendor consolidation dock"
+      },
+      {
+        "eventType": "IN_TRANSIT",
+        "occurredAt": "2026-12-31T06:00:00Z",
+        "location": "FlightPath linehaul"
+      }
+    ]
+  }
+]

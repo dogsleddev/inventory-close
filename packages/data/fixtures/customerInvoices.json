@@ -1,0 +1,408 @@
+[
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10249",
+      "transactionNumber": "INV-2026-0301",
+      "lastModifiedAt": "2026-11-09T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "1d330e58acc59b13073ad4ae81a6ef26f62fe3e8858c29331261ac787afe379c"
+    },
+    "transactionNumber": "INV-2026-0301",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-3589"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-1271"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-7771"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26101",
+    "invoiceDate": "2026-11-09"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10252",
+      "transactionNumber": "INV-2026-0302",
+      "lastModifiedAt": "2026-11-13T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2398d40515f734a7a06c388d6eff58059f965ccb7b88e477e454c094b4a42043"
+    },
+    "transactionNumber": "INV-2026-0302",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-8518"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 2,
+        "amountCents": 768000,
+        "serials": [
+          "KE-S1-4460",
+          "KE-S1-8383"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-6669"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26102",
+    "invoiceDate": "2026-11-13"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10255",
+      "transactionNumber": "INV-2026-0303",
+      "lastModifiedAt": "2026-11-17T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2c77805b1e433dc7886868b4d1dc7fc0f8944dd4c9f4225d6a99ea98930ee098"
+    },
+    "transactionNumber": "INV-2026-0303",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-3016"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 2,
+        "amountCents": 1568000,
+        "serials": [
+          "KE-E1-4430",
+          "KE-E1-5349"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26103",
+    "invoiceDate": "2026-11-17"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10258",
+      "transactionNumber": "INV-2026-0304",
+      "lastModifiedAt": "2026-11-21T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f9bd22a997a6d2b9794570816271ce53b2ba396b3e216f45ce16258e2791e3df"
+    },
+    "transactionNumber": "INV-2026-0304",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-1662"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-4281"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26104",
+    "invoiceDate": "2026-11-21"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10261",
+      "transactionNumber": "INV-2026-0305",
+      "lastModifiedAt": "2026-11-25T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "5eafb111fb21e1d3d1d774f4b10091c4280767eb258b2efcbaba8cc411a18f41"
+    },
+    "transactionNumber": "INV-2026-0305",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-1157"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-4916"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-5843"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26105",
+    "invoiceDate": "2026-11-25"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10264",
+      "transactionNumber": "INV-2026-0306",
+      "lastModifiedAt": "2026-11-29T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "21a5b746ed855a946fefbb83efcf84ae20e00c34336c66df2182424905a6d287"
+    },
+    "transactionNumber": "INV-2026-0306",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-3799"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-M1",
+        "quantity": 2,
+        "amountCents": 432000,
+        "serials": [
+          "KE-M1-6449",
+          "KE-M1-3671"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26106",
+    "invoiceDate": "2026-11-29"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10267",
+      "transactionNumber": "INV-2026-0307",
+      "lastModifiedAt": "2026-12-03T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "d8acf96a3ba06f0d84085b31747bf6ccdfd21ce46009a07a75de8545100f42a2"
+    },
+    "transactionNumber": "INV-2026-0307",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-2255"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-S1",
+        "quantity": 1,
+        "amountCents": 384000,
+        "serials": [
+          "KE-S1-4077"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26107",
+    "invoiceDate": "2026-12-03"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10270",
+      "transactionNumber": "INV-2026-0308",
+      "lastModifiedAt": "2026-12-07T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c0be2fd7bdbfadbe34333bef09e3c20f8f094edd2fc3a901c2053ee1f2a97216"
+    },
+    "transactionNumber": "INV-2026-0308",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-4748"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-6417"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26108",
+    "invoiceDate": "2026-12-07"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10273",
+      "transactionNumber": "INV-2026-0309",
+      "lastModifiedAt": "2026-12-11T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "64fffa7547df4e5d754baf3becf2f54f48aa39418bb2a00d3fa2fd1d60b2f15a"
+    },
+    "transactionNumber": "INV-2026-0309",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 1,
+        "amountCents": 784000,
+        "serials": [
+          "KE-E1-5877"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-M1",
+        "quantity": 1,
+        "amountCents": 216000,
+        "serials": [
+          "KE-M1-9178"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26109",
+    "invoiceDate": "2026-12-11"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10276",
+      "transactionNumber": "INV-2026-0310",
+      "lastModifiedAt": "2026-12-15T09:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8cab6178b4360649e2b8349bb5fc0d84b6e00c2da01e6b0b6061effa39d4a7e3"
+    },
+    "transactionNumber": "INV-2026-0310",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E1",
+        "quantity": 2,
+        "amountCents": 1568000,
+        "serials": [
+          "KE-E1-4268",
+          "KE-E1-5523"
+        ]
+      },
+      {
+        "lineId": "L2",
+        "sku": "KE-X1",
+        "quantity": 1,
+        "amountCents": 1472000,
+        "serials": [
+          "KE-X1-5166"
+        ]
+      },
+      {
+        "lineId": "L3",
+        "sku": "KE-E2",
+        "quantity": 1,
+        "amountCents": 1184000,
+        "serials": [
+          "KE-E2-8589"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26110",
+    "invoiceDate": "2026-12-15"
+  },
+  {
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "CUSTOMER_INVOICE",
+      "internalId": "10279",
+      "transactionNumber": "INV-2027-00418",
+      "lastModifiedAt": "2027-01-02T09:30:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "133ba348352f8d104274fff1d5e58ff1d6daa3f6d708a32e2e405dbfdf0f0dc6"
+    },
+    "transactionNumber": "INV-2027-00418",
+    "lines": [
+      {
+        "lineId": "L1",
+        "sku": "KE-E2",
+        "quantity": 2,
+        "amountCents": 2368000,
+        "serials": [
+          "KE-E2-1048",
+          "KE-E2-1051"
+        ]
+      }
+    ],
+    "salesOrderNumber": "SO-26184",
+    "invoiceDate": "2027-01-02"
+  }
+]

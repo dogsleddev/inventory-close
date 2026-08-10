@@ -1,0 +1,72 @@
+[
+  {
+    "account": "1200",
+    "asOf": "2026-12-31",
+    "amountCents": 378915000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_BALANCE",
+      "internalId": "90001",
+      "transactionNumber": "GLB-2026-1200",
+      "lastModifiedAt": "2027-01-01T02:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "f7740c5209064e1f2d4495e7560ca07fbe32f4843e6ef6ecbffae8a36580999e"
+    }
+  },
+  {
+    "account": "1210",
+    "asOf": "2026-12-31",
+    "amountCents": 39030000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_BALANCE",
+      "internalId": "90002",
+      "transactionNumber": "GLB-2026-1210",
+      "lastModifiedAt": "2027-01-01T02:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "59366348d3b5956cf288109bfe6f55c57552801c25044f302e3bac094643cd01"
+    }
+  },
+  {
+    "account": "1220",
+    "asOf": "2026-12-31",
+    "amountCents": 39467500,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_BALANCE",
+      "internalId": "90003",
+      "transactionNumber": "GLB-2026-1220",
+      "lastModifiedAt": "2027-01-01T02:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "af1569ab457636eeabd8d51186b2e901e4dd00cca60d97ebd078afea980afb08"
+    }
+  },
+  {
+    "account": "1230",
+    "asOf": "2026-12-31",
+    "amountCents": 23832500,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_BALANCE",
+      "internalId": "90004",
+      "transactionNumber": "GLB-2026-1230",
+      "lastModifiedAt": "2027-01-01T02:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "6e85da22cd9590f04e2167024347ffce3824b5ec5cf5959e29c7ee2fff19a7c9"
+    }
+  },
+  {
+    "account": "1290",
+    "asOf": "2026-12-31",
+    "amountCents": -5400000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "GL_BALANCE",
+      "internalId": "90005",
+      "transactionNumber": "GLB-2026-1290",
+      "lastModifiedAt": "2027-01-01T02:00:00Z",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "cf1e7b76270c2cc9f5ee98869511ef9a2cda53252f71f01602bd78638866d3f8"
+    }
+  }
+]

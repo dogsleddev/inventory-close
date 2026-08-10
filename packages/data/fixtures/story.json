@@ -1,0 +1,89 @@
+{
+  "exc001Serials": [
+    "KE-E2-1048",
+    "KE-E2-1051"
+  ],
+  "exc002Serials": [
+    "KE-X1-9025",
+    "KE-X1-9880",
+    "KE-X1-9866"
+  ],
+  "exc003Serial": "KE-X1-3498",
+  "exc004Serial": "KE-X1-8842",
+  "exc006Serial": "KE-E2-8904",
+  "exc013Serial": "KE-E2-1986",
+  "exc014Serial": "KE-X1-6904",
+  "exc010Serial": "KE-X1-6670",
+  "exc008Serial": "KE-Y1-1845",
+  "exc012Serial": "KE-E1-3335",
+  "gitInOtherSerialized": [
+    "KE-E1-9506",
+    "KE-X1-2388",
+    "KE-X1-6107",
+    "KE-X1-6448",
+    "KE-X1-1917",
+    "KE-X1-1425",
+    "KE-X1-6001",
+    "KE-X1-4745",
+    "KE-X1-8371",
+    "KE-X1-6403",
+    "KE-Y1-5584",
+    "KE-Y1-6093"
+  ],
+  "redwoodUnits": [
+    {
+      "sku": "KE-S1",
+      "serial": "KE-S1-9002"
+    },
+    {
+      "sku": "KE-E1",
+      "serial": "KE-E1-4778"
+    },
+    {
+      "sku": "KE-E1",
+      "serial": "KE-E1-7566"
+    },
+    {
+      "sku": "KE-E1",
+      "serial": "KE-E1-9443"
+    },
+    {
+      "sku": "KE-E1",
+      "serial": "KE-E1-9611"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-8854"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-9983"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-1834"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-7242"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-9930"
+    },
+    {
+      "sku": "KE-X1",
+      "serial": "KE-X1-1373"
+    },
+    {
+      "sku": "KE-Y1",
+      "serial": "KE-Y1-7854"
+    },
+    {
+      "sku": "KA-41"
+    },
+    {
+      "sku": "KA-41"
+    }
+  ]
+}

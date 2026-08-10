@@ -23,5 +23,6 @@ export * from "./types/security.js";
 export * from "./types/sources.js";
 export * from "./types/replay.js";
 export * from "./schemas/fixtures.js";
+export * from "./schemas/datasetFixtures.js";
 export * from "./schemas/goldenBaseline.js";
 export * from "./repositories.js";
