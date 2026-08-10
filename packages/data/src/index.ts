@@ -17,6 +17,11 @@ export {
 
 export { buildDataset } from "./buildDataset.js";
 export type { FixtureCollections, IcgDataset } from "./buildDataset.js";
+export { toCloseInput } from "./closeInput.js";
+export { createFixtureNetSuiteAdapter } from "./netsuiteAdapter.js";
+export type { NetSuiteAdapter } from "./netsuiteAdapter.js";
+export { DEMO_USERS, userByRole } from "./users.js";
+export type { DemoUser } from "./users.js";
 export { ALLOCATION_PLAN } from "./allocation.js";
 export type { AllocationCell } from "./allocation.js";
 export * from "./constants.js";

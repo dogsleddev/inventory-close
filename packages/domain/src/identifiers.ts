@@ -38,10 +38,11 @@ export interface SourceRecordRef {
   readonly sourceSystem: SourceSystemId;
   readonly recordType: NetSuiteRecordType | string;
   readonly internalId: string;
-  readonly transactionNumber?: string;
-  readonly lineId?: string;
-  readonly lastModifiedAt?: IsoDateTime;
-  readonly retrievedAt: IsoDateTime;
+  /** Optionals admit explicit undefined to match Zod-inferred fixture shapes. */
+  readonly transactionNumber?: string | undefined;
+  readonly lineId?: string | undefined;
+  readonly lastModifiedAt?: IsoDateTime | string | undefined;
+  readonly retrievedAt: IsoDateTime | string;
   readonly sourceHash: string;
 }
 

@@ -103,10 +103,19 @@ importers:
 
   packages/evidence:
     dependencies:
+      '@icg/data':
+        specifier: workspace:*
+        version: link:../data
       '@icg/domain':
         specifier: workspace:*
         version: link:../domain
+      '@icg/rules':
+        specifier: workspace:*
+        version: link:../rules
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -126,10 +135,16 @@ importers:
 
   packages/permissions:
     dependencies:
+      '@icg/data':
+        specifier: workspace:*
+        version: link:../data
       '@icg/domain':
         specifier: workspace:*
         version: link:../domain
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -174,6 +189,9 @@ importers:
         specifier: workspace:*
         version: link:../workflows
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

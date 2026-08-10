@@ -1,9 +1,9 @@
-{
+﻿{
   "name": "@icg/services",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Application services — the single structured source of truth consumed by UI, Ask Gaurd, exports, and future MCP (Stage 04).",
+  "description": "Application services â€” the single structured source of truth consumed by UI, Ask Gaurd, exports, and future MCP (Stage 04).",
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc --noEmit" },
   "dependencies": {
@@ -15,5 +15,5 @@
     "@icg/rules": "workspace:*",
     "@icg/workflows": "workspace:*"
   },
-  "devDependencies": { "typescript": "^5.7.2" }
+  "devDependencies": { "@types/node": "^22.10.2", "typescript": "^5.7.2" }
 }

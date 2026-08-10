@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "@icg/evidence",
   "version": "0.1.0",
   "private": true,
@@ -6,6 +6,6 @@
   "description": "Evidence lineage, hashing, and the append-only evidence graph (Stage 04).",
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc --noEmit" },
-  "dependencies": { "@icg/domain": "workspace:*" },
-  "devDependencies": { "typescript": "^5.7.2" }
+  "dependencies": { "@icg/data": "workspace:*", "@icg/domain": "workspace:*", "@icg/rules": "workspace:*" },
+  "devDependencies": { "@types/node": "^22.10.2", "typescript": "^5.7.2" }
 }
