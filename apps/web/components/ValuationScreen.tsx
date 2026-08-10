@@ -281,7 +281,7 @@ export function ValuationScreen({
             <Panel>
               <PanelHead
                 title="Damaged and returned units"
-                sub="Held at full carrying value pending a repair-versus-write-down assessment."
+                sub="Units in the damaged/hold area, carried at full value."
               />
               {data.damaged.empty !== null ? (
                 <div style={{ padding: "0 18px 16px" }}>
@@ -299,13 +299,16 @@ export function ValuationScreen({
                         <th scope="col" className="icg-cell-right">
                           Carrying value
                         </th>
-                        <th scope="col">Exception</th>
+                        <th scope="col">Assessment</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.damaged.rows.map((row) => (
                         <tr key={row.serial}>
-                          <td style={{ position: "relative" }}>
+                          {/* The cell must not be positioned: `.icg-row-btn::after`
+                              stretches over `.icg-table tr`, and `icg-row-link`
+                              lifts the ID link above it (§4 row activation). */}
+                          <td>
                             {row.drawerId !== null ? (
                               <button
                                 type="button"
@@ -314,7 +317,10 @@ export function ValuationScreen({
                                 onClick={() => setExceptionId(row.drawerId)}
                               />
                             ) : null}
-                            <Link className="icg-row-id icg-mono" href={`/inventory/${row.serial}`}>
+                            <Link
+                              className="icg-row-link icg-row-id icg-mono"
+                              href={`/inventory/${row.serial}`}
+                            >
                               {row.serial}
                             </Link>
                           </td>
@@ -327,16 +333,21 @@ export function ValuationScreen({
                           <td style={{ fontSize: "11.5px" }}>{row.reason}</td>
                           <td className="icg-cell-money">{row.carrying}</td>
                           <td>
-                            {row.exceptionId !== null ? (
+                            {row.assessment !== null ? (
                               <span
-                                className="icg-mono"
-                                style={{ fontSize: "10px", color: "var(--frost)" }}
+                                style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}
                               >
-                                {row.exceptionId}
+                                <StatusCapsule status={row.assessment} />
+                                <span
+                                  className="icg-mono"
+                                  style={{ fontSize: "10px", color: "var(--frost)" }}
+                                >
+                                  {row.exceptionId}
+                                </span>
                               </span>
                             ) : (
                               <span className="icg-soft" style={{ fontSize: "11px" }}>
-                                No close exception
+                                {row.assessmentNote}
                               </span>
                             )}
                           </td>
@@ -344,6 +355,12 @@ export function ValuationScreen({
                       ))}
                     </tbody>
                   </table>
+                  <p
+                    className="icg-quiet"
+                    style={{ fontSize: "10.5px", lineHeight: 1.55, padding: "11px 18px 15px", margin: 0 }}
+                  >
+                    {data.damaged.note}
+                  </p>
                 </div>
               )}
             </Panel>

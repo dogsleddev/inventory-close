@@ -242,9 +242,12 @@ export function ReconciliationScreen({
                                   : undefined
                             }
                           >
-                            <td style={{ position: "relative" }}>
+                            <td>
                               {/* Row opens the drawer; the ID cell navigates
-                                  to the full object (§4 row activation). */}
+                                  to the full object (§4 row activation). The
+                                  overlay must resolve against `.icg-table tr`,
+                                  so this cell must NOT be positioned, and the
+                                  link needs `icg-row-link` to sit above it. */}
                               {row.exceptionId !== null ? (
                                 <button
                                   type="button"
@@ -254,7 +257,7 @@ export function ReconciliationScreen({
                                 />
                               ) : null}
                               {row.id !== null && row.href !== null ? (
-                                <Link className="icg-row-id icg-mono" href={row.href}>
+                                <Link className="icg-row-link icg-row-id icg-mono" href={row.href}>
                                   {row.id}
                                 </Link>
                               ) : (

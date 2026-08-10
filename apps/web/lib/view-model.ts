@@ -606,8 +606,12 @@ export interface ValuationData {
       readonly rma: string;
       readonly reason: string;
       readonly exceptionId: string | null;
+      /** The unit's own assessment state — never assumed for the panel. */
+      readonly assessment: StatusView | null;
+      readonly assessmentNote: string;
       readonly drawerId: string | null;
     }[];
+    readonly note: string;
     readonly empty: string | null;
   };
   readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
@@ -679,6 +683,8 @@ export interface AuditPackageData {
       }[];
       readonly note: string;
       readonly terminates: string | null;
+      /** Set when the viewer's scope, not the data, truncated the path. */
+      readonly scopeNotice: string | null;
     };
     readonly evidence: {
       readonly rows: readonly {
@@ -693,7 +699,11 @@ export interface AuditPackageData {
       readonly scopeNotice: string | null;
       readonly note: string;
     };
-    readonly versions: readonly PbcVersionRow[];
+    readonly versions: {
+      readonly rows: readonly PbcVersionRow[];
+      /** Set when unsealed drafts were withheld from the viewer. */
+      readonly scopeNotice: string | null;
+    };
     readonly related: readonly {
       readonly id: string;
       readonly title: string;

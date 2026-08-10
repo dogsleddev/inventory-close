@@ -131,6 +131,31 @@ describe("auditor scope follows sealed versions", () => {
     }
   });
 
+  it("withholds unsealed internal drafts from the auditor without hiding the omission", () => {
+    const auditor = ctx("AUDITOR_READ_ONLY");
+    const controllerPkg = queries.getPbcPackage(ctx("CONTROLLER"));
+    for (const item of queries.getPbcPackage(auditor)) {
+      // docs/10: the auditor sees provided support. A working draft is not it.
+      for (const v of item.versions) {
+        expect(v.sealed, `${item.id} exposed an unsealed draft`).toBe(true);
+      }
+      const full = controllerPkg.find((i) => i.id === item.id);
+      expect(item.withheldVersionCount).toBe(
+        (full?.versions.length ?? 0) - item.versions.length,
+      );
+      // The facts derived from the full history are unaffected by the filter.
+      expect(item.hasProvidedVersion).toBe(full?.hasProvidedVersion);
+      expect(item.latestVersion).toBe(full?.latestVersion);
+    }
+    // At least one workpaper actually has something withheld, so the
+    // assertion above is not vacuous.
+    expect(
+      queries.getPbcPackage(auditor).some((i) => i.withheldVersionCount > 0),
+    ).toBe(true);
+    // The controller keeps the whole history.
+    expect(controllerPkg.every((i) => i.withheldVersionCount === 0)).toBe(true);
+  });
+
   it("keeps the auditor read-only on every stage-07 surface", () => {
     const auditor = ctx("AUDITOR_READ_ONLY");
     // Reads succeed…

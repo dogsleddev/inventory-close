@@ -60,6 +60,10 @@ function buildFinancialBridge(
   const openEntries = entries.filter((e) => e.exceptionOpen);
   const undrafted = entries.filter((e) => e.proposal === undefined);
   const potentialDifferenceCents = recon.potentialAdjustedGlCents - recon.subledgerCents;
+  // "item", never "proposal": three items are identified and only two carry a
+  // drafted entry, and the same panel says so. Calling all three proposals
+  // would assert a journal entry that does not exist.
+  const noun = (n: number) => `${n} item${n === 1 ? "" : "s"}`;
 
   const rows: BridgeRow[] = [
     {
@@ -107,7 +111,7 @@ function buildFinancialBridge(
       kind: "net",
       id: null,
       label: "Net potential adjustment",
-      detail: `If all ${recon.items.length} were approved and posted`,
+      detail: `If all ${noun(recon.items.length)} were adjusted and posted`,
       amount: formatCents(recon.explainedCents),
       ember: false,
       status: null,
@@ -201,9 +205,13 @@ function buildFinancialBridge(
           ember: false,
         },
       ],
-      footnote: `A management view of what would be true if every proposal were approved and posted. ${
+      // The figures apply EVERY identified item, not every drafted entry —
+      // saying "every proposal" would promise this outcome from the two
+      // entries that exist, which would instead leave the third item's
+      // difference standing.
+      footnote: `A management view of what would be true if all ${noun(recon.items.length)} identified here were adjusted and posted. ${
         register !== undefined
-          ? `${register.draftedCount} of ${register.identifiedCount} identified items carry a prepared entry and ${register.postedCount} are posted.`
+          ? `Only ${register.draftedCount} of the ${register.identifiedCount} carry a prepared entry today, and ${register.postedCount} are posted.`
           : ""
       }`,
     },
@@ -214,7 +222,7 @@ function buildFinancialBridge(
           : `${recon.items.length} identified`,
       rows,
     },
-    direction: `${reducing} proposal${reducing === 1 ? "" : "s"} reduce the GL and ${increasing} increase${increasing === 1 ? "s" : ""} it. They net to the current difference by coincidence of this period's facts — not because the bridge was balanced to it.`,
+    direction: `${noun(reducing)} would reduce the GL and ${noun(increasing)} would increase it. They net to the current difference by coincidence of this period's facts — not because the bridge was balanced to it.`,
     reserves:
       "All figures on this tab are gross. Reserve conclusions are held in Valuation and are not netted here.",
     // A residual would mean the identified items do not explain the whole

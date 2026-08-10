@@ -172,7 +172,11 @@ export function AuditPackageScreen({
               <Panel>
                 <PanelHead
                   title="Requires attention"
-                  sub={`${data.attention.rows.length} requests are not yet ready to provide.`}
+                  // Definitional, not historical: these are the requests
+                  // outside the Ready/Provided numerator. PBC-008 HAS been
+                  // provided and is owed a follow-up, so "not yet provided"
+                  // would be false of it.
+                  sub={`${data.attention.rows.length} requests are neither Ready nor Provided.`}
                   right={
                     <span className="icg-nstag">
                       {data.attention.rows.length} OF {data.rows.length}
@@ -262,9 +266,17 @@ export function AuditPackageScreen({
 
                   {tab === "workpaper" ? (
                     <div>
-                      <p className="icg-soft" style={{ fontSize: "11.5px", margin: "0 0 11px" }}>
-                        {detail.workpaper.note}
-                      </p>
+                      {/* A path truncated by scope says so instead of being
+                          presented under a claim that it traces end to end. */}
+                      {detail.workpaper.scopeNotice !== null ? (
+                        <div style={{ marginBottom: "12px" }}>
+                          <ScopeNotice text={detail.workpaper.scopeNotice} />
+                        </div>
+                      ) : (
+                        <p className="icg-soft" style={{ fontSize: "11.5px", margin: "0 0 11px" }}>
+                          {detail.workpaper.note}
+                        </p>
+                      )}
                       <div className="icg-lineage">
                         {detail.workpaper.lineage.map((node, i) => (
                           <div key={node.layer} style={{ display: "contents" }}>
@@ -398,10 +410,15 @@ export function AuditPackageScreen({
 
                   {tab === "versions" ? (
                     <div style={{ display: "grid", gap: "7px" }}>
-                      {detail.versions.length === 0 ? (
+                      {/* An empty list under a scope is not "no history". */}
+                      {detail.versions.scopeNotice !== null ? (
+                        <ScopeNotice text={detail.versions.scopeNotice} />
+                      ) : null}
+                      {detail.versions.rows.length === 0 &&
+                      detail.versions.scopeNotice === null ? (
                         <NoRecordsState note="No version exists — preparation has not started." />
                       ) : null}
-                      {detail.versions.map((v) => (
+                      {detail.versions.rows.map((v) => (
                         <div
                           key={v.key}
                           className={`icg-version${v.sealed ? " icg-version--sealed" : " icg-version--draft"}`}

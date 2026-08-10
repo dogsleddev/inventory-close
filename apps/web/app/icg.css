@@ -2131,7 +2131,8 @@ button.icg-close-capsule {
 /* 1280–1439: KPI grids drop to 3 columns. */
 @media (min-width: 1280px) and (max-width: 1439px) {
   .icg-gate-right,
-  .icg-facts {
+  .icg-facts,
+  .icg-kpis--quad {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

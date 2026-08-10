@@ -269,11 +269,7 @@ export function buildAuditPackageData(
       { key: "summary", label: "Summary", count: null },
       { key: "workpaper", label: "Workpaper", count: null },
       { key: "evidence", label: "Evidence", count: String(evidenceRows.length) },
-      {
-        key: "versions",
-        label: "Version History",
-        count: String(selected.versions.length),
-      },
+      { key: "versions", label: "Version History", count: String(selected.versions.length) },
       {
         key: "related",
         label: "Related Exceptions",
@@ -320,17 +316,33 @@ export function buildAuditPackageData(
         lineage,
         note: "Every figure in this workpaper traces to a source record. Follow one without leaving the product.",
         terminates,
+        // The chain has related exceptions but none of them resolved to a
+        // lineage: the path was truncated by SCOPE, not by the data ending.
+        // Saying nothing would render a withheld trace as a complete one.
+        scopeNotice:
+          related.length > 0 && lineageSource === undefined
+            ? `${selected.id} traces through ${related.map((r) => r.exception.id).join(", ")}, whose lineage is outside your scope. The path is withheld, not absent.`
+            : null,
       },
       evidence: {
         rows: evidenceRows,
-        // An empty list under a scope is not "no evidence".
+        // Gated on PROVISION, not on emptiness. A provided workpaper whose
+        // dependencies contain no exception (PBC-001 depends on POPULATION)
+        // has no evidence rows for ANY role — telling its reader it "has not
+        // been provided" would be false, and on the auditor's own screen.
         scopeNotice:
-          isAuditor && evidenceRows.length === 0
+          isAuditor && !selected.hasProvidedVersion && evidenceRows.length === 0
             ? `${selected.id} has not been provided, so its supporting evidence is outside your scope. This is not an empty workpaper.`
             : null,
         note: "Attached evidence is referenced, never copied — each row resolves to the same record the exception and the serial view read from.",
       },
-      versions: versionRows(selected),
+      versions: {
+        rows: versionRows(selected),
+        scopeNotice:
+          selected.withheldVersionCount > 0
+            ? `${selected.withheldVersionCount} unsealed draft${selected.withheldVersionCount === 1 ? " is" : "s are"} withheld: an internal working draft has not been provided. Sealed versions are shown in full.`
+            : null,
+      },
       related: related.map((view) => ({
         id: view.exception.id,
         title: view.exception.finding.title,
@@ -416,8 +428,11 @@ export function buildAuditPackageData(
     ladder: LADDER,
     acceptanceNote:
       "There is no state in this system that records auditor acceptance. Providing is a management act; what the auditor concludes is recorded outside this product.",
+    // Says what is actually scoped. Every request is listed — the auditor
+    // asked for them — but the evidence, lineage and unsealed drafts beneath
+    // a workpaper reach them only once it has been provided.
     auditorNote: isAuditor
-      ? "You are viewing the read-only auditor package. Only workpapers that have been provided, and the evidence beneath them, are in scope — management's own risk indicators are not part of it."
+      ? "You are viewing the read-only auditor package. Every request is listed with its preparation state, but supporting evidence, lineage, and internal drafts are in scope only for workpapers that have been provided — and management's own risk indicators are never part of it."
       : null,
     drawers,
     records,

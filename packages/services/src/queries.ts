@@ -273,7 +273,10 @@ export interface PbcPackageItem extends PbcItemOut {
   readonly immutable: boolean;
   readonly hasProvidedVersion: boolean;
   readonly latestVersion?: number | undefined;
+  /** Versions the viewer may see; an auditor sees only sealed ones. */
   readonly versions: readonly PbcVersion[];
+  /** How many versions the viewer's scope withheld — never silently zero. */
+  readonly withheldVersionCount: number;
   readonly dependsOn: readonly string[];
   readonly blockedBy: readonly string[];
   readonly preparedStateHash: string;
@@ -715,6 +718,11 @@ export function createQueryService(ws: Workspace) {
         const stale = preparedStateHash !== currentStateHash;
         const versions = versionsFor(item, currentStateHash, userForRole);
         const provided = hasProvidedVersion(versions);
+        // docs/10: the auditor sees provided support. An internal working
+        // draft has not been provided, so it is withheld — but the COUNT is
+        // reported so the omission is visible rather than looking like a
+        // workpaper with no history at all.
+        const visible = isAuditor(ctx.user) ? versions.filter((v) => v.sealed) : versions;
         return {
           ...item,
           baselineStatus: item.status,
@@ -725,7 +733,8 @@ export function createQueryService(ws: Workspace) {
           immutable: provided,
           hasProvidedVersion: provided,
           latestVersion: versions.find((v) => v.version !== undefined)?.version,
-          versions,
+          versions: visible,
+          withheldVersionCount: versions.length - visible.length,
           dependsOn,
           /** The open exceptions this workpaper is waiting on, if any. */
           blockedBy: dependsOn.filter((dep) => {

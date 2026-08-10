@@ -33,7 +33,7 @@ export function buildValuationData(
       reserve: null,
       aging: null,
       populations: [],
-      damaged: { rows: [], empty: null },
+      damaged: { rows: [], note: "", empty: null },
       drawers: {},
     };
   }
@@ -112,6 +112,10 @@ export function buildValuationData(
       carrying: formatCents(p.carryingCents),
     })),
     damaged: {
+      // The population is selected by LOCATION alone, so no assessment state
+      // may be asserted for it. Each row reports its own: a resolved
+      // exception means the assessment concluded, and a unit VAL-DMG-001
+      // never evaluated (no RMA record) has no assessment to report at all.
       rows: valuation.damaged.map((unit) => {
         const view =
           unit.exceptionId !== undefined
@@ -124,9 +128,18 @@ export function buildValuationData(
           rma: unit.rmaId ?? "No RMA record",
           reason: unit.reason ?? "—",
           exceptionId: unit.exceptionId ?? null,
+          assessment:
+            view !== undefined ? statusView(view.exception.status) : null,
+          assessmentNote:
+            view !== undefined
+              ? view.open
+                ? "Assessment outstanding"
+                : "Assessment concluded"
+              : "No assessment on file",
           drawerId: drawerFor(view),
         };
       }),
+      note: "Selected by location in the inventory listing. A unit appears here because of where it sits, not because an assessment is outstanding — each row states its own.",
       empty:
         valuation.damaged.length === 0
           ? "No units sit in the damaged/hold area — checked against the inventory listing, not assumed."

@@ -102,6 +102,17 @@ describe("stage-06 fleet regressions — record scoping", () => {
     expect(Object.keys(full.records).length).toBeGreaterThan(
       Object.keys(scoped.records).length,
     );
+    // Run the side-door check where it can actually fail. On KE-E2-1048 every
+    // record is legitimately in scope now, so `leaked` there is vacuously
+    // empty; on an out-of-scope serial a partial leak of even one record
+    // fails here, which a count comparison alone would pass.
+    const scopedRefs = Object.values(scoped.records).map(
+      (r) =>
+        (r as { id?: string; transactionNumber?: string }).id ??
+        (r as { transactionNumber?: string }).transactionNumber ??
+        "",
+    );
+    expect(scopedRefs.filter((t) => graphTitles.has(t) && !auditorTitles.has(t))).toEqual([]);
     // Content the auditor's scope does allow is still complete, not stubbed.
     expect(
       queries.getFinancialLife(ctx("CONTROLLER"), "KE-E2-1048").records.salesOrder
