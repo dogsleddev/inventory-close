@@ -10,11 +10,23 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
 
 ## 0. Start here
 
-**All ten code stages are COMPLETE.** Stage 10 (public README, User Guide, deployment
-config) and its public-surface verification fleet are committed; the release gate is
-recorded in `QA_RELEASE_GATE.md` (no P0 open). The one decision still owed is the
-**LICENSE** — the repo has none, which means a public push grants nobody any rights; that
-choice belongs to the owner and was deliberately not made by the build.
+**All ten code stages are COMPLETE, licensed (MIT, owner's choice), and tagged
+`v1.0.0-demo` at `868b072`.** The release gate is recorded in `QA_RELEASE_GATE.md`
+(no P0 open).
+
+**The next task is two final data passes, requested by the owner (2026-08-10):**
+
+1. **Pass 1 — one last adversarial pass at the DATA.** The fixture corpus itself:
+   cross-fixture referential integrity, per-serial story coherence, operational timeline
+   realism, and the derived close against `CANONICAL_SPEC.md`. See §8 for exactly what
+   prior reviews covered and where the headroom is.
+2. **Pass 2 — validate the highlighted results.** After pass 1's remediation lands: verify
+   that every figure and claim the demo highlights is consistent across every surface that
+   states it (dataset → rules → services → UI → README → QA_RELEASE_GATE → User Guide →
+   docs) and valid (re-derivable from the fixtures). §8 lists the highlight set.
+
+Run pass 2 only after pass 1 is committed — validating surfaces against data that is about
+to change would validate the wrong tree.
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
@@ -80,11 +92,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 09 Reset/Replay/QA | Done + fleet-reviewed (`38a115c`, `30494c0`) — Reset + Reproduce Close controls, package manifest, `/cutoff` + `/ownership`, `?tab=` deep links, AI-off statement, repo-wide QA scans, `QA_RELEASE_GATE.md` |
 | Full-tree review | Done (`30494c0`) — stages 01–09 reviewed together; 9 defects fixed |
 | Code 10 Polish/Public/Deploy | Done + fleet-verified (`e3c952e`, `1c85866`) — public README, User Guide, `.env.example`, `apps/web/vercel.json`, `.gitattributes`, 27 verification defects fixed |
-| Remaining | **LICENSE decision** (owner's call), then push/deploy — see §8. |
+| LICENSE | Done — MIT (owner's choice), wired into README + package.json (`868b072`), tagged `v1.0.0-demo` |
+| Remaining | **Two final data passes** (owner request, see §0/§8), then push/deploy. |
 
 ### Commit history (newest first)
 
 ```
+868b072 Add the MIT license and wire it into the README and package.json
+cebb269 Record the stage-10 verification outcome and refresh the handoff
 1c85866 Stage 10 verification remediation: 27 defects fixed
 e3c952e Code stage 10: public README, User Guide, deployment config
 64d0819 Record the full-tree review outcome and the invariants it established
@@ -378,11 +393,66 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Choose a LICENSE** (owner's decision) — without one, a public repository grants nobody
-   any rights, which defeats publishing. Then push to a public remote.
-2. **Deploy**: on Vercel, set the project Root Directory to `apps/web`; no environment
-   variables exist. `apps/web/vercel.json` carries the security headers.
-3. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
+### Pass 1 — one last adversarial pass at the DATA
+
+**Where the headroom genuinely is.** The full-tree review's 12 lenses included accounting
+math (allocation, buildDataset, closeInput, the derived totals) and an attack on the
+authored interpretations (scenario events, allocation marginals, PBC baseline) — both
+cleared. But a dedicated fixture-by-fixture DATA lens was cut from that lens set, so no
+fleet has ever swept:
+
+- **Cross-fixture referential integrity end-to-end**: every PO↔IR↔VB, SO↔IF↔invoice,
+  serial↔count-row, serial↔carrier-shipment↔installation↔telemetry, GL entry↔reconciling
+  item, contract↔party, custodian statement↔third-party holding reference resolving both
+  directions, with no orphans and no dangling ids.
+- **Per-serial story coherence for the OTHER ~1,490 units** — the 15 exception serials are
+  golden-tested to death; the background population's buy-side dates, costs, locations and
+  count rows have never been story-checked (e.g. receipts before their PO dates, telemetry
+  from units never installed, units counted in locations they never moved to).
+- **Operational timeline realism**: carrier event trails (PICKUP→DELIVERED ordering),
+  installation-vs-delivery ordering, cycle-count cadence, movement authorization dates.
+- **Fixture content vs. what screens humanize**: party names, location display names,
+  document totals summing from their own lines.
+- Existing pins to build on: `packages/data/test/controls.test.ts` (46 tests, marginals),
+  `stories.test.ts` (27, the exception serials), `determinism.test.ts` (byte-for-byte).
+
+Working method: §6 (finder lenses → dedupe → two skeptics per finding at high effort →
+adjudicate contested inline → fix with category-level regressions → gate → commit). Tree
+is clean at `868b072` — commit BEFORE launching any fleet. Traps in §7 all still apply,
+especially: **never hand-edit `allocation.ts`**, fixtures must regenerate byte-for-byte
+(`pnpm --filter @icg/data generate`), story serials in `fixtures/story.json` are
+PRNG-derived not canonical, and if data and spec disagree, STOP and identify which is
+wrong — never silently change a canonical total.
+
+### Pass 2 — validate the highlighted results (run only after pass 1 is committed)
+
+The owner's highlight set — every figure/claim the demo leads with. For each: (a) it is
+re-derivable from the fixtures through `runClose`, and (b) it reads identically on every
+surface that states it (fixtures → rules → services → each screen → README →
+QA_RELEASE_GATE → User Guide → docs/CANONICAL_SPEC → golden/baseline.json):
+
+- 81.42% close readiness (8142 bps, half-up from 8141.65) · 7 blockers / $198,950 ·
+  $12,450 GL difference ($4,812,450 − $4,800,000) · 15 exceptions, 7 open / 8 resolved ·
+  $255,650 designed exposure · PBC 17/21 = 80.95% · source health 91.67% (825/900) ·
+  1,500 book units / $4.8M · count population 1,065, first pass 1,061 / 4 variances,
+  6 movements, 24+18 test counts · reconciling items −$2,900 / +$9,200 / −$18,750 →
+  adjusted GL $4,800,000 · adjustments 2 drafted of 3 identified, 0 posted.
+- The EXC-001 signature story: SO-26184 → IF-261972 shipped 12/27 → delivered 12/29 →
+  installed/online 12/30 → INV-2027-00418 dated 2027-01-02 → provision missing →
+  conclusion Open. Serials KE-E2-1048/1051, $14,800, CUT-OUT-001 REVIEW_REQUIRED.
+- Reproduce Close = MATCH; Reset Demo restores all of the above after mutation.
+- The boundary claims beside the numbers: nothing posts, auditor sees provided-only,
+  readiness ≠ audit assurance, AI-off identical answer.
+
+A mismatch between two surfaces is a finding even when both are "right" (rounded vs exact,
+stale wording, a figure quoted where it should be derived). Record both passes' outcomes
+in `QA_RELEASE_GATE.md` + this file, then commit.
+
+### After both passes
+
+1. **Push public / deploy**: Vercel Root Directory = `apps/web`; no environment variables
+   exist; `apps/web/vercel.json` carries the security headers.
+2. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
    with the pinned stage-05 `complementary` contract, needs a design decision); a
    git-history credential scan in `test/` (history was verified clean by hand, but the
    permanent scan covers only the working tree); dark-theme capsule-contrast audit
