@@ -16,6 +16,7 @@ import type {
 import type {
   CountMovement,
   CountResult,
+  CountTest,
   PhysicalCountPlan,
   ProcurementMatch,
 } from "./types/netsuite.js";
@@ -49,6 +50,8 @@ export interface CountRepository {
   getCountPlans(): Promise<readonly PhysicalCountPlan[]>;
   getCountResults(countPlanId: string): Promise<readonly CountResult[]>;
   getCountMovements(countPlanId: string): Promise<readonly CountMovement[]>;
+  /** Management and auditor test-count selections (docs/06 CountResult/Test/Movement). */
+  getCountTests(countPlanId: string): Promise<readonly CountTest[]>;
 }
 
 export interface ProcurementRepository {

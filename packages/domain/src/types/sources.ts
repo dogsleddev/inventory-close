@@ -1,6 +1,7 @@
 import type { IsoDateTime } from "../dates.js";
 import type { SourceHealthStatus, SourceSystemId } from "../enums.js";
 import { SOURCE_HEALTH_SCORE_HUNDREDTHS } from "../enums.js";
+import { basisPoints, type BasisPoints } from "../money.js";
 
 export interface SourceSystemHealth {
   readonly sourceSystem: SourceSystemId;
@@ -17,15 +18,17 @@ export interface SourceSystemHealth {
  */
 export function aggregateHealthBasisPoints(
   healths: readonly SourceSystemHealth[],
-): number {
+): BasisPoints {
   if (healths.length === 0) {
-    return 0;
+    // Fail-down: no health data reads as 0, never as healthy.
+    return basisPoints(0);
   }
   const numerator = healths.reduce(
     (sum, h) => sum + SOURCE_HEALTH_SCORE_HUNDREDTHS[h.status],
     0,
   );
   const denominator = healths.length * 100;
-  // Round to nearest basis point, half away from zero.
-  return Math.round((numerator * 10000) / denominator);
+  // Math.round (round-half-up). Scores are non-negative, so this coincides
+  // with round-half-away-from-zero: baseline 825/900 → 9166.67 → 9167.
+  return basisPoints(Math.round((numerator * 10000) / denominator));
 }

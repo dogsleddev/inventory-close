@@ -59,6 +59,15 @@ export const goldenBaselineSchema = z
         message: "blocker exposure cannot exceed total designed exposure",
       });
     }
+    // The percent string must be the two-decimal rendering of ready/total
+    // (17/21 → "80.95"), so the display value cannot drift from the integers.
+    const expectedPbcPercent = ((value.pbc_ready / value.pbc_total) * 100).toFixed(2);
+    if (value.pbc_readiness_percent !== expectedPbcPercent) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `pbc_readiness_percent must equal ${expectedPbcPercent} (pbc_ready/pbc_total at two decimals)`,
+      });
+    }
   });
 
 export type GoldenBaseline = z.infer<typeof goldenBaselineSchema>;

@@ -12,6 +12,20 @@ const ISO_DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const ISO_DATE_TIME_RE =
   /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(\.\d{1,3})?Z$/;
 
+/**
+ * The regex alone admits impossible dates like 2026-02-30; a real calendar
+ * round-trip rejects them. `datePart` is the leading "YYYY-MM-DD".
+ */
+export function isRealCalendarDate(datePart: string): boolean {
+  const [y, m, d] = datePart.split("-").map(Number) as [number, number, number];
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === m - 1 &&
+    dt.getUTCDate() === d
+  );
+}
+
 export class InvalidDateError extends Error {
   constructor(value: string, kind: "IsoDate" | "IsoDateTime") {
     super(`Invalid ${kind}: "${value}"`);
@@ -20,14 +34,14 @@ export class InvalidDateError extends Error {
 }
 
 export function isoDate(value: string): IsoDate {
-  if (!ISO_DATE_RE.test(value)) {
+  if (!ISO_DATE_RE.test(value) || !isRealCalendarDate(value)) {
     throw new InvalidDateError(value, "IsoDate");
   }
   return value as IsoDate;
 }
 
 export function isoDateTime(value: string): IsoDateTime {
-  if (!ISO_DATE_TIME_RE.test(value)) {
+  if (!ISO_DATE_TIME_RE.test(value) || !isRealCalendarDate(value.slice(0, 10))) {
     throw new InvalidDateError(value, "IsoDateTime");
   }
   return value as IsoDateTime;
