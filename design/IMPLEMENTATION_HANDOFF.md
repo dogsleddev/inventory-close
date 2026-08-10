@@ -198,6 +198,29 @@ Acceptance tests carried from the design review:
 4. **Cutoff and Ownership** — both are filtered views of the exception list; the shell's
    "not designed yet" state covers them until built.
 
+### 9a. Known copy defects in the mockups — correct these, do not replicate
+
+An independent per-screen review (19 agents, one analyst per export, every claim adversarially
+verified — 2 confirmed, 10 refuted) found two internal contradictions in visible copy that the
+stage-07 pass did not catch. They are *not* baseline drift; every locked figure still matches.
+
+1. **Exception detail (EXC-001), evidence record `EV-4420` "NetSuite year-end inventory state":**
+   shows `Occurred — Dec. 31, 2026 23:59 PT` with `Retrieved — Dec. 31, 2026 16:42 PT` — the
+   record is retrieved seven hours *before* it occurs. A period-end position stamped 23:59 cannot
+   have been pulled at 16:42 the same day. **Fix in implementation:** either present the position
+   as of the period-end date without a 23:59 clock time, or set Retrieved after Occurred. This
+   matters beyond cosmetics — the evidence drawer's whole purpose is separating *occurred* from
+   *retrieved*, so the one place that distinction is demonstrated must be coherent.
+2. **Reconciliation → Commercial Chain tab, EXC-001 CARRIER node:** renders
+   `FlightPath · in transit` in the **Present ✓** state inside the same strip that shows
+   `DELIVERY / Dec. 29 · POD confirmed` and `INSTALLATION / Dec. 30 · INST-4471`. At the 12/31
+   balance-sheet date the carrier leg cannot still read "in transit", and as written it also
+   falsifies the adjacent completeness claim "Operational sequence — Complete and consistent".
+   **Fix in implementation:** render the completed handoff (e.g. `FlightPath · delivered Dec. 29`
+   or the tracking reference). The chain data comes from `@icg/services`
+   `getCommercialChains()`, which already carries the real delivery event — take the state from
+   the service, never from static copy.
+
 ---
 
 ## 10. Explicitly P2 — must not block the build
