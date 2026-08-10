@@ -1,9 +1,26 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-09 at commit `e0a603b`.
+re-deriving decisions or breaking locked facts. Written 2026-08-09 at commit `75dc3b2`.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
+
+---
+
+## 0. Start here
+
+**The next task is code stage 05 — the core UI.** Everything it depends on is done and committed.
+
+1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
+   (component/reuse map, geometry, interaction rules, accessibility, demo states, and the two
+   mockup defects in §9a you must correct rather than replicate).
+2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
+   **204 tests passing** — and confirm `git log -1` is `75dc3b2` or later.
+3. Follow `prompts/code/05_CORE_UI_OVERVIEW_AND_EXCEPTIONS.md`. All figures come from
+   `@icg/services`; no accounting logic in components; no hard-coded totals.
+
+One decision is open and unanswered (see §7): the **Physical Count screen was designed but never
+exported**. It does not block stage 05, only stage 06. Ask before assuming either way.
 
 ---
 
@@ -26,7 +43,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified at `e0a603b`)
+## 2. Current state (verified at `75dc3b2`)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
@@ -51,6 +68,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 ### Commit history (newest first)
 
 ```
+75dc3b2 Record two mockup copy defects found by independent screen review
+28ff2d9 Handoff-doc corrections from verification fleet + close a silent test-skip trap
+24b8309 Design 07 complete: approved handoff exports plus IMPLEMENTATION_HANDOFF.md
 e0a603b Stage 04 fleet remediation: 10 confirmed defect clusters fixed
 5e6a461 Stage 04 follow-up: lineage redaction and PBC version/dependency model
 a02bf35 Stage 04: application services, evidence graph, workflows, security, audit
