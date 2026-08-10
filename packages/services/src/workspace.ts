@@ -1,4 +1,4 @@
-import { buildDataset, toCloseInput, type IcgDataset } from "@icg/data";
+import { buildDataset, hashObject, toCloseInput, type IcgDataset } from "@icg/data";
 import { runClose, type CloseRunResult } from "@icg/rules";
 import { buildEvidenceGraph, type EvidenceGraph, type EvidenceItem } from "@icg/evidence";
 import { createAuditLog, type AuditLog } from "@icg/audit";
@@ -51,8 +51,72 @@ export interface Workspace {
   comments: Comment[];
   drafts: Draft[];
   reviews: ReviewRecord[];
+  /** Controlled-state hash each PBC workpaper was prepared against. */
+  pbcPreparedState: Map<string, string>;
   /** Deterministic logical clock: base instant + one minute per tick. */
   clockSeq: number;
+}
+
+/**
+ * What each PBC workpaper depends on (docs/10): exception ids plus keyed
+ * close-state slices. When a dependency's state changes after preparation
+ * the workpaper becomes REFRESH_REQUIRED.
+ */
+export const PBC_DEPENDENCIES: Readonly<Record<string, readonly string[]>> = {
+  "PBC-001": ["POPULATION"],
+  "PBC-002": ["RECONCILIATION", "EXC-009", "EXC-014", "EXC-015"],
+  "PBC-003": ["COUNTS"],
+  "PBC-004": ["COUNTS"],
+  "PBC-005": ["COUNTS", "EXC-005", "EXC-006", "EXC-013"],
+  "PBC-006": ["COUNTS"],
+  "PBC-007": ["COUNTS", "EXC-006"],
+  "PBC-008": ["EXC-001"],
+  "PBC-009": ["EXC-002", "EXC-014"],
+  "PBC-010": ["EXC-002"],
+  "PBC-011": ["EXC-007"],
+  "PBC-012": ["EXC-007"],
+  "PBC-013": ["EXC-008"],
+  "PBC-014": ["EXC-010"],
+  "PBC-015": ["EXC-008"],
+  "PBC-016": ["EXC-009", "EXC-012"],
+  "PBC-017": ["POPULATION"],
+  "PBC-018": ["EXC-011"],
+  "PBC-019": ["EXC-012"],
+  "PBC-020": ["PROPOSALS", "EXC-009", "EXC-014", "EXC-015"],
+  "PBC-021": ["POPULATION", "RECONCILIATION"],
+};
+
+/** Deterministic hash of the close-state slices a workpaper depends on. */
+export function pbcDependencyHash(
+  close: CloseRunResult,
+  dependsOn: readonly string[],
+): string {
+  const slices = dependsOn.map((dep) => {
+    switch (dep) {
+      case "POPULATION":
+        return { dep, v: close.aggregates.grossInventoryCents };
+      case "RECONCILIATION":
+        return { dep, v: close.reconciliation };
+      case "COUNTS":
+        return { dep, v: close.countSummary };
+      case "PROPOSALS":
+        return { dep, v: close.proposedAdjustments };
+      default: {
+        const exc = close.exceptions.find((e) => e.id === dep);
+        return { dep, v: exc ? { status: exc.status, exposure: exc.finding.exposureCents } : null };
+      }
+    }
+  });
+  return hashObject(slices);
+}
+
+function preparedStateFor(close: CloseRunResult): Map<string, string> {
+  return new Map(
+    close.pbc.map((item) => [
+      item.id,
+      pbcDependencyHash(close, PBC_DEPENDENCIES[item.id] ?? []),
+    ]),
+  );
 }
 
 const CLOCK_BASE_MS = Date.UTC(2027, 0, 7, 6, 0, 0);
@@ -74,14 +138,16 @@ function buildState(): Pick<Workspace, "dataset" | "close" | "evidenceGraph"> {
 }
 
 export function createWorkspace(): Workspace {
+  const state = buildState();
   return {
-    ...buildState(),
+    ...state,
     period: createPeriodMachine("OPEN"),
     audit: createAuditLog(),
     submittedEvidence: [],
     comments: [],
     drafts: [],
     reviews: [],
+    pbcPreparedState: preparedStateFor(state.close),
     clockSeq: 0,
   };
 }
@@ -97,4 +163,5 @@ export function resetWorkspace(ws: Workspace): void {
   ws.comments = [];
   ws.drafts = [];
   ws.reviews = [];
+  ws.pbcPreparedState = preparedStateFor(ws.close);
 }

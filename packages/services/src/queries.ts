@@ -21,7 +21,7 @@ import type {
 } from "@icg/rules";
 import { traceExceptionLineage, type ExceptionLineage } from "@icg/evidence";
 import { authorize, canReadContent } from "@icg/permissions";
-import type { Workspace } from "./workspace.js";
+import { PBC_DEPENDENCIES, pbcDependencyHash, type Workspace } from "./workspace.js";
 
 /**
  * Query services (prompt 04). Authorization happens HERE, before data
@@ -348,12 +348,45 @@ export function createQueryService(ws: Workspace) {
 
     traceLineage(ctx: ServiceContext, exceptionId: string): ExceptionLineage | undefined {
       authorize(ctx.user, "evidence.read");
-      return traceExceptionLineage(exceptionId, ws.close, ws.evidenceGraph);
+      const lineage = traceExceptionLineage(exceptionId, ws.close, ws.evidenceGraph);
+      if (!lineage) return undefined;
+      // Restricted content is redacted here exactly as in listEvidence —
+      // lineage must never be a side door around sensitivity.
+      return {
+        ...lineage,
+        evidence: lineage.evidence.map(({ item, linkType }) =>
+          canReadContent(ctx.user, item.sensitivity)
+            ? { item, linkType }
+            : { item: { ...item, content: undefined }, linkType },
+        ),
+      };
     },
 
     getPbcStatus(ctx: ServiceContext): readonly PbcItemOut[] {
       authorize(ctx.user, "pbc.read");
       return ws.close.pbc;
+    },
+
+    /**
+     * PBC package view with version/dependency model (docs/10): provided
+     * versions are immutable; a workpaper whose underlying controlled state
+     * has changed since preparation becomes REFRESH_REQUIRED.
+     */
+    getPbcPackage(ctx: ServiceContext) {
+      authorize(ctx.user, "pbc.read");
+      return ws.close.pbc.map((item) => {
+        const dependsOn = PBC_DEPENDENCIES[item.id] ?? [];
+        const currentStateHash = pbcDependencyHash(ws.close, dependsOn);
+        const preparedStateHash = ws.pbcPreparedState.get(item.id) ?? currentStateHash;
+        const stale = preparedStateHash !== currentStateHash;
+        return {
+          ...item,
+          version: 1,
+          immutable: item.status === "PROVIDED",
+          dependsOn,
+          status: stale ? ("REFRESH_REQUIRED" as const) : item.status,
+        };
+      });
     },
 
     getSourceHealth(ctx: ServiceContext) {

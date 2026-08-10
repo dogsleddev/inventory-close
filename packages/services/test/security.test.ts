@@ -105,6 +105,18 @@ describe("3. restricted contract content withheld correctly", () => {
       expect(contracts.every((c) => !c.contentWithheld && c.content !== undefined)).toBe(true);
     }
   });
+
+  it("lineage traversal is not a side door around restricted content", () => {
+    const asWarehouse = queries.traceLineage(ctx("WAREHOUSE"), "EXC-001");
+    const contract = asWarehouse?.evidence.find((e) => e.item.sensitivity === "RESTRICTED");
+    expect(contract).toBeDefined();
+    expect(contract?.item.content).toBeUndefined();
+    expect(contract?.item.contentHash.length).toBe(64);
+    const asController = queries.traceLineage(ctx("CONTROLLER"), "EXC-001");
+    expect(
+      asController?.evidence.find((e) => e.item.sensitivity === "RESTRICTED")?.item.content,
+    ).toBeDefined();
+  });
 });
 
 describe("4. period lock blocks ordinary mutation", () => {

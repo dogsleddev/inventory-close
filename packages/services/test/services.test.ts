@@ -80,6 +80,20 @@ describe("query services", () => {
     ).toBeGreaterThanOrEqual(2);
     expect(queries.getPbcStatus(controller)).toHaveLength(21);
   });
+
+  it("serves the PBC package with versions, dependencies, and staleness", () => {
+    const pkg = queries.getPbcPackage(controller);
+    expect(pkg).toHaveLength(21);
+    // Baseline: nothing has changed since preparation — no REFRESH_REQUIRED.
+    expect(pkg.every((i) => i.status !== "REFRESH_REQUIRED")).toBe(true);
+    expect(pkg.filter((i) => i.immutable)).toHaveLength(5); // the Provided set
+    const outbound = pkg.find((i) => i.id === "PBC-008");
+    expect(outbound?.dependsOn).toContain("EXC-001");
+    // Simulate underlying controlled state changing after preparation:
+    ws.pbcPreparedState.set("PBC-008", "stale-hash");
+    const refreshed = queries.getPbcPackage(controller).find((i) => i.id === "PBC-008");
+    expect(refreshed?.status).toBe("REFRESH_REQUIRED");
+  });
 });
 
 describe("audit behavior", () => {
