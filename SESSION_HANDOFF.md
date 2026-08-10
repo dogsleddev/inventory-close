@@ -1,7 +1,7 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-10 at commit `ffbb2a8`.
+re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 07.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
@@ -9,21 +9,20 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 at commit `ff
 
 ## 0. Start here
 
-**The next task is code stage 07 — reconciliation bridge, valuation, PBC.** Everything it
-depends on is done and committed.
+**The next task is code stage 08 — Ask Gaurd.** Everything it depends on is done and committed.
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
-   (component/reuse map, geometry, interaction rules, accessibility, demo states, and the two
+   (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **376 tests passing** — and confirm `git log -1` is `e18d94e` or later.
-3. Follow `prompts/code/07_RECONCILIATION_VALUATION_PBC.md`. All figures come from
-   `@icg/services`; no accounting logic in components; no hard-coded totals.
+   **426 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+3. Follow `prompts/code/08_ASK_GAURD.md`. All figures come from `@icg/services`; no accounting
+   logic in components or prompts; no hard-coded totals.
 
-Stage 07 adds the **Financial tab** to the Reconciliation screen stage 06 built
-(`apps/web/components/ReconciliationScreen.tsx` — the tab exists and currently renders an
-honest "not built yet" state, not a placeholder figure). Valuation and Adjustments are
-separate nav sections and are deliberately not designed; see §7.
+Stage 08 is unblocked: the query service now covers every figure the assistant's golden answers
+need — readiness, blockers, exceptions, Financial Life, counts, reconciliation, procurement
+match, commercial chain, **valuation, the adjustment register, and the PBC package**. The
+drawer shell and its deterministic fallback already exist from stage 05.
 
 ---
 
@@ -46,11 +45,13 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified at `ffbb2a8`)
+## 2. Current state (verified after code stage 07)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **376 tests passing** (the 317 pre-stage-06 tests untouched); typecheck, lint, and production build all green.
+- **426 tests passing**; typecheck, lint, and production build all green.
+  (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
+  off-by-one in the note, not a skipped test. Stage 07 added 51.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
 - Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
 
@@ -68,11 +69,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 04 Services/Security | Done + fleet-reviewed (`a02bf35`, `5e6a461`, `e0a603b`) |
 | Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
 | Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
-| Code 07–10 | Not started. **Code 07 is next** — see §8. |
+| Code 07 Bridge/Adjustments/Valuation/PBC | Done — **fleet review not yet run** (see §6) |
+| Code 08–10 | Not started. **Code 08 (Ask Gaurd) is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+04fe79b Code stage 07: reconciliation bridge, adjustments, valuation, audit package
+ae9f4bd Record stage-06 fleet outcome and the invariants it established
 e18d94e Stage 06 fleet remediation: 16 confirmed defects fixed
 1ab0a0d Refresh SESSION_HANDOFF.md for code stage 07
 ffbb2a8 Code stage 06: Financial Life, Physical Count, and NetSuite chains
@@ -180,9 +184,15 @@ The spec deferred these; they were authored during the build and are now pinned 
 3. **Readiness derivation** — the canonical 90/90/80/85/80/85/53.33/66.67 scores are **derived**
    from close state via tier rules in `CLOSE-POLICY-v1.0.0`, not hard-coded; total uses integer
    half-up rounding (8141.65 → 8142).
-4. **PBC baseline** — which of the 21 items are Provided/Ready/Preparing/Follow-Up/Not-Started is
-   authored in `policy.ts`, correlated with the open exceptions (E&O preparing because EXC-011,
-   tracker follow-up because EXC-007).
+4. **PBC baseline — NOT authored; specified.** Stage 03 believed the spec deferred which four
+   items are not ready and picked PBC-011/012/018/020. It does not: `prompts/code/07`
+   ("Required baseline remaining items"), `prompts/design/06` ("Requires Attention") and the
+   approved export `design/06_audit-ai/ICG-Audit-Package.html` all name **PBC-002 Preparing,
+   PBC-005 Preparing, PBC-008 Follow-Up Requested, PBC-018 Not Started**. Stage 07 corrected
+   `PBC_BASELINE_V1` to those. The status *mix* was identical either way, so 17/21 = 8095 bps
+   never moved — which is exactly why nothing caught it for four stages. **Do not "restore" the
+   old four.** The Provided five (PBC-001/003/004/006/007) and the per-item owner role are
+   still authored; the four attention items are not.
 5. **Serialized vs batch** — `KE-*` SKUs are serialized; accessories are quantity-tracked with
    `-U####` ids and report `buySideTracking: "BATCH"` rather than false "missing" documents.
 6. **GL difference is seeded as three GL-entry facts** (JE-2026-0790 +2,900, JE-2026-0847 +18,750
@@ -213,10 +223,11 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - Never silently change canonical totals. If spec and code disagree, stop and identify which is wrong.
 - Regenerate fixtures with `pnpm --filter @icg/data generate` and commit them — a test asserts the
   committed fixtures reproduce byte-for-byte from the seed, and that no stale fixture files linger.
-- **Adversarial fleet review after each stage** (the pattern used for 02/03/04): 5 finder lenses in
-  parallel → dedupe → one skeptic verifier per finding at high effort → apply confirmed fixes with
-  regression tests → re-run gate → commit. It has confirmed real latent defects every single time
-  (7 clusters in Stage 03, 10 in Stage 04), so don't skip it.
+- **Adversarial fleet review after each stage** (the pattern used for 02/03/04/05/06): 5 finder
+  lenses in parallel → dedupe → one skeptic verifier per finding at high effort → apply confirmed
+  fixes with regression tests → re-run gate → commit. It has confirmed real latent defects every
+  single time (7 clusters in stage 03, 10 in stage 04, 9 in stage 05, 16 in stage 06), so don't
+  skip it. **Stage 07's has not been run yet.**
 
 ---
 
@@ -229,9 +240,15 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   was saved. *Decided 2026-08-09: it will NOT be exported.* **Settled** — stage 06 built
   `/physical-count` from the Reconciliation + Financial Life patterns plus the `prompts/design/05`
   Parts A/B spec. Nothing further is owed here.
-- Valuation (EXC-011 reserve) and Adjustments screens are **deliberately not designed** and marked
-  not-blocking; build them on the exception-detail and bridge-row patterns respectively.
-  See `design/IMPLEMENTATION_HANDOFF.md` §9. **Still open — these are stage 07 work.**
+- Valuation (EXC-011 reserve) and Adjustments were **deliberately not designed**; stage 07 built
+  them on the exception-detail and bridge-row patterns as `design/IMPLEMENTATION_HANDOFF.md` §9
+  directed. **Settled** — nothing further is owed here.
+- **The stage-07 fleet review has not been run.** The stage is committed and green, so it is a
+  safe point to launch one (§6). Every previous stage's review found real latent defects.
+- **A third §9a-class mockup copy defect** was found in `05_counts-reconciliation`: the Financial
+  tab asserts "Two of the three are still open items" and "Not reachable — 2 items open", but its
+  own bridge rows show one open item (EXC-015; EXC-009 and EXC-014 are both resolved). The
+  implementation counts it from close state instead. Do not replicate the mockup's number.
 - `design/05_counts-reconciliation/ICG-Reconciliation.html` was **accidentally swept into commit
   `e0a603b`** by a `git add -A` during Stage 04 remediation; that commit message doesn't mention it.
   Harmless to the tree, but the history is misleading if that matters to you.
@@ -285,14 +302,44 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-1. **Code 07** — reconciliation bridge / valuation / PBC. The bridge is a **new tab on the
-   existing Reconciliation screen**, not a new route: `ReconciliationScreen.tsx` already has the
-   tab (`key: "financial"`), currently rendering an honest not-built-yet state. Reuse the
-   stage-06 `TabBar` and the bridge-row pattern; Valuation (EXC-011, reserve stays
-   **UNDETERMINED**) and Adjustments (**every row NOT POSTED**) are separate nav sections and
-   are deliberately not designed — see §7 and `design/IMPLEMENTATION_HANDOFF.md` §9.
-2. Then 08 (Ask Gaurd — services are stable, so it's unblocked whenever), 09 (reset / replay /
-   QA), 10 (polish / deployment).
+1. **Run the stage-07 fleet review** (§6) — it is the one step of the working method stage 07
+   did not complete.
+2. **Code 08 — Ask Gaurd.** The assistant reads the same query service the UI does and inherits
+   its authorization; it may explain, investigate, draft and navigate, and may never decide,
+   approve, post, close a controlled exception, invent evidence or a contract term, select an
+   auditor sample, or set a reserve. The golden answers in `CANONICAL_SPEC.md` §13 are all
+   derivable from existing queries.
+3. Then 09 (reset / replay / QA), 10 (polish / deployment — note stage 10 edits the
+   manifest-covered root `README.md`; see the `SPEC_MANIFEST.json` trap in §7).
+
+**What stage 07 established that later stages must not undo:**
+
+- **Provided is a sealed version, not a status word.** `packages/services/src/pbc.ts` derives
+  each workpaper's history; a version with a `contentHash` is immutable and is superseded rather
+  than edited, and exactly one object in a history is `editable`. The hashes are derived from
+  the workpaper identity plus its dependency-state hash, so they reproduce exactly.
+- **Auditor scope keys on `hasProvidedVersion`, not on `status === "PROVIDED"`.**
+  FOLLOW_UP_REQUESTED means support was provided and more was then asked for, so its sealed
+  versions are in the auditor's hands. At the corrected baseline that puts **EXC-001 in scope**
+  (via PBC-008) and **EXC-009 out of it** (PBC-002 has never been provided) — the reverse of
+  stages 04–06. Scope is not a content gate: restricted contract content is still withheld
+  inside an in-scope lineage, and `makeRecordScope()` still governs raw-fixture projections.
+- **The adjustment register is keyed on reconciling items, not on proposals.** Three identified,
+  two drafted, zero posted. Never create a third proposal to make the register look complete:
+  `proposedAdjustments.length / reconciliation.items.length` **is** the ADJUSTMENTS readiness
+  score (2/3 = 6667), so a third would move 8142 bps. An item with no entry states why.
+- **`posted` is structurally `false`** on `ProposedAdjustmentOut`, `postedCount` is typed `0`,
+  and no command service method writes anywhere. A stage-07 test asserts no command name matches
+  /post|writeToNetsuite|approveAdjustment/.
+- **No reserve amount exists anywhere.** `buildValuation()` reports the recorded 1290 balance and
+  the conclusion `UNDETERMINED`; there is no field, query, or control that carries a proposed
+  reserve, and Ask Gaurd must not add one.
+- **A valuation review's population is the aged subset**, not every unit of the SKU. EXC-011 is
+  20 aged KE-M1 units, not 292 KE-M1 units — the first version of this screen got that wrong.
+- **`@icg/services` re-exports the rule result shapes** the web app types against, so
+  `apps/web` never imports `@icg/rules` directly and the UI → services → rules direction holds.
+- The bridge's Financial tab is the **default** Reconciliation tab; stage-06 tests that assumed
+  Procurement Match now click through to it.
 
 **What stage 06 established that later stages must not undo:**
 
