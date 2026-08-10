@@ -189,3 +189,5 @@ NetSuite records in the dataset are generated.
 implementation, `golden/baseline.json` holds the locked aggregates, and `CHANGELOG.md` records
 the NetSuite v1.1 architectural amendment. `SESSION_HANDOFF.md` carries the working state and
 the decisions a future contributor must not re-litigate.
+
+Released under the [MIT License](LICENSE).
