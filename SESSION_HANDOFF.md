@@ -16,7 +16,7 @@ depends on is done and committed.
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the two
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **359 tests passing** — and confirm `git log -1` is `ffbb2a8` or later.
+   **376 tests passing** — and confirm `git log -1` is `e18d94e` or later.
 3. Follow `prompts/code/07_RECONCILIATION_VALUATION_PBC.md`. All figures come from
    `@icg/services`; no accounting logic in components; no hard-coded totals.
 
@@ -50,7 +50,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **359 tests passing** (the 317 pre-stage-06 tests untouched); typecheck, lint, and production build all green.
+- **376 tests passing** (the 317 pre-stage-06 tests untouched); typecheck, lint, and production build all green.
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
 - Committed dataset hash: `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06`.
 
@@ -67,12 +67,14 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 03 Rules/Golden | Done + fleet-reviewed — **hard gate PASS** (`e8b7d12`, `cad38bb`) |
 | Code 04 Services/Security | Done + fleet-reviewed (`a02bf35`, `5e6a461`, `e0a603b`) |
 | Code 05 Core UI | Done + fleet-reviewed (`3a4dc6b`) — shell, Overview, exceptions queue, EXC-001 detail |
-| Code 06 Life/Counts/Chains | Done (`ffbb2a8`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
+| Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
 | Code 07–10 | Not started. **Code 07 is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+e18d94e Stage 06 fleet remediation: 16 confirmed defects fixed
+1ab0a0d Refresh SESSION_HANDOFF.md for code stage 07
 ffbb2a8 Code stage 06: Financial Life, Physical Count, and NetSuite chains
 a856e9f Refresh SESSION_HANDOFF.md for code stage 06 and ignore local Claude settings
 3a4dc6b Code stage 05: core UI (Overview, Exceptions, EXC-001) + fleet remediation
@@ -273,6 +275,11 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   06 would each have stranded an uncommitted tree.
 - `pnpm test` can OOM ("Zone Allocation failed") when a `pnpm dev` server is also running — the
   jsdom suites plus a Next dev server exceed available RAM. Stop the dev server first.
+- **Never rewrite a source file with PowerShell `Get-Content -Raw` + `Set-Content`.** PS 5.1
+  reads as ANSI, so every em dash, `·`, `§` and status glyph comes back as mojibake; it type-
+  checks and lints clean and only shows up as garbage in the rendered UI. Use the Edit tool.
+  To check: `Get-ChildItem -Recurse -Include *.ts,*.tsx,*.css apps,packages | ForEach-Object
+  { if ([IO.File]::ReadAllText($_.FullName) -match '[âÃÂ]') { $_.FullName } }`.
 
 ---
 
@@ -303,8 +310,23 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - The **§9a-2 carrier defect is corrected at the source**: carrier state comes from the
   service's real delivery event (`shipmentPosition` in `financial-life-view.ts` mirrors
   `carrierEvent` in `exception-view.ts`). Never re-introduce static "in transit" copy.
-- Additive read-only service queries stage 07+ can rely on: `FinancialLifeView.records`,
-  `getProcurementDetail()`, and `getCountDetail().adjustments`.
+- Additive read-only service queries stage 07+ can rely on: `FinancialLifeView.records` and
+  `.recordTotals`, `getProcurementDetail()` (documents **and** their totals),
+  `getCountDetail().adjustments`, and `listLocations()`.
+- **Document totals are summed in the service, never in the web layer** — `recordTotals` and
+  `ProcurementDetail.totals`. An absent total renders as absent; the UI formats money and
+  never adds it up.
+- **Source documents inherit the visibility of the evidence they are.** `makeRecordScope()` in
+  `queries.ts` withholds a record whose evidence-graph counterpart is outside the viewer's
+  scope, so the record projections cannot become a side door around `listEvidence` /
+  `traceLineage`. Any future raw-fixture projection must go through it.
+- **Location display names come from `listLocations()`**, registered once into
+  `humanize.ts`. Never transcribe a location name into the UI — the dataset owns them
+  (`STAGING` is "Shipping / Install Staging", not "Staging").
+- Count truth helpers live in `financial-life-view.ts`: `countOutcome()` /
+  `countOutcomeDetail()` read **every** year-end row for a serial. A count that failed to find
+  a unit is evidence of absence, and one clean row is not a clean count — a serial can have
+  two (EXC-013). Never re-introduce a `.find()` over year-end rows.
 
 **What stage 05 established that later stages must not undo:**
 
