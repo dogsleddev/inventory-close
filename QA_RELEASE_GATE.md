@@ -12,11 +12,16 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 | | |
 |---|---|
-| Commit | stage 09 (`git log -1`) |
-| Suite | **577 tests across 41 files, all passing** |
+| Commit | `30494c0` (stage 09 + full-tree review remediation) |
+| Suite | **597 tests across 44 files, all passing** |
 | Typecheck / lint / build | green (`pnpm -r run typecheck` + `tsc -p test/tsconfig.json`, `eslint .`, `next build`) |
 | Dataset hash | `7588ce733b2119dfbf95b95b72741d37b1bacfd555e0369af96a29991e57af06` |
-| Run id | `RUN-c21eb1a101c5-BASELINE` · output hash `bfb0c993…de79` |
+| Adversarial review | full tree, 12 lenses × 37 agents — 12 raw → **5 confirmed / 4 contested / 3 refuted**, all 9 fixed |
+
+> The run id and output hash changed at `30494c0`: run identity now binds every
+> controlled input `docs/16` names (it previously bound only the dataset hash, the
+> policy version and the scenario flag). No financial figure moved — the locked
+> aggregates are unchanged and the golden tests are untouched.
 
 ---
 
@@ -63,6 +68,42 @@ deterministic baseline, or real/confidential data exposure.
 | Clean install | PASS | `pnpm install` from the committed lockfile, then the four-command gate |
 | Synthetic disclosure and public-data scan | PASS | `test/synthetic-and-secrets.test.ts` |
 | Stale-reference scan (deprecated dataset names, completeness serial) | PASS | `test/stale-references.test.ts` (9) |
+
+---
+
+---
+
+## Full-tree adversarial review (12 lenses, 37 agents, at `f3f6f98`)
+
+Two skeptics per finding — one told to refute and to default to refuted when
+uncertain, one told to reproduce the failure by running code. All four contested
+findings were adjudicated real and fixed, so nine defects were remediated in `30494c0`.
+
+**Eight of the twelve lenses examined their area and found nothing:** accounting math,
+restricted-content disclosure, evidence lineage, the authored interpretations, the
+read-only NetSuite boundary, permissions/SOD/auditor scope, the stage-09 surfaces, and
+type-safety edge cases. That is a *result*, not an absence of coverage — the synthesis
+agent sees only findings that survived verification, so its "coverage gaps" section
+listed these same areas as unexamined. They were examined and cleared.
+
+| Fixed | Where | Was it reachable? |
+|---|---|---|
+| A denied resolve-probe reported as NO_SUCH_OBJECT (P1) | `packages/ai/src/answers.ts` | **Yes, today, with no provider bound** |
+| Finality vocabulary past the status guard | `packages/ai/src/guardrails.ts` | Latent — gates a provider; none is bound |
+| Zero/nil/none past the quantity guard | `packages/ai/src/guardrails.ts` | Latent |
+| Bare "signed"/"booked" past the action guard | `packages/ai/src/guardrails.ts` | Latent |
+| Identified count rendered as "proposed", ×2 | `apps/web/lib/server/data.ts` | Yes — Overview GL panel and close-area note |
+| Run identity binding only part of the version set | `packages/rules/src/close.ts` | Yes — a rule version bump reused a run id |
+| MISMATCH that named no differing section | `packages/rules/src/close.ts` | Diagnostic only; verdict was always correct |
+| A guarded assertion that passed when it found nothing | `apps/web/test/interaction-contract.test.tsx` | Test hygiene |
+
+**Refuted and accepted as refuted (3):** a claim that the `.icg-kpis*` responsive regex
+misses non-`icg-kpis` 4-column grids, and two others where the reproducer could not make
+the failure occur. Recorded so they are not re-litigated.
+
+**The one thin area:** no lens performed a real WCAG/keyboard/contrast audit. The a11y
+lens checked the interaction contract (row activation, drawer focus, touch targets) and
+test quality, which is narrower than accessibility. Worth a dedicated pass in stage 10.
 
 ---
 

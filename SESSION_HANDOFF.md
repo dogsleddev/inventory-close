@@ -10,20 +10,22 @@ re-deriving decisions or breaking locked facts. Written 2026-08-10 after code st
 
 ## 0. Start here
 
-**The next task is code stage 10 — final polish and deployment.** Stage 09 is committed and
-its release gate is recorded in `QA_RELEASE_GATE.md` (no P0 open).
+**The next task is code stage 10 — final polish and deployment.** Stage 09 is committed, the
+whole build has been adversarially reviewed, and the release gate is recorded in
+`QA_RELEASE_GATE.md` (no P0 open).
 
 1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
    (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
    mockup defects in §9a you must correct rather than replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **577 tests passing**. **Stop any `pnpm dev` server first** (see §7).
+   **597 tests passing**. **Stop any `pnpm dev` server first** (see §7).
 3. Follow `prompts/code/10_FINAL_POLISH_AND_DEPLOYMENT.md`. All figures come from
    `@icg/services`; no accounting logic in components or prompts; no hard-coded totals.
 
-**Stage 09 has not had its adversarial fleet review yet** (§6 working method). It has confirmed
-real latent defects after every stage so far; run it against `38a115c` before stage 10, or
-decide explicitly to skip it.
+**The full-tree review is done** (`30494c0`): 12 lenses over stages 01–09, 12 raw findings →
+5 confirmed / 4 contested / 3 refuted, all nine real ones fixed. Eight of the twelve lenses
+examined their area and found nothing — see `QA_RELEASE_GATE.md` for which, because that is a
+result worth having and not a gap to re-investigate.
 
 ---
 
@@ -50,7 +52,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **577 tests across 41 files passing**; typecheck, lint, and production build all green.
+- **597 tests across 44 files passing**; typecheck, lint, and production build all green.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
@@ -74,12 +76,15 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Code 06 Life/Counts/Chains | Done + fleet-reviewed (`ffbb2a8`, `e18d94e`) — Inventory search, Financial Life, Physical Count, Reconciliation chain tabs |
 | Code 07 Bridge/Adjustments/Valuation/PBC | Done + fleet-reviewed (`04fe79b`, `36dafe5`) — bridge tab, Adjustments, Valuation, Audit Package |
 | Code 08 Ask Gaurd | Done + fleet-reviewed (`2eaab1e`, `e343f2e`, `4552c9b`) — tools, deterministic answers, guardrails, drawer |
-| Code 09 Reset/Replay/QA | Done (`38a115c`) — **fleet review not yet run**. Reset + Reproduce Close controls, package manifest, `/cutoff` + `/ownership`, `?tab=` deep links, AI-off statement, repo-wide QA scans, `QA_RELEASE_GATE.md` |
+| Code 09 Reset/Replay/QA | Done + fleet-reviewed (`38a115c`, `30494c0`) — Reset + Reproduce Close controls, package manifest, `/cutoff` + `/ownership`, `?tab=` deep links, AI-off statement, repo-wide QA scans, `QA_RELEASE_GATE.md` |
+| Full-tree review | Done (`30494c0`) — stages 01–09 reviewed together; 9 defects fixed |
 | Code 10 | Not started. **Final polish / deployment is next** — see §8. |
 
 ### Commit history (newest first)
 
 ```
+30494c0 Full-tree review remediation: 9 defects fixed
+f3f6f98 Refresh SESSION_HANDOFF.md for code stage 10
 38a115c Code stage 09: demo reset, replay, deep routes, and the QA release gate
 3aab9a1 Make the documented gate reliable, and refresh the handoff for stage 09
 4552c9b Stage 08 fleet remediation: 18 confirmed defects fixed
@@ -372,6 +377,43 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
    confirmed defects; stage 09 has not been reviewed.
 2. **Code 10 — final polish and deployment.** Note stage 10 edits the manifest-covered root
    `README.md`; see the `SPEC_MANIFEST.json` trap in §7.
+
+**What the full-tree review established that later stages must not undo (`30494c0`):**
+
+- **An enumerated denylist is not a category.** All four confirmed Ask Gaurd defects were
+  one shape: a guard listing the phrases someone thought of. "Resolved" was caught and
+  "concluded/settled/finalised" were not; digits and number words were caught and *zero*
+  was not; "sign off" was caught and bare "signed"/"booked" were not. When you touch
+  `guardrails.ts`, add the **category** and a test that iterates it — writing those tests
+  found two further holes in the first version of the fix.
+- **`anyDenied` must be re-read after any probe.** It is a live getter over the tool call
+  log. The engine checked it before the resolve-probe ran, so a probe that was DENIED
+  looked like an object that does not exist, and the assistant told an unauthorized user
+  that a real serial was not in the population. Stage 08 fixed exactly this substitution
+  for the intent-tool path; the scope-probe path kept it. **A refusal must still name
+  which kind of nothing it is.**
+- **Identified ≠ drafted ≠ posted.** The register's three counts are different numbers
+  and "proposed" is this product's word for a *drafted* entry. Rendering the identified
+  count as "3 proposed" claimed an entry that was never written. Any surface quoting an
+  adjustment count reads `getAdjustmentRegister()` and names which count it is showing.
+- **A test that pins a literal keeps a defect green.** `overview.test.tsx` asserted the
+  string "3 proposed, none posted" and so protected the overstatement for four stages.
+  Assert against the service that produced the number.
+- **A guarded assertion is not an assertion.** `if (x !== undefined) expect(...)` passes
+  silently exactly when the thing it checks stops being produced.
+- **Run identity binds every controlled input `docs/16` names** — dataset, ruleset, rule
+  versions, policy, config, scenario script — plus the input's row shape, because
+  `datasetHash` is a claim the caller supplies rather than a measurement of the input it
+  was handed. Two materially different runs must never share one run id.
+- **The replay hash and the mismatch diagnostic read ONE projection**
+  (`comparableSections` in `close.ts`). They drifted before: `ruleResults` decided the
+  verdict but sat outside the compared list, so a coverage-only difference could report
+  MISMATCH and name nothing.
+- **A synthesis agent's "coverage gaps" are not gaps.** It only sees findings that
+  survived verification, so it reported the redactor, the locked aggregates, permissions,
+  the read-only boundary and evidence lineage as unexamined. Eight lenses examined those
+  areas at high effort and cleared them. Read the per-lens results in the run's
+  `journal.jsonl` before chasing a gap.
 
 **What stage 09 established that later stages must not undo:**
 
