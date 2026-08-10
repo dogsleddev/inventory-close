@@ -1,7 +1,8 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 07.
+re-deriving decisions or breaking locked facts. Written 2026-08-10 after code stage 08 and its
+fleet review (HEAD `714acec`).
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
@@ -44,7 +45,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ---
 
-## 2. Current state (verified after code stage 07)
+## 2. Current state (verified after code stage 08)
 
 - Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
@@ -157,8 +158,12 @@ docs/  prompts/  golden/  data/README.md                                        
                                               (all 44 files are manifest-hashed; see traps in §7)
 design/00_master … 06_audit-ai/    <- approved design exports (self-extracting bundles)
 design/07_final/                   <- ICG-Design-Handoff.html (design 07 output, authoritative)
-design/IMPLEMENTATION_HANDOFF.md   <- markdown distillation of it; what code 05-07 read
-apps/web/                          <- Next.js App Router skeleton (placeholder page only)
+design/IMPLEMENTATION_HANDOFF.md   <- markdown distillation of it; what code 05-08 read
+apps/web/                          <- Next.js App Router. 11 routes: /, /inventory,
+                                      /inventory/[serial], /physical-count, /exceptions,
+                                      /exceptions/[id], /reconciliation, /valuation,
+                                      /adjustments, /audit-package, /[section] (not-designed
+                                      state for the rest). Page data in lib/server/*-view.ts.
 packages/
   domain/       types, enums, Zod schemas, money/dates, repositories   (zero deps but zod)
   data/         deterministic generator, committed fixtures, toCloseInput,
@@ -168,8 +173,10 @@ packages/
   permissions/  explicit role matrix, authorize(), SOD, restricted-content gate
   workflows/    period + review state machines with append-only history
   audit/        append-only audit log (no mutation API)
-  services/     workspace, query services, command services, demo reset
-  ai/ mcp/      stubs (Stage 08+)
+  services/     workspace, query services, command services, demo reset,
+                the single restricted-content redactor, PBC version model
+  ai/           Ask Gaurd: approved tools, deterministic answer engine, guardrails
+  mcp/          stub (P2 — deliberately inert)
 ```
 
 Key files a new session will want first: `packages/rules/src/close.ts` (the orchestrator),
@@ -203,11 +210,19 @@ The spec deferred these; they were authored during the build and are now pinned 
    `-U####` ids and report `buySideTracking: "BATCH"` rather than false "missing" documents.
 6. **GL difference is seeded as three GL-entry facts** (JE-2026-0790 +2,900, JE-2026-0847 +18,750
    unsupported, JE-2027-0012 +9,200 January posting) so rules derive the reconciliation.
-7. **Auditor scoping** — the auditor sees only evidence under **PROVIDED** workpapers; management
-   indicators are never auditor-facing.
+7. **Auditor scoping** — the auditor sees only evidence under workpapers that have been
+   **provided**, and management indicators are never auditor-facing. Stage 07 made "provided"
+   mean *has a sealed provided version* rather than *status reads PROVIDED*, so
+   FOLLOW_UP_REQUESTED counts (support was provided and more was then asked for); stage 08 also
+   withholds unsealed internal drafts from them. Scope is not the sensitivity gate: restricted
+   content stays withheld inside an in-scope lineage.
 8. **Not yet typed:** docs/06 objects for later stages (CloseTask/Readiness,
-   AiInteraction/ToolCall/Citation/Draft/Session, TechnicalAccountingReview/LegalReview, …) arrive
-   with their stages. This is deliberate staging, not an omission. **Contract and Shipment are
+   TechnicalAccountingReview/LegalReview, …) arrive with their stages. This is deliberate
+   staging, not an omission. **The AI objects are now typed** — `AiInteraction`, `AiToolCall`,
+   `AiCitation` in `packages/ai/src/types.ts`, deliberately NOT in `@icg/domain` (the core's
+   identity is that the close works if AI disappears, and `Draft` already exists in
+   `@icg/services`). `Session` was not built: transcripts are a stated non-goal
+   (`design/IMPLEMENTATION_HANDOFF.md` §10). **Contract and Shipment are
    already typed** — `contractFixtureSchema` (provisions: OWNERSHIP_TRANSFER / ACCEPTANCE /
    TITLE_RETENTION / CUSTODY / LOANER_TERMS / DEMO_TERMS / RETURN_TERMS, each PRESENT or MISSING)
    and `carrierShipmentFixtureSchema` (PICKUP → DELIVERED event trail) in
@@ -229,9 +244,10 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 - Never silently change canonical totals. If spec and code disagree, stop and identify which is wrong.
 - Regenerate fixtures with `pnpm --filter @icg/data generate` and commit them — a test asserts the
   committed fixtures reproduce byte-for-byte from the seed, and that no stale fixture files linger.
-- **Adversarial fleet review after each stage** (the pattern used for 02/03/04/05/06): 5 finder
-  lenses in parallel → dedupe → one skeptic verifier per finding at high effort → apply confirmed
-  fixes with regression tests → re-run gate → commit. It has confirmed real latent defects every
+- **Adversarial fleet review after each stage** (used for 02–08): finder lenses in parallel →
+  dedupe → skeptic verifiers per finding at high effort → apply confirmed fixes with regression
+  tests → re-run gate → commit. **Commit the stage first** — reviews are long-running background
+  work. It has confirmed real latent defects every
   single time (7 clusters in stage 03, 10 in stage 04, 9 in stage 05, 16 in stage 06, 9 in
   stage 07, **18 in stage 08**), so don't skip it.
 - **Add a lens that tries to BREAK the stage, not review it.** Stage 08's red-team — told to
@@ -241,11 +257,16 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   suite harder than the code: "each gap is the shape of a test that asserts an instance where the
   contract states a category". The replacements iterate every exception, every serial with a
   scope difference, every shipped chip.
-- Stage 07 ran **two** skeptics per finding with different jobs — one told to refute and to
-  default to refuted when uncertain, one told to reproduce the failure by running code. Confirm
-  only when both fail to refute; a split is **contested**, to be adjudicated inline rather than
-  dropped. Four of the five contested findings turned out to be real. A dedicated lens pointed
-  at the stage's own authored interpretations is worth one agent slot.
+- **Two skeptics per finding, with different jobs** — one told to refute (and to default to
+  refuted when uncertain), one told to *reproduce* the failure by running code. Confirm only when
+  both fail to refute; a split is **contested**, to be adjudicated inline rather than dropped.
+  Four of stage 07's five contested findings were real, including the two most consequential.
+- **Spend one lens on the stage's own authored interpretations**, named explicitly, with the
+  agent told its job is to find where the author was wrong. Stages 07 and 08 both cleared theirs,
+  which is a result worth having before it reaches a reviewer who assumes otherwise.
+- The synthesis agent only sees findings that SURVIVED, so its "coverage gaps" will list things
+  other lenses checked and cleared. Read the per-lens raw output in the run's `journal.jsonl`
+  before believing a gap is real.
 
 ---
 
@@ -263,7 +284,9 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   directed. **Settled** — nothing further is owed here.
 - **Fleet-review agents can leave artifacts despite read-only instructions.** The stage-07
   review left an empty `x.html` in the repo root (a stray shell redirect). Check
-  `git status --porcelain` after a review and before staging; never `git add -A`.
+  `git status --porcelain` after a review and before staging; never `git add -A`. Spelling the
+  ban out — no writes anywhere, no `>` / `>>` / `tee`, use inline `node -e` printing to stdout —
+  worked: stage 08's 65 agents left nothing.
 - **A third §9a-class mockup copy defect** was found in `05_counts-reconciliation`: the Financial
   tab asserts "Two of the three are still open items" and "Not reachable — 2 items open", but its
   own bridge rows show one open item (EXC-015; EXC-009 and EXC-014 are both resolved). The
@@ -310,7 +333,15 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   remediation commits). Reviews are long-running background work; three host exits during stage
   06 would each have stranded an uncommitted tree.
 - `pnpm test` can OOM ("Zone Allocation failed") when a `pnpm dev` server is also running — the
-  jsdom suites plus a Next dev server exceed available RAM. Stop the dev server first.
+  jsdom suites plus a Next dev server exceed available RAM. Stop the dev server first. A second
+  symptom of the same pressure is esbuild dying with "The service is no longer running" or
+  "runtime: cannot allocate memory", which fails **every** file with *no tests run* — that is an
+  environment problem, never a code regression.
+- **`vitest.config.ts` sets a 30s `testTimeout` deliberately.** The first test in each file pays
+  for the whole deterministic close (buildDataset over 1,500 units, runClose across 21 rules,
+  then the evidence graph). Under the 5s default that sat right on the boundary: the first test
+  in a jsdom file failed on a loaded machine and passed on an idle one, which reads as a
+  regression and is not one. Don't lower it.
 - **Never rewrite a source file with PowerShell `Get-Content -Raw` + `Set-Content`.** PS 5.1
   reads as ANSI, so every em dash, `·`, `§` and status glyph comes back as mojibake; it type-
   checks and lints clean and only shows up as garbage in the rendered UI. Use the Edit tool.
