@@ -79,16 +79,32 @@ export function OverviewScreen({
                   <span aria-hidden>◆</span>
                   <span>NOT READY FOR MANAGEMENT SIGN-OFF</span>
                 </div>
+                {/* The question this page exists to answer leads: what is
+                    preventing sign-off, and how much is at stake. Readiness
+                    is a management workflow measure and reads as one — it
+                    stays above the fold, one size down, where it cannot be
+                    mistaken for the headline. */}
                 <div className="icg-gate-readiness">
-                  <div className="icg-gate-pct">{data.gate.readinessOverview}</div>
-                  <div style={{ paddingBottom: "6px" }}>
-                    <div className="icg-soft" style={{ fontSize: "12px" }}>
-                      Close Readiness
-                    </div>
-                    <div className="icg-mono icg-quiet" style={{ fontSize: "10px" }}>
-                      {data.gate.bps} bps · weighted management metric
-                    </div>
-                  </div>
+                  <Link href="/exceptions?filter=blockers" className="icg-gate-blockers">
+                    <span className="icg-gate-pct">{data.gate.blockerCount}</span>
+                    <span>
+                      <span style={{ display: "block", fontSize: "12.5px", fontWeight: 600 }}>
+                        {data.gate.blockerCount === 1 ? "Sign-off blocker" : "Sign-off blockers"}
+                      </span>
+                      <span className="icg-soft" style={{ fontSize: "11.5px" }}>
+                        {data.gate.blockerExposure}
+                      </span>
+                    </span>
+                  </Link>
+                </div>
+                <div className="icg-gate-readiness-secondary">
+                  <span className="icg-gate-readiness-pct">{data.gate.readinessOverview}</span>
+                  <span className="icg-soft" style={{ fontSize: "11.5px" }}>
+                    Close Readiness
+                  </span>
+                  <span className="icg-mono icg-quiet" style={{ fontSize: "10px" }}>
+                    {data.gate.bps} bps · weighted management metric
+                  </span>
                 </div>
                 <div className="icg-gate-bar" aria-hidden>
                   {data.gate.categories.map((c) => (
@@ -130,31 +146,48 @@ export function OverviewScreen({
                   </div>
                 </div>
               </div>
+              {/* Each tile opens the screen that derives its figure. The
+                  whole tile is the hit area; the accessible name says where
+                  it goes, because "7" is not a destination. */}
               <div className="icg-gate-right">
-                {data.gate.stats.map((s) => (
-                  <div key={s.label}>
-                    <div className="icg-label">{s.label}</div>
-                    <div
-                      className="icg-gate-stat-value"
-                      style={
-                        s.tone === "ember"
-                          ? { color: "var(--ember)" }
-                          : s.tone === "warn"
-                            ? { color: "var(--warn)" }
-                            : undefined
-                      }
+                {data.gate.stats.map((s) => {
+                  const body = (
+                    <>
+                      <div className="icg-label">{s.label}</div>
+                      <div
+                        className="icg-gate-stat-value"
+                        style={
+                          s.tone === "ember"
+                            ? { color: "var(--ember)" }
+                            : s.tone === "warn"
+                              ? { color: "var(--warn)" }
+                              : undefined
+                        }
+                      >
+                        {s.value}
+                      </div>
+                      <div
+                        className="icg-kpi-note"
+                        style={s.warnNote === true ? { color: "var(--warn)" } : undefined}
+                      >
+                        {s.warnNote === true ? <span aria-hidden>◔ </span> : null}
+                        {s.note}
+                      </div>
+                    </>
+                  );
+                  return s.href !== undefined ? (
+                    <Link
+                      key={s.label}
+                      href={s.href}
+                      className="icg-kpi-link"
+                      aria-label={`${s.label}: ${s.value} — open ${s.hrefLabel ?? "the detail"}`}
                     >
-                      {s.value}
-                    </div>
-                    <div
-                      className="icg-kpi-note"
-                      style={s.warnNote === true ? { color: "var(--warn)" } : undefined}
-                    >
-                      {s.warnNote === true ? <span aria-hidden>◔ </span> : null}
-                      {s.note}
-                    </div>
-                  </div>
-                ))}
+                      {body}
+                    </Link>
+                  ) : (
+                    <div key={s.label}>{body}</div>
+                  );
+                })}
               </div>
             </Panel>
 

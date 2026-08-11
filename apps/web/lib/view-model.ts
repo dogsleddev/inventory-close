@@ -122,6 +122,14 @@ export interface KpiTile {
   readonly note: string;
   readonly tone?: "ember" | "warn";
   readonly warnNote?: boolean;
+  /**
+   * Where this figure is worked out in full. A headline number that cannot
+   * be opened asks the reader to believe it; every one of these resolves to
+   * the screen that derives it.
+   */
+  readonly href?: string;
+  /** What the destination shows, for the link's accessible name. */
+  readonly hrefLabel?: string;
 }
 
 export interface GateCategory {
@@ -207,6 +215,8 @@ export interface OverviewData {
     readonly stats: readonly KpiTile[];
     readonly blockerCount: number;
     readonly blockerSummary: string;
+    /** Exposure alone, for the gate where the count is already the figure. */
+    readonly blockerExposure: string;
   };
   readonly preventing?: {
     readonly rows: readonly BlockerRow[];

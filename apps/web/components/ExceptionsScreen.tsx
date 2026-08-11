@@ -84,8 +84,11 @@ export function ExceptionsScreen({
                     {data.openBlockerExposure}
                   </div>
                   <div className="icg-quiet icg-num" style={{ fontSize: "10.5px" }}>
+                    {/* "in this view" rather than "in this domain": the queue
+                        is narrowed by control domain on some pages and by
+                        what is blocking sign-off on others. */}
                     {filter !== null
-                      ? `${data.totalCount} in this domain`
+                      ? `${data.totalCount} in this view`
                       : `${data.totalCount} designed exceptions`}
                   </div>
                 </div>

@@ -65,6 +65,41 @@ describe("Overview — 10-second acceptance (canonical figures above the fold)",
     expect(screen.getAllByText("91.67%").length).toBeGreaterThan(0);
   });
 
+  it("leads with what prevents sign-off and keeps readiness visible but secondary", () => {
+    renderAs("CONTROLLER");
+    // The gate answers the page's question first. Readiness is a management
+    // workflow measure and must stay on the screen — demoted, never hidden.
+    const gate = document.querySelector(".icg-gate-left");
+    expect(gate).not.toBeNull();
+    const blockers = gate!.querySelector(".icg-gate-blockers");
+    expect(blockers, "the blocker count leads the gate").not.toBeNull();
+    expect(blockers!.textContent).toContain("7");
+    expect(blockers!.textContent).toContain("Sign-off blockers");
+    expect(blockers!.getAttribute("href")).toBe("/exceptions?filter=blockers");
+    expect(gate!.querySelector(".icg-gate-readiness-secondary")?.textContent).toContain("81.4%");
+  });
+
+  it("makes every headline figure open the screen that derives it", () => {
+    renderAs("CONTROLLER");
+    // A KPI a reader cannot open is a figure they are asked to take on trust.
+    const tiles = document.querySelectorAll(".icg-gate-right > *");
+    expect(tiles.length).toBe(6);
+    const hrefs = [...tiles].map((t) => t.getAttribute("href"));
+    expect(hrefs, "every KPI tile is a link").not.toContain(null);
+    expect(hrefs).toEqual([
+      "/exceptions?filter=blockers",
+      "/exceptions?filter=blockers",
+      "/reconciliation?tab=financial",
+      "/inventory",
+      "/audit-package",
+      "/evidence",
+    ]);
+    // The accessible name says where it goes: "7" is not a destination.
+    for (const tile of tiles) {
+      expect(tile.getAttribute("aria-label")).toMatch(/ — open /);
+    }
+  });
+
   it("keeps the sign-off action visible but disabled with its reason", () => {
     renderAs("CONTROLLER");
     const btn = screen.getByRole("button", { name: "Record management sign-off" });

@@ -365,39 +365,53 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     .filter((x) => x !== null)
     .join(" · ");
 
+  // Every headline figure resolves to the screen that derives it. A KPI a
+  // reader cannot open is a figure they are asked to take on trust.
   const stats: KpiTile[] = [
     {
       label: "ACTIVE BLOCKERS",
       value: String(agg.blockerCount),
       note: `of ${agg.exceptionCount} designed exceptions`,
       tone: "ember",
+      href: "/exceptions?filter=blockers",
+      hrefLabel: "the blocking items",
     },
     {
       label: "BLOCKER EXPOSURE",
       value: formatCents(agg.blockerExposureCents),
       note: "open blockers only",
+      href: "/exceptions?filter=blockers",
+      hrefLabel: "the blocking items by exposure",
     },
     {
       label: "CURRENT GL DIFFERENCE",
       value: formatCents(agg.grossGlDifferenceCents),
       note: "GL over subledger · gross",
       tone: "warn",
+      href: "/reconciliation?tab=financial",
+      hrefLabel: "the subledger-to-GL reconciliation",
     },
     {
       label: "GROSS SUBLEDGER / GL",
       value: `${formatCentsMillions(agg.grossInventoryCents, 2)} / ${formatCentsMillions(agg.grossGlCents, 3)}`,
       note: units !== undefined ? `${units.length.toLocaleString("en-US")} book units` : "—",
+      href: "/inventory",
+      hrefLabel: "the inventory population",
     },
     {
       label: "PBC READINESS",
       value: formatBpsExact(agg.pbcReadinessBps),
       note: `${agg.pbcReady} of ${agg.pbcTotal} ready or provided`,
+      href: "/audit-package",
+      hrefLabel: "the audit package",
     },
     {
       label: "DATA HEALTH",
       value: formatBpsExact(agg.sourceHealthBps),
       note: degradedNote !== "" ? degradedNote : "all sources healthy",
       warnNote: degradedNote !== "",
+      href: "/evidence",
+      hrefLabel: "the evidence index and source health",
     },
   ];
 
@@ -467,6 +481,7 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
       stats,
       blockerCount: agg.blockerCount,
       blockerSummary: `${agg.blockerCount} blockers · ${formatCents(agg.blockerExposureCents)}`,
+      blockerExposure: `${formatCents(agg.blockerExposureCents)} exposure`,
     },
     preventing: {
       rows: shown.map((e) => blockerRow(e, true)),
@@ -585,10 +600,18 @@ export function buildExceptionsData(
   correlationId: string,
   /** A key of EXCEPTION_SECTIONS; omitted for the full queue. */
   sectionKey?: string,
+  /**
+   * "blockers" narrows the queue to the items preventing sign-off — the
+   * destination of the Overview's blocker and exposure figures. It is a
+   * filter over the same queue, so the page states what it is showing and
+   * out of how many, exactly as the control-domain sections do.
+   */
+  filterKey?: string,
 ): ExceptionsData {
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
   const section = sectionKey !== undefined ? EXCEPTION_SECTIONS[sectionKey] : undefined;
+  const blockersOnly = filterKey === "blockers";
   const all = attempt(() => queries.listExceptions(ctx));
   if (all === undefined) {
     return {
@@ -604,13 +627,19 @@ export function buildExceptionsData(
   }
   const rules = attempt(() => queries.listRuleSummaries(ctx)) ?? [];
   const domainOf = new Map(rules.map((r) => [r.id, r.controlDomain]));
-  const exceptions =
+  const allBlockerIds = new Set(
+    (attempt(() => queries.getBlockers(ctx)) ?? []).map((b) => b.exceptionId),
+  );
+  const domainFiltered =
     section === undefined
       ? all
       : all.filter((e) => {
           const domain = domainOf.get(e.exception.finding.ruleId);
           return domain !== undefined && section.domains.includes(domain);
         });
+  const exceptions = blockersOnly
+    ? domainFiltered.filter((e) => allBlockerIds.has(e.exception.id))
+    : domainFiltered;
 
   const blockers = (attempt(() => queries.getBlockers(ctx)) ?? []).filter((b) =>
     exceptions.some((e) => e.exception.id === b.exceptionId),
@@ -663,9 +692,8 @@ export function buildExceptionsData(
     totalCount: exceptions.length,
     drawers,
     filter:
-      section === undefined
-        ? null
-        : {
+      section !== undefined
+        ? {
             title: section.title,
             context: section.context,
             // The basis is stated, not implied: this page is a filter over
@@ -674,7 +702,19 @@ export function buildExceptionsData(
             shown: exceptions.length,
             outOf: all.length,
             emptyNote: section.emptyNote,
-          },
+          }
+        : blockersOnly
+          ? {
+              title: "Preventing sign-off",
+              context: "The open items management must conclude before the period can be signed off.",
+              basis:
+                "Open exceptions the close identifies as blockers, ordered by exposure. An exception that is open but not blocking is not shown here.",
+              shown: exceptions.length,
+              outOf: all.length,
+              emptyNote:
+                "No exception is currently blocking sign-off in this close — verified empty, not assumed.",
+            }
+          : null,
   };
 }
 
