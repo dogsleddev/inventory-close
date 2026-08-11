@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { COST_COMPONENT_TYPES } from "@icg/domain";
+import { COST_COMPONENT_BEHAVIOR, COST_COMPONENT_TYPES } from "@icg/domain";
 import { userByRole } from "@icg/data";
 import {
-  COST_COMPONENT_BEHAVIOR,
   createQueryService,
   createWorkspace,
   getCostClassification,
@@ -129,10 +128,15 @@ describe("cost behaviour", () => {
   it("classifies every component type the data actually carries", () => {
     // A component with no behaviour entry would drop out of the split
     // silently, and variable + fixed would still look like a whole number.
-    for (const type of new Set(ws.dataset.costComponents.map((c) => c.component))) {
+    const carried = new Set(ws.dataset.costComponents.map((c) => c.component));
+    for (const type of carried) {
       expect(COST_COMPONENT_BEHAVIOR[type], type).toBeDefined();
       expect(COST_COMPONENT_BEHAVIOR[type].basis.length, type).toBeGreaterThan(20);
     }
+    // The loop's length comes from the data it is checking, so an empty
+    // fixture would empty it and this test would go green having asserted
+    // nothing. Every component type in the enum is carried at this baseline.
+    expect(carried.size).toBe(COST_COMPONENT_TYPES.length);
   });
 
   it("splits the capitalized total exhaustively", () => {

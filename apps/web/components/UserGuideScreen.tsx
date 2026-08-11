@@ -59,6 +59,12 @@ const JOURNEYS: readonly Journey[] = [
         href: "/exceptions/EXC-001",
         what: "Open the assistant from the header. The Missing Evidence block declines to infer the contract term — it explains the control result, it never creates one.",
       },
+      {
+        step: "4",
+        where: "Close Memo",
+        href: "/close-memo",
+        what: "Where management states the position in its own words. The prose is a person's; every figure beside it is read from the close on each render, and issuing a version seals both the text and a hash of the close it was written against.",
+      },
     ],
     ending:
       "The conclusion stays Open because the evidence is genuinely not there. Nothing in this product will close it for you.",
@@ -137,6 +143,10 @@ const DOES: readonly { rule: string; note: string }[] = [
   {
     rule: "Prepares the audit package",
     note: "Management-prepared workpapers, versioned and sealed when provided, with a manifest and a replay that rebuilds the close from its seed.",
+  },
+  {
+    rule: "Shows its working",
+    note: "Methodology sets out how each derived figure is arrived at, term by term, and carries the register of judgements this product makes that no source document dictates — each one with the basis a reader would need in order to disagree with it.",
   },
   {
     rule: "Lets the work leave",

@@ -17,6 +17,7 @@ export type {
   Comment,
   Draft,
   EvidenceRequest,
+  MemoVersion,
   RecordedConclusion,
   SubmittedEvidence,
   Workspace,
@@ -80,6 +81,7 @@ export {
 export {
   effectiveBlockers,
   effectiveClose,
+  effectiveExceptions,
   effectiveOpenExceptionIds,
   effectiveStatus,
   latestConclusion,
@@ -88,7 +90,7 @@ export {
 } from "./effective.js";
 export type { CommandService } from "./commands.js";
 export { getGlAccountReconciliation, INVENTORY_RESERVE_ACCOUNT, type GlAccountReconcilingItemOut, type GlAccountReconciliationOut, type GlAccountReconciliationState, type GlAccountRowOut, type GlReserveAccountOut } from "./glAccounts.js";
-export { COST_COMPONENT_BEHAVIOR, getCostClassification, getCostStandards } from "./costing.js";
+export { getCostClassification, getCostStandards } from "./costing.js";
 export type {
   CogsChainRowOut,
   CostClassificationOut,
@@ -123,6 +125,25 @@ export type {
   EoSignalRowOut,
   RecoveryEvidenceOut,
 } from "./eoMethodology.js";
+export {
+  getMethodology,
+  INTERPRETATION_CONSTANT_NAMES,
+} from "./methodology.js";
+export type {
+  AccountingMatrixOut,
+  InterpretationOut,
+  MatrixRowOut,
+  MethodologyOut,
+  PolicyValueOut,
+  ReconciliationDerivationOut,
+} from "./methodology.js";
+export {
+  getMemo,
+  MEMO_DRAFT_PERMISSION,
+  MEMO_ISSUE_PERMISSION,
+  memoPosition,
+} from "./memo.js";
+export type { MemoOut, MemoPositionOut, MemoVersionOut } from "./memo.js";
 export { getProcurementPopulations } from "./procurement.js";
 export type {
   GoodsInTransitOut,

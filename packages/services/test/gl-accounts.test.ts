@@ -9,10 +9,12 @@ import {
   type ServiceContext,
   type Workspace,
 } from "../src/index.js";
+import { INVENTORY_GL_ACCOUNT_DESCRIPTIONS } from "../src/glAccounts.js";
 import {
-  CLASSIFICATION_GL_ACCOUNT,
-  INVENTORY_GL_ACCOUNT_DESCRIPTIONS,
-} from "../src/glAccounts.js";
+  ACCOUNTING_CLASSIFICATIONS,
+  glAccountDescription,
+  glAccountForClassification,
+} from "@icg/domain";
 
 /**
  * Per-account inventory GL reconciliation (COMPLETION_PLAN §4).
@@ -103,7 +105,7 @@ describe("the four gross accounts", () => {
     const units = queries.listInventoryUnits(ctx("CONTROLLER"));
     for (const account of view.accounts) {
       const mine = units.filter(
-        (u) => CLASSIFICATION_GL_ACCOUNT[u.classification] === account.account,
+        (u) => glAccountForClassification(u.classification) === account.account,
       );
       expect(account.subledgerCents).toBe(
         mine.reduce((n, u) => n + u.unitCostCents, 0),
@@ -124,20 +126,41 @@ describe("the four gross accounts", () => {
     }
   });
 
-  it("keeps the classification map in step with the one the query service reports", () => {
-    // The map is duplicated from queries.ts pending the shared accounting
-    // matrix (COMPLETION_PLAN §4). This is what stops the two drifting: one
-    // unit of every classification, checked against what the service says.
+  it("gives every classification an account the chart of accounts and the GL both know", () => {
+    // The mapping used to exist twice and this test compared the copies.
+    // There is one map now (INVENTORY_ACCOUNTING_MATRIX), so that comparison
+    // could only ever pass. What can still go wrong is the mapping naming an
+    // account nothing else carries — a classification pointed at 1240 would
+    // put its units in a bucket the GL has no balance for, and the row would
+    // report a difference equal to its whole subledger.
+    const view = getGlAccountReconciliation(ws, ctx("CONTROLLER"));
+    const reported = new Set(view.accounts.map((a) => a.account));
+    for (const classification of ACCOUNTING_CLASSIFICATIONS) {
+      const account = glAccountForClassification(classification);
+      expect(glAccountDescription(account), `${classification} → ${account}`).toBeDefined();
+      expect(reported.has(account), `${classification} → ${account} has no GL row`).toBe(true);
+    }
+  });
+
+  it("reports the same account for a unit as the matrix assigns its classification", () => {
+    // Structural now — the query service calls the same function — so this
+    // is here to catch a future projection that starts deriving the account
+    // some other way, which is exactly how the two copies drifted before.
     const units = queries.listInventoryUnits(ctx("CONTROLLER"));
-    const classifications = [...new Set(units.map((u) => u.classification))];
-    expect(classifications.length).toBe(Object.keys(CLASSIFICATION_GL_ACCOUNT).length);
-    for (const classification of classifications) {
+    const seen = new Set<string>();
+    for (const classification of ACCOUNTING_CLASSIFICATIONS) {
       const unit = units.find((u) => u.classification === classification);
-      const life = queries.getFinancialLife(ctx("CONTROLLER"), unit?.serial ?? "");
+      if (unit === undefined) continue;
+      seen.add(classification);
+      const life = queries.getFinancialLife(ctx("CONTROLLER"), unit.serial);
       expect(life.unit?.glAccount, `${classification} maps inconsistently`).toBe(
-        CLASSIFICATION_GL_ACCOUNT[classification],
+        glAccountForClassification(classification),
       );
     }
+    // The loop's iteration count must not come from the population it walks:
+    // an empty listing would empty it and the test would pass having checked
+    // nothing. Every classification in the enum is carried at this baseline.
+    expect(seen.size).toBe(ACCOUNTING_CLASSIFICATIONS.length);
   });
 });
 

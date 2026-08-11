@@ -18,6 +18,11 @@ vi.mock("../app/actions", () => ({
   setRole: vi.fn(async () => {}),
   askGaurd: async (question: string, scope: { exceptionId?: string; serial?: string }) =>
     askGaurdData(userByRole("CONTROLLER"), question, scope, "T-ASK"),
+  // `OverviewScreen` imports `recordSignOff`, and a factory that omits an
+  // export replaces it with `undefined` rather than failing — silently, until
+  // something clicks the control. Listed here so the omission cannot become a
+  // hole the way it did before.
+  recordSignOff: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
 }));
 
 function services() {

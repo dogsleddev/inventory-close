@@ -39,8 +39,10 @@ afterEach(cleanup);
 let actingRole: Parameters<typeof userByRole>[0] = "CONTROLLER";
 
 import {
+  runIssueMemoVersion,
   runRecordConclusion,
   runRequestEvidence,
+  runSaveMemoDraft,
   runSignOff,
   runSubmitEvidence,
 } from "../lib/server/workflow-actions";
@@ -67,6 +69,11 @@ vi.mock("../app/actions", () => ({
     note: string;
   }) => runSubmitEvidence(userByRole(actingRole), "T-09", input),
   recordSignOff: async () => runSignOff(userByRole(actingRole), "T-09"),
+  // Stage F.
+  saveMemoDraft: async (input: { title: string; body: string }) =>
+    runSaveMemoDraft(userByRole(actingRole), "T-09", input),
+  issueMemoVersion: async (input: { note: string }) =>
+    runIssueMemoVersion(userByRole(actingRole), "T-09", input),
 }));
 
 const noopRole = vi.fn(async () => {});

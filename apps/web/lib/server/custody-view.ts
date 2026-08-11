@@ -13,7 +13,7 @@ import type {
   ProcurementStat,
 } from "../view-model";
 import { attempt } from "./data";
-import { locationLabel } from "./humanize";
+import { holderLabel, locationLabel } from "./humanize";
 import { CUSTODY_LABELS } from "./inventory-list-view";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
@@ -45,18 +45,6 @@ const METHOD_LABELS: Readonly<Record<string, string>> = {
   SCRAPPED: "Scrapped",
   RETURNED_TO_VENDOR: "Returned to vendor",
   SALVAGE_SALE: "Salvage sale",
-};
-
-/**
- * Who is holding it, in a reader's words. The ANSWER comes from the service
- * (`row.heldBy`); this map is only the wording. Deriving it here from a set of
- * company-held types made "custody not established" render as a positive claim
- * that another party held the unit.
- */
-const HOLDER_LABELS: Readonly<Record<string, string>> = {
-  COMPANY: "The company",
-  OTHER_PARTY: "Another party",
-  NOT_ESTABLISHED: "Not established",
 };
 
 /** Unit counts group at workpaper scale; a bare 1500 reads as an id. */
@@ -107,7 +95,7 @@ export function buildCustodyData(user: DemoUser, correlationId: string): Custody
           ? r.custodians.join(", ")
           : `${r.custodians.join(", ")} — and no name on ${units(r.unitsWithoutCustodian)} of these units`
         : "No holder named on the listing",
-    heldBy: HOLDER_LABELS[r.heldBy] ?? r.heldBy,
+    heldBy: holderLabel(r.heldBy),
   }));
 
   const custodyStats: ProcurementStat[] = [

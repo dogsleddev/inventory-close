@@ -27,6 +27,8 @@ vi.mock("../app/actions", () => ({
   requestEvidence: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
   submitEvidence: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
   recordSignOff: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
+  saveMemoDraft: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
+  issueMemoVersion: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
 }));
 
 const noop = vi.fn(async () => ({ ok: true, message: "", unmet: [] as string[] }));

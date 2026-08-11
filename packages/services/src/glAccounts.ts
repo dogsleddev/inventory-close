@@ -1,4 +1,8 @@
-import { INVENTORY_GL_ACCOUNTS, isResolvedStatus } from "@icg/domain";
+import {
+  glAccountForClassification,
+  INVENTORY_GL_ACCOUNTS,
+  isResolvedStatus,
+} from "@icg/domain";
 import { authorize } from "@icg/permissions";
 import type { ServiceContext } from "./queries.js";
 import type { Workspace } from "./workspace.js";
@@ -45,23 +49,17 @@ export const INVENTORY_GL_ACCOUNT_DESCRIPTIONS: Readonly<Record<string, string>>
   Object.fromEntries(INVENTORY_GL_ACCOUNTS.map((a) => [a.code, a.description]));
 
 /**
- * Accounting classification → GL account (CANONICAL_SPEC §5, "Gross
- * subledger GL mapping"). Mirrors the map `getFinancialLife` reports per
- * unit; COMPLETION_PLAN §4 folds both into a shared
- * `INVENTORY_ACCOUNTING_MATRIX` later. Until then the mirror is held by a
- * test that compares this map against what the query service reports for a
- * unit of every classification, so the two cannot drift silently.
+ * Accounting classification → GL account comes from the Inventory Accounting
+ * Matrix in @icg/domain (`glAccountForClassification`), which is the ONE
+ * place the mapping lives.
+ *
+ * It used to live here as `CLASSIFICATION_GL_ACCOUNT` and again in
+ * `queries.ts` as `CLASSIFICATION_GL` — byte-identical copies of an
+ * accounting judgement, held apart by a test that compared them. A test
+ * comparing two copies is a weaker guarantee than not having two copies:
+ * it catches the drift after someone writes it, and only for the pairs
+ * somebody remembered to compare. Stage F collapsed them.
  */
-export const CLASSIFICATION_GL_ACCOUNT: Readonly<Record<string, string>> = {
-  FINISHED_HARDWARE: "1200",
-  THIRD_PARTY: "1200",
-  DAMAGED: "1200",
-  VALUATION_REVIEW: "1200",
-  GIT: "1210",
-  DEMO: "1220",
-  LOANER: "1220",
-  RMA: "1230",
-};
 
 /**
  * Per-account reconciliation state. NOT an exception workflow status and
@@ -140,14 +138,16 @@ export function getGlAccountReconciliation(
   const recon = ws.close.reconciliation;
 
   // Subledger side: the unit population, cut by the account its accounting
-  // classification maps to. An unmapped classification would be a silent
-  // hole in the sum, so it lands in a row of its own instead of nowhere.
+  // classification maps to. The mapping is total over the classification
+  // enum — `glAccountForClassification` is keyed by a `Record` the compiler
+  // checks — so there is no unmapped case to fall through, and this loop
+  // does not invent a bucket to catch one.
   const subledger = new Map<
     string,
     { cents: number; units: number; classifications: Set<string> }
   >();
   for (const unit of ws.dataset.inventoryUnits) {
-    const account = CLASSIFICATION_GL_ACCOUNT[unit.classification] ?? unit.classification;
+    const account = glAccountForClassification(unit.classification);
     let bucket = subledger.get(account);
     if (bucket === undefined) {
       bucket = { cents: 0, units: 0, classifications: new Set<string>() };

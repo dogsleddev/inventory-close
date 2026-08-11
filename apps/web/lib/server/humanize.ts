@@ -51,6 +51,25 @@ export function classificationLabel(classification: string): string {
   return special[classification] ?? titleCase(classification);
 }
 
+/**
+ * Custody holder → a reader's words.
+ *
+ * The ANSWER is the services layer's three-way `heldBy`; this is only the
+ * wording. It lived in the custody view and again in the exporter — two
+ * copies of a phrase two surfaces have to agree on — and Methodology's
+ * register of judgements would have been the third. `NOT_ESTABLISHED` reads
+ * as the absence of an answer, never as a claim that another party holds the
+ * unit.
+ */
+export function holderLabel(holder: string): string {
+  const map: Record<string, string> = {
+    COMPANY: "The company",
+    OTHER_PARTY: "Another party",
+    NOT_ESTABLISHED: "Not established",
+  };
+  return map[holder] ?? holder;
+}
+
 /** Evidence/record kinds → display ("ITEM_FULFILLMENT" → "Item Fulfillment"). */
 export function kindLabel(kind: string): string {
   const special: Record<string, string> = {

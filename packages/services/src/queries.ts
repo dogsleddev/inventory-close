@@ -22,6 +22,7 @@ import type {
 import {
   custodyTypeFor,
   daysBetween,
+  glAccountForClassification,
   isoDate,
   isResolvedStatus,
   type InventoryOwnershipStatus,
@@ -364,24 +365,6 @@ function documentTotalCents(
   return total;
 }
 
-/**
- * Accounting classification → GL account (CANONICAL_SPEC §5). Exported so
- * every surface that needs a unit's account reads THIS map: the per-unit
- * Financial Life answer and the all-inventory master list are the same
- * answer, and a second copy is how two screens start disagreeing about
- * which account holds a unit.
- */
-export const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
-  FINISHED_HARDWARE: "1200",
-  THIRD_PARTY: "1200",
-  DAMAGED: "1200",
-  VALUATION_REVIEW: "1200",
-  GIT: "1210",
-  DEMO: "1220",
-  LOANER: "1220",
-  RMA: "1230",
-};
-
 /** The count line that last covered a unit, and how it covered it. */
 export interface InventoryMasterCount {
   readonly planId: string;
@@ -596,7 +579,7 @@ function buildInventoryMaster(ws: Workspace): InventoryMasterOut {
         ...(unit.custodian !== undefined ? { custodian: unit.custodian } : {}),
       }),
       classification: unit.classification,
-      glAccount: CLASSIFICATION_GL[unit.classification] ?? "1200",
+      glAccount: glAccountForClassification(unit.classification),
       ownership: disputed
         ? ("UNDER_REVIEW" as const)
         : ("COMPANY_OWNED" as const),
@@ -804,7 +787,7 @@ export function createQueryService(ws: Workspace) {
                 location: unit.location,
                 classification: unit.classification,
                 unitCostCents: unit.unitCostCents,
-                glAccount: CLASSIFICATION_GL[unit.classification] ?? "1200",
+                glAccount: glAccountForClassification(unit.classification),
                 ...(unit.acquiredAt !== undefined ? { acquiredAt: unit.acquiredAt } : {}),
                 ...(unit.lastMovementAt !== undefined
                   ? { lastMovementAt: unit.lastMovementAt }

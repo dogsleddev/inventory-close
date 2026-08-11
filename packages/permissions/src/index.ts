@@ -33,6 +33,17 @@ export type PermissionKey =
    * carry that authority and with no one else.
    */
   | "exception.conclude"
+  /**
+   * Write the working draft of the management close memo. Preparation, so it
+   * sits with the roles that prepare material work.
+   */
+  | "memo.draft"
+  /**
+   * Issue a memo version. Deliberately narrower than drafting: issuing is
+   * management putting its name to a statement about the close, and a
+   * preparer preparing one is not the same act as management making it.
+   */
+  | "memo.issue"
   | "comment.create"
   | "draft.create"
   | "review.request"
@@ -49,23 +60,27 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly PermissionKey[]>> = {
     "close.read", "evidence.read", "evidence.read_restricted", "comment.create",
     "review.request", "review.approve", "period.lock", "period.reopen",
     "pbc.read", "audit.read", "exception.conclude", "evidence.request",
+    "memo.draft", "memo.issue",
   ],
   CONTROLLER: [
     "close.read", "evidence.read", "evidence.read_restricted", "evidence.submit",
     "evidence.review", "comment.create", "draft.create", "review.request",
     "review.approve", "period.lock", "period.reopen", "pbc.read", "pbc.prepare",
     "audit.read", "exception.conclude", "evidence.request",
+    "memo.draft", "memo.issue",
   ],
   ACCOUNTING_MANAGER: [
     "close.read", "evidence.read", "evidence.read_restricted", "evidence.submit",
     "evidence.review", "comment.create", "draft.create", "review.request",
     "review.approve", "pbc.read", "pbc.prepare", "audit.read",
-    "exception.conclude", "evidence.request",
+    "exception.conclude", "evidence.request", "memo.draft", "memo.issue",
   ],
+  // Prepares the memo; does not issue it. Drafting and issuing are separated
+  // for the same reason preparation and approval are.
   PREPARER: [
     "close.read", "evidence.read", "evidence.submit", "comment.create",
     "draft.create", "review.request", "pbc.read", "pbc.prepare",
-    "evidence.request",
+    "evidence.request", "memo.draft",
   ],
   WAREHOUSE: ["close.read", "evidence.read", "evidence.submit", "comment.create", "evidence.request"],
   SUPPLY_CHAIN: ["close.read", "evidence.read", "evidence.submit", "comment.create", "evidence.request"],

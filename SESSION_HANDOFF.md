@@ -8,7 +8,7 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 
 ---
 
-## 0a. START HERE — Stage E (Ownership & valuation lifecycle) is the next task
+## 0a. START HERE — Stage G (Ask Gaurd tools) is the next task
 
 The original ten stages shipped and deployed. The work in flight is a **product-completion
 and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
@@ -26,10 +26,11 @@ but the *next task* is here, not in §8.
 | **Export affordance** | ✅ Done (`32f6856` + `546e388`) — every population now has a way out |
 | **D — Costing** | ✅ Done — `/costing`, four tabs, eleventh export table, no dataset work |
 | **E — Ownership & valuation lifecycle** | ✅ Done — `/custody` (3 tabs) + E&O methodology on `/valuation`, twelfth export table |
-| **F — Management outputs** | ⬅ **NEXT.** Methodology & Calculations, Accounting Matrix, Close Memo |
-| G — Ask Gaurd tools · H — QA | Not started |
+| **F — Management outputs** | ✅ Done — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
+| **G — Ask Gaurd tools** | ⬅ **NEXT.** Matcher hardening + routing harness, then ~10 grounded tools |
+| H — QA | Not started |
 
-**909 tests across 63 files passing**; typecheck, lint and production build clean (18 routes).
+**970 tests across 66 files passing**; typecheck, lint and production build clean.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
@@ -40,59 +41,59 @@ the next request 500s on a missing vendor chunk.
 
 ---
 
-### Stage F — what to build
+### Stage G — what to build
 
-Scope from `COMPLETION_PLAN.md` §10: **Methodology & Calculations, the Inventory Accounting
-Matrix, the Close Memo with its review workflow, and guided-demo polish.** Decision **D8** is
-the one that governs it.
+Scope from `COMPLETION_PLAN.md` §10 and §6: **anchor the Ask Gaurd intent regexes, order
+specific-before-general, add a routing-identity regression harness, then add roughly ten
+grounded intents** — work-priority, GL-account inventory, GRNI, invoiced-not-received, the cost
+stack, scrap, JE detail, the SO accounting-impact walk, consignment custody, and memo drafting
+(prose only). **Everything those intents need now exists**: Stages B–F built the services behind
+all ten.
 
 **There is no data work.** D5 was spent by Stage C; the dataset stays **`FY2026-DEMO-v1.2.0`**
-(hash `9f39105d…`). Nothing in Stage F needs a fixture.
+(hash `9f39105d…`). Stage G is a `packages/ai` stage.
 
-**Stage F is the first stage since W that adds WORKING STATE.** The Close Memo is a new
-`Workspace` collection (`memoVersions`), which means two things Stages C, D and E did not have
-to think about:
+**The matcher is the gate, and it is a live defect, not a nicety.** `COMPLETION_PLAN` §3.9: the
+counts intent's unanchored `/count/` regex captures "GL **account** 1200" and "**account**ing
+impact of SO-26184" *today*. Roughly ten new intents cannot be added on top of that without a
+routing-identity harness that asserts, for every shipped chip and every intent, which handler a
+question reaches.
 
-1. **`WORKSPACE_SHAPE` in `apps/web/lib/server/workspace.ts` MUST be bumped.** It is currently
-   `"conclusions+evidenceRequests+dataset-v1.2.0"`. A cached workspace built before the change
-   survives dev-server module reloads, and the first read of the new field throws — exactly
-   what happened when the close loop added `conclusions`. Tests build a fresh workspace per
-   test, so the suite cannot catch it.
-2. **D8: the memo is a separate management artifact, NOT PBC #22.** It lives in workspace
-   working state, never in `CloseRunResult`, and is excluded from replay. Putting it in the
-   PBC package would move `17/21` and therefore the locked 81.42%.
+**Two rules `packages/ai` already keeps that Stage G must not relax:**
 
-**Three collapses Stage F owns**, because it is the stage that builds the matrix they belong in:
+- **Narration may not carry figures OR record identifiers at all.** Five guardrail bypasses came
+  from trying to decide whether a number in prose was the right one; that comparison is not
+  reliably decidable across spellings and phrasings, so it is not attempted. Quantities and ids
+  belong to the structured answer. Memo drafting is prose-only for exactly this reason — the memo
+  screen already assembles its figures from `memoPosition`, so a drafting intent must produce
+  wording and let the screen supply every number.
+- **An enumerated denylist is not a category.** Every confirmed Ask Gaurd defect in the full-tree
+  review was a guard listing the phrases somebody thought of. Add the category and a test that
+  iterates it — writing those tests found two further holes in the first version of that fix.
 
-- The classification → GL map exists **twice** — exported from `packages/services/src/queries.ts`
-  and mirrored in `packages/services/src/glAccounts.ts` (`CLASSIFICATION_GL_ACCOUNT`), both
-  test-pinned. Collapse into `INVENTORY_ACCOUNTING_MATRIX` in `packages/domain`.
-- `COST_COMPONENT_BEHAVIOR` in `packages/services/src/costing.ts` (Stage D) is an authored
-  interpretation held in the services layer, and its doc comment already says Stage F folds it
-  into the matrix.
-- `COMPANY_HELD` / `COMPANY_HELD_CUSTODY` is duplicated between
-  `apps/web/lib/server/custody-view.ts` and `apps/web/lib/server/export-csv.ts` (Stage E). Same
-  fix, same place.
-
-**Methodology & Calculations is a greenfield page and a firewall test applies to it**: every
-figure must render from services, never be transcribed. `/assumptions` was deleted in Stage A
-and D12 says its content folds in here.
+**Every tool takes the caller's `ServiceContext`**, so authorization, restricted-content
+redaction and auditor scoping are inherited from `@icg/services`. A tool that builds its own
+context or reads the workspace directly bypasses all three silently.
 
 **The pattern to follow**, established by Stage B (`glAccounts.ts`), C (`procurement.ts`),
-D (`costing.ts`) and E (`ownership.ts` + `eoMethodology.ts`):
+D (`costing.ts`), E (`ownership.ts` + `eoMethodology.ts`) and F (`methodology.ts` + `memo.ts`):
 
 1. A read-only projection in `packages/services/src/<name>.ts` taking `(ws, ctx)`, calling
    `authorize(ctx.user, …)`, scoping source documents with `makeRecordScope` where the
    collection carries a `sourceRef` — and saying in the module doc when it does not, rather
    than omitting the call silently. Exported from `packages/services/src/index.ts`.
-   **The memo also needs COMMANDS** (`saveMemoDraft`, `sealMemoVersion`) in `commands.ts`, which
-   is new ground for this pass: every stage since W has been read-only.
+   **A COMMAND surface** (Stage F's `saveMemoDraft` / `issueMemoVersion`) additionally needs a
+   permission key in `packages/permissions`, a runner in `lib/server/workflow-actions.ts` that
+   goes through `fail()`, a server action, and an entry in **all four**
+   `vi.mock("../app/actions")` factories (`close-loop`, `ask-gaurd`, `stage09`, **`overview`** —
+   the fourth was undocumented until Stage F and was already missing `recordSignOff`).
 2. `apps/web/lib/server/<name>-view.ts` — formats and labels; never sums money.
 3. The screen component + `app/<route>/page.tsx`, with `?tab=` deep links.
-4. `apps/web/lib/nav.ts` — a 16th entry. `apps/web/test/shell.test.tsx` pins the label array
-   AND its "fifteen sections" test name; both must move together, and the name is a string that
+4. `apps/web/lib/nav.ts` — an 18th entry. `apps/web/test/shell.test.tsx` pins the label array
+   AND its "seventeen sections" test name; both must move together, and the name is a string that
    will not fail on its own. Pick a label that is **not a substring of another label**:
-   `shell.test.tsx` builds `new RegExp(s.label)` unescaped and `getByRole` throws on ambiguity.
+   `shell.test.tsx` builds `new RegExp(s.label)` unescaped and `getByRole` throws on ambiguity
+   (Stage F's regressions now pin that no label is inside another).
    `AppShell` matches `aria-current` by exact string equality against the `section` prop, so the
    screen's `section` must byte-match its nav label.
 5. **An export table**, if the screen owns a population. `apps/web/test/export-affordance.test.tsx`
@@ -100,8 +101,18 @@ D (`costing.ts`) and E (`ownership.ts` + `eoMethodology.ts`):
    branch in `export-csv.ts`, the `ExportCsvLink` on the screen (gated on `!data.restricted`),
    the entry in that test's `SCREENS` array, **and an `AUDITOR_SCOPE_NOTES` entry** — `null`
    unless the table genuinely withholds, since a note claiming a redaction that did not happen
-   is itself a failure that test catches.
+   is itself a failure that test catches. Where the withholding is CONDITIONAL (the memo withholds
+   only when an unissued draft exists), the static note stays `null` and the file states the count
+   inline, so it can never claim a redaction that did not happen on this run.
 6. Regressions that pin rules rather than strings, then **mutation-test them** before shipping.
+
+**A new `Workspace` collection has nine registration sites**, and only one of them fails loudly:
+the `Workspace` interface, `createWorkspace`, `resetWorkspace`, the `cleared` object in
+`resetDemo`, the `DEMO_RESET` audit detail, the reset report in `integrity-view.ts`,
+`REPLAY_EXCLUSIONS`, the `services/src/index.ts` type export, and `WORKSPACE_SHAPE` in
+`apps/web/lib/server/workspace.ts`. **The last one is the only one that breaks the running dev
+server**; the rest under-report silently. `memo.test.ts` now walks the workspace's own
+array-valued keys against `REPLAY_EXCLUSIONS`, so a new collection fails there.
 
 **Stage E's adversarial review found 14 of its 23 confirmed defects IN THE NEW TESTS.** Four
 shapes to check your own regressions against, because mutation-testing the obvious ones did not
@@ -120,17 +131,33 @@ catch these:
   filtered the expected list by what the screen rendered, so an empty screen emptied the loop and
   the test went green having checked nothing. Assert the loop ran.
 
-**Reusable pieces Stage E left behind:** `StatStrip` now lives in `apps/web/components/kit.tsx`
-(it was about to be copied a third time). `MeasuredClaimView` + the `ClaimPanel` pattern in
-`CustodyScreen.tsx` is the shape for any ✓/✕ panel whose sentence comes from a measured boolean.
+**Two shapes Stage F added to the list, both found by mutation-testing my own tests:**
+
+- **An assertion on a branch that does not exist.** The first refusal test asserted the memo body
+  survived a refused *save* — but nothing on the save path clears the editor on either outcome, so
+  it would have passed whatever the component did. Before writing "X survives Y", check that
+  something in the code could have destroyed X.
+- **A comparison that has not happened is not a negative result.** `positionMoved` is `null`
+  before anything is issued, never `false`: "the position has not moved" is a claim about a
+  comparison against a sealed hash, and there is no hash yet.
+
+**Reusable pieces in `apps/web/components/kit.tsx`:** `StatStrip` (Stage E), and `ClaimPanel` +
+`FactRows` (Stage F) — each moved there when it was about to be copied a third time. `ClaimPanel`
+is the shape for any ✓/✕ panel whose sentence comes from a measured boolean; `FactRows` is the
+label/value table for values that are sentences rather than figures. Display wording that two
+surfaces must agree on belongs in `lib/server/humanize.ts` (`holderLabel` joined it in Stage F,
+after living in the custody view and the exporter).
 
 **Traps that have cost real time in this pass** (§7 has the full list):
 
 - `WORKSPACE_SHAPE` in `apps/web/lib/server/workspace.ts` must be bumped for a new `Workspace`
   field **or a new dataset version**. The dev server caches across module reloads, tests build
   a fresh workspace each time, so neither failure is catchable by the suite.
-- Three test files mock `../app/actions` with a factory; a component importing a new action
-  fails there until the factory lists it.
+- **Four** test files mock `../app/actions` with a factory — `close-loop`, `ask-gaurd`,
+  `stage09` and `overview`. A component importing a new action fails there until the factory
+  lists it, and an omitted export is `undefined` rather than an error, so it passes until
+  something calls it. `overview.test.tsx` had been rendering the screen that imports
+  `recordSignOff` without listing it; Stage F closed that.
 - `.click()` does not flush React state in jsdom — use `userEvent`.
 - A `.tsx` test without the `// @vitest-environment jsdom` docblock fails obscurely.
 - Money figures in a CSV must be bound to their label in tests. `toContain("7")` passes on
@@ -146,8 +173,14 @@ catch these:
   passed the entire suite. `createWorkspace()` calls `buildDataset()` afresh, so mutating
   `ws.dataset` inside a test is isolated to that test.
 
-**Verify in a browser before calling it done.** Five defects this pass shipped past a green
-suite and were caught only by opening the page: a card showing two different amounts under a
+**Verify in a browser before calling it done.** Eight defects this pass shipped past a green
+suite and were caught only by opening the page. Stage F's three: a closing note saying the
+readiness figure is "derived from the tier rules **below**" when they render above it; a
+Methodology register showing raw enum values (`COMPANY_WAREHOUSE`, `NOT_EXPECTED`) on one tab
+while the tab beside it showed "Company warehouse" and "Not expected" — one fact, two
+vocabularies, on one screen; and a reset report reading "1 close-memo versions", a plural the
+whole sentence had hard-coded and that nothing revealed while the demo baseline cleared zero of
+everything. The earlier five: a card showing two different amounts under a
 footnote calling them matched; a cached workspace serving an empty population; (Stage D) a
 sentence saying the stack "sums to $4,800,000 — the same $4,800,000 the close reconciles TO the
 general ledger", which reads as agreement when the whole product exists to show a $12,450
@@ -245,9 +278,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **833 tests across 59 files passing** (was 628/47 at the original release; the completion
-  pass added the rest); typecheck, lint, and production build all green — **16 routes**, now
-  including `/procurement` and `/api/export/[table]`, which serves ten tables.
+- **970 tests across 66 files passing** (was 628/47 at the original release; the completion
+  pass added the rest); typecheck, lint, and production build all green — **20 routes**, with
+  `/api/export/[table]` serving fourteen tables.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
@@ -282,8 +315,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
-| **Completion pass A/B/W/C/D/E + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
-| **Completion pass F–H** | **Not started.** Stage F is next; it needs no fixtures, but it is the first stage since W to add working state. |
+| **Completion pass A/B/W/C/D/E/F + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass G–H** | **Not started.** Stage G (Ask Gaurd tools) is next; it needs no fixtures and is a `packages/ai` stage gated on hardening the intent matcher. |
 
 ### Commit history (newest first)
 
@@ -456,6 +489,21 @@ Key files a new session will want first: `packages/rules/src/close.ts` (the orch
   (RMA-DUP-001 would otherwise invent a 100+ unit population).
 - **The guide route stays `/user-guide`** though the page and nav read "How to Explore This
   Demo" — it is the one address that may have been shared or recorded.
+- **Every authored accounting judgement lives in `INVENTORY_ACCOUNTING_MATRIX`** and the
+  Methodology register is a PROJECTION of it, selected by each dimension's `provenance`. The GL
+  mapping is absent from the register because the specification decides it, not because someone
+  remembered to omit it. Prose restating a judgement anywhere else is a second copy of it.
+- **The close memo is management's prose and the close's figures, never the reverse.** The editor
+  holds a title and a body; every figure is read from `memoPosition` on each render. Issuing seals
+  two hashes — the text, and the close position it was written against — which is what makes a
+  later divergence visible rather than silent. **D8: never PBC #22**, never in `CloseRunResult`,
+  excluded from replay. Drafting (`memo.draft`) and issuing (`memo.issue`) are separate
+  permissions: a preparer may write the memo and may not put management's name to it.
+- **`explainReadiness` and `computeReadiness` share one derivation** (`deriveScores` in
+  `packages/rules/src/readiness.ts`). `ReadinessOut` is hashed into `outputHash` and could not
+  gain a field, so the explanation is a second projection rather than a second implementation. Do
+  not "simplify" it into a standalone function — that is how an explanation starts describing a
+  rule the close did not run.
 
 The spec deferred these; they were authored during the build and are now pinned by tests.
 
@@ -607,10 +655,13 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   satisfy a control by resembling it.
 - **`ExceptionStatus` is locked spec vocabulary** (CANONICAL_SPEC §9) and is hashed into the run.
   The conclusion vocabulary is deliberately separate. Do not add values to the enum.
-- **The classification→GL map exists in two places** — exported from `packages/services/src/queries.ts`
-  and mirrored as `CLASSIFICATION_GL_ACCOUNT` in `packages/services/src/glAccounts.ts`. Both are
-  test-pinned against the query service so they cannot drift silently, but they should collapse
-  into the shared `INVENTORY_ACCOUNTING_MATRIX` when Stage F lands.
+- **The classification→GL map is now in ONE place** — `glAccountForClassification` in
+  `packages/domain/src/accountingMatrix.ts`, which is also where `COST_COMPONENT_BEHAVIOR` and
+  `CUSTODY_HOLDER` live (Stage F collapsed all three). It is total over the classification enum,
+  so callers need no fallback; a `?? "1200"` beside it is dead code that hides a missing row.
+  **A new authored accounting judgement belongs there**, and the Methodology register picks it up
+  automatically — anything held elsewhere has to be added to `buildInterpretations` by hand and
+  will otherwise be a judgement the product makes and does not disclose.
 - **Export handlers may import `QueryService` only** — never `@icg/data` or `ws.dataset`. That
   single rule is what gives a CSV the same role scoping and redaction the screens have.
 

@@ -1,0 +1,324 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { DEMO_USERS, userByRole } from "@icg/data";
+import type { Role } from "@icg/domain";
+import { hasPermission } from "@icg/permissions";
+import {
+  createCommandService,
+  createWorkspace,
+  effectiveClose,
+  getMemo,
+  MEMO_DRAFT_PERMISSION,
+  MEMO_ISSUE_PERMISSION,
+  REPLAY_EXCLUSIONS,
+  type ServiceContext,
+  type Workspace,
+} from "../src/index.js";
+
+/**
+ * Stage F — the close memo.
+ *
+ * The memo is the first working state added since the close loop, and the
+ * rule that governs it (decision D8) is a negative one: writing a memo must
+ * not change the close it describes. Several tests below exist only to prove
+ * that nothing moved.
+ *
+ * The rest pin the sealing model — one editable object, a sealed version
+ * superseded rather than edited, and a stated comparison between the close a
+ * version was sealed against and the close as it stands.
+ */
+
+let ws: Workspace;
+let commands: ReturnType<typeof createCommandService>;
+
+const ctx = (role: Role): ServiceContext => ({
+  user: userByRole(role),
+  correlationId: `T-MEMO-${role}`,
+  sourceInterface: "TEST",
+});
+
+const DRAFT = { title: "FY2026 Inventory Close Memo", body: "Management's assessment." };
+
+beforeEach(() => {
+  ws = createWorkspace();
+  commands = createCommandService(ws);
+});
+
+describe("drafting", () => {
+  it("keeps exactly one editable object however many times it is saved", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, body: "Second pass." });
+    commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, body: "Third pass." });
+    expect(ws.memoVersions).toHaveLength(1);
+    expect(ws.memoVersions.filter((v) => v.editable)).toHaveLength(1);
+    expect(ws.memoVersions[0]?.body).toBe("Third pass.");
+  });
+
+  it("refuses a draft with no title or no body", () => {
+    expect(() => commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, title: "  " })).toThrow();
+    expect(() => commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, body: "  " })).toThrow();
+    expect(ws.memoVersions).toHaveLength(0);
+  });
+
+  it("records who wrote it and when, from the logical clock", () => {
+    const draft = commands.saveMemoDraft(ctx("ACCOUNTING_MANAGER"), DRAFT);
+    expect(draft.byUserId).toBe(userByRole("ACCOUNTING_MANAGER").id);
+    expect(draft.at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+    expect(draft.sealed).toBe(false);
+    expect(draft.contentHash).toBeUndefined();
+  });
+});
+
+describe("issuing", () => {
+  it("seals the text and the close state, and leaves nothing editable", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    const issued = commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    expect(issued.version).toBe(1);
+    expect(issued.state).toBe("ISSUED");
+    expect(issued.sealed).toBe(true);
+    expect(issued.editable).toBe(false);
+    // Two hashes, answering two different questions: what was said, and what
+    // the close looked like when it was said.
+    expect(issued.contentHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(issued.closeStateHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(issued.contentHash).not.toBe(issued.closeStateHash);
+    expect(ws.memoVersions.filter((v) => v.editable)).toHaveLength(0);
+  });
+
+  it("supersedes the previous version rather than replacing it", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, body: "Revised." });
+    const second = commands.issueMemoVersion(ctx("CONTROLLER"), {});
+
+    expect(second.version).toBe(2);
+    const first = ws.memoVersions.find((v) => v.version === 1);
+    expect(first?.state).toBe("SUPERSEDED");
+    expect(first?.supersededByVersion).toBe(2);
+    // Superseded, not deleted: the first version's own text survives.
+    expect(first?.body).toBe(DRAFT.body);
+    expect(first?.sealed).toBe(true);
+  });
+
+  it("refuses when there is no working draft", () => {
+    expect(() => commands.issueMemoVersion(ctx("CONTROLLER"), {})).toThrow(
+      /no working draft/i,
+    );
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    // And again immediately: issuing consumed the draft, so there is nothing
+    // left to issue and the same refusal applies.
+    expect(() => commands.issueMemoVersion(ctx("CONTROLLER"), {})).toThrow(
+      /no working draft/i,
+    );
+  });
+
+  it("writes the act to the append-only trail", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), { note: "Reviewed with the CFO." });
+    const actions = ws.audit.list().map((e) => e.action);
+    expect(actions).toContain("MEMO_DRAFT_SAVED");
+    expect(actions).toContain("MEMO_VERSION_ISSUED");
+    const issued = ws.audit.list().find((e) => e.action === "MEMO_VERSION_ISSUED");
+    expect(issued?.reason).toBe("Reviewed with the CFO.");
+  });
+});
+
+describe("the memo is not part of the close it describes (D8)", () => {
+  it("moves no figure the close derives", () => {
+    const before = {
+      readiness: effectiveClose(ws).readinessBps,
+      blockers: effectiveClose(ws).blockerCount,
+      pbc: ws.close.pbc.length,
+      pbcReady: ws.close.aggregates.pbcReady,
+      outputHash: ws.close.runManifest.outputHash,
+    };
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    expect(effectiveClose(ws).readinessBps).toBe(before.readiness);
+    expect(effectiveClose(ws).blockerCount).toBe(before.blockers);
+    expect(ws.close.pbc.length).toBe(before.pbc);
+    expect(ws.close.aggregates.pbcReady).toBe(before.pbcReady);
+    expect(ws.close.runManifest.outputHash).toBe(before.outputHash);
+  });
+
+  it("never becomes a twenty-second audit request", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    expect(ws.close.pbc.map((p) => p.id)).not.toContain("PBC-022");
+    for (const item of ws.close.pbc) {
+      expect(item.title.toLowerCase(), item.id).not.toContain("memo");
+    }
+  });
+
+  it("is named among what the reproducibility check excludes", () => {
+    // The sentence used to name four collections while the workspace held
+    // six — a disclosure narrower than what it discloses. This walks the
+    // workspace's own working-state collections rather than a list, so a new
+    // one fails here instead of quietly going unmentioned.
+    const workingState = Object.entries(ws).filter(
+      ([key, value]) =>
+        Array.isArray(value) &&
+        !["dataset", "close", "evidenceGraph", "period", "audit"].includes(key),
+    );
+    const WORDS: Readonly<Record<string, string>> = {
+      submittedEvidence: "submitted evidence",
+      comments: "comments",
+      drafts: "drafts",
+      reviews: "reviews",
+      conclusions: "conclusions",
+      evidenceRequests: "evidence requests",
+      memoVersions: "memo",
+    };
+    const sentence = REPLAY_EXCLUSIONS.join(" ").toLowerCase();
+    expect(workingState.length).toBeGreaterThan(0);
+    for (const [key] of workingState) {
+      const word = WORDS[key];
+      expect(word, `${key} has no word in this test's mapping`).toBeDefined();
+      expect(sentence.includes(word!.toLowerCase()), `${key} is not named`).toBe(true);
+    }
+  });
+});
+
+describe("the position comparison", () => {
+  it("is null before anything is issued", () => {
+    expect(getMemo(ws, ctx("CONTROLLER")).positionMoved).toBeNull();
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    // A draft is still not a comparison: nothing has been sealed.
+    expect(getMemo(ws, ctx("CONTROLLER")).positionMoved).toBeNull();
+  });
+
+  it("is false immediately after issue, and true once the close moves", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    expect(getMemo(ws, ctx("CONTROLLER")).positionMoved).toBe(false);
+
+    // A condition the baseline cannot produce. Without it, a flag hard-coded
+    // to false would pass every other assertion in this file.
+    commands.concludeException(ctx("CONTROLLER"), {
+      exceptionId: "EXC-007",
+      conclusion: "REMAINS_OPEN",
+      rationale: "Chased the custodian again.",
+    });
+    // REMAINS_OPEN does not move the close, so the comparison must still hold.
+    expect(getMemo(ws, ctx("CONTROLLER")).positionMoved).toBe(false);
+
+    ws.close = {
+      ...ws.close,
+      exceptions: ws.close.exceptions.map((e) =>
+        e.id === "EXC-003" ? { ...e, status: "RESOLVED_NO_ADJUSTMENT" as const } : e,
+      ),
+    };
+    expect(getMemo(ws, ctx("CONTROLLER")).positionMoved).toBe(true);
+  });
+
+  it("reads every figure from the close rather than from the memo", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    const memo = getMemo(ws, ctx("CONTROLLER"));
+    const live = effectiveClose(ws);
+    expect(memo.position.subledgerCents).toBe(ws.close.reconciliation.subledgerCents);
+    expect(memo.position.grossGlCents).toBe(ws.close.reconciliation.grossGlCents);
+    expect(memo.position.blockerCount).toBe(live.blockerCount);
+    expect(memo.position.readinessBps).toBe(live.readinessBps);
+    expect(memo.position.bookUnits).toBe(ws.dataset.inventoryUnits.length);
+    expect(memo.position.pbcReady).toBe(ws.close.aggregates.pbcReady);
+  });
+});
+
+describe("who may do what", () => {
+  it("offers exactly what it allows, for every demo user", () => {
+    // Offer and allow are computed from the same permission keys, so a
+    // control is never shown to someone the command would refuse — and never
+    // hidden from someone it would accept.
+    for (const user of DEMO_USERS) {
+      const c: ServiceContext = {
+        user,
+        correlationId: "T-MEMO-CAP",
+        sourceInterface: "TEST",
+      };
+      let memo;
+      try {
+        memo = getMemo(ws, c);
+      } catch {
+        // No close.read at all: nothing to reconcile for this user.
+        expect(hasPermission(user, "close.read")).toBe(false);
+        continue;
+      }
+      expect(memo.canDraft, `${user.id} draft offer`).toBe(
+        hasPermission(user, MEMO_DRAFT_PERMISSION),
+      );
+      expect(memo.canIssue, `${user.id} issue offer`).toBe(
+        hasPermission(user, MEMO_ISSUE_PERMISSION),
+      );
+
+      const fresh = createWorkspace();
+      const cmds = createCommandService(fresh);
+      if (memo.canDraft) {
+        expect(() => cmds.saveMemoDraft(c, DRAFT)).not.toThrow();
+      } else {
+        expect(() => cmds.saveMemoDraft(c, DRAFT)).toThrow();
+      }
+    }
+  });
+
+  it("separates preparing from issuing", () => {
+    // A preparer may write the memo and may not put management's name to it.
+    expect(hasPermission(userByRole("PREPARER"), MEMO_DRAFT_PERMISSION)).toBe(true);
+    expect(hasPermission(userByRole("PREPARER"), MEMO_ISSUE_PERMISSION)).toBe(false);
+    commands.saveMemoDraft(ctx("PREPARER"), DRAFT);
+    expect(() => commands.issueMemoVersion(ctx("PREPARER"), {})).toThrow(
+      /lacks permission/i,
+    );
+    // And the draft the preparer wrote survives the refusal.
+    expect(ws.memoVersions).toHaveLength(1);
+    expect(ws.memoVersions[0]?.editable).toBe(true);
+  });
+
+  it("refuses everything while the period is locked", () => {
+    commands.lockPeriod(ctx("CONTROLLER"), "LOCKED");
+    expect(() => commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT)).toThrow(/locked/i);
+  });
+});
+
+describe("auditor scope", () => {
+  it("withholds unissued drafts and says how many", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    const auditor = getMemo(ws, ctx("AUDITOR_READ_ONLY"));
+    expect(auditor.versions).toHaveLength(0);
+    expect(auditor.workingDraft).toBeNull();
+    expect(auditor.withheldDraftCount).toBe(1);
+
+    const controller = getMemo(ws, ctx("CONTROLLER"));
+    expect(controller.versions).toHaveLength(1);
+    expect(controller.workingDraft).not.toBeNull();
+    expect(controller.withheldDraftCount).toBe(0);
+  });
+
+  it("shows an issued version in full, and claims no withholding then", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    const auditor = getMemo(ws, ctx("AUDITOR_READ_ONLY"));
+    expect(auditor.versions).toHaveLength(1);
+    expect(auditor.issued?.body).toBe(DRAFT.body);
+    // Nothing is withheld once the draft has become the issued version, so a
+    // withholding count above zero here would be a claimed redaction that did
+    // not happen.
+    expect(auditor.withheldDraftCount).toBe(0);
+  });
+});
+
+describe("demo reset", () => {
+  it("clears the memo and reports how many versions it cleared", () => {
+    commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+    commands.issueMemoVersion(ctx("CONTROLLER"), {});
+    commands.saveMemoDraft(ctx("CONTROLLER"), { ...DRAFT, body: "Next." });
+    expect(ws.memoVersions).toHaveLength(2);
+
+    const result = commands.resetDemo(ctx("CONTROLLER"));
+    expect(result.cleared.memoVersions).toBe(2);
+    expect(ws.memoVersions).toHaveLength(0);
+    // A reset that silently kept or dropped state is indistinguishable from
+    // one that did the opposite, so the count travels in the audit detail too.
+    const reset = ws.audit.list().find((e) => e.action === "DEMO_RESET");
+    expect(reset?.detail).toContain("2 memo versions");
+  });
+});

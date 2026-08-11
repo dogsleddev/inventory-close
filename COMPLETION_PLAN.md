@@ -262,7 +262,7 @@ prior one is green.
 | **C — Procurement** ✅ **DONE** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. **Carried the single D5 regeneration for C/D/E.** | D5, D9 |
 | **D — Costing** ✅ **DONE** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **E — Ownership & valuation lifecycle** ✅ **DONE** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
-| **F — Management outputs** | Methodology & Calculations; Accounting Matrix; Close Memo with review workflow; guided-demo polish. | D8 |
+| **F — Management outputs** ✅ **DONE** | Methodology & Calculations; Accounting Matrix; Close Memo with draft/issue workflow; guided-demo polish. **First stage since W to add working state.** | D8 ✅ |
 | **G — Ask Gaurd** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
 | **H — QA** | Baseline regression, accounting-language review, AI-off test, placeholder scan, 60-second demo test, full-tree adversarial pass. | — |
 
@@ -597,6 +597,85 @@ The methodology ships as appended panels instead. Retabbing would have risked ~2
 stays the exception queue filtered to the ownership and third-party domains, which is a different
 question from "who is holding it". Mounting the new screen there would have silently defeated the
 nav/affordance agreement test, which exempts that exact href.
+
+### Stage F outcome (2026-08-11)
+
+`/methodology` (Methodology & Calculations, four tabs) and `/close-memo` (Close Memo, two tabs),
+`packages/domain/src/accountingMatrix.ts`, `packages/services/src/methodology.ts` and
+`packages/services/src/memo.ts`, plus `explainReadiness` in `@icg/rules`. Nav is 17 entries,
+`EXPORT_TABLES` is fourteen. Typecheck, lint and production build clean; every locked figure
+unmoved.
+
+**The three collapses are done, and one of them was already done.** Classification → GL existed
+twice (`CLASSIFICATION_GL` in `queries.ts`, `CLASSIFICATION_GL_ACCOUNT` in `glAccounts.ts`) and is
+now `glAccountForClassification` in `@icg/domain`; `COST_COMPONENT_BEHAVIOR` moved from
+`costing.ts` to the matrix; `CUSTODY_HOLDER` moved from `ownership.ts`. The `COMPANY_HELD`
+duplication §0a still listed had **already been collapsed by Stage E's own review** into
+`CUSTODY_HOLDER` — the handoff was describing a defect that was fixed before it was written down.
+
+**A test comparing two copies is a weaker guarantee than not having two copies.** The old
+classification test compared the mirror against the query service; with one map that comparison can
+only pass, so it was replaced with the claim that can still fail — that every classification maps to
+an account the chart of accounts knows *and* the general ledger carries a balance for.
+
+**The register of authored judgements is a projection, not prose.** `AUTHORED_INTERPRETATIONS` is
+BUILT from the matrix tables by reading `provenance`, so the GL mapping is absent because the
+specification decides it rather than because someone remembered to leave it out, and moving a
+dimension between SPECIFIED and AUTHORED moves it into or out of the register automatically. The
+judgements that live outside the matrix (`MONTHS_OF_SUPPLY_BASIS`, the `POLICY_V1` weights) are read
+from their own constants at runtime, and a test asserts every constant the register names is still
+exported somewhere in source — the "a scan that names a file must fail when the file is missing"
+rule, applied to a register.
+
+**`explainReadiness` shares one derivation with `computeReadiness`.** `ReadinessOut` is hashed into
+`outputHash`, so it could not gain a field; instead `deriveScores` is the single implementation and
+the two exported functions are projections over it. A Methodology page explaining a tier rule
+therefore cannot describe a rule the close did not run. `explainReadiness` is deliberately NOT part
+of `CloseRunResult`.
+
+**D12's premise was thinner than it read.** `/assumptions` never had content — no commit in the
+repo's history ever contained a file under `apps/web/app/assumptions/`, and no design prompt ever
+specified the screen; it was a nav entry pointing at the generic "not designed yet" placeholder.
+What folded in is the assumptions the product actually holds, which were scattered across
+seventeen constants and thirteen prose statements, plus `docs/04`'s three principles.
+
+**The memo is management's prose and the close's figures, and never the reverse.** The editor holds
+a title and a body only; the position panel is read from the services layer on every render, so the
+memo cannot come to disagree with the close it describes. Issuing seals two hashes answering two
+questions — what was said (`sha256Canonical` over the text) and what the close looked like when it
+was said (`hashObject` over the position) — which is what makes a later divergence visible
+(`positionMoved`) instead of silent. `positionMoved` is **null** before anything is issued: "the
+position has not moved" is a claim about a comparison, and there is nothing to compare against yet.
+
+**D8 is pinned by tests that assert nothing moved**: readiness, blockers, `pbc.length`, `pbcReady`
+and `outputHash` are all captured before drafting and issuing and compared after, and a test asserts
+no PBC item is titled "memo". Drafting and issuing are separate permissions (`memo.draft`,
+`memo.issue`) — a preparer may write the memo and may not put management's name to it.
+
+**`REPLAY_EXCLUSIONS` was already stale and is now walked rather than written.** Its working-state
+line named four collections while the workspace held six; it now names all seven, and a test
+enumerates the workspace's own array-valued working-state keys so a new collection fails there
+rather than going quietly unmentioned.
+
+**The refusal path had no UI test anywhere in the repo.** Every refusal was proved at the service
+layer; nothing asserted that a screen renders one, so a handler that dropped `setResult` and
+swallowed the reason would have passed. Stage F's regressions assert the reason reaches a live
+region, that the outcome renders on success too, and that a refused issue keeps the note the user
+wrote. Mutating `run()` to swallow refusals and to clear on both branches fails both.
+
+**A vacuous assertion caught in review of my own test.** The first version asserted the memo body
+survived a refused *save* — but nothing on the save path clears the editor on either outcome, so it
+would have passed whatever the component did. The branch that can actually clear is the issue note,
+and that is what the assertion moved to.
+
+**`overview.test.tsx` was a fourth `vi.mock('../app/actions')` factory nobody had recorded**, and it
+omitted `recordSignOff` while rendering the screen that imports it. An omitted export in one of
+these factories is `undefined` rather than an error, so it passes until something clicks the
+control. All four factories now list every action.
+
+**Reusable pieces Stage F left behind:** `ClaimPanel` and `FactRows` moved into
+`apps/web/components/kit.tsx` — each was about to be copied a third time, the same threshold that
+moved `StatStrip` there in Stage E.
 
 ## 11. Acceptance criteria (the twenty questions)
 

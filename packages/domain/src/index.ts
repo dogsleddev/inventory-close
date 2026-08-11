@@ -29,3 +29,4 @@ export * from "./schemas/datasetFixtures.js";
 export * from "./schemas/goldenBaseline.js";
 export * from "./repositories.js";
 export * from "./accounts.js";
+export * from "./accountingMatrix.js";

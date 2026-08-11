@@ -1364,6 +1364,154 @@ export interface EoMethodologyView {
 }
 
 /* ------------------------------------------------------------------ */
+/* Stage F — Methodology, the accounting matrix, and the close memo     */
+/* ------------------------------------------------------------------ */
+
+/** One term in a readiness category's arithmetic. */
+export interface ReadinessTermView {
+  readonly rule: string;
+  readonly observed: string;
+  /** "−10 points", or the stated absence of a deduction. */
+  readonly penalty: string;
+  readonly fired: boolean;
+  readonly drivingExceptionIds: readonly string[];
+}
+
+export interface ReadinessCategoryView {
+  readonly key: string;
+  readonly label: string;
+  readonly weight: string;
+  readonly score: string;
+  readonly basis: string;
+  readonly terms: readonly ReadinessTermView[];
+  /** weight × score, shown so the sum below can be followed by hand. */
+  readonly contribution: string;
+}
+
+export interface MatrixRowView {
+  readonly classification: string;
+  readonly glAccount: string;
+  readonly ownership: string;
+  readonly cogs: string;
+  readonly cogsBasis: string;
+  readonly record: string;
+  readonly expectedCustody: string;
+  readonly observedCustody: string;
+  /** Stated only where observation and expectation differ. */
+  readonly custodyDifference: string | null;
+  readonly units: string;
+  readonly carrying: string;
+}
+
+export interface InterpretationRowView {
+  readonly id: string;
+  readonly dimension: string;
+  readonly subject: string;
+  readonly answer: string;
+  readonly basis: string;
+  readonly heldIn: string;
+}
+
+export interface MethodologyData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly policyVersion: string;
+  readonly datasetVersion: string;
+  readonly runId: string;
+  readonly tabs: readonly TabDef[];
+  readonly readiness: {
+    readonly stats: readonly ProcurementStat[];
+    readonly categories: readonly ReadinessCategoryView[];
+    readonly weightedSum: string;
+    readonly roundingRule: string;
+    readonly total: string;
+    /** Stated only when a conclusion has moved the live figure. */
+    readonly divergenceNote: string | null;
+    readonly weightsSumTo100: MeasuredClaimView;
+    readonly note: string;
+  } | null;
+  readonly reconciliation: {
+    readonly stats: readonly ProcurementStat[];
+    readonly steps: readonly { readonly k: string; readonly v: string }[];
+    readonly items: readonly {
+      readonly id: string;
+      readonly description: string;
+      readonly amount: string;
+      readonly exceptionId: string;
+    }[];
+    readonly explained: MeasuredClaimView;
+    readonly signConvention: string;
+    readonly note: string;
+  } | null;
+  readonly matrix: {
+    readonly dimensions: readonly {
+      readonly label: string;
+      readonly question: string;
+      readonly provenance: string;
+      readonly basis: string;
+    }[];
+    readonly rows: readonly MatrixRowView[];
+    readonly custodyExpectation: MeasuredClaimView;
+    readonly note: string;
+  } | null;
+  readonly interpretations: {
+    readonly rows: readonly InterpretationRowView[];
+    readonly policyValues: readonly {
+      readonly key: string;
+      readonly value: string;
+      readonly governs: string;
+    }[];
+    readonly replayExclusions: readonly string[];
+    readonly principles: readonly string[];
+    readonly note: string;
+  } | null;
+}
+
+export interface MemoVersionRowView {
+  readonly key: string;
+  readonly label: string;
+  readonly state: string;
+  readonly glyph: string;
+  readonly lock: string;
+  readonly title: string;
+  readonly date: string;
+  readonly by: string;
+  readonly hash: string | null;
+  readonly sealed: boolean;
+  readonly editable: boolean;
+}
+
+export interface CloseMemoData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly asOf: string;
+  readonly tabs: readonly TabDef[];
+  /** The figures the memo speaks about, read from the close, never typed. */
+  readonly position: readonly { readonly k: string; readonly v: string }[];
+  readonly positionStats: readonly ProcurementStat[];
+  readonly draft: {
+    readonly title: string;
+    readonly body: string;
+    readonly by: string;
+    readonly at: string;
+  } | null;
+  /** A body assembled from the close, offered as a starting point. */
+  readonly suggestedBody: string;
+  readonly versions: readonly MemoVersionRowView[];
+  readonly issuedBody: string | null;
+  /** Null until something has been issued — there is nothing to compare to. */
+  readonly positionMoved: MeasuredClaimView | null;
+  readonly withheldNote: string | null;
+  readonly canDraft: boolean;
+  readonly canIssue: boolean;
+  /** Why the memo is not part of the close it describes. */
+  readonly notPartOfClose: string;
+  readonly note: string;
+}
+
+/* ------------------------------------------------------------------ */
 /* Stage D — Costing                                                   */
 /* ------------------------------------------------------------------ */
 

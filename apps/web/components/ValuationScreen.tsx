@@ -7,6 +7,7 @@ import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
   ExportCsvLink,
+  FactRows,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -522,25 +523,3 @@ function MethodologyBlock({ view }: { view: NonNullable<ValuationData["methodolo
 }
 
 /** A labelled fact list, rendered as rows so each value keeps its label. */
-function FactRows({ rows }: { rows: readonly { k: string; v: string }[] }) {
-  return (
-    <div className="icg-table-wrap">
-      <table className="icg-table">
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.k}>
-              <th scope="row" style={{ fontWeight: 500, textAlign: "left" }}>
-                <span className="icg-soft" style={{ fontSize: "11px" }}>
-                  {row.k}
-                </span>
-              </th>
-              <td>
-                <span style={{ fontSize: "11.5px" }}>{row.v}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}

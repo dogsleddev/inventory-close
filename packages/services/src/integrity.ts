@@ -69,7 +69,12 @@ export interface ReproductionCheck {
  */
 export const REPLAY_EXCLUSIONS = [
   "Ask Gaurd narration (generated prose)",
-  "Working state — comments, drafts, submitted evidence, reviews",
+  // This line named four collections and the workspace had six; the two the
+  // close loop added were excluded in fact and unmentioned in the sentence,
+  // which is the same over-claim in reverse — a disclosure narrower than
+  // what it discloses. It now lists every working-state collection, and a
+  // test walks the workspace to keep it that way.
+  "Working state — comments, drafts, submitted evidence, reviews, management conclusions, evidence requests and close-memo versions",
   "The audit trail, which records what happened rather than what was derived",
 ] as const;
 

@@ -136,6 +136,87 @@ export function PanelHead({
 }
 
 /**
+ * Label/value rows where the value is a sentence rather than a figure.
+ *
+ * A real table rather than a flex pair: the values here run to a line or
+ * more, and `.icg-kv`'s space-between layout pushes a paragraph against the
+ * right edge. Written for Valuation's methodology blocks, moved here when
+ * Methodology and the Close Memo needed the same shape.
+ */
+export function FactRows({ rows }: { rows: readonly { k: string; v: string }[] }) {
+  return (
+    <div className="icg-table-wrap">
+      <table className="icg-table">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.k}>
+              <th scope="row" style={{ fontWeight: 500, textAlign: "left" }}>
+                <span className="icg-soft" style={{ fontSize: "11px" }}>
+                  {row.k}
+                </span>
+              </th>
+              <td>
+                <span style={{ fontSize: "11.5px" }}>{row.v}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * A statement the services layer MEASURED, with the branch it did not take.
+ *
+ * The glyph is never the whole answer — `headline` says which way the
+ * measurement went in words, so the panel is legible without colour and
+ * without the tick. Both branches are authored in the view layer, because a
+ * panel with only a true branch is prose that happens to be right today.
+ *
+ * Written for Custody, moved here when Methodology and the Close Memo would
+ * have been the second and third copies.
+ */
+export function ClaimPanel({
+  title,
+  sub,
+  claim,
+  foot,
+}: {
+  title: string;
+  sub: string;
+  claim: { readonly holds: boolean; readonly headline: string; readonly detail: string };
+  foot: string;
+}) {
+  return (
+    <Panel decision>
+      <PanelHead title={title} sub={sub} />
+      <div style={{ padding: "14px 18px" }}>
+        <div
+          style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}
+        >
+          <span
+            aria-hidden
+            style={{ fontSize: "13px", color: claim.holds ? "var(--aurora)" : "var(--ember)" }}
+          >
+            {claim.holds ? "✓" : "✕"}
+          </span>
+          <span style={{ fontSize: "13px", fontWeight: 600 }}>{claim.headline}</span>
+        </div>
+        <p className="icg-soft" style={{ fontSize: "11.5px", lineHeight: 1.6, margin: "8px 0 0" }}>
+          {claim.detail}
+        </p>
+      </div>
+      <div className="icg-panel-foot">
+        <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+          {foot}
+        </span>
+      </div>
+    </Panel>
+  );
+}
+
+/**
  * Audit Details — collapsed by default everywhere; open state is local and
  * never remembered between objects (design/IMPLEMENTATION_HANDOFF §4).
  */

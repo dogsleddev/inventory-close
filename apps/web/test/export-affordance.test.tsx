@@ -6,8 +6,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { userByRole, DEMO_USERS } from "@icg/data";
 import { AdjustmentsScreen } from "../components/AdjustmentsScreen";
 import { AuditPackageScreen } from "../components/AuditPackageScreen";
+import { CloseMemoScreen } from "../components/CloseMemoScreen";
 import { CostingScreen } from "../components/CostingScreen";
 import { CustodyScreen } from "../components/CustodyScreen";
+import { MethodologyScreen } from "../components/MethodologyScreen";
 import { EvidenceScreen } from "../components/EvidenceScreen";
 import { ExceptionsScreen } from "../components/ExceptionsScreen";
 import { InventorySearchScreen } from "../components/InventorySearchScreen";
@@ -33,6 +35,8 @@ import { buildEvidenceData } from "../lib/server/evidence-view";
 import { buildPackageManifest } from "../lib/server/integrity-view";
 import { buildInventorySearchData } from "../lib/server/financial-life-view";
 import { buildInventoryListData } from "../lib/server/inventory-list-view";
+import { buildCloseMemoData } from "../lib/server/memo-view";
+import { buildMethodologyData } from "../lib/server/methodology-view";
 import { buildProcurementData } from "../lib/server/procurement-view";
 import { buildReconciliationData } from "../lib/server/recon-view";
 import { buildValuationData } from "../lib/server/valuation-view";
@@ -55,6 +59,7 @@ import { buildValuationData } from "../lib/server/valuation-view";
 afterEach(cleanup);
 const noopRole = vi.fn(async () => {});
 const noopReproduce = vi.fn(async () => ({}) as never);
+const noopWorkflow = vi.fn(async () => ({ ok: true, message: "ok", unmet: [] as string[] }));
 const user = (role: Parameters<typeof userByRole>[0] = "CONTROLLER") => userByRole(role);
 
 /** Every screen that owns a population, with how to render it. */
@@ -177,6 +182,30 @@ const SCREENS = [
       <AdjustmentsScreen
         shell={buildShellData(user(r), "T-EXP")}
         data={buildAdjustmentsData(user(r), "T-EXP")}
+        setRoleAction={noopRole}
+      />
+    ),
+  },
+  {
+    route: "/methodology",
+    table: "methodology",
+    element: (r: Parameters<typeof userByRole>[0]) => (
+      <MethodologyScreen
+        shell={buildShellData(user(r), "T-EXP")}
+        data={buildMethodologyData(user(r), "T-EXP")}
+        setRoleAction={noopRole}
+      />
+    ),
+  },
+  {
+    route: "/close-memo",
+    table: "close-memo",
+    element: (r: Parameters<typeof userByRole>[0]) => (
+      <CloseMemoScreen
+        shell={buildShellData(user(r), "T-EXP")}
+        data={buildCloseMemoData(user(r), "T-EXP")}
+        saveDraftAction={noopWorkflow}
+        issueVersionAction={noopWorkflow}
         setRoleAction={noopRole}
       />
     ),

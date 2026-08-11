@@ -23,5 +23,7 @@ export const NAV_SECTIONS: readonly { label: string; href: string }[] = [
   { label: "Reconciliation", href: "/reconciliation" },
   { label: "Adjustments", href: "/adjustments" },
   { label: "Audit Package", href: "/audit-package" },
+  { label: "Methodology", href: "/methodology" },
+  { label: "Close Memo", href: "/close-memo" },
   { label: "How to Explore", href: "/user-guide" },
 ];

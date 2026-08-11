@@ -22,8 +22,10 @@ afterEach(cleanup);
 let actingRole: Parameters<typeof userByRole>[0] = "CONTROLLER";
 
 import {
+  runIssueMemoVersion,
   runRecordConclusion,
   runRequestEvidence,
+  runSaveMemoDraft,
   runSignOff,
   runSubmitEvidence,
 } from "../lib/server/workflow-actions";
@@ -48,6 +50,13 @@ vi.mock("../app/actions", () => ({
     note: string;
   }) => runSubmitEvidence(userByRole(actingRole), "T-ASK", input),
   recordSignOff: async () => runSignOff(userByRole(actingRole), "T-ASK"),
+  // Stage F. An omitted export here is `undefined` rather than an error, so a
+  // screen importing it fails only when something calls it — the factory has
+  // to list every action the module exports.
+  saveMemoDraft: async (input: { title: string; body: string }) =>
+    runSaveMemoDraft(userByRole(actingRole), "T-ASK", input),
+  issueMemoVersion: async (input: { note: string }) =>
+    runIssueMemoVersion(userByRole(actingRole), "T-ASK", input),
 }));
 
 const noopRole = vi.fn(async () => {});

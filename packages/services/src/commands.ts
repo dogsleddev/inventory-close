@@ -12,11 +12,20 @@ import {
 import type { ServiceContext } from "./queries.js";
 import { effectiveStatus, unmetRequirements } from "./effective.js";
 import {
+  closeStateHashFor,
+  issuedVersionOf,
+  memoPosition,
+  workingDraftOf,
+  MEMO_DRAFT_PERMISSION,
+  MEMO_ISSUE_PERMISSION,
+} from "./memo.js";
+import {
   nextInstant,
   resetWorkspace,
   type Comment,
   type Draft,
   type EvidenceRequest,
+  type MemoVersion,
   type RecordedConclusion,
   type SubmittedEvidence,
   type Workspace,
@@ -357,6 +366,104 @@ export function createCommandService(ws: Workspace) {
       return record;
     },
 
+    /**
+     * Write the working draft of the close memo.
+     *
+     * Replaces the draft rather than appending: a draft is the thing being
+     * written, and a history of keystrokes is not a version history. Issued
+     * versions are untouched — this command cannot reach one, which is what
+     * makes "sealed means sealed" structural rather than a discipline.
+     */
+    saveMemoDraft(
+      ctx: ServiceContext,
+      input: { title: string; body: string },
+    ): MemoVersion {
+      authorize(ctx.user, MEMO_DRAFT_PERMISSION);
+      requireMutable(ws, "a memo draft");
+      if (input.title.trim() === "") {
+        throw new Error("A memo must have a title.");
+      }
+      if (input.body.trim() === "") {
+        throw new Error("A memo draft with no body is not a draft.");
+      }
+      const at = nextInstant(ws);
+      const existing = workingDraftOf(ws);
+      const draft: MemoVersion = {
+        id: existing?.id ?? `MEMO-D${String(ws.memoVersions.length + 1).padStart(3, "0")}`,
+        state: "DRAFT",
+        title: input.title.trim(),
+        body: input.body.trim(),
+        byUserId: ctx.user.id,
+        at,
+        sealed: false,
+        editable: true,
+      };
+      if (existing === undefined) {
+        ws.memoVersions.push(draft);
+      } else {
+        ws.memoVersions[ws.memoVersions.indexOf(existing)] = draft;
+      }
+      audit(ctx, "MEMO_DRAFT_SAVED", draft.id, at, {
+        detail: `${draft.title} — ${draft.body.length} characters`,
+      });
+      return draft;
+    },
+
+    /**
+     * Issue the working draft as a numbered version.
+     *
+     * Two things are sealed, and they answer different questions: the content
+     * hash says what was written, and the close-state hash says what the
+     * close looked like when it was written. Without the second, a memo read
+     * a month later cannot be told from one whose figures have since moved.
+     *
+     * The previous issued version is SUPERSEDED, never edited or removed.
+     */
+    issueMemoVersion(ctx: ServiceContext, input: { note?: string }): MemoVersion {
+      authorize(ctx.user, MEMO_ISSUE_PERMISSION);
+      requireMutable(ws, "issuing a memo version");
+      const draft = workingDraftOf(ws);
+      if (draft === undefined) {
+        throw new Error("There is no working draft to issue.");
+      }
+      const previous = issuedVersionOf(ws);
+      const version = (previous?.version ?? 0) + 1;
+      const at = nextInstant(ws);
+      const position = memoPosition(ws);
+      const issued: MemoVersion = {
+        id: `MEMO-V${String(version).padStart(3, "0")}`,
+        version,
+        state: "ISSUED",
+        title: draft.title,
+        body: draft.body,
+        byUserId: ctx.user.id,
+        at,
+        contentHash: sha256Canonical({ title: draft.title, body: draft.body }),
+        closeStateHash: closeStateHashFor(position),
+        sealed: true,
+        editable: false,
+      };
+      if (previous !== undefined) {
+        ws.memoVersions[ws.memoVersions.indexOf(previous)] = {
+          ...previous,
+          state: "SUPERSEDED",
+          supersededByVersion: version,
+        };
+      }
+      // The draft becomes the issued version: there is one working draft at a
+      // time, and issuing is what it was for.
+      ws.memoVersions[ws.memoVersions.indexOf(draft)] = issued;
+      audit(ctx, "MEMO_VERSION_ISSUED", issued.id, at, {
+        priorState: "DRAFT",
+        newState: "ISSUED",
+        ...(input.note !== undefined && input.note.trim() !== ""
+          ? { reason: input.note.trim() }
+          : {}),
+        detail: `readiness ${position.readinessBps} bps, ${position.blockerCount} blockers open at issue`,
+      });
+      return issued;
+    },
+
     lockPeriod(ctx: ServiceContext, kind: "SOFT_LOCKED" | "LOCKED") {
       authorize(ctx.user, "period.lock");
       const at = nextInstant(ws);
@@ -401,6 +508,10 @@ export function createCommandService(ws: Workspace) {
         // this report exists to prevent.
         conclusions: ws.conclusions.length,
         evidenceRequests: ws.evidenceRequests.length,
+        // Including issued versions. A memo is management's own statement
+        // about the close, so a reset that silently discarded one is exactly
+        // as bad as a reset that silently discarded a conclusion.
+        memoVersions: ws.memoVersions.length,
         period: ws.period.state,
       };
       resetWorkspace(ws);
@@ -411,7 +522,8 @@ export function createCommandService(ws: Workspace) {
           `dataset ${ws.dataset.manifest.datasetVersion} rebuilt; run ${ws.close.runManifest.runId}; ` +
           `working state cleared: ${cleared.comments} comments, ${cleared.drafts} drafts, ` +
           `${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews, ` +
-          `${cleared.conclusions} conclusions, ${cleared.evidenceRequests} evidence requests`,
+          `${cleared.conclusions} conclusions, ${cleared.evidenceRequests} evidence requests, ` +
+          `${cleared.memoVersions} memo versions`,
       });
       return {
         aggregates: ws.close.aggregates,

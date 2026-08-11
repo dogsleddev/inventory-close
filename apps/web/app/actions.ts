@@ -7,8 +7,10 @@ import { ROLE_COOKIE, currentUser, newCorrelationId } from "../lib/server/curren
 import { askGaurdData } from "../lib/server/ask-view";
 import { runReproduceClose, runResetDemo } from "../lib/server/integrity-view";
 import {
+  runIssueMemoVersion,
   runRecordConclusion,
   runRequestEvidence,
+  runSaveMemoDraft,
   runSignOff,
   runSubmitEvidence,
 } from "../lib/server/workflow-actions";
@@ -114,6 +116,31 @@ export async function submitEvidence(input: {
 }): Promise<WorkflowActionResult> {
   const user = await currentUser();
   const result = runSubmitEvidence(user, newCorrelationId(), input);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+/**
+ * The close memo (Stage F). Drafting and issuing are separate acts with
+ * separate permissions: preparing a statement is not the same as management
+ * making it. Both authorize inside @icg/services against the acting user's
+ * real permissions.
+ */
+export async function saveMemoDraft(input: {
+  title: string;
+  body: string;
+}): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runSaveMemoDraft(user, newCorrelationId(), input);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+export async function issueMemoVersion(input: {
+  note: string;
+}): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runIssueMemoVersion(user, newCorrelationId(), input);
   if (result.ok) revalidatePath("/", "layout");
   return result;
 }

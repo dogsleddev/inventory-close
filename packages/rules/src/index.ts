@@ -48,8 +48,14 @@ export type {
   ValuationOut,
   ValuationPopulationOut,
 } from "./valuation.js";
-export { computeReadiness } from "./readiness.js";
-export type { ReadinessCategoryOut, ReadinessOut } from "./readiness.js";
+export { computeReadiness, explainReadiness } from "./readiness.js";
+export type {
+  ReadinessCategoryExplanationOut,
+  ReadinessCategoryOut,
+  ReadinessExplanationOut,
+  ReadinessOut,
+  ReadinessTermOut,
+} from "./readiness.js";
 export {
   CONFIG_VERSION,
   REPLAY_COMPARED_SECTIONS,

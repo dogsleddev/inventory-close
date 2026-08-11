@@ -107,18 +107,29 @@ export interface EffectiveClose {
  * set. A second scoring path here would be a second definition of readiness,
  * and the two would disagree the first time either changed.
  */
-export function effectiveClose(ws: Workspace): EffectiveClose {
-  const blockers = effectiveBlockers(ws);
+/**
+ * The exception set as the scorer sees it now.
+ *
+ * Exported so anything EXPLAINING readiness scores the same population the
+ * close scores. Two constructions of "the effective exceptions" would be two
+ * answers to a question that has one, and the explanation would start
+ * describing a run that never happened.
+ */
+export function effectiveExceptions(ws: Workspace) {
   const openIds = new Set(effectiveOpenExceptionIds(ws));
-  const exceptions = ws.close.exceptions.map((e) =>
+  return ws.close.exceptions.map((e) =>
     openIds.has(e.id)
       ? e
       : // Present the concluded item to the scorer as resolved, exactly as a
         // rules-resolved exception would arrive.
         { ...e, status: effectiveStatus(ws, e.id) as typeof e.status },
   );
+}
+
+export function effectiveClose(ws: Workspace): EffectiveClose {
+  const blockers = effectiveBlockers(ws);
   const readiness = computeReadiness(
-    exceptions,
+    effectiveExceptions(ws),
     ws.close.reconciliation,
     ws.close.proposedAdjustments.length,
     // The SAME policy the baseline scored against. A second policy here

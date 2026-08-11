@@ -7,11 +7,14 @@ import {
   getCustodyBreakdown,
   getDispositions,
   getEoMethodology,
+  getMemo,
+  getMethodology,
   getProcurementPopulations,
 } from "@icg/services";
 import { formatCents } from "../format";
 import { attempt } from "./data";
-import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
+import { holderLabel } from "./humanize";
+import { getQueries, getWorkspace, makeContext, roleLabel, userById } from "./workspace";
 
 /**
  * CSV export.
@@ -66,22 +69,12 @@ export const EXPORT_TABLES = [
   "custody",
   "physical-count",
   "valuation",
+  "methodology",
+  "close-memo",
   "close-summary",
 ] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number];
-
-/**
- * Who is holding it, in a reader's words. The ANSWER comes from the service's
- * own `heldBy` field — this is only the wording. It used to be a set of
- * company-held types whose complement was written as "Another party", which
- * reported a unit with no established custody as one a third party held.
- */
-const HOLDER_LABELS: Readonly<Record<string, string>> = {
-  COMPANY: "The company",
-  OTHER_PARTY: "Another party",
-  NOT_ESTABLISHED: "Not established",
-};
 
 export function isExportTable(value: string): value is ExportTable {
   return (EXPORT_TABLES as readonly string[]).includes(value);
@@ -153,6 +146,15 @@ const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
   // byte-identical. Scoping being applied is not the same as scoping removing
   // something, and only the second would justify a note here.
   custody: null,
+  // Derivations, policy values and authored judgements. Nothing here is a
+  // record, nothing carries a sourceRef, and every role reads the same file.
+  methodology: null,
+  // The memo's UNISSUED drafts are withheld from an auditor — a draft is
+  // internal management working paper, the same rule the PBC package applies
+  // to unsealed workpaper versions. When no draft exists the auditor's file
+  // is byte-identical to a Controller's and the note would over-claim, so it
+  // is chosen from what was actually withheld rather than from the role.
+  "close-memo": null,
 };
 
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
@@ -757,7 +759,7 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       lines.push(
         row([
           r.custodyType,
-          HOLDER_LABELS[r.heldBy] ?? r.heldBy,
+          holderLabel(r.heldBy),
           r.locations.join(" / "),
           r.custodians.length > 0 ? r.custodians.join(" / ") : "None recorded",
           r.unitsWithoutCustodian,
@@ -986,6 +988,318 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         "What each disposal realised is a fact about that unit. It is not a recovery rate, and no figure here is applied to anything still on the year-end listing.",
       ]),
     );
+  } else if (table === "methodology") {
+    // Section headings use A–Z, space, parentheses, slash and hyphen only:
+    // the affordance test's section splitter recognises nothing else as a
+    // boundary, so a heading with an ampersand or a digit silently extends
+    // the section above it.
+    const m = getMethodology(getWorkspace(), ctx);
+
+    lines.push(row(["READINESS DERIVATION"]));
+    lines.push(
+      row([
+        "Category",
+        "Weight",
+        "Score",
+        "Weighted contribution",
+        "Basis",
+        "Term",
+        "What the close state was",
+        "Points removed",
+        "Exceptions counted",
+      ]),
+    );
+    for (const c of m.readiness.categories) {
+      for (const [i, t] of c.terms.entries()) {
+        lines.push(
+          row([
+            // The category identity travels on its first term only; a repeated
+            // label under a "Category" heading reads as a second category.
+            i === 0 ? c.label : "",
+            i === 0 ? `${c.weightPercent}%` : "",
+            i === 0 ? (c.scoreHundredths / 100).toFixed(2) : "",
+            i === 0 ? c.weightPercent * c.scoreHundredths : "",
+            i === 0 ? c.basis : "",
+            t.rule,
+            t.observed,
+            t.penaltyPercent === 0 ? "None" : t.penaltyPercent,
+            t.drivingExceptionIds.length === 0 ? "" : t.drivingExceptionIds.join(" / "),
+          ]),
+        );
+      }
+    }
+    lines.push(
+      row([
+        "Weighted sum",
+        "",
+        "",
+        m.readiness.weightedSum,
+        m.readiness.roundingRule,
+        "",
+        "",
+        "",
+        "",
+      ]),
+    );
+    lines.push(
+      row([
+        "Close readiness",
+        "",
+        "",
+        m.readiness.totalBasisPoints,
+        m.readinessDiverged
+          ? `Live position. The rules on their own derived ${m.baselineReadinessBps} basis points; a management conclusion or a submitted record has moved it.`
+          : "The derived baseline. Nothing recorded in this session has moved it.",
+        "",
+        "",
+        "",
+        "",
+      ]),
+    );
+    lines.push(
+      row([
+        "Weights total",
+        `${m.readiness.weightPercentTotal}%`,
+        "",
+        "",
+        m.readiness.weightPercentTotal === 100
+          ? "The weights total 100, so dividing the weighted sum by 100 yields basis points"
+          : "The weights do NOT total 100, so the total above is not on the basis-point scale it claims",
+        "",
+        "",
+        "",
+        "",
+      ]),
+    );
+
+    lines.push("");
+    lines.push(row(["SUBLEDGER TO GENERAL LEDGER"]));
+    lines.push(row(["Measure", "Value", "Basis"]));
+    lines.push(
+      row([
+        "Subledger",
+        formatCents(m.reconciliation.subledgerCents),
+        `Unit cost of every unit on the year-end listing, summed over ${m.reconciliation.subledgerUnits} units`,
+      ]),
+    );
+    lines.push(
+      row([
+        "Gross general ledger",
+        formatCents(m.reconciliation.grossGlCents),
+        `Recorded balances on accounts ${m.reconciliation.grossAccounts.join(" / ")}`,
+      ]),
+    );
+    lines.push(
+      row([
+        "Excluded from gross",
+        m.reconciliation.excludedAccount,
+        `${m.reconciliation.excludedAccountDescription} - a reserve netted into gross inventory would understate the population being reconciled`,
+      ]),
+    );
+    lines.push(
+      row([
+        "Difference",
+        formatCents(m.reconciliation.differenceCents),
+        m.reconciliation.signConvention,
+      ]),
+    );
+    lines.push(
+      row([
+        "Explained by identified items",
+        formatCents(m.reconciliation.explainedCents),
+        `${m.reconciliation.items.length} items, derived from GL-side rule findings`,
+      ]),
+    );
+    lines.push(
+      row([
+        "Unexplained",
+        formatCents(m.reconciliation.unexplainedCents),
+        m.reconciliation.fullyExplained
+          ? "Applying every identified item would clear the difference exactly. Identified is not drafted, and drafted is not posted."
+          : "Part of the difference has no identified reconciling item behind it.",
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["RECONCILING ITEMS"]));
+    lines.push(row(["Item", "Description", "Exception", "Effect on the ledger"]));
+    for (const i of m.reconciliation.items) {
+      lines.push(
+        row([i.id, i.description, i.relatedExceptionId, formatCents(i.amountCents)]),
+      );
+    }
+
+    lines.push("");
+    lines.push(row(["INVENTORY ACCOUNTING MATRIX"]));
+    lines.push(row(["Column", "Question", "Source", "Basis"]));
+    for (const d of m.matrix.dimensions) {
+      lines.push(row([d.label, d.question, d.provenance, d.basis]));
+    }
+    lines.push("");
+    lines.push(row(["MATRIX ROWS"]));
+    lines.push(
+      row([
+        "Classification",
+        "GL account",
+        "Units",
+        "Carrying value",
+        "Expected custody",
+        "Observed custody",
+        "Custody difference",
+        "Ownership assertion",
+        "Cost relief",
+        "Cost relief basis",
+        "Establishing record",
+      ]),
+    );
+    for (const r of m.matrix.rows) {
+      const difference = [
+        r.unexpectedCustody.length > 0
+          ? `resolves to ${r.unexpectedCustody.join(" / ")}, not expected`
+          : "",
+        r.unobservedCustody.length > 0
+          ? `expects ${r.unobservedCustody.join(" / ")}, not reached`
+          : "",
+      ]
+        .filter((s) => s !== "")
+        .join("; ");
+      lines.push(
+        row([
+          r.classification,
+          `${r.glAccount} ${r.glAccountDescription}`,
+          r.units,
+          formatCents(r.carryingCents),
+          r.expectedCustody.join(" / "),
+          r.observedCustody.length === 0
+            ? "No unit of this classification is on the listing"
+            : r.observedCustody.join(" / "),
+          difference === "" ? "As expected" : difference,
+          r.ownershipAssertion,
+          r.cogsRelief,
+          r.cogsBasis,
+          r.establishingRecord,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Custody expectation holds",
+        m.matrix.custodyExpectationHolds ? "YES" : "NO",
+        "",
+        "",
+        "",
+        "",
+        m.matrix.custodyExpectationHolds
+          ? "Measured in both directions: no unit resolves to a custody type its row does not name, and no row names a custody type nothing reaches"
+          : `Unexpected on ${m.matrix.rowsWithUnexpectedCustody.join(" / ") || "none"}; unreached expectation on ${m.matrix.rowsWithUnobservedCustody.join(" / ") || "none"}`,
+        "",
+        "",
+        "",
+        "",
+      ]),
+    );
+
+    lines.push("");
+    lines.push(row(["AUTHORED JUDGEMENTS"]));
+    lines.push(row(["Question", "About", "The judgement", "Basis", "Held in"]));
+    for (const i of m.interpretations) {
+      lines.push(row([i.dimension, i.subject, i.answer, i.basis, i.heldIn]));
+    }
+
+    lines.push("");
+    lines.push(row(["POLICY VALUES"]));
+    lines.push(row(["Setting", "Value", "What it governs"]));
+    for (const p of m.policyValues) {
+      lines.push(row([p.key, p.value, p.governs]));
+    }
+
+    lines.push("");
+    lines.push(row(["NOT COVERED BY THE REPRODUCIBILITY CHECK"]));
+    lines.push(row(["Exclusion"]));
+    for (const x of m.replayExclusions) {
+      lines.push(row([x]));
+    }
+  } else if (table === "close-memo") {
+    const memo = getMemo(getWorkspace(), ctx);
+
+    lines.push(row(["CLOSE POSITION THIS MEMO DESCRIBES"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Balance-sheet date", memo.position.asOf]));
+    lines.push(row(["Units on the listing", memo.position.bookUnits]));
+    lines.push(row(["Inventory subledger", formatCents(memo.position.subledgerCents)]));
+    lines.push(row(["Gross inventory in the general ledger", formatCents(memo.position.grossGlCents)]));
+    lines.push(row(["Difference", formatCents(memo.position.differenceCents)]));
+    lines.push(row(["Reconciling items identified", memo.position.reconcilingItemCount]));
+    lines.push(row(["Unexplained", formatCents(memo.position.unexplainedCents)]));
+    lines.push(row(["Exceptions raised", memo.position.exceptionCount]));
+    lines.push(row(["Exceptions open", memo.position.openExceptionCount]));
+    lines.push(row(["Blockers", memo.position.blockerCount]));
+    lines.push(row(["Blocker exposure", formatCents(memo.position.blockerExposureCents)]));
+    lines.push(row(["Close readiness (basis points)", memo.position.readinessBps]));
+    lines.push(row(["Audit requests ready", `${memo.position.pbcReady} of ${memo.position.pbcTotal}`]));
+    lines.push(row(["Period", memo.position.periodState]));
+    lines.push(row(["Note", memo.notPartOfClose]));
+
+    lines.push("");
+    lines.push(row(["VERSION HISTORY"]));
+    // Stated from what was actually withheld, never from the viewer's role: at
+    // baseline no draft exists, so an auditor's file is byte-identical to a
+    // Controller's and a scope line here would claim a redaction that did not
+    // happen.
+    if (memo.withheldDraftCount > 0) {
+      lines.push(
+        row([
+          "Withheld",
+          `${memo.withheldDraftCount} unissued draft(s) are withheld from this role - a draft is internal management working paper. Issued versions are shown in full.`,
+        ]),
+      );
+    }
+    if (memo.versions.length === 0) {
+      lines.push(row(["No version exists - the memo has not been drafted"]));
+    } else {
+      lines.push(
+        row(["Version", "State", "Lock", "Title", "Recorded at", "By", "Content hash", "Close-state hash"]),
+      );
+      for (const v of memo.versions) {
+        lines.push(
+          row([
+            v.label,
+            v.state,
+            v.sealed ? "SEALED" : v.editable ? "EDITABLE" : "ARCHIVED",
+            v.title,
+            v.at,
+            // The same wording the screen uses. A file naming "U-002" beside
+            // a screen naming "M. Reyes · Controller" is two surfaces
+            // describing one fact differently, which is a finding even when
+            // both are individually defensible.
+            `${userById(v.byUserId).displayName} · ${roleLabel(userById(v.byUserId))}`,
+            v.contentHash ?? "Not sealed",
+            v.closeStateHash ?? "Not sealed",
+          ]),
+        );
+      }
+    }
+
+    lines.push("");
+    lines.push(row(["ISSUED TEXT"]));
+    if (memo.issued === null) {
+      lines.push(row(["No version has been issued"]));
+    } else {
+      lines.push(row(["Title", memo.issued.title]));
+      // One cell, newlines intact: RFC 4180 quoting carries them, and
+      // splitting the body into rows would invent paragraph boundaries the
+      // writer did not put there.
+      lines.push(row(["Memo", memo.issued.body]));
+      lines.push(
+        row([
+          "Still describes this close",
+          memo.positionMoved === null
+            ? "Not compared"
+            : memo.positionMoved
+              ? "NO - the close has moved since this version was sealed"
+              : "YES - the close position still hashes to what was sealed",
+        ]),
+      );
+    }
   } else if (table === "physical-count") {
     const summary = queries.getCountSummary(ctx);
     const detail = queries.getCountDetail(ctx);

@@ -1,5 +1,5 @@
-import { custodyTypeFor, PHYSICAL_CUSTODY_TYPES } from "@icg/domain";
-import type { DispositionMethod, PhysicalCustodyType } from "@icg/domain";
+import { custodyHolderFor, custodyTypeFor, PHYSICAL_CUSTODY_TYPES } from "@icg/domain";
+import type { CustodyHolder, DispositionMethod, PhysicalCustodyType } from "@icg/domain";
 import { authorize } from "@icg/permissions";
 import { makeRecordScope, type ServiceContext } from "./queries.js";
 import type { Workspace } from "./workspace.js";
@@ -48,16 +48,12 @@ import type { Workspace } from "./workspace.js";
 /* ------------------------------------------------------------------ */
 
 /**
- * Who is holding the unit, as a three-way answer.
- *
- * NOT_ESTABLISHED is its own value and not the absence of one: a custody type
- * the location does not describe means nobody has said who holds the unit,
- * which is a different statement from "somebody other than the company does".
- * Both surfaces used to derive this by taking the COMPLEMENT of a small
- * company-held set, which turned `UNDETERMINED` into a positive claim that a
- * third party held the unit.
+ * Who is holding the unit comes from `custodyHolderFor` in the Inventory
+ * Accounting Matrix (@icg/domain). It is re-exported here because callers
+ * type against this module's row shape, and moving the type would be a
+ * second name for one answer.
  */
-export type CustodyHolder = "COMPANY" | "OTHER_PARTY" | "NOT_ESTABLISHED";
+export type { CustodyHolder };
 
 export interface CustodyRowOut {
   readonly custodyType: PhysicalCustodyType;
@@ -104,36 +100,6 @@ export interface CustodyBreakdownOut {
   readonly heldByOthersUnits: number;
   readonly heldByOthersCents: number;
 }
-
-/**
- * Custody type → who is holding it. Total over the taxonomy, and exhaustive
- * by construction: `Record<PhysicalCustodyType, …>` means adding a custody
- * type without answering this question is a compile error rather than a unit
- * quietly reported as held by a third party.
- *
- * This is the ONE place the distinction is made. It used to exist three times
- * — a positive six-type list here, and two three-type company-held sets in the
- * web layer and the exporter whose COMPLEMENT was rendered as "Another party".
- * The three were not complements of each other, so `UNDETERMINED` was held by
- * nobody according to the summary figure and by a third party according to the
- * table beside it.
- */
-const CUSTODY_HOLDER: Readonly<Record<PhysicalCustodyType, CustodyHolder>> = {
-  COMPANY_WAREHOUSE: "COMPANY",
-  REPAIR_RMA_HOLD: "COMPANY",
-  QUARANTINE_DAMAGED: "COMPANY",
-  IN_TRANSIT_INBOUND: "OTHER_PARTY",
-  IN_TRANSIT_OUTBOUND: "OTHER_PARTY",
-  CUSTOMER_SITE: "OTHER_PARTY",
-  THIRD_PARTY_CUSTODIAN: "OTHER_PARTY",
-  CONTRACT_MANUFACTURER: "OTHER_PARTY",
-  FIELD_DEMO_LOANER: "OTHER_PARTY",
-  // Vendor-owned stock in the company's custody is held BY the company; it is
-  // simply not the company's stock. No book unit resolves here.
-  CONSIGNMENT_IN: "COMPANY",
-  CONSIGNMENT_OUT: "OTHER_PARTY",
-  UNDETERMINED: "NOT_ESTABLISHED",
-};
 
 export function getCustodyBreakdown(
   ws: Workspace,
@@ -182,7 +148,7 @@ export function getCustodyBreakdown(
   const rows: CustodyRowOut[] = [...buckets.entries()]
     .map(([custodyType, b]) => ({
       custodyType,
-      heldBy: CUSTODY_HOLDER[custodyType],
+      heldBy: custodyHolderFor(custodyType),
       units: b.units,
       carryingCents: b.cents,
       locations: [...b.locations].sort(),

@@ -160,14 +160,26 @@ export function runResetDemo(user: DemoUser, correlationId: string): ResetResult
   }
 
   const cleared = result.cleared;
+  /**
+   * Counted nouns, agreeing with their count. The sentence used to hard-code
+   * every plural, which read correctly only because the demo baseline clears
+   * zero of everything — the moment a reader actually did one piece of work
+   * it reported "1 comments".
+   */
+  const counted = (n: number, singular: string, plural = `${singular}s`) =>
+    `${n} ${n === 1 ? singular : plural}`;
   return {
     ok: true,
     headline: `Rebuilt from ${result.datasetVersion} · run ${result.runId}`,
     detail:
       `${result.aggregates.exceptionCount} exceptions, ${result.aggregates.blockerCount} blockers and ` +
       `${formatBpsExact(result.aggregates.closeReadinessBps)} readiness were re-derived from the seed, the rules and the scenario events. ` +
-      `Cleared ${cleared.comments} comments, ${cleared.drafts} drafts, ${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews, ` +
-      `${cleared.conclusions} management conclusions and ${cleared.evidenceRequests} evidence requests; ` +
+      `Cleared ${counted(cleared.comments, "comment")}, ${counted(cleared.drafts, "draft")}, ` +
+      `${counted(cleared.submittedEvidence, "submitted record", "submitted records")}, ` +
+      `${counted(cleared.reviews, "review")}, ` +
+      `${counted(cleared.conclusions, "management conclusion")}, ` +
+      `${counted(cleared.evidenceRequests, "evidence request")} ` +
+      `and ${counted(cleared.memoVersions, "close-memo version")}; ` +
       `the append-only audit trail kept ${result.auditEventsRetained === 1 ? "its single event" : `all ${result.auditEventsRetained} events`}, including this reset.`,
   };
 }

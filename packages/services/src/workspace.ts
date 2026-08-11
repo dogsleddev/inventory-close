@@ -78,6 +78,47 @@ export interface RecordedConclusion {
   readonly priorStatus: string;
 }
 
+/**
+ * A version of the management close memo.
+ *
+ * The memo is a MANAGEMENT artifact and deliberately not a twenty-second PBC
+ * request (COMPLETION_PLAN decision D8). Putting it in the PBC package would
+ * move the ready-item count and therefore the readiness figure, which would
+ * mean writing a memo changed how ready the close is — an artifact reporting
+ * on the close cannot also be a component of it.
+ *
+ * It lives in working state alongside conclusions, is cleared by Reset Demo,
+ * and is excluded from replay equivalence: it is what people wrote, not what
+ * the rules derived.
+ *
+ * The version vocabulary mirrors `PbcVersion` on purpose — a sealed version
+ * carries the hash it was sealed with and can only be superseded, and exactly
+ * one object in a history is editable. A memo that could be edited after
+ * being issued would be a record of the present rather than of what was said.
+ */
+export interface MemoVersion {
+  readonly id: string;
+  /** Sequence number, from 1. The working draft has none until it seals. */
+  readonly version?: number;
+  readonly state: "DRAFT" | "ISSUED" | "SUPERSEDED";
+  readonly title: string;
+  readonly body: string;
+  readonly byUserId: string;
+  readonly at: string;
+  /** Present only on sealed versions — a draft has nothing sealed yet. */
+  readonly contentHash?: string;
+  /**
+   * The close state the version was sealed against, so a later divergence is
+   * visible rather than silent. Derived the same way a PBC workpaper's
+   * prepared state is, from the figures the memo speaks about.
+   */
+  readonly closeStateHash?: string;
+  readonly sealed: boolean;
+  /** The working draft is the only editable object in a history. */
+  readonly editable: boolean;
+  readonly supersededByVersion?: number;
+}
+
 /** A request for a record that does not exist yet. Never itself evidence. */
 export interface EvidenceRequest {
   readonly id: string;
@@ -111,6 +152,12 @@ export interface Workspace {
    */
   conclusions: RecordedConclusion[];
   evidenceRequests: EvidenceRequest[];
+  /**
+   * Close-memo history, oldest first. Working state like the rest: the memo
+   * describes the close, so it can never become part of what the close
+   * derives (D8), and Reset Demo clears it.
+   */
+  memoVersions: MemoVersion[];
   /** Controlled-state hash each PBC workpaper was prepared against. */
   pbcPreparedState: Map<string, string>;
   /** Deterministic logical clock: base instant + one minute per tick. */
@@ -218,6 +265,7 @@ export function createWorkspace(): Workspace {
     reviews: [],
     conclusions: [],
     evidenceRequests: [],
+    memoVersions: [],
     pbcPreparedState: preparedStateFor(state.close),
     clockSeq: 0,
     evidenceSeq: 0,
@@ -237,5 +285,6 @@ export function resetWorkspace(ws: Workspace): void {
   ws.reviews = [];
   ws.conclusions = [];
   ws.evidenceRequests = [];
+  ws.memoVersions = [];
   ws.pbcPreparedState = preparedStateFor(ws.close);
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { CustodyData, MeasuredClaimView, ShellData } from "../lib/view-model";
+import type { CustodyData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import {
+  ClaimPanel,
   ExportCsvLink,
   NoRecordsState,
   Panel,
@@ -402,42 +403,3 @@ export function CustodyScreen({
   );
 }
 
-/** A decision panel whose glyph and sentence come from a measured boolean. */
-function ClaimPanel({
-  title,
-  sub,
-  claim,
-  foot,
-}: {
-  title: string;
-  sub: string;
-  claim: MeasuredClaimView;
-  foot: string;
-}) {
-  return (
-    <Panel decision>
-      <PanelHead title={title} sub={sub} />
-      <div style={{ padding: "14px 18px" }}>
-        <div
-          style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}
-        >
-          <span
-            aria-hidden
-            style={{ fontSize: "13px", color: claim.holds ? "var(--aurora)" : "var(--ember)" }}
-          >
-            {claim.holds ? "✓" : "✕"}
-          </span>
-          <span style={{ fontSize: "13px", fontWeight: 600 }}>{claim.headline}</span>
-        </div>
-        <p className="icg-soft" style={{ fontSize: "11.5px", lineHeight: 1.6, margin: "8px 0 0" }}>
-          {claim.detail}
-        </p>
-      </div>
-      <div className="icg-panel-foot">
-        <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
-          {foot}
-        </span>
-      </div>
-    </Panel>
-  );
-}

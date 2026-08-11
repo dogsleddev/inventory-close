@@ -1,4 +1,4 @@
-import { COST_COMPONENT_TYPES } from "@icg/domain";
+import { COST_COMPONENT_BEHAVIOR, COST_COMPONENT_TYPES } from "@icg/domain";
 import type {
   CogsState,
   CostBehavior,
@@ -39,55 +39,19 @@ import type { Workspace } from "./workspace.js";
  *   `buildReconciliation` sums. That claim is checked here against
  *   `glBalances` (`accountsInGlBalances`), not restated in prose.
  *
+ * The one authored judgement this module reports — how each capitalized
+ * component behaves with volume — is NOT held here. It lives in
+ * `INVENTORY_ACCOUNTING_MATRIX` in @icg/domain, with the classification → GL
+ * mapping and the custody-holder answer, because a reader who wants to
+ * disagree with this product's accounting judgements should find them in one
+ * place rather than in whichever projection needed each one first.
+ *
  * Nothing here reads a source document, so there is nothing for
  * `makeRecordScope` to narrow: `costComponents`, `periodCosts` and `skus`
  * carry no `sourceRef`, the unit population is readable under `close.read`
  * exactly as `listInventoryUnits` is, and the chain states are rule output —
  * the same close-control facts `getCommercialChains` already returns whole.
  */
-
-/* ------------------------------------------------------------------ */
-/* Cost behaviour — a management interpretation, carried with its basis */
-/* ------------------------------------------------------------------ */
-
-/**
- * How each capitalized component behaves with volume, and why.
- *
- * This is the one authored judgement in the module. It is held HERE, once,
- * rather than in the fixtures: a behaviour classification is an accounting
- * interpretation that a reader may disagree with, and putting it in the
- * dataset would make disagreeing with it a dataset regeneration. Stage F
- * folds it into `INVENTORY_ACCOUNTING_MATRIX` along with the classification →
- * GL map that currently lives in `glAccounts.ts`.
- */
-export const COST_COMPONENT_BEHAVIOR: Readonly<
-  Record<CostComponentType, { readonly behavior: CostBehavior; readonly basis: string }>
-> = {
-  DIRECT_MATERIAL: {
-    behavior: "VARIABLE",
-    basis:
-      "Component cost is incurred per unit built and moves directly with volume.",
-  },
-  DIRECT_LABOR: {
-    behavior: "VARIABLE",
-    basis:
-      "Assembly and test hours are charged at a standard rate per unit, so the cost follows the units produced.",
-  },
-  MANUFACTURING_OVERHEAD: {
-    behavior: "FIXED",
-    basis:
-      "Absorbed at a standard rate set on normal capacity. The pool itself does not move with the next unit; overhead left unabsorbed is not capitalized at all, and is reported on the period side as idle capacity.",
-  },
-  INBOUND_FREIGHT: {
-    behavior: "VARIABLE",
-    basis:
-      "Charged on the shipment that brings the goods in, and scales with the units shipped.",
-  },
-  IMPORT_DUTY: {
-    behavior: "VARIABLE",
-    basis: "Assessed on the declared value of the units imported.",
-  },
-};
 
 /* ------------------------------------------------------------------ */
 /* Shapes                                                              */
