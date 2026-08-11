@@ -884,6 +884,49 @@ export interface ReconciliationData {
   readonly records: Readonly<Record<string, EvidenceRecordView>>;
 }
 
+export interface EvidenceCenterData {
+  readonly roleLabel: string;
+  readonly restricted: boolean;
+  readonly rows: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly kind: string;
+    readonly src: string;
+    readonly sourceSystem: string | null;
+    readonly internalId: string | null;
+    readonly retrieved: string;
+    readonly sensitivity: string;
+    readonly withheld: boolean;
+    readonly hash: string;
+    readonly relations: readonly {
+      readonly exceptionId: string;
+      readonly linkType: string;
+      readonly label: string;
+      readonly conflict: boolean;
+    }[];
+  }[];
+  readonly counts: { readonly total: number; readonly withheld: number; readonly missing: number };
+  /** Required records that do not exist. Never mixed in with records that do. */
+  readonly links: readonly {
+    readonly exceptionId: string;
+    readonly description: string;
+    readonly ruleId: string;
+  }[];
+  readonly sources: readonly {
+    readonly key: string;
+    readonly name: string;
+    readonly status: string;
+    readonly glyph: string;
+    readonly tone: string;
+    readonly note: string | null;
+    readonly lastSync: string;
+  }[];
+  readonly sourceHealth: { readonly score: string; readonly degraded: number } | null;
+  readonly scopeNotice: string | null;
+  readonly records: Readonly<Record<string, EvidenceRecordView>>;
+  readonly selectedId: string | null;
+}
+
 /**
  * One evidence lens on an exception.
  *

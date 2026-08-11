@@ -240,7 +240,7 @@ export function AppShell(props: AppShellProps) {
               {item.label === "Exceptions" && shell.navOpenBlockers !== null ? (
                 <span className="icg-nav-badge">{shell.navOpenBlockers}</span>
               ) : null}
-              {item.label === "User Guide" ? (
+              {item.label === "How to Explore" ? (
                 <span className="icg-nav-start">START HERE</span>
               ) : null}
             </Link>

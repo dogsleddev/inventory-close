@@ -44,10 +44,7 @@ import {
 } from "./exception-view";
 import {
   assertionLabel,
-  capitalize,
   eventTypeLabel,
-  kindLabel,
-  locationLabel,
   numberWord,
   sourceLabel,
   sourceName,

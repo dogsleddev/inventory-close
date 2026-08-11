@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userByRole } from "@icg/data";
 import { OverviewScreen } from "../components/OverviewScreen";
+import { NAV_SECTIONS } from "../lib/nav";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
 import { getQueries, makeContext } from "../lib/server/workspace";
 
@@ -232,7 +233,7 @@ describe("every wide band collapses below 1024", () => {
 describe("the collapsed nav rail keeps its accessible names", () => {
   it("never removes .icg-nav-label from the accessibility tree", () => {
     const css = readFileSync(join(import.meta.dirname, "..", "app", "icg.css"), "utf8");
-    // display:none on the label made all 13 nav links nameless below 1280
+    // display:none on the label made every nav link nameless below 1280
     // (WCAG 4.1.2). The label may leave the LAYOUT (clip pattern) only.
     for (const m of css.matchAll(/@media[^{]*\{([\s\S]*?)\n\}/g)) {
       const block = m[1] ?? "";
@@ -251,7 +252,7 @@ describe("the collapsed nav rail keeps its accessible names", () => {
     const nav = document.querySelector(".icg-rail-nav");
     expect(nav).not.toBeNull();
     const links = nav!.querySelectorAll("a");
-    expect(links.length).toBeGreaterThanOrEqual(13);
+    expect(links.length).toBe(NAV_SECTIONS.length);
     for (const link of links) {
       const label = link.querySelector(".icg-nav-label");
       expect(label?.textContent?.trim(), "a nav link with no label text").toBeTruthy();

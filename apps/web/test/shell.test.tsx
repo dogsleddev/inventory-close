@@ -2,8 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { userByRole } from "@icg/data";
-import { NotDesignedScreen } from "../components/NotDesignedScreen";
+import { AppShell } from "../components/AppShell";
 import { buildShellData } from "../lib/server/data";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_BOOTSTRAP, THEME_KEY } from "../lib/theme";
@@ -16,19 +18,29 @@ beforeEach(() => {
 
 const noopRole = vi.fn(async () => {});
 
-function renderShell() {
+/**
+ * The shell under test, with the thinnest possible page inside it. This used
+ * to be the "not designed yet" placeholder screen; that screen no longer
+ * exists, because every nav entry now resolves to a built route.
+ */
+function renderShell(setRole: (userId: string) => Promise<void> = noopRole) {
   const user = userByRole("CONTROLLER");
   return render(
-    <NotDesignedScreen
+    <AppShell
       shell={buildShellData(user, "T-SHELL")}
       section="Valuation"
-      setRoleAction={noopRole}
-    />,
+      setRoleAction={setRole}
+      drawerOpen={false}
+      askSuggestions={["What prevents sign-off?"]}
+      askContext="FY2026 Inventory Close · Shell"
+    >
+      <main className="icg-workspace" />
+    </AppShell>,
   );
 }
 
 describe("App shell — navigation and identity", () => {
-  it("renders all thirteen sections with the blocker badge and start-here tag", () => {
+  it("renders all twelve sections with the blocker badge and start-here tag", () => {
     renderShell();
     // Pinned against the canonical list, not against NAV_SECTIONS itself —
     // iterating the source array would shrink with it and pass on deletion.
@@ -44,15 +56,14 @@ describe("App shell — navigation and identity", () => {
       "Reconciliation",
       "Adjustments",
       "Audit Package",
-      "Assumptions",
-      "User Guide",
+      "How to Explore",
     ]);
     for (const s of NAV_SECTIONS) {
       expect(screen.getByRole("link", { name: new RegExp(s.label) })).toBeTruthy();
     }
     const exceptions = screen.getByRole("link", { name: /Exceptions/ });
     expect(exceptions.textContent).toContain("7");
-    const guide = screen.getByRole("link", { name: /User Guide/ });
+    const guide = screen.getByRole("link", { name: /How to Explore/ });
     expect(guide.textContent).toContain("START HERE");
   });
 
@@ -75,13 +86,25 @@ describe("App shell — navigation and identity", () => {
   });
 });
 
-describe("App shell — not-designed state", () => {
-  it("says the section is not designed rather than rendering empty panels", () => {
-    renderShell();
-    expect(screen.getByText("Valuation is not designed yet")).toBeTruthy();
-    expect(
-      screen.getByText(/an empty screen must never read as a zero balance/),
-    ).toBeTruthy();
+describe("App shell — every nav entry is a built screen", () => {
+  /**
+   * The placeholder problem, pinned so it cannot return: a rail entry that
+   * leads to a "not designed yet" page (or to nothing at all) is worse than
+   * no entry. This walks the real app directory rather than trusting a list.
+   */
+  it("resolves every nav href to a route file that exists", () => {
+    const appDir = join(__dirname, "..", "app");
+    for (const section of NAV_SECTIONS) {
+      const segment = section.href === "/" ? "" : section.href.replace(/^\//, "");
+      const route = join(appDir, segment, "page.tsx");
+      expect(existsSync(route), `${section.label} → ${section.href} (${route})`).toBe(true);
+    }
+  });
+
+  it("ships no not-designed placeholder screen or catch-all section route", () => {
+    const appDir = join(__dirname, "..", "app");
+    expect(existsSync(join(appDir, "[section]", "page.tsx"))).toBe(false);
+    expect(existsSync(join(__dirname, "..", "components", "NotDesignedScreen.tsx"))).toBe(false);
   });
 });
 
@@ -126,14 +149,7 @@ describe("App shell — role selector", () => {
   it("lists every demo user and invokes the role action", async () => {
     const user = userEvent.setup();
     const setRole = vi.fn(async () => {});
-    const shellUser = userByRole("CONTROLLER");
-    render(
-      <NotDesignedScreen
-        shell={buildShellData(shellUser, "T-ROLE")}
-        section="Valuation"
-        setRoleAction={setRole}
-      />,
-    );
+    renderShell(setRole);
     await user.click(screen.getByRole("button", { name: /ROLE/ }));
     const options = screen.getAllByRole("menuitemradio");
     expect(options).toHaveLength(10);

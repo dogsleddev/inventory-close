@@ -416,9 +416,15 @@ export function assembleChainNodes(components: readonly {
 /** Evidence record → drawer payload (occurred vs retrieved, original vs normalized). */
 export function assembleEvidenceRecord(
   e: EvidenceEntry,
-  view: ExceptionView,
+  /**
+   * The exception this record was opened from, when there is one. The
+   * Evidence Center opens records outside any single exception, so it passes
+   * undefined and supplies its own related-object list instead.
+   */
+  view: ExceptionView | undefined,
   datasetVersion: string,
   user: DemoUser,
+  relatedOverride?: readonly string[],
 ): EvidenceRecordView {
   // A REQUIRED_FOR link marks an evidence GAP for ANY record kind: the
   // contract whose provision is absent, the custodian statement that was
@@ -491,10 +497,11 @@ export function assembleEvidenceRecord(
   }
   rows.push({ k: "Sensitivity", v: kindLabel(e.sensitivity) });
 
-  const related = [
-    ...(view.exception.finding.subjects.serials ?? []).slice(0, 2),
-    view.exception.id,
-  ];
+  const related =
+    relatedOverride ??
+    (view !== undefined
+      ? [...(view.exception.finding.subjects.serials ?? []).slice(0, 2), view.exception.id]
+      : []);
 
   return {
     id: e.id,
