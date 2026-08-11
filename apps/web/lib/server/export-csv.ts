@@ -1,6 +1,10 @@
 import type { DemoUser } from "@icg/data";
 import { glAccountDescription } from "@icg/domain";
-import { getProcurementPopulations } from "@icg/services";
+import {
+  getCostClassification,
+  getCostStandards,
+  getProcurementPopulations,
+} from "@icg/services";
 import { formatCents } from "../format";
 import { attempt } from "./data";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
@@ -54,6 +58,7 @@ export const EXPORT_TABLES = [
   "evidence",
   "pbc",
   "procurement",
+  "costing",
   "physical-count",
   "valuation",
   "close-summary",
@@ -120,6 +125,11 @@ const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
   adjustments: null,
   valuation: null,
   "close-summary": null,
+  // Nothing in this file is a scoped record: the cost stack and the period
+  // pools carry no source document, and the COGS states are rule output every
+  // role reads whole. An auditor's file is byte-identical to a Controller's,
+  // so claiming a redaction here would be the over-claim this map exists for.
+  costing: null,
 };
 
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
@@ -534,6 +544,165 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       row([
         "Treatment",
         "Inventory is carried at standard cost, so purchase price variance is expensed in the period. No figure in this section is in the inventory subledger, the inventory accounts, or the inventory-to-GL reconciliation.",
+      ]),
+    );
+  } else if (table === "costing") {
+    // One file, both halves of "which costs belong in inventory" — and the
+    // two halves must never be added. The capitalized side is already inside
+    // the inventory balance; the period side never entered it. Each section
+    // says which it is, in its own heading and again in its total row.
+    const standards = getCostStandards(getWorkspace(), ctx);
+    const classification = getCostClassification(getWorkspace(), ctx);
+
+    lines.push(row(["STANDARD COST STACK — CAPITALIZED, ALREADY IN THE INVENTORY BALANCE"]));
+    lines.push(
+      row([
+        "SKU",
+        "Product",
+        "Component",
+        "Behaviour",
+        "Amount / unit",
+        "Rate source",
+        "Effective from",
+        "Standard / unit",
+        "Units on hand",
+        "Carried value",
+        "Stack ties to standard",
+      ]),
+    );
+    for (const r of standards.rows) {
+      for (const c of r.components) {
+        lines.push(
+          row([
+            r.sku,
+            r.description,
+            c.component,
+            c.behavior,
+            formatCents(c.amountCents),
+            c.costSource,
+            c.effectiveFrom,
+            formatCents(r.standardUnitCents),
+            r.onHandUnits,
+            formatCents(r.carriedCents),
+            // Measured per SKU, not asserted once for the file. A stack that
+            // does not tie is the finding this column exists to carry.
+            r.stackAgrees ? "YES" : `NO — components sum to ${formatCents(r.stackTotalCents)}`,
+          ]),
+        );
+      }
+    }
+    lines.push("");
+    lines.push(row(["DECOMPOSITION OF THE INVENTORY BALANCE"]));
+    lines.push(row(["Component", "Behaviour", "Amount", "Share", "Basis for the behaviour"]));
+    for (const t of standards.byComponent) {
+      lines.push(
+        row([
+          t.component,
+          t.behavior,
+          formatCents(t.amountCents),
+          `${(t.shareBps / 100).toFixed(2)}%`,
+          t.basis,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Decomposed total",
+        "",
+        formatCents(standards.componentTotalCents),
+        "",
+        "Components extended over the units on the book",
+      ]),
+    );
+    lines.push(
+      row([
+        "Inventory subledger",
+        "",
+        formatCents(standards.subledgerCents),
+        "",
+        "The close's own figure, reconciled to the general ledger",
+      ]),
+    );
+    lines.push(
+      row([
+        "Components account for the whole balance",
+        "",
+        standards.decompositionAgrees ? "YES" : "NO",
+        "",
+        standards.decompositionAgrees
+          ? "Every SKU's components tie to the standard it is carried at, no SKU is without a stack, and no unit is carried off standard"
+          : `${standards.unitsWithoutStack} units belong to a SKU with no cost stack; ${standards.unitsOffStandard} units are carried off their SKU's standard`,
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["PERIOD COSTS — EXPENSED, NEVER IN THE INVENTORY BALANCE"]));
+    lines.push(
+      row([
+        "Pool",
+        "Category",
+        "Department",
+        "Fiscal year",
+        "GL account",
+        "Treatment",
+        "Amount",
+        "Basis for exclusion",
+      ]),
+    );
+    for (const r of classification.period.rows) {
+      lines.push(
+        row([
+          r.id,
+          r.category,
+          r.department,
+          r.fiscalYear,
+          r.glAccount,
+          r.treatment,
+          formatCents(r.amountCents),
+          r.basis,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Period total",
+        "",
+        "",
+        "",
+        "",
+        "",
+        formatCents(classification.period.totalCents),
+        // The constraint is checked against the recorded balances, not
+        // restated: this cell reports a measurement.
+        classification.period.keptOutOfInventory
+          ? "No account carrying one of these pools holds a recorded inventory balance, so none of this figure is inside the inventory-to-GL reconciliation"
+          : `${classification.period.accountsInGlBalances.join(", ")} carries a period cost AND a recorded inventory balance — this amount is inside the gross GL figure`,
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["COST OF SALES — INVENTORY RELIEF BY SALES ORDER"]));
+    lines.push(row(["Sales order", "COGS state", "What the book shows", "Exception"]));
+    for (const r of classification.cogs.rows) {
+      lines.push(
+        row([
+          r.salesOrder,
+          r.state,
+          // The rule writes "… still on the year-end book" whenever fulfilled
+          // serials are on hand, whatever the state — so an unshipped order
+          // carries it too, with twenty serials on SO-26190. Printed beside
+          // NOT_SHIPPED that reads as twenty units that failed to relieve.
+          r.expectedOnBook
+            ? "No fulfillment posted at the balance-sheet date, so there is nothing to relieve"
+            : (r.note ?? "No fulfilled serial remains on the year-end book"),
+          r.relatedExceptionId ?? "",
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Basis",
+        "",
+        "Read from the O2C-CHAIN-001 inventory-relief component — whether the serials on a fulfillment are still in the year-end book population. That is evidence of relief, not a cost-of-sales journal entry read from the general ledger.",
+        "",
       ]),
     );
   } else if (table === "physical-count") {

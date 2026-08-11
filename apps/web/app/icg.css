@@ -2340,6 +2340,13 @@ button.icg-close-capsule {
   background: var(--aurora-bg);
   color: var(--aurora-text);
 }
+/* Neither good news nor a finding: the Costing screen's "not shipped" state,
+   where there is simply nothing to report yet. It must not read as a pass. */
+.icg-close-capsule--quiet {
+  background: transparent;
+  color: var(--quiet);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
 
 /* Evidence-chain row (Financial Life right column). */
 .icg-chainrow {

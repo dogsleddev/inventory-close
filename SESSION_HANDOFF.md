@@ -2,13 +2,13 @@
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
 re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
-**product-completion pass** (HEAD `32f6856`), with Stage D as the next task.
+**product-completion pass**, with Stage E as the next task.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
 ---
 
-## 0a. START HERE — Stage D (Costing) is the next task
+## 0a. START HERE — Stage E (Ownership & valuation lifecycle) is the next task
 
 The original ten stages shipped and deployed. The work in flight is a **product-completion
 and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
@@ -23,12 +23,12 @@ but the *next task* is here, not in §8.
 | **B — Inventory & GL** | ✅ Done (`3a359e7`, `de41445`) |
 | **W — Workflow verbs** | ✅ Done (`de41445`) |
 | **C — Procurement** | ✅ Done (`2cfb216`) — and it carried the **one** D5 regeneration for C/D/E |
-| **Export affordance** | ✅ Done (`32f6856` + follow-up) — every population now has a way out |
-| **D — Costing** | ⬅ **NEXT.** Fixtures already ship; no dataset work |
-| E — Ownership & valuation lifecycle | Not started — fixtures already ship |
+| **Export affordance** | ✅ Done (`32f6856` + `546e388`) — every population now has a way out |
+| **D — Costing** | ✅ Done — `/costing`, four tabs, eleventh export table, no dataset work |
+| **E — Ownership & valuation lifecycle** | ⬅ **NEXT.** Fixtures already ship; no dataset work |
 | F — Management outputs · G — Ask Gaurd tools · H — QA | Not started |
 
-**833 tests across 59 files passing**; typecheck, lint and production build clean (16 routes).
+**865 tests across 61 files passing**; typecheck, lint and production build clean (17 routes).
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
@@ -39,52 +39,66 @@ the next request 500s on a missing vendor chunk.
 
 ---
 
-### Stage D — what to build
+### Stage E — what to build
 
-Scope from `COMPLETION_PLAN.md` §10: **the standard cost stack, fixed/variable/period cost
-classification, R&D, and COGS state.**
+Scope from `COMPLETION_PLAN.md` §10: **the custody model, consignment-in, E&O methodology
+depth, and scrap & disposition.**
 
 **There is no data work.** D5 was spent by Stage C in a single regeneration to
-**`FY2026-DEMO-v1.2.0`** (hash `9f39105d…`). Everything Stage D needs already exists,
+**`FY2026-DEMO-v1.2.0`** (hash `9f39105d…`). Everything Stage E needs already exists,
 generated and validated:
 
-- `packages/data/fixtures/costComponents.json` — 70 rows, five components per SKU
-  (direct material, direct labour, manufacturing overhead, inbound freight, import duty).
-  Each SKU's components sum **exactly** to its locked unit cost; the generator throws
-  otherwise and `packages/data/test/stageC-fixtures.test.ts` pins it.
-- `packages/data/fixtures/periodCosts.json` — 6 FY2026 pools kept OUT of inventory (R&D,
-  prototype materials, qualification, idle capacity, non-inventory freight), each carrying
-  the basis for keeping it out, on expense GL accounts.
+- `packages/data/fixtures/consignmentInUnits.json` — 12 vendor-owned units held on site.
+  A separate collection precisely so it can never be summed into the 1,500, and valued at the
+  OWNER's stated value, because the company has no cost basis in a unit it never bought.
+  **Informational only — it must derive no rule** (COMPLETION_PLAN §9, trap 5).
+- `packages/data/fixtures/dispositions.json` — 4 records, on a historical FY2026 serial
+  excluded from the 1,500 by construction. Scrap is the one lifecycle the book population
+  cannot show, because no unit in it has ever been disposed of.
+
+**9 of the 10 custody types are derivable** from `(location, classification, custodian)` —
+only consignment needs the fixture (COMPLETION_PLAN §4). `PHYSICAL_CUSTODY_TYPES` and
+`custodyTypeFor()` are derivation-only domain additions; `COGS_STATES` and `COST_BEHAVIORS`
+landed in `packages/domain/src/enums.ts` in Stage D and are the precedent to follow.
 
 **If you find yourself about to regenerate the dataset, stop — that is the thing D5 exists to
-prevent.** Stage E's fixtures (`consignmentInUnits`, `dispositions`) are there too.
+prevent.**
 
-**The two halves of the question.** Stage D answers *which costs belong in inventory*:
-`costComponents` is the capitalized side — the cost already inside the $4,800,000 subledger,
-decomposed. `periodCosts` is the expensed side. `periodCosts` must **never** reach
-`glBalances`: `buildReconciliation` sums every GL balance except 1290, so a period-cost row
-landing there moves the locked gross GL without a line of rule code changing.
+**Stage D's two hardest lessons apply directly to E:**
 
-**COGS state is nearly free** — `O2C-CHAIN-001` already computes inventory-relief presence per
-chain (`COMPLETION_PLAN.md` §4).
+1. **Measure the claim, do not write it.** Consignment's whole point is that those units are
+   NOT inventory. Do not print "not in the 1,500" as prose — check it (no consignment serial
+   appears in `inventoryUnits`) and render the result, the way `keptOutOfInventory` and
+   `decompositionAgrees` are rendered on `/costing`. E&O has the same shape: condition and
+   recovery are honestly "not on file", and that must be a measured absence, not a blank cell.
+2. **Read the rendered output, not just the code.** Stage D's one real defect was invisible in
+   the source: `O2C-CHAIN-001` emits "… still on the year-end book" regardless of state, so an
+   unshipped order carried it with twenty serials. Rule prose is never reworded — the service
+   flags the case and the view frames it. Expect the same where a disposition note or a
+   custodian statement is written for one context and read in another.
 
-**The pattern to follow**, established by Stage B (`glAccounts.ts`) and Stage C
-(`procurement.ts`):
+**The pattern to follow**, established by Stage B (`glAccounts.ts`), Stage C
+(`procurement.ts`) and Stage D (`costing.ts` — the closest model, since it also projects over
+non-rule fixture collections):
 
-1. `packages/services/src/costing.ts` — a read-only projection taking `(ws, ctx)`, calling
+1. `packages/services/src/ownership.ts` — a read-only projection taking `(ws, ctx)`, calling
    `authorize(ctx.user, "close.read")`, scoping any source document with `makeRecordScope`,
    exported from `packages/services/src/index.ts`. **Change no rule**: every completion-pass
    stage so far has been a projection over state the close already produced, which is why no
-   golden figure has moved.
-2. `apps/web/lib/server/costing-view.ts` — formats and labels; never sums money.
-3. `apps/web/components/CostingScreen.tsx` + `apps/web/app/costing/page.tsx`.
-4. `apps/web/lib/nav.ts` — a 14th entry. `apps/web/test/shell.test.tsx` pins the label array
-   and must be updated with it.
+   golden figure has moved. Where a collection carries no `sourceRef` there is nothing for
+   record scope to narrow — say so in the module doc rather than omitting it silently, as
+   `costing.ts` does.
+2. `apps/web/lib/server/ownership-view.ts` — formats and labels; never sums money.
+3. The screen component + `app/<route>/page.tsx`, with `?tab=` deep links.
+4. `apps/web/lib/nav.ts` — a 15th entry. `apps/web/test/shell.test.tsx` pins the label array
+   AND its "fourteen sections" test name; both must move with it.
 5. **An export table.** Every screen owning a population has one; `apps/web/test/export-affordance.test.tsx`
    fails if a new screen has none, or if `EXPORT_TABLES` gains one nothing links to. Add the
    branch in `export-csv.ts`, the `ExportCsvLink` on the screen (gated on `!data.restricted`),
-   and the entry in that test's `SCREENS` array.
-6. Regressions that pin rules rather than strings.
+   the entry in that test's `SCREENS` array, **and a `AUDITOR_SCOPE_NOTES` entry** — `null`
+   unless the table genuinely withholds, since a note claiming a redaction that did not happen
+   is itself a failure that test catches.
+6. Regressions that pin rules rather than strings, then **mutation-test them** before shipping.
 
 **Traps that have cost real time in this pass** (§7 has the full list):
 
@@ -96,11 +110,32 @@ chain (`COMPLETION_PLAN.md` §4).
 - `.click()` does not flush React state in jsdom — use `userEvent`.
 - A `.tsx` test without the `// @vitest-environment jsdom` docblock fails obscurely.
 - Money figures in a CSV must be bound to their label in tests. `toContain("7")` passes on
-  almost any file; assert the value sits in the row its label heads.
+  almost any file; assert the value sits in the row its label heads — and use the app's own
+  `formatCents`, never a hand-rolled `toLocaleString`, which drops non-whole cents ($67.50).
+- `apps/web/test/no-hardcoded-totals.test.ts` scans `app/`, `components/` and `lib/` for the
+  canonical literals — **including inside comments**. Stage D tripped it twice by writing
+  "$4,800,000" in a doc comment. Say "the inventory subledger" in the web app and let the
+  figure arrive from services.
+- A condition the baseline cannot produce is a condition your regression does not test.
+  Stage D creates two in-test (a unit carried off standard, a period-cost account pushed into
+  `glBalances`) because without them a projection that hard-coded either boolean would have
+  passed the entire suite. `createWorkspace()` calls `buildDataset()` afresh, so mutating
+  `ws.dataset` inside a test is isolated to that test.
 
-**Verify in a browser before calling it done.** Two defects this pass shipped past a green
+**Verify in a browser before calling it done.** Three defects this pass shipped past a green
 suite and were caught only by opening the page: a card showing two different amounts under a
-footnote calling them matched, and a cached workspace serving an empty population.
+footnote calling them matched, a cached workspace serving an empty population, and (Stage D) a
+sentence saying the stack "sums to $4,800,000 — the same $4,800,000 the close reconciles TO the
+general ledger", which reads as agreement when the whole product exists to show a $12,450
+difference.
+
+**Known, pre-existing, and NOT caused by any stage:** `pnpm test` exits 1 while reporting every
+test passed. The error is `[vitest-worker]: Timeout calling "onTaskUpdate"` — a reporter RPC
+timeout, not a test failure. `export-affordance.test.tsx` renders every screen for every demo
+user in one test that blocks its worker for ~45s and starves the reporter channel; each new
+stage adds a screen to that sweep. It reproduces at `546e388`, before Stage D. Read the
+`Tests` line, not the exit code — and if you fix it, split that sweep rather than raising a
+timeout.
 
 ---
 
@@ -216,8 +251,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
-| **Completion pass A/B/W/C + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
-| **Completion pass D–H** | **Not started.** Stage D is next; its fixtures already ship. |
+| **Completion pass A/B/W/C/D + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass E–H** | **Not started.** Stage E is next; its fixtures already ship. |
 
 ### Commit history (newest first)
 

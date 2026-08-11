@@ -244,6 +244,28 @@ export const COST_TREATMENTS = [
 ] as const;
 export type CostTreatment = (typeof COST_TREATMENTS)[number];
 
+/**
+ * How a capitalized cost component behaves with volume (COMPLETION_PLAN §10,
+ * Stage D). A management classification, not a control result: nothing in the
+ * rule engine reads it, and the basis for each assignment travels with it so
+ * a reader can disagree with the judgement rather than only with the label.
+ */
+export const COST_BEHAVIORS = ["VARIABLE", "FIXED"] as const;
+export type CostBehavior = (typeof COST_BEHAVIORS)[number];
+
+/**
+ * Whether the cost of a sold unit has left inventory (COMPLETION_PLAN §5).
+ *
+ * Derived from the `O2C-CHAIN-001` inventory-relief component and nothing
+ * else: the chain measures whether the fulfilled serials are still in the
+ * year-end book population. That is evidence of relief, not a COGS posting
+ * read from the GL, and every surface reporting these states has to say so —
+ * NOT_RELIEVED means the units are still on the book, not that a journal
+ * entry was checked and found missing.
+ */
+export const COGS_STATES = ["RELIEVED", "NOT_RELIEVED", "NOT_SHIPPED"] as const;
+export type CogsState = (typeof COGS_STATES)[number];
+
 /** How a unit left the book population before the balance-sheet date. */
 export const DISPOSITION_METHODS = [
   "SCRAPPED",

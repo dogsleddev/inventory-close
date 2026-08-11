@@ -88,6 +88,17 @@ export {
 } from "./effective.js";
 export type { CommandService } from "./commands.js";
 export { getGlAccountReconciliation, INVENTORY_RESERVE_ACCOUNT, type GlAccountReconcilingItemOut, type GlAccountReconciliationOut, type GlAccountReconciliationState, type GlAccountRowOut, type GlReserveAccountOut } from "./glAccounts.js";
+export { COST_COMPONENT_BEHAVIOR, getCostClassification, getCostStandards } from "./costing.js";
+export type {
+  CogsChainRowOut,
+  CostClassificationOut,
+  CostComponentOut,
+  CostComponentTotalOut,
+  CostStandardRowOut,
+  CostStandardsOut,
+  PeriodCostCategoryOut,
+  PeriodCostRowOut,
+} from "./costing.js";
 export { getProcurementPopulations } from "./procurement.js";
 export type {
   GoodsInTransitOut,

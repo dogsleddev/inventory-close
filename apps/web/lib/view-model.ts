@@ -1242,3 +1242,102 @@ export interface ResetResultView {
   readonly headline: string;
   readonly detail: string;
 }
+
+/* ------------------------------------------------------------------ */
+/* Stage D — Costing                                                   */
+/* ------------------------------------------------------------------ */
+
+export interface CostStandardRowView {
+  readonly sku: string;
+  readonly description: string;
+  readonly standard: string;
+  /**
+   * One cell per column in `componentColumns`. A SKU whose stack has no such
+   * component renders the stated absence, never an empty cell — a blank under
+   * a component heading asserts a cost of zero.
+   */
+  readonly cells: readonly string[];
+  /** Stated only when the stack does NOT tie to the standard. */
+  readonly disagreement: string | null;
+  readonly onHandUnits: string;
+  readonly carried: string;
+}
+
+export interface CostComponentTotalView {
+  readonly component: string;
+  readonly amount: string;
+  readonly share: string;
+  readonly behavior: string;
+  readonly basis: string;
+}
+
+export interface PeriodCostRowView {
+  readonly id: string;
+  readonly category: string;
+  readonly department: string;
+  readonly amount: string;
+  readonly treatment: string;
+  readonly basis: string;
+  readonly glAccount: string;
+}
+
+export interface CogsRowView {
+  readonly salesOrder: string;
+  readonly state: string;
+  readonly glyph: string;
+  readonly variant: "frost" | "aurora" | "quiet";
+  /**
+   * What this row's units are doing, framed for its own state. A NOT_SHIPPED
+   * row never shows the rule's serial list — units on the book are the
+   * expected condition when nothing has been fulfilled.
+   */
+  readonly detail: string;
+  readonly exceptionId: string | null;
+}
+
+export interface CostingData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly asOf: string;
+  readonly tabs: readonly TabDef[];
+  readonly stack: {
+    readonly stats: readonly ProcurementStat[];
+    /** Component column headings, from the service's own union of stacks. */
+    readonly componentColumns: readonly string[];
+    readonly rows: readonly CostStandardRowView[];
+    /** When the standards took effect — plural if they did not all agree. */
+    readonly effectiveNote: string;
+    /** The decomposition claim, made only because the service measured it. */
+    readonly agreement: {
+      readonly agrees: boolean;
+      readonly headline: string;
+      readonly detail: string;
+    };
+    readonly note: string;
+  } | null;
+  readonly classification: {
+    readonly stats: readonly ProcurementStat[];
+    readonly components: readonly CostComponentTotalView[];
+    readonly note: string;
+  } | null;
+  readonly period: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly PeriodCostRowView[];
+    readonly byCategory: readonly { readonly category: string; readonly amount: string }[];
+    /** Whether the pools stay out of the GL the bridge sums — measured. */
+    readonly containment: {
+      readonly held: boolean;
+      readonly headline: string;
+      readonly detail: string;
+    };
+    readonly note: string;
+  } | null;
+  readonly cogs: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly CogsRowView[];
+    readonly basisNote: string;
+    readonly note: string;
+  } | null;
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+}
