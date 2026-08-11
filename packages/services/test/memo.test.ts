@@ -5,11 +5,13 @@ import { hasPermission } from "@icg/permissions";
 import {
   createCommandService,
   createWorkspace,
+  describeWorkingState,
   effectiveClose,
   getMemo,
   MEMO_DRAFT_PERMISSION,
   MEMO_ISSUE_PERMISSION,
   REPLAY_EXCLUSIONS,
+  WORKING_STATE_COLLECTIONS,
   type ServiceContext,
   type Workspace,
 } from "../src/index.js";
@@ -152,30 +154,31 @@ describe("the memo is not part of the close it describes (D8)", () => {
 
   it("is named among what the reproducibility check excludes", () => {
     // The sentence used to name four collections while the workspace held
-    // six — a disclosure narrower than what it discloses. This walks the
-    // workspace's own working-state collections rather than a list, so a new
-    // one fails here instead of quietly going unmentioned.
-    const workingState = Object.entries(ws).filter(
-      ([key, value]) =>
-        Array.isArray(value) &&
-        !["dataset", "close", "evidenceGraph", "period", "audit"].includes(key),
-    );
-    const WORDS: Readonly<Record<string, string>> = {
-      submittedEvidence: "submitted evidence",
-      comments: "comments",
-      drafts: "drafts",
-      reviews: "reviews",
-      conclusions: "conclusions",
-      evidenceRequests: "evidence requests",
-      memoVersions: "memo",
-    };
-    const sentence = REPLAY_EXCLUSIONS.join(" ").toLowerCase();
-    expect(workingState.length).toBeGreaterThan(0);
-    for (const [key] of workingState) {
-      const word = WORDS[key];
-      expect(word, `${key} has no word in this test's mapping`).toBeDefined();
-      expect(sentence.includes(word!.toLowerCase()), `${key} is not named`).toBe(true);
+    // six: the one disclosure whose job is to say what the check skipped was
+    // itself skipping two. It is derived from WORKING_STATE_COLLECTIONS now,
+    // so this asserts the derivation reaches the sentence rather than
+    // re-listing the nouns — a list in the test would be the same second
+    // copy that caused the drift.
+    const sentence = REPLAY_EXCLUSIONS.join(" ");
+    expect(WORKING_STATE_COLLECTIONS.length).toBeGreaterThan(0);
+    for (const c of WORKING_STATE_COLLECTIONS) {
+      expect(sentence.includes(c.plural), `${c.key} is not named`).toBe(true);
     }
+    expect(sentence).toContain("close-memo versions");
+  });
+
+  it("keeps the enumerated collections in step with the workspace itself", () => {
+    // The compile-time guard in workspace.ts is the real one; this is the
+    // runtime cross-check, because a type-level assertion can be defeated by
+    // a cast and this cannot. Every array-valued field of a fresh workspace
+    // must be a collection the list knows about, and vice versa.
+    const derived = new Set(
+      Object.entries(ws)
+        .filter(([, value]) => Array.isArray(value))
+        .map(([key]) => key),
+    );
+    const listed = new Set<string>(WORKING_STATE_COLLECTIONS.map((c) => c.key));
+    expect([...derived].sort()).toEqual([...listed].sort());
   });
 });
 
@@ -317,8 +320,17 @@ describe("demo reset", () => {
     expect(result.cleared.memoVersions).toBe(2);
     expect(ws.memoVersions).toHaveLength(0);
     // A reset that silently kept or dropped state is indistinguishable from
-    // one that did the opposite, so the count travels in the audit detail too.
+    // one that did the opposite, so the counts travel in the audit detail too.
+    //
+    // Asserted through `describeWorkingState` rather than against a literal:
+    // a literal here would pin the wording instead of the behaviour, and this
+    // test previously did exactly that — it kept passing the phrase "2 memo
+    // versions" after the sentence had become the shared one, which is the
+    // "a test that pins a literal keeps a defect green" shape.
     const reset = ws.audit.list().find((e) => e.action === "DEMO_RESET");
-    expect(reset?.detail).toContain("2 memo versions");
+    expect(reset?.detail).toContain(describeWorkingState(result.cleared));
+    // …and the sentence really does carry this collection's count, or the
+    // assertion above would hold against a phrase that never mentions it.
+    expect(describeWorkingState(result.cleared)).toContain("2 close-memo versions");
   });
 });

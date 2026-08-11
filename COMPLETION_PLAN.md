@@ -241,7 +241,7 @@ Stage A needs **none** of these. Everything below gates Stage B and later.
 | **D9** ✅ **APPROVED with D5** | PPV: honest zero-PPV display vs seeded variance. | **Seed a small non-blocking variance** under D5; must remain match-level, never a 16th exception. |
 | **D10** | Export (CSV + print) — absent from the brief, P0 in the critique. | **Build it.** Read-only, `QueryService`-only, role-scoped. |
 | **D11** | Single in-memory workspace shared by all visitors. | **Out of scope this pass**; documented. Revisit only if the demo needs per-session isolation. |
-| **D12** | `/assumptions`. | **Remove from nav** in Stage A; fold its content into Methodology in Stage F. |
+| **D12** ✅ **SUPERSEDED** (Stage F) | `/assumptions`. | **Removed from nav** in Stage A. Stage F found there was **nothing to fold**: no commit in the repo's history ever contained a file under `apps/web/app/assumptions/`, and no design prompt ever specified the screen — it was a nav entry pointing at the generic "not designed yet" placeholder. Methodology supersedes it. The judgements the product actually makes are on `/methodology`'s Judgements tab as **derivation provenance**, beside the figures they move; there is no separate assumptions surface and should not be one. |
 
 Two standing guardrails inherited from `QA_RELEASE_GATE.md`: no screen may juxtapose the
 CD-0512/CD-0513 warehouse count rows with the EXC-001 delivery timeline (that juxtaposition is what
@@ -633,11 +633,15 @@ the two exported functions are projections over it. A Methodology page explainin
 therefore cannot describe a rule the close did not run. `explainReadiness` is deliberately NOT part
 of `CloseRunResult`.
 
-**D12's premise was thinner than it read.** `/assumptions` never had content — no commit in the
-repo's history ever contained a file under `apps/web/app/assumptions/`, and no design prompt ever
+**D12 is superseded, not satisfied.** `/assumptions` never had content — no commit in the repo's
+history ever contained a file under `apps/web/app/assumptions/`, and no design prompt ever
 specified the screen; it was a nav entry pointing at the generic "not designed yet" placeholder.
-What folded in is the assumptions the product actually holds, which were scattered across
-seventeen constants and thirteen prose statements, plus `docs/04`'s three principles.
+There was nothing to fold. The first version of the Methodology page carried an "Assumptions" tab
+and a panel of `docs/04` principles anyway, which was the dead page's framing surviving its
+content; **both were removed** (owner's call, 2026-08-11). What remains is the register of
+judgements the product actually makes, on a tab called **Judgements**, sitting beside the figures
+those judgements move — because an assumption a reader cannot find next to the number it changes
+is one nobody can check. There is no separate assumptions surface and there should not be one.
 
 **The memo is management's prose and the close's figures, and never the reverse.** The editor holds
 a title and a body only; the position panel is read from the services layer on every render, so the
@@ -652,10 +656,25 @@ and `outputHash` are all captured before drafting and issuing and compared after
 no PBC item is titled "memo". Drafting and issuing are separate permissions (`memo.draft`,
 `memo.issue`) — a preparer may write the memo and may not put management's name to it.
 
-**`REPLAY_EXCLUSIONS` was already stale and is now walked rather than written.** Its working-state
-line named four collections while the workspace held six; it now names all seven, and a test
-enumerates the workspace's own array-valued working-state keys so a new collection fails there
-rather than going quietly unmentioned.
+**`REPLAY_EXCLUSIONS` was already stale, and the fix is structural rather than a corrected
+sentence.** Its working-state line named four collections while the workspace held six — the one
+disclosure whose entire job is to say what the reproducibility check skipped was itself skipping
+two, and had been since the close loop landed.
+
+Correcting the sentence would have left the shape that caused it: a hand-written enumeration kept
+in step with a data structure by memory, in four places (what Reset Demo clears, what it reports
+clearing, what the audit trail records it cleared, and the exclusion line). So the four collapsed
+into **`WORKING_STATE_COLLECTIONS`** in `packages/services/src/workspace.ts`, typed against the
+array-valued keys of `Workspace` itself. Omitting a collection is now a **compile** error
+(`UnlistedWorkingState` stops being `never`), verified by removing one and watching typecheck
+fail; `memo.test.ts` cross-checks the list against a live workspace at runtime, because a
+type-level assertion can be defeated by a cast and that one cannot.
+
+It also fixed a wording defect the same enumeration was hiding: the reset report hard-coded every
+plural, which read correctly only because the demo baseline clears zero of everything. The first
+time a reader actually did one piece of work it said "1 comments". The nouns now agree with their
+counts, from one helper the audit log and the screen share, so the log and the page cannot
+describe one reset two ways.
 
 **The refusal path had no UI test anywhere in the repo.** Every refusal was proved at the service
 layer; nothing asserted that a screen renders one, so a handler that dropped `setResult` and

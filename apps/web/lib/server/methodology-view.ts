@@ -36,13 +36,6 @@ import { getWorkspace, makeContext, roleLabel } from "./workspace";
  * This module formats and labels. It sums nothing.
  */
 
-/** The principles the demo's assumptions are held to (docs/04). */
-const PRINCIPLES: readonly string[] = [
-  "Visible uncertainty over hidden certainty.",
-  "Configuration over guessing.",
-  "Evidence over assumption.",
-];
-
 const PROVENANCE_LABELS: Readonly<Record<string, string>> = {
   SPECIFIED: "Specified",
   AUTHORED: "Authored",
@@ -266,7 +259,7 @@ export function buildMethodologyData(
       { key: "matrix", label: "Accounting Matrix", count: String(matrixRows.length) },
       {
         key: "interpretations",
-        label: "Assumptions",
+        label: "Judgements",
         count: String(interpretationRows.length),
       },
     ],
@@ -368,8 +361,7 @@ export function buildMethodologyData(
       rows: interpretationRows,
       policyValues: m.policyValues,
       replayExclusions: [...m.replayExclusions],
-      principles: PRINCIPLES,
-      note: "Every judgement this product makes that no source document dictates, read from the constant that holds it. Where a reader disagrees with one, the basis beside it is the thing to disagree with — not the label. Policy values are recorded in the close policy and hashed into the run; changing one is a policy version change.",
+      note: "Every judgement this product makes that no source document dictates, read from the constant that holds it. Where a reader disagrees with one, the basis beside it is the thing to disagree with — not the label. This is part of how a figure is arrived at, which is why it sits here rather than on a page of its own: an assumption nobody can find beside the number it moves is one nobody can check.",
     },
   };
 }

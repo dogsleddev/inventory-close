@@ -1463,7 +1463,6 @@ export interface MethodologyData {
       readonly governs: string;
     }[];
     readonly replayExclusions: readonly string[];
-    readonly principles: readonly string[];
     readonly note: string;
   } | null;
 }

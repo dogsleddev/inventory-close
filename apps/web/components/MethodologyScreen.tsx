@@ -345,32 +345,6 @@ export function MethodologyScreen({
 
               {tab === "interpretations" && data.interpretations !== null ? (
                 <>
-                  <Panel decision>
-                    <PanelHead
-                      title="What this demo assumes"
-                      sub="The standard these assumptions are held to."
-                    />
-                    <div style={{ padding: "14px 18px" }}>
-                      <ul
-                        className="icg-soft"
-                        style={{
-                          fontSize: "12px",
-                          lineHeight: 1.7,
-                          margin: 0,
-                          paddingLeft: "18px",
-                        }}
-                      >
-                        {data.interpretations.principles.map((p) => (
-                          <li key={p}>{p}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="icg-panel-foot">
-                      <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
-                        {data.interpretations.note}
-                      </span>
-                    </div>
-                  </Panel>
                   <Panel>
                     <PanelHead
                       title="Authored judgements"
@@ -415,6 +389,11 @@ export function MethodologyScreen({
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                    <div className="icg-panel-foot">
+                      <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+                        {data.interpretations.note}
+                      </span>
                     </div>
                   </Panel>
                   <Panel>

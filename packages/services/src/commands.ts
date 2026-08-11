@@ -20,8 +20,10 @@ import {
   MEMO_ISSUE_PERMISSION,
 } from "./memo.js";
 import {
+  describeWorkingState,
   nextInstant,
   resetWorkspace,
+  workingStateCounts,
   type Comment,
   type Draft,
   type EvidenceRequest,
@@ -498,32 +500,20 @@ export function createCommandService(ws: Workspace) {
     resetDemo(ctx: ServiceContext) {
       authorize(ctx.user, DEMO_RESET_PERMISSION, "demo reset is a controlled operation");
       const at = nextInstant(ws);
-      const cleared = {
-        comments: ws.comments.length,
-        drafts: ws.drafts.length,
-        submittedEvidence: ws.submittedEvidence.length,
-        reviews: ws.reviews.length,
-        // The close loop's working state. Reported because a reset that
-        // silently discarded a management conclusion would be the one thing
-        // this report exists to prevent.
-        conclusions: ws.conclusions.length,
-        evidenceRequests: ws.evidenceRequests.length,
-        // Including issued versions. A memo is management's own statement
-        // about the close, so a reset that silently discarded one is exactly
-        // as bad as a reset that silently discarded a conclusion.
-        memoVersions: ws.memoVersions.length,
-        period: ws.period.state,
-      };
+      // Counted from the one list of working-state collections, so a reset
+      // cannot silently discard a collection this report does not mention.
+      // That matters most for the ones somebody authored — a management
+      // conclusion or an issued memo — which is exactly what this report
+      // exists to prevent losing quietly.
+      const counts = workingStateCounts(ws);
+      const cleared = { ...counts, period: ws.period.state };
       resetWorkspace(ws);
       audit(ctx, "DEMO_RESET", "WORKSPACE", at, {
         priorState: cleared.period,
         newState: ws.period.state,
         detail:
           `dataset ${ws.dataset.manifest.datasetVersion} rebuilt; run ${ws.close.runManifest.runId}; ` +
-          `working state cleared: ${cleared.comments} comments, ${cleared.drafts} drafts, ` +
-          `${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews, ` +
-          `${cleared.conclusions} conclusions, ${cleared.evidenceRequests} evidence requests, ` +
-          `${cleared.memoVersions} memo versions`,
+          `working state cleared: ${describeWorkingState(counts)}`,
       });
       return {
         aggregates: ws.close.aggregates,

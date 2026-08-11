@@ -5,7 +5,11 @@ import {
   runClose,
   type CloseRunResult,
 } from "@icg/rules";
-import { PBC_DEPENDENCIES, pbcDependencyHash } from "./workspace.js";
+import {
+  PBC_DEPENDENCIES,
+  pbcDependencyHash,
+  workingStateNouns,
+} from "./workspace.js";
 
 /**
  * Close integrity (stage 09) — the determinism surface behind `Reproduce
@@ -67,16 +71,16 @@ export interface ReproductionCheck {
  * does not say what it skipped invites the reader to assume it skipped
  * nothing.
  */
-export const REPLAY_EXCLUSIONS = [
+export const REPLAY_EXCLUSIONS: readonly string[] = [
   "Ask Gaurd narration (generated prose)",
-  // This line named four collections and the workspace had six; the two the
-  // close loop added were excluded in fact and unmentioned in the sentence,
-  // which is the same over-claim in reverse — a disclosure narrower than
-  // what it discloses. It now lists every working-state collection, and a
-  // test walks the workspace to keep it that way.
-  "Working state — comments, drafts, submitted evidence, reviews, management conclusions, evidence requests and close-memo versions",
+  // DERIVED from the workspace's own collections, not written beside them.
+  // This line named four while the workspace held six: the sentence whose
+  // entire job is to disclose what the check skipped was itself skipping
+  // two, and it had been wrong since the close loop landed. Naming them by
+  // hand is what made that possible, so it no longer does.
+  `Working state — ${workingStateNouns()}`,
   "The audit trail, which records what happened rather than what was derived",
-] as const;
+];
 
 /** Coverage of the equivalence check, without paying for a rebuild. */
 export function replayCoverage(): {

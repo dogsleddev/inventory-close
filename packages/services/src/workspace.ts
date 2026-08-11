@@ -170,6 +170,114 @@ export interface Workspace {
   evidenceSeq: number;
 }
 
+/* ------------------------------------------------------------------ */
+/* Working state, enumerated once                                       */
+/* ------------------------------------------------------------------ */
+
+/** Every `Workspace` field that is a collection — i.e. all of the working state. */
+type ArrayKeys<T> = {
+  [K in keyof T]-?: T[K] extends readonly unknown[] ? K : never;
+}[keyof T];
+export type WorkingStateKey = ArrayKeys<Workspace>;
+
+/**
+ * The working-state collections: what PEOPLE did, as opposed to what the
+ * rules derived.
+ *
+ * This list is the single source for four things that used to be four
+ * hand-written enumerations of the same seven names — what Reset Demo
+ * clears, what it reports clearing, what the audit trail records it cleared,
+ * and what the reproducibility check says it does not cover. They drifted,
+ * predictably and silently: the replay exclusions named four collections
+ * while the workspace held six, so the one sentence whose whole job is to
+ * disclose what a check skipped was itself skipping two.
+ *
+ * The `ArrayKeys` constraint is what makes the coupling real rather than
+ * remembered: adding a collection to `Workspace` without adding it here is a
+ * COMPILE error (see the exhaustiveness check below), not a sentence that
+ * quietly stops being true.
+ *
+ * Each noun is carried in both numbers because these counts are rendered to
+ * a reader. The report used to hard-code every plural, which read correctly
+ * only because the demo baseline clears zero of everything — the first time
+ * somebody actually did one piece of work it said "1 comments".
+ */
+export const WORKING_STATE_COLLECTIONS = [
+  { key: "comments", singular: "comment", plural: "comments" },
+  { key: "drafts", singular: "draft", plural: "drafts" },
+  {
+    key: "submittedEvidence",
+    singular: "submitted record",
+    plural: "submitted records",
+  },
+  { key: "reviews", singular: "review", plural: "reviews" },
+  {
+    key: "conclusions",
+    singular: "management conclusion",
+    plural: "management conclusions",
+  },
+  {
+    key: "evidenceRequests",
+    singular: "evidence request",
+    plural: "evidence requests",
+  },
+  {
+    key: "memoVersions",
+    singular: "close-memo version",
+    plural: "close-memo versions",
+  },
+] as const satisfies readonly {
+  key: WorkingStateKey;
+  singular: string;
+  plural: string;
+}[];
+
+/**
+ * Compile-time exhaustiveness. If a new collection is added to `Workspace`
+ * and not to the list above, `Exclude<…>` stops being `never` and this line
+ * fails to typecheck — which is the only guard that cannot be forgotten.
+ */
+type UnlistedWorkingState = Exclude<
+  WorkingStateKey,
+  (typeof WORKING_STATE_COLLECTIONS)[number]["key"]
+>;
+const _everyCollectionIsListed: UnlistedWorkingState extends never ? true : never = true;
+void _everyCollectionIsListed;
+
+/** "a, b and c" — an Oxford-free list, because these are read as prose. */
+function joinNaturally(parts: readonly string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+/** The collections by name, for a sentence that has to list all of them. */
+export function workingStateNouns(): string {
+  return joinNaturally(WORKING_STATE_COLLECTIONS.map((c) => c.plural));
+}
+
+/**
+ * The counts as a sentence fragment, each noun agreeing with its number.
+ * Shared by the audit detail and the on-screen reset report so the log and
+ * the page cannot describe one reset two ways.
+ */
+export function describeWorkingState(
+  counts: Readonly<Record<WorkingStateKey, number>>,
+): string {
+  return joinNaturally(
+    WORKING_STATE_COLLECTIONS.map((c) => {
+      const n = counts[c.key];
+      return `${n} ${n === 1 ? c.singular : c.plural}`;
+    }),
+  );
+}
+
+/** How many of each collection the workspace is holding right now. */
+export function workingStateCounts(ws: Workspace): Record<WorkingStateKey, number> {
+  const counts = {} as Record<WorkingStateKey, number>;
+  for (const c of WORKING_STATE_COLLECTIONS) counts[c.key] = ws[c.key].length;
+  return counts;
+}
+
 /**
  * What each PBC workpaper depends on (docs/10): exception ids plus keyed
  * close-state slices. When a dependency's state changes after preparation
@@ -279,12 +387,11 @@ export function resetWorkspace(ws: Workspace): void {
   ws.close = fresh.close;
   ws.evidenceGraph = fresh.evidenceGraph;
   ws.period = createPeriodMachine("OPEN");
-  ws.submittedEvidence = [];
-  ws.comments = [];
-  ws.drafts = [];
-  ws.reviews = [];
-  ws.conclusions = [];
-  ws.evidenceRequests = [];
-  ws.memoVersions = [];
+  // Every working-state collection, from the one list. A reset that missed
+  // one would leave a person's work layered over a freshly derived close and
+  // nothing would say so.
+  for (const c of WORKING_STATE_COLLECTIONS) {
+    (ws[c.key] as unknown[]).length = 0;
+  }
   ws.pbcPreparedState = preparedStateFor(ws.close);
 }

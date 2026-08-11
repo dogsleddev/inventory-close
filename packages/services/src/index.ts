@@ -10,9 +10,14 @@
 
 export {
   createWorkspace,
-  resetWorkspace,
+  describeWorkingState,
   nextInstant,
+  resetWorkspace,
+  workingStateCounts,
+  workingStateNouns,
+  WORKING_STATE_COLLECTIONS,
 } from "./workspace.js";
+export type { WorkingStateKey } from "./workspace.js";
 export type {
   Comment,
   Draft,
