@@ -94,7 +94,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Final data pass 1 | **Done** — adversarial data fleet, 10 defects fixed + category regressions (`fb496a0`) |
 | Final data pass 2 | **Done** — highlight validation, all valid/consistent; wording fixes in the close-out commit |
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
-| Remaining | **Deploy** (see §8), plus the two open P3 items in the `QA_RELEASE_GATE.md` register. |
+| Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
+| Remaining | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
 
 ### Commit history (newest first)
 
@@ -401,10 +402,22 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 register and the owner-decision register live in `QA_RELEASE_GATE.md` ("Final data
 passes"). What remains, in order:
 
-1. **Deploy**: the repo is already public at
-   **https://github.com/dogsleddev/inventory-close** (pushed 2026-08-10). For Vercel, set
-   Root Directory = `apps/web`; no environment variables exist; `apps/web/vercel.json`
-   carries the security headers.
+1. **Published and deployed — nothing owed here.** The repo is public at
+   **https://github.com/dogsleddev/inventory-close** and the site is live at
+   **https://inventory.dogsled.dev**.
+
+   Vercel setup (project `inventory-close`, team `dogsled`,
+   `prj_2gyivdsxKa4rvyFXmbkaoXiUwO1j`): **Root Directory = `apps/web`**, framework
+   `nextjs`, build/install commands left null so Vercel's pnpm-workspace defaults run.
+   Git is connected to `dogsleddev/inventory-close` with production branch `master`, so
+   **a push to `master` redeploys**. No environment variables exist; the security headers
+   come from `apps/web/vercel.json` (verified live: HSTS, `X-Frame-Options: DENY`,
+   `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
+   *Trap:* deploying with the CLI **from `apps/web` fails** — it uploads only that folder
+   and `npm install` chokes on the `workspace:*` deps. Deploy from the git source (a push,
+   or the dashboard), which builds the whole workspace with Root Directory applied.
+   All 13 routes verified 200 and the Overview renders the canonical figures.
+
    *Repo note:* the owner's Prompt Driven Development GitHub App auto-plants
    `.github/workflows/pdd-secrets-dispatch.yml` into new repos on this account. It is a
    vendor tool the owner uses deliberately, but it is **deliberately kept out of this
