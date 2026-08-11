@@ -257,8 +257,8 @@ prior one is green.
 | Stage | Scope | Baseline decisions needed |
 |---|---|---|
 | **A — Credibility** ✅ **DONE** (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) | Evidence Center; remove `/assumptions`; "How to Explore This Demo" + glossary; Overview hierarchy + 6 clickable KPIs + blockers filter; domain-aware exception lenses; coverage terminology; ownership language (rule v1.0.1); reconciliation canonical language + posted block; honest treatment of dead buttons; per-route titles, favicon, OG, `not-found`/`error`, footer, Print button. | None (D1–D4 resolved above) |
-| **B — Inventory & GL** | All Inventory master list; GL accounts view; full JE detail; subledger-to-GL polish; **CSV export route handlers**. | D7, D10 |
-| **W — Workflow verbs** | `concludeException` + `requestEvidence` + `submitEvidence` wired; live effective-state overlay; sign-off reachable at zero live blockers. | **D6** |
+| **B — Inventory & GL** ✅ **DONE** (`3a359e7`, `de41445`) | All Inventory master list; GL accounts view; full JE detail; subledger-to-GL polish; **CSV export route handlers**. | D7, D10 |
+| **W — Workflow verbs** ✅ **DONE** (`de41445`) | `concludeException` + `requestEvidence` + `submitEvidence` wired; live effective-state overlay; sign-off reachable at zero live blockers. | **D6** |
 | **C — Procurement** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. | D5, D9 |
 | **D — Costing** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. | D5 |
 | **E — Ownership & valuation lifecycle** | Custody model; consignment-in; E&O methodology; scrap & disposition. | D5 |
@@ -290,6 +290,30 @@ New regressions worth knowing about, because they pin rules rather than strings:
   (this caught a real defect in the new EXC-015 support lens during the build);
 - outstanding evidence gaps count open exceptions only;
 - every Overview KPI is a link whose accessible name names its destination.
+
+### Stage B + W outcome (2026-08-10)
+
+**758 tests across 55 files**, production build clean, baseline restored exactly by Reset Demo.
+
+Delivered: per-account GL reconciliation (1200 carries the whole difference, derived by reading
+each item's GL entries); full JE detail with account descriptions, debit/credit, drafted date,
+period adjusted, named preparer and support; CSV export for six tables through `QueryService`
+only; the All-Inventory master population with custody as a first-class derived concept; and the
+close loop — request → submit → conclude → blocker clears → sign-off — with readiness recomputed
+through the rules' own `computeReadiness` and policy.
+
+Design decisions worth remembering:
+- A conclusion is **working state layered over** the derived close, never written into it. The
+  effective-state module has no write path, so Reset Demo's restoration is structural.
+- Evidence satisfies the requirement it **names**, matched exactly. An upload never satisfies a
+  control by resembling it, and returned evidence stops satisfying anything.
+- The Overview states when it is showing a session position and quotes the baseline it moved from.
+- `scenario.ts` no longer defaults a proposal's offset account; an entry whose evidence does not
+  settle its offset throws rather than booking one side against an account nobody chose.
+
+**Still open from the audit:** the classification→GL map now exists in two places
+(`queries.ts` exported, and `glAccounts.ts`'s mirror). Both are pinned against the query service
+by tests, but they should collapse into the `INVENTORY_ACCOUNTING_MATRIX` in Stage F.
 
 ## 11. Acceptance criteria (the twenty questions)
 
