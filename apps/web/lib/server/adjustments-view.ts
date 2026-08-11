@@ -1,6 +1,7 @@
 import type { DemoUser } from "@icg/data";
+import { glAccountDescription } from "@icg/domain";
 import type { ExceptionView } from "@icg/services";
-import { formatCents } from "../format";
+import { formatCents, formatDate } from "../format";
 import type {
   AdjustmentCard,
   AdjustmentLineRow,
@@ -10,6 +11,7 @@ import type {
 import { statusView } from "../workflow-view";
 import { attempt } from "./data";
 import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { sourceLabel } from "./humanize";
 import { ROLE_LABELS, getQueries, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -22,6 +24,25 @@ import { ROLE_LABELS, getQueries, makeContext, roleLabel } from "./workspace";
  */
 
 const roleName = (role: string): string => ROLE_LABELS[role] ?? role;
+
+/**
+ * The evidence behind the exception an entry answers, so the workpaper can
+ * be traced without leaving the card. Only records the caller may see reach
+ * this list — the services redact before it is built.
+ */
+function evidenceRefs(
+  queries: ReturnType<typeof getQueries>,
+  ctx: ReturnType<typeof makeContext>,
+  view: ExceptionView | undefined,
+): readonly { id: string; title: string; src: string }[] {
+  if (view === undefined) return [];
+  const context = gatherExceptionContext(queries, ctx, view);
+  return context.evidence.slice(0, 6).map((e) => ({
+    id: e.id,
+    title: e.title,
+    src: e.sourceSystem !== undefined ? sourceLabel(e.sourceSystem) : "—",
+  }));
+}
 
 export function buildAdjustmentsData(
   user: DemoUser,
@@ -60,12 +81,22 @@ export function buildAdjustmentsData(
     return id;
   };
 
+  // The period an entry adjusts is the close's, not the draft date's: these
+  // are drafted in January against the year-end being closed, so the
+  // reconciliation's own balance-sheet date is the honest answer.
+  const periodLabel =
+    recon !== undefined ? `Balance-sheet date ${formatDate(recon.asOf)}` : "—";
+
   const cards: AdjustmentCard[] = register.entries.map((entry) => {
     const view = exceptions.find((e) => e.exception.id === entry.exceptionId);
     const proposal = entry.proposal;
     const lines: AdjustmentLineRow[] =
       proposal?.lines.map((line) => ({
         account: line.account,
+        // The account's own description, so a reviewer is not asked to know
+        // the chart of accounts by heart. Unknown codes render bare rather
+        // than being given a description this product cannot vouch for.
+        accountDescription: glAccountDescription(line.account) ?? null,
         memo: line.memo,
         amount: formatCents(Math.abs(line.amountCents)),
         // Sign convention comes from the domain: positive is a debit.
@@ -95,12 +126,25 @@ export function buildAdjustmentsData(
               balance: formatCents(proposal.imbalanceCents),
               balanced: proposal.balanced,
               preparer: roleName(proposal.preparedByRole),
+              preparedByName: proposal.preparedByName ?? null,
+              proposedAt: proposal.proposedAt !== undefined ? formatDate(proposal.proposedAt) : null,
+              period: periodLabel,
               reviewer: roleName(proposal.reviewerRole),
               approval: proposal.approved ? "Approved" : "Not approved",
               approvalRequirement: proposal.approvalRequirement,
+              // A workpaper a reviewer cannot trace is not support. These are
+              // the evidence records behind the exception this entry answers.
+              evidence: evidenceRefs(queries, ctx, view),
+              postingStatus: "Not posted in NetSuite — no write path exists",
             }
           : null,
       undraftedReason: proposal === undefined ? (entry.undraftedReason ?? null) : null,
+      // Where no entry exists, the offset is the open question — never an
+      // account picked to make the entry balance.
+      offsetRequirement:
+        proposal === undefined
+          ? "Offset account: Accounting Review Required — the evidence on file does not establish which account carries the other side."
+          : null,
       posted: "NOT POSTED",
       drawerId: drawerFor(view),
       href: `/exceptions/${entry.exceptionId}`,

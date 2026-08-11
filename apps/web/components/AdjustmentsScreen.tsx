@@ -175,8 +175,21 @@ export function AdjustmentsScreen({
                           <tbody>
                             {card.entry.lines.map((line, i) => (
                               <tr key={`${line.account}-${i}`}>
-                                <td className="icg-mono" style={{ fontSize: "11px" }}>
-                                  {line.account}
+                                <td>
+                                  <span className="icg-mono" style={{ fontSize: "11px" }}>
+                                    {line.account}
+                                  </span>
+                                  {/* The account's description, so a reviewer
+                                      does not have to know the chart of
+                                      accounts by heart. */}
+                                  {line.accountDescription !== null ? (
+                                    <span
+                                      className="icg-quiet"
+                                      style={{ display: "block", fontSize: "10px" }}
+                                    >
+                                      {line.accountDescription}
+                                    </span>
+                                  ) : null}
                                 </td>
                                 <td style={{ fontSize: "11.5px" }}>{line.memo}</td>
                                 <td style={{ fontSize: "11px", letterSpacing: "0.04em" }}>
@@ -196,9 +209,23 @@ export function AdjustmentsScreen({
                                 : `Out of balance by ${card.entry.balance}`,
                               warn: !card.entry.balanced,
                             },
-                            { k: "Prepared by", v: card.entry.preparer, warn: false },
+                            {
+                              k: "Drafted",
+                              v: card.entry.proposedAt ?? "Date not recorded",
+                              warn: card.entry.proposedAt === null,
+                            },
+                            { k: "Period adjusted", v: card.entry.period, warn: false },
+                            {
+                              k: "Prepared by",
+                              v:
+                                card.entry.preparedByName !== null
+                                  ? `${card.entry.preparedByName} · ${card.entry.preparer}`
+                                  : card.entry.preparer,
+                              warn: false,
+                            },
                             { k: "Reviewer", v: card.entry.reviewer, warn: false },
                             { k: "Approval", v: card.entry.approval, warn: true },
+                            { k: "NetSuite", v: card.entry.postingStatus, warn: false },
                           ].map((row) => (
                             <div key={row.k} className="icg-proposal-meta-row">
                               <dt className="icg-label">{row.k}</dt>
@@ -215,6 +242,24 @@ export function AdjustmentsScreen({
                             </div>
                           ))}
                         </dl>
+                        {/* Support, on the workpaper. A reviewer should not
+                            have to leave the entry to find what it rests on. */}
+                        {card.entry.evidence.length > 0 ? (
+                          <div style={{ marginTop: "9px" }}>
+                            <div className="icg-label" style={{ marginBottom: "4px" }}>
+                              SUPPORT
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                              {card.entry.evidence.map((e) => (
+                                <span key={e.id} className="icg-chip-inline">
+                                  {e.src}
+                                  <span className="icg-chip-inline-div" aria-hidden />
+                                  <span className="icg-chip-inline-id">{e.title}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
                         <p
                           className="icg-quiet"
                           style={{ fontSize: "10.5px", lineHeight: 1.5, margin: "9px 0 0" }}
@@ -231,6 +276,16 @@ export function AdjustmentsScreen({
                           <div>
                             <div className="icg-state-title">No entry drafted</div>
                             <div className="icg-state-note">{card.undraftedReason}</div>
+                            {/* The offset is the open question, never an
+                                account chosen to make the entry balance. */}
+                            {card.offsetRequirement !== null ? (
+                              <div
+                                className="icg-state-note"
+                                style={{ color: "var(--ember)", marginTop: "5px" }}
+                              >
+                                {card.offsetRequirement}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </div>

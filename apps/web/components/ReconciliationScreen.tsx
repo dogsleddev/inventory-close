@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
+import type { GlAccountsData } from "../lib/server/recon-view";
 import type { ProcurementCard, ReconciliationData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
@@ -31,7 +32,12 @@ export function ReconciliationScreen({
   setRoleAction,
 }: {
   shell: ShellData;
-  data: ReconciliationData;
+  /**
+   * The financial tab carries the per-account table alongside the bridge.
+   * Its shape is exported from the builder that assembles it (recon-view),
+   * so the two cannot drift.
+   */
+  data: ReconciliationData & { glAccounts: GlAccountsData | null };
   /** `?tab=` deep link (stage 09); an unknown value falls back to the default. */
   initialTab?: string | undefined;
   setRoleAction: (userId: string) => Promise<void>;
@@ -376,6 +382,13 @@ export function ReconciliationScreen({
                     <AuditDetails rows={data.financial.audit} />
                   </div>
                 </Panel>
+
+                {/* The same reconciliation, cut by account. The bridge above
+                    says the difference is explained; this says where it
+                    sits — and keeps 1290 out of the gross figures. */}
+                {data.glAccounts !== null ? (
+                  <GlAccountsTable accounts={data.glAccounts} />
+                ) : null}
               </>
             ) : null}
 
@@ -836,6 +849,205 @@ export function ReconciliationScreen({
         )}
       </main>
     </AppShell>
+  );
+}
+
+/**
+ * Inventory GL accounts — one row per account, beneath the bridge.
+ *
+ * Two deliberate choices. The Status column uses the close-control capsule
+ * rather than `StatusCapsule`: this is a per-account RECONCILIATION state,
+ * and an exception workflow status is a different kind of claim that must
+ * not borrow its look. And the reserve sits in its own block below the
+ * table, out of the totals, because it is not part of gross inventory.
+ */
+function GlAccountsTable({ accounts }: { accounts: GlAccountsData }) {
+  return (
+    <Panel>
+      <PanelHead
+        title="Inventory GL accounts"
+        sub="The same reconciliation, cut by account. The bridge above reconciles inventory in total; this is which account carries the difference."
+        right={<span className="icg-nstag">{accounts.summary}</span>}
+      />
+      <div className="icg-table-wrap">
+        <table className="icg-table">
+          <thead>
+            <tr>
+              <th scope="col">Account</th>
+              <th scope="col">Description</th>
+              <th scope="col" className="icg-cell-right">
+                Subledger
+              </th>
+              <th scope="col" className="icg-cell-right">
+                GL
+              </th>
+              <th scope="col" className="icg-cell-right">
+                Difference
+              </th>
+              <th scope="col">Related Exceptions</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {accounts.rows.map((row) => (
+              <tr key={row.account}>
+                <td>
+                  <span className="icg-mono" style={{ fontSize: "11px", fontWeight: 600 }}>
+                    {row.account}
+                  </span>
+                </td>
+                <td>
+                  <span style={{ fontSize: "12px" }}>{row.description}</span>
+                  <span
+                    className="icg-quiet"
+                    style={{ display: "block", fontSize: "10.5px", marginTop: "2px" }}
+                  >
+                    {row.basis}
+                  </span>
+                </td>
+                <td className="icg-cell-money">{row.subledger}</td>
+                <td className="icg-cell-money">{row.gl}</td>
+                <td
+                  className="icg-cell-money"
+                  style={
+                    row.differenceEmber ? { color: "var(--ember)", fontWeight: 600 } : undefined
+                  }
+                >
+                  {row.difference}
+                </td>
+                <td>
+                  {row.exceptionsNote !== null ? (
+                    <span
+                      className={row.exceptionsEmber ? "" : "icg-soft"}
+                      style={{
+                        fontSize: "11.5px",
+                        ...(row.exceptionsEmber
+                          ? { color: "var(--ember)", fontWeight: 600 }
+                          : {}),
+                      }}
+                    >
+                      {row.exceptionsNote}
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "6px",
+                        alignItems: "center",
+                      }}
+                    >
+                      {row.exceptions.map((exc) => (
+                        <Link
+                          key={exc.id}
+                          href={exc.href}
+                          className="icg-mono"
+                          style={{
+                            fontSize: "10.5px",
+                            fontWeight: 600,
+                            color: exc.open ? "var(--ember)" : "var(--frost)",
+                          }}
+                        >
+                          {exc.id}
+                        </Link>
+                      ))}
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <span
+                    className={`icg-close-capsule${row.state.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
+                  >
+                    <span aria-hidden style={{ fontSize: "9px" }}>
+                      {row.state.glyph}
+                    </span>
+                    {row.state.label}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            <tr style={{ background: "var(--panel-2)", fontWeight: 600 }}>
+              <td>
+                <span className="icg-quiet" aria-hidden>
+                  —
+                </span>
+              </td>
+              <td>
+                <span style={{ fontSize: "12px" }}>{accounts.total.label}</span>
+                <span
+                  className="icg-quiet"
+                  style={{ display: "block", fontSize: "10.5px", marginTop: "2px" }}
+                >
+                  {accounts.total.detail}
+                </span>
+              </td>
+              <td className="icg-cell-money">{accounts.total.subledger}</td>
+              <td className="icg-cell-money">{accounts.total.gl}</td>
+              <td
+                className="icg-cell-money"
+                style={
+                  accounts.total.differenceEmber
+                    ? { color: "var(--ember)", fontWeight: 600 }
+                    : undefined
+                }
+              >
+                {accounts.total.difference}
+              </td>
+              <td>
+                <span className="icg-soft" style={{ fontSize: "11.5px" }}>
+                  —
+                </span>
+              </td>
+              <td>
+                <span className="icg-soft" style={{ fontSize: "11.5px" }}>
+                  —
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style={{ padding: "13px 18px 15px", display: "grid", gap: "10px" }}>
+        {accounts.unattributed !== null ? (
+          <p style={{ margin: 0, fontSize: "11.5px", color: "var(--ember)", fontWeight: 600 }}>
+            {accounts.unattributed}
+          </p>
+        ) : null}
+        {accounts.reserve !== null ? (
+          <div className="icg-subpanel" style={{ padding: "11px 13px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div className="icg-label">{accounts.reserve.label}</div>
+              <span className="icg-num" style={{ fontSize: "14px", fontWeight: 600 }}>
+                {accounts.reserve.value}
+              </span>
+            </div>
+            <p
+              className="icg-soft"
+              style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 0" }}
+            >
+              {accounts.reserve.note}
+            </p>
+          </div>
+        ) : null}
+        <div className="icg-subpanel" style={{ padding: "11px 13px" }}>
+          <div className="icg-label">WHAT STATUS MEANS HERE</div>
+          <p
+            className="icg-soft"
+            style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 0" }}
+          >
+            {accounts.stateNote}
+          </p>
+        </div>
+      </div>
+    </Panel>
   );
 }
 

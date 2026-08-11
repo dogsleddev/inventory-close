@@ -19,7 +19,14 @@ import type {
   TransactionChain,
   VendorBillFixture,
 } from "@icg/domain";
-import { isResolvedStatus } from "@icg/domain";
+import {
+  custodyTypeFor,
+  daysBetween,
+  isoDate,
+  isResolvedStatus,
+  type InventoryOwnershipStatus,
+  type PhysicalCustodyType,
+} from "@icg/domain";
 import type {
   AdjustmentRegisterOut,
   BlockerOut,
@@ -350,7 +357,14 @@ function documentTotalCents(
   return total;
 }
 
-const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
+/**
+ * Accounting classification → GL account (CANONICAL_SPEC §5). Exported so
+ * every surface that needs a unit's account reads THIS map: the per-unit
+ * Financial Life answer and the all-inventory master list are the same
+ * answer, and a second copy is how two screens start disagreeing about
+ * which account holds a unit.
+ */
+export const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
   FINISHED_HARDWARE: "1200",
   THIRD_PARTY: "1200",
   DAMAGED: "1200",
@@ -360,6 +374,248 @@ const CLASSIFICATION_GL: Readonly<Record<string, string>> = {
   LOANER: "1220",
   RMA: "1230",
 };
+
+/** The count line that last covered a unit, and how it covered it. */
+export interface InventoryMasterCount {
+  readonly planId: string;
+  readonly countType: string;
+  /** The count plan's snapshot instant — when the floor was observed. */
+  readonly countedAt: string;
+  readonly variance: number;
+  /**
+   * UNIT: a count line names this serial. SKU_LOCATION: the unit's SKU and
+   * location were counted as a quantity, so the line covers this unit
+   * without identifying it — the honest state for non-serialized stock.
+   */
+  readonly basis: "UNIT" | "SKU_LOCATION";
+  readonly countDetailId?: string | undefined;
+}
+
+/**
+ * How an exception reaches a unit. `identifiesUnit` is the whole point of
+ * this shape: SERIAL and CUSTODIAN are attributes OF THIS UNIT, so a
+ * finding carrying them names it. SKU / SKU_AND_LOCATION findings name a
+ * population the unit sits in — CNT-VAR-001 flags an accessory bin, not the
+ * individual accessories inside it — and a surface that rendered those as
+ * "this unit is under exception" would assert something no rule concluded.
+ */
+export interface InventoryMasterExceptionRef {
+  readonly exceptionId: string;
+  readonly basis: "SERIAL" | "CUSTODIAN" | "SKU_AND_LOCATION" | "SKU";
+  readonly identifiesUnit: boolean;
+  readonly open: boolean;
+  readonly blocker: boolean;
+  readonly status: string;
+  readonly assertions: readonly string[];
+}
+
+/** One book unit, with every column of the master list derived. */
+export interface InventoryMasterRow {
+  readonly serial: string;
+  readonly sku: string;
+  readonly product: string;
+  /** False for accessory SKUs counted by quantity (docs/06). */
+  readonly serialized: boolean;
+  /**
+   * Always 1. The listing stores one row per unit — accessories included,
+   * under minted -U#### ids — so the master list never groups: 1,500 units
+   * are 1,500 rows.
+   */
+  readonly quantity: number;
+  readonly location: string;
+  readonly custodian?: string | undefined;
+  readonly custodyType: PhysicalCustodyType;
+  readonly classification: string;
+  readonly glAccount: string;
+  readonly ownership: InventoryOwnershipStatus;
+  readonly unitCostCents: number;
+  /** Unit cost × quantity. Gross: no reserve is allocated to any unit. */
+  readonly carryingCents: number;
+  readonly acquiredAt?: string | undefined;
+  readonly lastMovementAt?: string | undefined;
+  /** Days from last movement to the balance-sheet date; absent = unknown. */
+  readonly ageDays?: number | undefined;
+  /** The valuation workspace's own aging bucket key — never a second scale. */
+  readonly ageBandKey?: string | undefined;
+  readonly lastCount?: InventoryMasterCount | undefined;
+  readonly exceptions: readonly InventoryMasterExceptionRef[];
+}
+
+export interface InventoryMasterOut {
+  /** The balance-sheet date every age on this population is measured to. */
+  readonly asOf: string;
+  readonly bookUnits: number;
+  /** Aging buckets as the valuation workspace defines them. */
+  readonly ageBands: readonly { readonly key: string; readonly label: string }[];
+  readonly rows: readonly InventoryMasterRow[];
+}
+
+/**
+ * A finding whose subjects are a stock population rather than a unit or a
+ * document. Transaction-subject findings are excluded deliberately:
+ * RMA-DUP-001 carries the returned unit's SKU as context for a duplicated
+ * POSTING, and joining every unit of that SKU to it would manufacture a
+ * population the rule never evaluated.
+ */
+function isPopulationFinding(subjects: {
+  serials?: readonly string[] | undefined;
+  skus?: readonly string[] | undefined;
+  transactionNumbers?: readonly string[] | undefined;
+  custodian?: string | undefined;
+}): boolean {
+  return (
+    (subjects.serials?.length ?? 0) === 0 &&
+    (subjects.transactionNumbers?.length ?? 0) === 0 &&
+    subjects.custodian === undefined &&
+    (subjects.skus?.length ?? 0) > 0
+  );
+}
+
+/**
+ * The all-inventory master population. Every column is derived from state
+ * the close already holds — this adds no fixture, no rule and no figure.
+ */
+function buildInventoryMaster(ws: Workspace): InventoryMasterOut {
+  const d = ws.dataset;
+  const asOf = ws.close.valuation.asOf;
+  const asOfDate = isoDate(asOf);
+  const productBySku = new Map(d.skus.map((s) => [s.code, s.description]));
+  const serializedBySku = new Map(d.skus.map((s) => [s.code, s.serialized ?? true]));
+  const planSnapshotAt = new Map(d.countPlans.map((p) => [p.id, p.snapshotAt]));
+
+  // Count coverage, indexed once: a per-unit scan over 906 count lines would
+  // be quadratic against a 1,500-row population.
+  const countsBySerial = new Map<string, CountResultFixture[]>();
+  const countsBySkuLocation = new Map<string, CountResultFixture[]>();
+  for (const result of d.countResults) {
+    if (result.serial !== undefined) {
+      const list = countsBySerial.get(result.serial) ?? [];
+      list.push(result);
+      countsBySerial.set(result.serial, list);
+      continue;
+    }
+    const key = `${result.sku}|${result.location}`;
+    const list = countsBySkuLocation.get(key) ?? [];
+    list.push(result);
+    countsBySkuLocation.set(key, list);
+  }
+  const latestCount = (
+    lines: readonly CountResultFixture[] | undefined,
+    basis: "UNIT" | "SKU_LOCATION",
+  ): InventoryMasterCount | undefined => {
+    if (lines === undefined || lines.length === 0) return undefined;
+    const at = (line: CountResultFixture) => planSnapshotAt.get(line.countPlanId) ?? "";
+    const line = lines.reduce((best, next) => (at(next) > at(best) ? next : best));
+    return {
+      planId: line.countPlanId,
+      countType: line.countType,
+      countedAt: at(line),
+      variance: line.variance,
+      basis,
+      ...(line.externalCountDetailId !== undefined
+        ? { countDetailId: line.externalCountDetailId }
+        : {}),
+    };
+  };
+
+  const blockerIds = new Set(ws.close.blockers.map((b) => b.exceptionId));
+  const bands = ws.close.valuation.aging;
+  // The SAME bucket assignment the valuation workspace made, over the same
+  // bucket definitions it emitted — including its rule that an age below the
+  // first floor belongs to the youngest bucket rather than to nothing.
+  const bandFor = (age: number): string | undefined =>
+    (
+      bands.find(
+        (b) =>
+          b.fromDays !== null && age >= b.fromDays && (b.toDays === null || age <= b.toDays),
+      ) ?? bands[0]
+    )?.key;
+
+  const rows: InventoryMasterRow[] = d.inventoryUnits.map((unit) => {
+    const ageDays =
+      unit.lastMovementAt !== undefined
+        ? daysBetween(isoDate(unit.lastMovementAt), asOfDate)
+        : undefined;
+
+    const exceptions: InventoryMasterExceptionRef[] = [];
+    for (const exception of ws.close.exceptions) {
+      const subjects = exception.finding.subjects;
+      const basis: InventoryMasterExceptionRef["basis"] | undefined =
+        subjects.serials?.includes(unit.serial) === true
+          ? "SERIAL"
+          : subjects.custodian !== undefined && subjects.custodian === unit.custodian
+            ? "CUSTODIAN"
+            : isPopulationFinding(subjects) &&
+                subjects.skus?.includes(unit.sku) === true &&
+                ((subjects.locations?.length ?? 0) === 0 ||
+                  subjects.locations?.includes(unit.location) === true)
+              ? (subjects.locations?.length ?? 0) > 0
+                ? "SKU_AND_LOCATION"
+                : "SKU"
+              : undefined;
+      if (basis === undefined) continue;
+      exceptions.push({
+        exceptionId: exception.id,
+        basis,
+        identifiesUnit: basis === "SERIAL" || basis === "CUSTODIAN",
+        open: !isResolvedStatus(exception.status),
+        blocker: blockerIds.has(exception.id),
+        status: exception.status,
+        assertions: exception.finding.assertions,
+      });
+    }
+
+    // Ownership is derived, never stored. Presence on the year-end listing
+    // IS the company's recorded assertion of ownership, so the default is
+    // COMPANY_OWNED; an OPEN exception that asserts RIGHTS_AND_OBLIGATIONS
+    // over this identified unit puts that assertion under review. Gaurd
+    // never concludes ownership — it reports the assertion and its disputes.
+    const disputed = exceptions.some(
+      (e) =>
+        e.open && e.identifiesUnit && e.assertions.includes("RIGHTS_AND_OBLIGATIONS"),
+    );
+
+    return {
+      serial: unit.serial,
+      sku: unit.sku,
+      product: productBySku.get(unit.sku) ?? unit.sku,
+      serialized: serializedBySku.get(unit.sku) ?? true,
+      quantity: 1,
+      location: unit.location,
+      ...(unit.custodian !== undefined ? { custodian: unit.custodian } : {}),
+      custodyType: custodyTypeFor({
+        location: unit.location,
+        classification: unit.classification,
+        ...(unit.custodian !== undefined ? { custodian: unit.custodian } : {}),
+      }),
+      classification: unit.classification,
+      glAccount: CLASSIFICATION_GL[unit.classification] ?? "1200",
+      ownership: disputed
+        ? ("UNDER_REVIEW" as const)
+        : ("COMPANY_OWNED" as const),
+      unitCostCents: unit.unitCostCents,
+      carryingCents: unit.unitCostCents,
+      ...(unit.acquiredAt !== undefined ? { acquiredAt: unit.acquiredAt } : {}),
+      ...(unit.lastMovementAt !== undefined ? { lastMovementAt: unit.lastMovementAt } : {}),
+      ...(ageDays !== undefined ? { ageDays } : {}),
+      ...(ageDays !== undefined ? { ageBandKey: bandFor(ageDays) } : {}),
+      ...(() => {
+        const count =
+          latestCount(countsBySerial.get(unit.serial), "UNIT") ??
+          latestCount(countsBySkuLocation.get(`${unit.sku}|${unit.location}`), "SKU_LOCATION");
+        return count !== undefined ? { lastCount: count } : {};
+      })(),
+      exceptions,
+    };
+  });
+
+  return {
+    asOf,
+    bookUnits: rows.length,
+    ageBands: bands.map((b) => ({ key: b.key, label: b.label })),
+    rows,
+  };
+}
 
 export function createQueryService(ws: Workspace) {
   return {
@@ -402,6 +658,22 @@ export function createQueryService(ws: Workspace) {
     listInventoryUnits(ctx: ServiceContext) {
       authorize(ctx.user, "close.read");
       return ws.dataset.inventoryUnits;
+    },
+
+    /**
+     * The all-inventory master population (COMPLETION_PLAN §4) — the same
+     * rows `listInventoryUnits` returns, with every column a close surface
+     * needs derived beside them: custody, ownership, GL account, age
+     * against the valuation workspace's own buckets, count coverage, and
+     * exception linkage that distinguishes a unit a finding NAMES from a
+     * population it merely sits in.
+     *
+     * Read-only and behind the same permission as `listInventoryUnits`: it
+     * exposes no fact the unit listing did not already contain.
+     */
+    listInventoryMaster(ctx: ServiceContext): InventoryMasterOut {
+      authorize(ctx.user, "close.read");
+      return buildInventoryMaster(ws);
     },
 
     /**

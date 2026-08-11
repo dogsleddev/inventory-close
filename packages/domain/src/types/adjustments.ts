@@ -20,6 +20,19 @@ export interface ProposedAdjustment {
   readonly preparedBy?: UserId;
   readonly reviewedBy?: UserId;
   readonly approved?: boolean;
+  /**
+   * When the entry was drafted. An optional additive field (versioned
+   * data-model enhancement, plan D5 scope): an entry a reviewer cannot date
+   * is not a workpaper anyone can act on. Recorded from the event that
+   * drafted it — never invented at render time.
+   *
+   * The accounting PERIOD is deliberately absent here. These entries are
+   * drafted after year-end and adjust the period being closed, so the draft
+   * date does not imply the period; the surface reads that from the close.
+   */
+  readonly proposedAt?: string;
+  /** The person the source event names as having drafted it. */
+  readonly preparedByName?: string;
 }
 
 /** A proposed JE must balance to zero in integer cents. */

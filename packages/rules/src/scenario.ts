@@ -106,7 +106,17 @@ export function applyScenarioEvents(
         if (!subjectsOverlap(event, exc)) continue;
         const amount = event.subjects.amountCents ?? 0;
         const account = event.subjects.glAccount ?? "1200";
-        const offset = PROPOSAL_OFFSET_ACCOUNT[exc.finding.ruleId] ?? "5110";
+        // The offset is established by the rule that identified the item.
+        // It is NEVER guessed: an entry whose evidence does not settle its
+        // offset is a question for accounting review, and a silent default
+        // would have booked one side of it against an account nobody chose.
+        const offset = PROPOSAL_OFFSET_ACCOUNT[exc.finding.ruleId];
+        if (offset === undefined) {
+          throw new Error(
+            `No offset account is established for ${exc.finding.ruleId}; ` +
+              `an entry for ${id} cannot be drafted without one.`,
+          );
+        }
         const proposal: ProposedAdjustment = {
           id: event.subjects.transactionNumbers?.[0] ?? `PROP-${event.id}`,
           relatedExceptionId: exceptionId(id),
@@ -116,6 +126,14 @@ export function applyScenarioEvents(
             { account: glAccountCode(offset), memo: "Offset", amount: cents(-amount) },
           ],
           approved: false,
+          // Recorded from the event that drafted it, so the workpaper's date
+          // and preparer are the real ones. The PERIOD is deliberately not
+          // set here: these entries are drafted in January and adjust the
+          // FY2026 balance sheet, so the calendar year of the draft is the
+          // wrong answer. The period belongs to the close, and the surface
+          // reads it from there.
+          proposedAt: event.occurredAt,
+          ...(event.recordedBy !== undefined ? { preparedByName: event.recordedBy } : {}),
         };
         if (!isBalanced(proposal)) {
           throw new Error(`Proposed adjustment ${proposal.id} does not balance`);

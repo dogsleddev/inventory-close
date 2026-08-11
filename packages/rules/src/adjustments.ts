@@ -1,5 +1,9 @@
 import type { ProposedAdjustment } from "@icg/domain";
-import { adjustmentImbalance, isResolvedStatus } from "@icg/domain";
+import {
+  GROSS_INVENTORY_ACCOUNT_CODES,
+  adjustmentImbalance,
+  isResolvedStatus,
+} from "@icg/domain";
 import type { DerivedException } from "./exceptions.js";
 import type { ReconciliationOut } from "./reconciliation.js";
 
@@ -32,6 +36,10 @@ export interface ProposedAdjustmentOut {
   readonly relatedExceptionId?: string;
   readonly description: string;
   readonly lines: readonly AdjustmentLineOut[];
+  /** When the entry was drafted; absent when the source event did not say. */
+  readonly proposedAt?: string;
+  /** Who drafted it, as the source event names them. */
+  readonly preparedByName?: string;
   /** Balanced proposals net to zero; the imbalance is reported, not assumed. */
   readonly imbalanceCents: number;
   readonly balanced: boolean;
@@ -71,8 +79,13 @@ export interface AdjustmentRegisterOut {
   readonly identifiedEffectCents: number;
 }
 
-/** GL accounts carrying gross inventory (1290 is the reserve, held out). */
-const INVENTORY_ACCOUNTS = new Set(["1200", "1210", "1220", "1230"]);
+/**
+ * GL accounts carrying gross inventory (1290 is the reserve, held out).
+ * Derived from the one chart of accounts in @icg/domain, so this set and
+ * every surface that names an account cannot disagree about which accounts
+ * are inventory.
+ */
+const INVENTORY_ACCOUNTS = new Set(GROSS_INVENTORY_ACCOUNT_CODES);
 
 const PREPARER_ROLE = "ACCOUNTING_MANAGER";
 const REVIEWER_ROLE = "CONTROLLER";
@@ -85,6 +98,10 @@ function toProposalOut(proposal: ProposedAdjustment): ProposedAdjustmentOut {
       ? { relatedExceptionId: String(proposal.relatedExceptionId) }
       : {}),
     description: proposal.description,
+    ...(proposal.proposedAt !== undefined ? { proposedAt: proposal.proposedAt } : {}),
+    ...(proposal.preparedByName !== undefined
+      ? { preparedByName: proposal.preparedByName }
+      : {}),
     lines: proposal.lines.map((line) => ({
       account: String(line.account),
       memo: line.memo,

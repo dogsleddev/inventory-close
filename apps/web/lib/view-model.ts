@@ -621,6 +621,8 @@ export interface FinancialBridgeData {
 /** One line of a proposed journal entry. Debit/credit is stated in words. */
 export interface AdjustmentLineRow {
   readonly account: string;
+  /** Null when the chart of accounts does not describe this code. */
+  readonly accountDescription: string | null;
   readonly memo: string;
   readonly amount: string;
   readonly side: "DEBIT" | "CREDIT";
@@ -642,11 +644,20 @@ export interface AdjustmentCard {
     readonly balance: string;
     readonly balanced: boolean;
     readonly preparer: string;
+    /** Who the source event names as drafting it; null when unrecorded. */
+    readonly preparedByName: string | null;
+    readonly proposedAt: string | null;
+    /** The period the entry adjusts — the close's, not the draft date's. */
+    readonly period: string;
     readonly reviewer: string;
     readonly approval: string;
     readonly approvalRequirement: string;
+    readonly evidence: readonly { id: string; title: string; src: string }[];
+    readonly postingStatus: string;
   } | null;
   readonly undraftedReason: string | null;
+  /** Present only where no entry is drafted: the offset is the open question. */
+  readonly offsetRequirement: string | null;
   readonly posted: string;
   readonly drawerId: string | null;
   readonly href: string;

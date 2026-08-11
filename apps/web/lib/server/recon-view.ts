@@ -1,8 +1,10 @@
 import type { DemoUser } from "@icg/data";
 import type { TransactionChain } from "@icg/domain";
+import { getGlAccountReconciliation } from "@icg/services";
 import type {
   AdjustmentRegisterOut,
   ExceptionView,
+  GlAccountReconciliationOut,
   ProcurementDetail,
   ReconciliationOut,
 } from "@icg/services";
@@ -27,8 +29,8 @@ import {
   gatherExceptionContext,
 } from "./exception-view";
 import { countOutcome, countOutcomeDetail } from "./financial-life-view";
-import { locationLabel, titleCase } from "./humanize";
-import { getQueries, makeContext, roleLabel } from "./workspace";
+import { classificationLabel, locationLabel, titleCase } from "./humanize";
+import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
  * Reconciliation — the Financial bridge (stage 07) plus the Procurement
@@ -268,6 +270,145 @@ function buildFinancialBridge(
   };
 }
 
+/* ---------------- Inventory GL accounts (Financial tab) ---------------- */
+
+/**
+ * One inventory GL account. Every figure is formatted from
+ * `getGlAccountReconciliation()`; nothing on this row is added up here.
+ */
+export interface GlAccountRowView {
+  readonly account: string;
+  readonly description: string;
+  /** Units and the accounting classifications that land in this account. */
+  readonly basis: string;
+  readonly subledger: string;
+  readonly gl: string;
+  readonly difference: string;
+  readonly differenceEmber: boolean;
+  readonly exceptions: readonly { id: string; href: string; open: boolean }[];
+  /** Rendered instead of links when no reconciling item sits here. */
+  readonly exceptionsNote: string | null;
+  readonly exceptionsEmber: boolean;
+  /**
+   * Per-account RECONCILIATION state — whether this account's recorded
+   * balance agrees with its subledger. Deliberately not a `StatusView`: the
+   * capsule component carries exception workflow status, and these two must
+   * never be read as the same kind of claim.
+   */
+  readonly state: { label: string; glyph: string; variant: "frost" | "aurora" };
+}
+
+export interface GlAccountsData {
+  readonly summary: string;
+  readonly rows: readonly GlAccountRowView[];
+  readonly total: {
+    readonly label: string;
+    readonly detail: string;
+    readonly subledger: string;
+    readonly gl: string;
+    readonly difference: string;
+    readonly differenceEmber: boolean;
+  };
+  readonly reserve: {
+    readonly label: string;
+    readonly value: string;
+    readonly note: string;
+  } | null;
+  /** Rendered only when an item cannot be placed on a single account. */
+  readonly unattributed: string | null;
+  readonly stateNote: string;
+}
+
+const GL_ACCOUNT_STATES: Readonly<
+  Record<string, { label: string; glyph: string; variant: "frost" | "aurora" }>
+> = {
+  RECONCILED: { label: "Reconciled", glyph: "✓", variant: "aurora" },
+  OPEN_RECONCILING_ITEMS: { label: "Open reconciling items", glyph: "◆", variant: "frost" },
+  DIFFERENCE_NOT_EXPLAINED: { label: "Difference not explained", glyph: "○", variant: "frost" },
+};
+
+/**
+ * The per-account cut of the same reconciliation the bridge above states in
+ * total. The bridge answers "does inventory tie to the GL"; this answers
+ * "which account is out, and what is sitting in it".
+ *
+ * Two things this function will not do. It never nets 1290 into the gross
+ * accounts — the reserve is reported on its own, out of the totals, exactly
+ * as the deterministic core holds it. And the Status column is a
+ * reconciliation state, never an exception workflow status: nothing here
+ * concludes anything, and no row on this table can become a blocker.
+ */
+function buildGlAccounts(
+  view: GlAccountReconciliationOut,
+  identifiedCount: number,
+): GlAccountsData {
+  const units = (n: number) => `${n.toLocaleString("en-US")} unit${n === 1 ? "" : "s"}`;
+  const rows: GlAccountRowView[] = view.accounts.map((account) => {
+    const classes = account.classifications.map(classificationLabel).join(", ");
+    return {
+      account: account.account,
+      description: account.description,
+      basis: `${units(account.unitCount)} · ${classes}`,
+      subledger: formatCents(account.subledgerCents),
+      gl: formatCents(account.glCents),
+      difference: formatCents(account.differenceCents),
+      differenceEmber: account.differenceCents !== 0,
+      exceptions: account.items.map((item) => ({
+        id: item.relatedExceptionId,
+        href: `/exceptions/${item.relatedExceptionId}`,
+        open: item.exceptionOpen,
+      })),
+      // "None" is a checked result, not an assumption: the items were
+      // matched to accounts through their GL entries, and none reached here.
+      exceptionsNote:
+        account.items.length > 0
+          ? null
+          : account.differenceCents === 0
+            ? "None"
+            : "None identified",
+      exceptionsEmber: account.items.length === 0 && account.differenceCents !== 0,
+      state: GL_ACCOUNT_STATES[account.state] ?? {
+        label: account.state,
+        glyph: "○",
+        variant: "frost",
+      },
+    };
+  });
+
+  const totalUnits = view.accounts.reduce((n, a) => n + a.unitCount, 0);
+
+  return {
+    summary: `${view.accounts.length} gross accounts${
+      view.reserve !== null ? ` · ${view.reserve.account} separate` : ""
+    }`,
+    rows,
+    total: {
+      label: "Gross inventory",
+      detail: `${units(totalUnits)} across ${view.accounts.length} accounts — the totals the bridge above reconciles`,
+      subledger: formatCents(view.subledgerCents),
+      gl: formatCents(view.grossGlCents),
+      difference: formatCents(view.differenceCents),
+      differenceEmber: view.differenceCents !== 0,
+    },
+    reserve:
+      view.reserve === null
+        ? null
+        : {
+            label: `${view.reserve.description} · ${view.reserve.account}`,
+            value: formatCents(view.reserve.glCents),
+            note: "A recorded credit balance with no unit-level subledger behind it. It is excluded from the gross bridge and is never netted into the accounts above; this period's reserve conclusion is held in Valuation.",
+          },
+    unattributed:
+      view.unattributedItems.length === 0
+        ? null
+        : `${view.unattributedItems.length} of the ${identifiedCount} identified items (${view.unattributedItems
+            .map((i) => i.relatedExceptionId)
+            .join(", ")}) could not be placed on a single account from their GL entries, and are not included in any row above.`,
+    stateNote:
+      "Status is a reconciliation state — whether an account's recorded balance agrees with its subledger. It is not an exception workflow status and it concludes nothing: the related exceptions are the same items the bridge above lists, each with its own management conclusion.",
+  };
+}
+
 /**
  * Document totals arrive from `getProcurementDetail().totals` — the web app
  * formats money, it never adds it up. An absent total renders as absent.
@@ -303,7 +444,7 @@ export function buildReconciliationData(
   user: DemoUser,
   serialQuery: string,
   correlationId: string,
-): ReconciliationData {
+): ReconciliationData & { glAccounts: GlAccountsData | null } {
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
   const role = roleLabel(user);
@@ -322,6 +463,7 @@ export function buildReconciliationData(
       serialTab: { query: "", notable: [], card: null, notFound: null },
       drawers: {},
       records: {},
+      glAccounts: null,
     };
   }
 
@@ -332,6 +474,9 @@ export function buildReconciliationData(
   const register = attempt(() => queries.getAdjustmentRegister(ctx));
   const manifest = attempt(() => queries.getRunManifest(ctx));
   const ruleExecutions = attempt(() => queries.getRuleExecutions(ctx)) ?? [];
+  // The per-account cut is a read-only projection over the same workspace,
+  // authorized on the same permission key as every other close read.
+  const glAccounts = attempt(() => getGlAccountReconciliation(getWorkspace(), ctx));
   const periodEnd = recon?.asOf;
 
   const drawers: Record<string, ExceptionDrawerData> = {};
@@ -945,5 +1090,9 @@ export function buildReconciliationData(
     serialTab: { query: trimmed, notable, card, notFound },
     drawers,
     records,
+    glAccounts:
+      glAccounts !== undefined
+        ? buildGlAccounts(glAccounts, recon?.items.length ?? glAccounts.accounts.length)
+        : null,
   };
 }

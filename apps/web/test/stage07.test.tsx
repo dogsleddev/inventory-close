@@ -158,7 +158,9 @@ describe("Adjustments register", () => {
     renderAdjustments();
     // Scoped to the register: the shell header also names the acting role.
     const panel = screen.getByText("Proposal register").closest("section") as HTMLElement;
-    expect(within(panel).getAllByText("Accounting Manager")).toHaveLength(
+    // Preparer now reads "<person> · <role>" where the source event names a
+    // person — a workpaper says who drafted it, not only which role could.
+    expect(within(panel).getAllByText(/Accounting Manager/)).toHaveLength(
       register.draftedCount,
     );
     expect(within(panel).getAllByText("Controller")).toHaveLength(register.draftedCount);
