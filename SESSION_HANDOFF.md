@@ -2,91 +2,125 @@
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
 re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
-**product-completion pass** (HEAD `546fe3a`).
+**product-completion pass** (HEAD `32f6856`), with Stage D as the next task.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
 ---
 
-## 0a. START HERE — the product-completion pass is in progress
+## 0a. START HERE — Stage D (Costing) is the next task
 
-The original ten stages shipped and deployed. The work in flight now is a different
-thing: a **product-completion and accounting-credibility pass** driven by the owner's
-brief plus an independent 15-agent critique of the live site.
-
-**Read `COMPLETION_PLAN.md` at the repo root first.** It holds the current-state audit,
-the staged sequence A→H, the golden-test traps, and the D1–D12 decision register with
-each decision's outcome. Everything in §0 below still applies (it describes the ten
-stages and the locked baseline) — but the *next task* is in the plan, not in §8.
-
-**State after Stage C:**
+The original ten stages shipped and deployed. The work in flight is a **product-completion
+and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
+critique of the live site. `COMPLETION_PLAN.md` holds the current-state audit, the staged
+sequence A→H, the golden-test traps, and the D1–D12 decision register with each outcome.
+Everything in §0 below still applies (it describes the ten stages and the locked baseline) —
+but the *next task* is here, not in §8.
 
 | Stage | State |
 |---|---|
 | **A — Credibility** | ✅ Done (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) |
 | **B — Inventory & GL** | ✅ Done (`3a359e7`, `de41445`) |
 | **W — Workflow verbs** | ✅ Done (`de41445`) |
-| **C — Procurement** | ✅ Done — and it carried the **one** D5 regeneration for C/D/E |
-| D — Costing · E — Ownership/valuation lifecycle | Not started — **their fixtures already exist**, no dataset bump left to do |
+| **C — Procurement** | ✅ Done (`2cfb216`) — and it carried the **one** D5 regeneration for C/D/E |
+| **Export affordance** | ✅ Done (`32f6856` + follow-up) — every population now has a way out |
+| **D — Costing** | ⬅ **NEXT.** Fixtures already ship; no dataset work |
+| E — Ownership & valuation lifecycle | Not started — fixtures already ship |
 | F — Management outputs · G — Ask Gaurd tools · H — QA | Not started |
 
-**802 tests across 58 files passing**; typecheck and lint clean; production build clean
-(16 routes, including `/procurement` and `/api/export/[table]`). The locked financial
-baseline has not moved — verified in a browser, not only in tests.
+**833 tests across 59 files passing**; typecheck, lint and production build clean (16 routes).
+The locked financial baseline has not moved and is verified in a browser, not only in tests:
+1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
+7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
 
-**Dataset is now `FY2026-DEMO-v1.2.0`** (hash `9f39105d…`). D5 is spent: `costComponents`,
-`periodCosts`, `consignmentInUnits`, `dispositions` and the seeded PPV all shipped in one
-regeneration. **Stages D and E build surfaces over fixtures that are already there.** If you
-find yourself about to regenerate, you are about to do the thing D5 exists to prevent.
+Before touching anything: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`, and
+**stop any `pnpm dev` server first** — running a build alongside one corrupts its cache and
+the next request 500s on a missing vendor chunk.
 
-**Owner decisions already approved (2026-08-10), recorded in `COMPLETION_PLAN.md` §9:**
+---
 
-- **D5** — dataset bump **FY2026-DEMO-v1.1.0 → v1.2.0** is approved for the new fixtures.
-  Stages C, D and E all need it: do it as **ONE regeneration** covering costing components,
-  R&D period costs, consignment-in, the scrapped serial and the PPV variance — not five
-  separate bumps. Update the `dataset_version` pin in `golden/baseline.json`,
-  `packages/data/test/controls.test.ts` and `packages/rules/test/replay.test.ts` in the
-  same change. Aggregates must stay byte-identical; only version/hash identity moves.
-- **D6** — a management conclusion may **not** resolve an exception whose rule still has a
-  required record missing. Already implemented; do not weaken it.
-- **D9** — seed a small non-blocking PPV variance under D5; it must stay a match-level
-  attribute and never become a 16th exception.
+### Stage D — what to build
 
-**The next task is Stage D (Costing)**: the standard cost stack, fixed/variable/period
-classification, R&D, and COGS state. `packages/data/fixtures/costComponents.json` and
-`periodCosts.json` are already generated and validated — Stage D is a services projection
-plus a screen, with no fixture work at all.
+Scope from `COMPLETION_PLAN.md` §10: **the standard cost stack, fixed/variable/period cost
+classification, R&D, and COGS state.**
 
-Two things Stage C established that Stage D inherits:
+**There is no data work.** D5 was spent by Stage C in a single regeneration to
+**`FY2026-DEMO-v1.2.0`** (hash `9f39105d…`). Everything Stage D needs already exists,
+generated and validated:
 
-- `costComponents` sums **exactly** to each SKU's locked unit cost, and a regression pins it.
-  The capitalized side of "which costs belong in inventory" is that stack; the expensed side
-  is `periodCosts`, every row carrying its basis. `periodCosts` must never reach `glBalances`.
-- The pattern for a new read-only projection is `packages/services/src/procurement.ts`:
-  a module taking `(ws, ctx)`, authorizing on `close.read`, scoping documents with
-  `makeRecordScope`, exported from `index.ts`, called from a `lib/server/*-view.ts`. It
-  changes no rule, so no golden figure can move.
+- `packages/data/fixtures/costComponents.json` — 70 rows, five components per SKU
+  (direct material, direct labour, manufacturing overhead, inbound freight, import duty).
+  Each SKU's components sum **exactly** to its locked unit cost; the generator throws
+  otherwise and `packages/data/test/stageC-fixtures.test.ts` pins it.
+- `packages/data/fixtures/periodCosts.json` — 6 FY2026 pools kept OUT of inventory (R&D,
+  prototype materials, qualification, idle capacity, non-inventory freight), each carrying
+  the basis for keeping it out, on expense GL accounts.
 
-**The export affordance is DONE** (done after Stage C, before Stage D). All seven tables are
-reachable from their screens; the three population screens with no table say so in the same
-slot; `/user-guide` and the README describe it. `apps/web/test/export-affordance.test.tsx`
-pins the rules — a table nothing links to fails the suite, and so does a link offered to a role
-the handler would refuse.
+**If you find yourself about to regenerate the dataset, stop — that is the thing D5 exists to
+prevent.** Stage E's fixtures (`consignmentInUnits`, `dispositions`) are there too.
 
-Four things it established that later stages inherit:
+**The two halves of the question.** Stage D answers *which costs belong in inventory*:
+`costComponents` is the capitalized side — the cost already inside the $4,800,000 subledger,
+decomposed. `periodCosts` is the expensed side. `periodCosts` must **never** reach
+`glBalances`: `buildReconciliation` sums every GL balance except 1290, so a period-cost row
+landing there moves the locked gross GL without a line of rule code changing.
 
-- **A screen only ever states its own capability.** The Overview briefly claimed "each section
-  below exports its own", which is false three ways. A screen cannot check another screen's
-  capability, so it may not assert one.
-- **`ExportCsvLink` takes a `scopeNote`** for the case where the file is broader than the view
-  (`/cutoff` shows 2 of 15 exceptions and downloads all 15). It is tied to the link by
-  `aria-describedby`, not left loose beside it.
-- **The auditor "Scope" header line is per-table**, not per-role. It used to appear on every
-  file an auditor took, including the four where their file is byte-identical to a Controller's.
-  Measured withholding today: evidence 22 of 31 records, pbc 16 versions, procurement 1 order.
-- **A count line that did not name a unit may not report that unit's variance.**
-  `InventoryMasterCount.basis` distinguishes the two, and the inventory file now carries
-  separate `Unit variance` and `SKU / bin line variance` columns.
+**COGS state is nearly free** — `O2C-CHAIN-001` already computes inventory-relief presence per
+chain (`COMPLETION_PLAN.md` §4).
+
+**The pattern to follow**, established by Stage B (`glAccounts.ts`) and Stage C
+(`procurement.ts`):
+
+1. `packages/services/src/costing.ts` — a read-only projection taking `(ws, ctx)`, calling
+   `authorize(ctx.user, "close.read")`, scoping any source document with `makeRecordScope`,
+   exported from `packages/services/src/index.ts`. **Change no rule**: every completion-pass
+   stage so far has been a projection over state the close already produced, which is why no
+   golden figure has moved.
+2. `apps/web/lib/server/costing-view.ts` — formats and labels; never sums money.
+3. `apps/web/components/CostingScreen.tsx` + `apps/web/app/costing/page.tsx`.
+4. `apps/web/lib/nav.ts` — a 14th entry. `apps/web/test/shell.test.tsx` pins the label array
+   and must be updated with it.
+5. **An export table.** Every screen owning a population has one; `apps/web/test/export-affordance.test.tsx`
+   fails if a new screen has none, or if `EXPORT_TABLES` gains one nothing links to. Add the
+   branch in `export-csv.ts`, the `ExportCsvLink` on the screen (gated on `!data.restricted`),
+   and the entry in that test's `SCREENS` array.
+6. Regressions that pin rules rather than strings.
+
+**Traps that have cost real time in this pass** (§7 has the full list):
+
+- `WORKSPACE_SHAPE` in `apps/web/lib/server/workspace.ts` must be bumped for a new `Workspace`
+  field **or a new dataset version**. The dev server caches across module reloads, tests build
+  a fresh workspace each time, so neither failure is catchable by the suite.
+- Three test files mock `../app/actions` with a factory; a component importing a new action
+  fails there until the factory lists it.
+- `.click()` does not flush React state in jsdom — use `userEvent`.
+- A `.tsx` test without the `// @vitest-environment jsdom` docblock fails obscurely.
+- Money figures in a CSV must be bound to their label in tests. `toContain("7")` passes on
+  almost any file; assert the value sits in the row its label heads.
+
+**Verify in a browser before calling it done.** Two defects this pass shipped past a green
+suite and were caught only by opening the page: a card showing two different amounts under a
+footnote calling them matched, and a cached workspace serving an empty population.
+
+---
+
+### The standing rule this pass keeps re-learning
+
+**A surface may never make a claim more precise than what it enforces, and an absence must be
+stated rather than implied.** Every adversarial review has confirmed this root cause more than
+any other. Recent instances: an auditor "Scope" line chosen by ROLE and printed on four files
+where nothing was withheld; a CSV column asking the raw fixture for a field it does not have
+and emitting 1,500 empty cells; the Overview claiming "each section below exports its own";
+a count line covering a SKU and location reported as that unit's own variance.
+
+Two habits that follow from it, and are worth keeping:
+
+- **Watch for coincidences.** All 7 open exceptions are blockers on this baseline, so a test
+  counting 7 BLOCKER cells passes against a column derived from `open`. When the data cannot
+  distinguish two sources, pin the SOURCE and say in the test why.
+- **Mutation-test your own regressions.** Six confirmed findings across the last two reviews
+  were defects in brand-new tests, found by deliberately breaking the source to see what
+  stayed green. Do that before shipping a test.
 
 ---
 
@@ -110,7 +144,7 @@ Before anything else:
    accessibility, demo states, and the mockup defects in §9a you must correct rather than
    replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **802 tests across 58 files passing**. **Stop any `pnpm dev` server first** (see §7).
+   **833 tests across 59 files passing**. **Stop any `pnpm dev` server first** (see §7).
 
 **All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
@@ -145,9 +179,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **802 tests across 58 files passing** (was 628/47 at the original release; the completion
+- **833 tests across 59 files passing** (was 628/47 at the original release; the completion
   pass added the rest); typecheck, lint, and production build all green — **16 routes**, now
-  including `/procurement` and `/api/export/[table]`.
+  including `/procurement` and `/api/export/[table]`, which serves ten tables.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
@@ -182,7 +216,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
-| **Completion pass A/B/W/C** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass A/B/W/C + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
 | **Completion pass D–H** | **Not started.** Stage D is next; its fixtures already ship. |
 
 ### Commit history (newest first)

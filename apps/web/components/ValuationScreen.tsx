@@ -6,7 +6,7 @@ import type { ShellData, ValuationData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
-  ExportUnavailableNote,
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -62,7 +62,13 @@ export function ValuationScreen({
               FY2026 · balance-sheet date Dec. 31, 2026
             </div>
           </div>
-          <ExportUnavailableNote reason="The valuation workspace has no export table in this build." />
+          {data.restricted || data.reserve === null ? null : (
+            <ExportCsvLink
+              table="valuation"
+              label="the valuation workspace"
+              scopeNote="Aging, review populations, damaged units and the reserve position."
+            />
+          )}
         </div>
 
         {data.restricted || data.reserve === null ? (

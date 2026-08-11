@@ -7,7 +7,7 @@ import { recordSignOff } from "../app/actions";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
-  ExportUnavailableNote,
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -66,12 +66,22 @@ export function OverviewScreen({
               FY2026 · balance-sheet date Dec. 31, 2026 · synthetic demo dataset
             </div>
           </div>
-          {/* Says only what is true of THIS screen. An earlier draft added
-              "each section below exports its own", which is false: Physical
-              Count and Valuation carry the opposite sentence, Cutoff and
-              Ownership export the whole exception queue rather than their
-              own view, and no Overview panel exports at all. */}
-          <ExportUnavailableNote reason="The overview has no export table; it summarises figures each section derives." />
+          {data.restricted || data.gate === undefined ? null : (
+            <ExportCsvLink
+              table="close-summary"
+              label="the close summary"
+              // Says only what is true of THIS screen, for THIS reader. An
+              // earlier draft claimed "each section below exports its own",
+              // which a screen cannot check and which was false three ways —
+              // and then still promised the PBC package to the three roles
+              // whose panel beside it is withheld.
+              scopeNote={
+                data.pbcPanel?.restricted === true
+                  ? "A summary. Each population it counts is exported in full by its own screen, except the PBC package, which is outside your role's scope."
+                  : "A summary. Each population it counts is exported in full by its own screen."
+              }
+            />
+          )}
         </div>
 
         {data.restricted || data.gate === undefined ? (

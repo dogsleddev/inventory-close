@@ -392,9 +392,35 @@ Closing it took more than seven links, because a link is a claim:
   that only counts whole orders. Two of the confirmed findings were defects in the *new tests*,
   caught by mutation — both now kill the mutation that exposed them.
 
-Deliberately still open: `/physical-count` and `/valuation` have no export table. Their
-populations are reachable in four of the seven existing files and via PRINT, and the screens
-say so, so this is a stated absence rather than a gap.
+**Then the stated absences were closed too** (owner's call, before Stage D). `/physical-count`,
+`/valuation` and the Overview gained their own tables — `physical-count`, `valuation` and
+`close-summary` — so **ten tables now cover every population the product owns**, and
+`ExportUnavailableNote` was removed with the last case for it. `/user-guide` is the only
+navigable route without an export, correctly: it is prose, not a population.
+
+A second 25-agent pass over those three tables confirmed a further set, all fixed. Every one
+was the same shape — **a file quietly narrower than the record it claims to carry**:
+
+- the movements section dropped the `quantity` and `reason` its schema requires, leaving five
+  of six movements with neither an identity nor a size;
+- the test-count section dropped `observation` and `traced`, making the floor-to-sheet
+  discovery behind EXC-004 indistinguishable from the 41 clean tests;
+- count plans dropped `nextCountDue`, which the file's own overdue indicators cite;
+- `COUNT SUMMARY` is year-end-only while the sections below span all 13 plans, and nothing
+  said so — "4 variance rows" sat above a results block holding more;
+- the valuation file headed a location-selected section "DAMAGED AND RMA UNITS" (it contains
+  no RMA units), dropped the per-row assessment state so a resolved exception read as open,
+  and listed two review populations that are the identical 30 units with nothing saying the
+  rows are lenses rather than segments;
+- close-summary told Warehouse, Supply Chain and Legal to fetch the `pbc` table, which
+  answers those three roles 403, and called an equal-weight mean "weighted" thirty lines under
+  a table whose own column is headed Weight (%).
+
+Four more were defects in the new tests, all found by mutation: a whole-file search for
+"Not serial-identified" satisfied by a different section, a reserve-amount test that only
+checked for presence (a derived reserve passed the whole suite), figures asserted with bare
+`toContain` where two were tautologies, and a sweep asserting against an un-rendered DOM.
+Each now kills the mutation that exposed it.
 
 ## 11. Acceptance criteria (the twenty questions)
 

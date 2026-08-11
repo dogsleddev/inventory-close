@@ -170,8 +170,9 @@ Work can leave. Every screen that owns a population carries `EXPORT CSV`, served
 `/api/export/[table]` through the same authorized reads the screen uses — so an auditor's file is
 scoped exactly as their screen is, and where the file covers more than the view (the exception
 queue behind a control-domain filter, the reconciliation bridge behind its other tabs) the
-control says so. `PRINT` in the header renders any screen as a workpaper. A screen whose
-population has no export table states that rather than staying silent.
+control says so. Ten tables: close summary, inventory, procurement, physical count, valuation,
+exceptions, evidence, reconciliation, adjustments, PBC. `PRINT` in the header renders any screen
+as a workpaper.
 
 ---
 

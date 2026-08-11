@@ -289,25 +289,12 @@ export function ExportCsvLink({
   );
 }
 
-/**
- * A screen whose population has no export table says so, in the slot where
- * the button sits everywhere else.
- *
- * Silence would be the one answer this codebase already rejects — disabled
- * actions are never hidden here, they carry their reason beneath (the
- * sign-off gate is the pattern). A reader who finds EXPORT CSV on six screens
- * and nothing on the seventh has no way to tell "cannot be exported" from
- * "someone forgot". A dead button would be worse still: these are permanently
- * absent, not temporarily blocked, so there is a sentence rather than a
- * control that can never become live.
- */
-export function ExportUnavailableNote({ reason }: { reason: string }) {
-  return (
-    <div className="icg-export">
-      <span className="icg-export-note">{reason}</span>
-    </div>
-  );
-}
+/* There was an `ExportUnavailableNote` here, for screens whose population had
+   no export table — the Overview, Physical Count and Valuation. All three now
+   have one, so the component has no case left and is gone rather than kept
+   against a hypothetical. If a future screen owns a population that genuinely
+   cannot be exported, say so in the page-head slot rather than staying
+   silent: this codebase never hides an unavailable capability. */
 
 /** Source-coverage chip: a degraded source states it inside the chip. */
 export function SourceStateChip({ text }: { text: string }) {

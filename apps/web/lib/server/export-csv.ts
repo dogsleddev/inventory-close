@@ -2,6 +2,7 @@ import type { DemoUser } from "@icg/data";
 import { glAccountDescription } from "@icg/domain";
 import { getProcurementPopulations } from "@icg/services";
 import { formatCents } from "../format";
+import { attempt } from "./data";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -53,6 +54,9 @@ export const EXPORT_TABLES = [
   "evidence",
   "pbc",
   "procurement",
+  "physical-count",
+  "valuation",
+  "close-summary",
 ] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number];
@@ -105,10 +109,17 @@ const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
   // covers everything withheld would be the over-claim this table is fixing.
   procurement:
     "Auditor scope — source documents behind workpapers that have not been provided are withheld. Orders withheld in full are counted at the top of this file; an order that keeps its row loses only the cells for its own withheld documents.",
+  // The cycle-count management indicators are a MANAGEMENT risk lens and are
+  // never part of an auditor's provided support (`getCountDetail` returns an
+  // empty list for them). The file is therefore genuinely shorter, and says so.
+  "physical-count":
+    "Auditor scope — the management cycle-count risk indicators are withheld. They are a management lens, not audit support, and no other section of this file is narrowed.",
   inventory: null,
   exceptions: null,
   reconciliation: null,
   adjustments: null,
+  valuation: null,
+  "close-summary": null,
 };
 
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
@@ -523,6 +534,384 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       row([
         "Treatment",
         "Inventory is carried at standard cost, so purchase price variance is expensed in the period. No figure in this section is in the inventory subledger, the inventory accounts, or the inventory-to-GL reconciliation.",
+      ]),
+    );
+  } else if (table === "physical-count") {
+    const summary = queries.getCountSummary(ctx);
+    const detail = queries.getCountDetail(ctx);
+    // The summary is the YEAR-END count only (CANONICAL_SPEC §6); the
+    // sections below carry every plan, cycle counts included. Two different
+    // populations under one heading is how "4 variance rows" ends up beside
+    // a results block holding more, so each block names its own scope.
+    const yearEndPlans = detail.plans.filter((p) => p.countType === "YEAR_END");
+    lines.push(row(["COUNT SUMMARY — YEAR-END COUNT ONLY"]));
+    lines.push(row(["Measure", "Value", "Scope"]));
+    lines.push(row(["Count population (units)", summary.populationUnits, "Year-end count, counted locations only — not the 1,500-unit book population"]));
+    lines.push(row(["First-pass matched (units)", summary.firstPassMatchedUnits, "Year-end count"]));
+    lines.push(row(["First-pass variance rows", summary.varianceRows, "Year-end count"]));
+    lines.push(row(["Controlled movements during the count", summary.movements, "Year-end count window"]));
+    lines.push(row(["Management-selected test counts", summary.managementTests, "Year-end count"]));
+    lines.push(row(["Auditor-selected test counts", summary.auditorTests, "Year-end count"]));
+    lines.push(
+      row([
+        "Count plans in this file",
+        detail.plans.length,
+        `${yearEndPlans.length} year-end, ${detail.plans.length - yearEndPlans.length} cycle/spot — the sections below span ALL of them, so their row counts exceed the year-end figures above`,
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["COUNT PLANS — ALL PLANS"]));
+    lines.push(
+      row(["Plan", "Type", "Snapshot", "Source status", "Approved by", "Approved at", "Next count due", "Rejected reason"]),
+    );
+    for (const p of detail.plans) {
+      lines.push(
+        row([
+          p.id,
+          p.countType,
+          p.snapshotAt,
+          p.sourceStatus ?? "",
+          p.approvedBy ?? "",
+          p.approvedAt ?? "",
+          // The overdue indicators below cite this date; without it the file
+          // asserts a cell is overdue against a due date it does not contain.
+          p.nextCountDue ?? "",
+          p.rejectedReason ?? "",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["COUNT RESULTS — ALL PLANS"]));
+    lines.push(
+      row(["Plan", "Plan type", "SKU", "Location", "Bin", "Serial", "Snapshot qty", "Counted qty", "Adjusted qty", "Variance"]),
+    );
+    const planType = new Map(detail.plans.map((p) => [p.id, p.countType]));
+    for (const r of detail.results) {
+      lines.push(
+        row([
+          r.countPlanId,
+          planType.get(r.countPlanId) ?? "",
+          r.sku,
+          r.location,
+          r.bin ?? "",
+          // A count line that names no serial counted a SKU and location as a
+          // quantity. Blank would read as "this line has no serial recorded";
+          // the line genuinely does not identify one.
+          r.serial ?? "Not serial-identified",
+          r.snapshotQuantity,
+          r.countQuantity,
+          r.adjustedQuantity ?? "",
+          r.variance,
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["TEST COUNTS"]));
+    lines.push(
+      row(["ID", "Plan", "Selected by", "Selection source", "Direction", "SKU", "Location", "Bin", "Serial", "Recorded at", "Observation", "Traced"]),
+    );
+    for (const t of detail.tests) {
+      lines.push(
+        row([
+          t.id,
+          t.countPlanId,
+          // Recorded verbatim; for auditor selections this is the external
+          // auditor, never a Gaurd user. Gaurd records these, it never makes
+          // them.
+          t.selectedBy,
+          t.selectionSource,
+          t.direction,
+          t.sku,
+          t.location,
+          t.bin ?? "",
+          t.serial ?? "Not serial-identified",
+          t.recordedAt,
+          // What the tester actually saw, and whether it traced. Without
+          // these the one test that did NOT trace — the floor-to-sheet
+          // discovery behind EXC-004 — is indistinguishable from the rest.
+          t.observation,
+          t.traced ? "TRACED" : "DID NOT TRACE",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["MOVEMENTS DURING THE COUNT WINDOW"]));
+    lines.push(
+      row(["ID", "Serial", "SKU", "Quantity", "From", "To", "Moved at", "Authorized by", "Reason"]),
+    );
+    for (const m of detail.movements) {
+      lines.push(
+        row([
+          m.id,
+          // Five of the six movements name no serial. Without the quantity
+          // beside it such a row carries neither an identity nor a size.
+          m.serial ?? "Not serial-identified",
+          m.sku,
+          m.quantity,
+          m.fromLocation,
+          m.toLocation,
+          m.movedAt,
+          m.authorizedBy,
+          m.reason,
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["COUNT-LINKED INVENTORY ADJUSTMENTS"]));
+    lines.push(row(["Adjustment", "Date", "GL account", "Count plan", "Reason", "SKU", "Quantity", "Amount"]));
+    for (const a of detail.adjustments) {
+      for (const l of a.lines) {
+        lines.push(
+          row([
+            a.transactionNumber,
+            a.adjustmentDate,
+            a.glAccount,
+            a.relatedCountPlanId ?? "Not linked to a count plan",
+            a.reason,
+            l.sku,
+            l.quantity,
+            l.amountCents === undefined ? "" : formatCents(l.amountCents),
+          ]),
+        );
+      }
+    }
+    lines.push("");
+    lines.push(row(["MANAGEMENT CYCLE-COUNT INDICATORS"]));
+    if (detail.managementIndicators.length === 0) {
+      lines.push(
+        row([
+          auditor
+            ? "Withheld — a management risk lens, not audit support"
+            : "None raised on this population",
+        ]),
+      );
+    } else {
+      // These are RuleFindings, not a bespoke indicator shape. The first
+      // draft cast them to {countPlanId, kind, note} and would have written
+      // three empty cells per row — a table of blanks asserting the
+      // indicators carry nothing.
+      lines.push(
+        row(["Rule", "Rule version", "Indicator", "Why flagged", "Risk", "SKUs", "Locations"]),
+      );
+      for (const i of detail.managementIndicators) {
+        lines.push(
+          row([
+            i.ruleId,
+            i.ruleVersion,
+            i.title,
+            i.whyFlagged,
+            i.risk,
+            (i.subjects.skus ?? []).join("; "),
+            (i.subjects.locations ?? []).join("; "),
+          ]),
+        );
+      }
+    }
+    lines.push("");
+    lines.push(
+      row([
+        "Note",
+        "These are management indicators, not auditor reliance or sampling conclusions. Gaurd records the external auditor's test-count selections; it never makes them.",
+      ]),
+    );
+  } else if (table === "valuation") {
+    const v = queries.getValuation(ctx);
+    lines.push(row(["RESERVE POSITION"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Recorded reserve (GL 1290)", formatCents(v.reserve.recordedCents)]));
+    // The literal type in ValuationOut forbids a rule emitting an amount.
+    // The file must not be the place one appears.
+    lines.push(row(["This period's conclusion", v.reserve.conclusion]));
+    lines.push(row(["Basis", v.reserve.conclusionNote]));
+    lines.push(row(["Slow-moving threshold (days)", v.slowMovingAgeDays]));
+    lines.push("");
+    lines.push(row(["INVENTORY AGING"]));
+    lines.push(row(["Band", "From (days)", "To (days)", "Units", "Carrying value"]));
+    for (const b of v.aging) {
+      lines.push(
+        row([
+          b.label,
+          b.fromDays ?? "",
+          b.toDays ?? "",
+          b.units,
+          formatCents(b.carryingCents),
+        ]),
+      );
+    }
+    // Unknown age is its own row and is never folded into a band: a unit
+    // whose age cannot be established is not a fresh one.
+    lines.push(
+      row([
+        "Age not established",
+        "",
+        "",
+        v.unknownAgeUnits,
+        formatCents(v.unknownAgeCarryingCents),
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["REVIEW POPULATIONS"]));
+    lines.push(
+      row([
+        "Each row is an independent filter over the same book, so a unit can appear in more than one. These rows are lenses, not segments: do not total them.",
+      ]),
+    );
+    lines.push(row(["Population", "Basis", "Units", "Carrying value"]));
+    for (const p of v.populations) {
+      lines.push(row([p.label, p.basis, p.units, formatCents(p.carryingCents)]));
+    }
+    lines.push("");
+    // Selected by LOCATION alone — the RMA/Repair area is a different
+    // location and is NOT in this section. The heading used to say "DAMAGED
+    // AND RMA UNITS", naming a population the rows do not contain.
+    lines.push(row(["DAMAGED / HOLD UNITS"]));
+    lines.push(
+      row([
+        "Selected by location in the inventory listing. A unit appears here because of where it sits, not because an assessment is outstanding — each row states its own.",
+      ]),
+    );
+    lines.push(
+      row(["Serial", "SKU", "Carrying value", "RMA", "Reason", "Exception", "Assessment"]),
+    );
+    const exceptionsById = new Map(
+      queries.listExceptions(ctx).map((e) => [e.exception.id, e]),
+    );
+    for (const d of v.damaged) {
+      const view = d.exceptionId === undefined ? undefined : exceptionsById.get(d.exceptionId);
+      lines.push(
+        row([
+          d.serial,
+          d.sku,
+          formatCents(d.carryingCents),
+          // Absences stated, never blank: a unit with no RMA record has none,
+          // and a unit no rule evaluated has no assessment to report.
+          d.rmaId ?? "No RMA record",
+          d.reason ?? "No reason recorded",
+          d.exceptionId ?? "",
+          view === undefined
+            ? "No assessment on file"
+            : view.open
+              ? "Assessment outstanding"
+              : "Assessment concluded",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["OPEN VALUATION REVIEWS"]));
+    lines.push(row(["Exception", "Title", "Exposure", "Status", "SKUs", "Units"]));
+    for (const r of v.reserve.openReviews) {
+      lines.push(
+        row([
+          r.exceptionId,
+          r.title,
+          formatCents(r.exposureCents),
+          r.status,
+          r.skus.join("; "),
+          r.units,
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(
+      row([
+        "Note",
+        "Every population here identifies stock for review. None of them is a write-down, and the carrying values are gross exposure — never a proposed reserve. No rule in this product can emit a reserve amount.",
+      ]),
+    );
+  } else if (table === "close-summary") {
+    // The Overview's own figures. Each population below is exported IN FULL
+    // by another table; this file is the one-page management summary, and it
+    // says so rather than letting a reader take it for the whole close.
+    const readiness = queries.getCloseReadiness(ctx);
+    const recon = queries.getReconciliation(ctx);
+    const health = queries.getSourceHealth(ctx);
+    const agg = readiness.aggregates;
+    lines.push(row(["SIGN-OFF POSITION"]));
+    lines.push(row(["Measure", "Value", "Basis"]));
+    lines.push(
+      row([
+        "Sign-off blockers",
+        agg.blockerCount,
+        "Open exceptions that prevent management sign-off",
+      ]),
+    );
+    lines.push(row(["Blocker exposure", formatCents(agg.blockerExposureCents), "Open blockers only"]));
+    lines.push(
+      row([
+        "Close readiness",
+        `${agg.closeReadinessBps} bps`,
+        "A management workflow measure — not audit assurance and not a statement of financial-statement accuracy",
+      ]),
+    );
+    lines.push(row(["Readiness policy", readiness.policyVersion, "The weighting this score was computed under"]));
+    lines.push("");
+    lines.push(row(["CLOSE AREAS"]));
+    lines.push(row(["Area", "Weight (%)", "Score (hundredths of a percent)"]));
+    for (const c of readiness.categories) {
+      lines.push(row([c.label, c.weightPercent, c.scoreHundredths]));
+    }
+    lines.push("");
+    lines.push(row(["EXCEPTION POPULATION"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Designed exceptions", agg.exceptionCount]));
+    lines.push(row(["Open", agg.openExceptionCount]));
+    lines.push(row(["Resolved", agg.resolvedExceptionCount]));
+    lines.push(row(["Total designed exposure", formatCents(agg.designedExceptionExposureCents)]));
+    lines.push("");
+    lines.push(row(["BLOCKERS"]));
+    lines.push(row(["Exception", "Description", "Exposure"]));
+    for (const b of queries.getBlockers(ctx)) {
+      lines.push(row([b.exceptionId, b.description, formatCents(b.exposureCents)]));
+    }
+    lines.push("");
+    lines.push(row(["INVENTORY TO GL — GROSS"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Gross subledger", formatCents(recon.subledgerCents)]));
+    lines.push(row(["Gross GL", formatCents(recon.grossGlCents)]));
+    lines.push(
+      row([
+        recon.differenceCents >= 0 ? "GL exceeds subledger" : "Subledger exceeds GL",
+        formatCents(Math.abs(recon.differenceCents)),
+      ]),
+    );
+    lines.push(row(["Recorded reserve (1290, reconciled separately)", formatCents(recon.reserveCents)]));
+    lines.push("");
+    lines.push(row(["PBC PACKAGE"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Ready or provided", `${agg.pbcReady} of ${agg.pbcTotal}`]));
+    lines.push(row(["PBC readiness", `${agg.pbcReadinessBps} bps`]));
+    lines.push("");
+    lines.push(row(["SOURCE AND CONTROL HEALTH"]));
+    lines.push(row(["Source system", "State", "Last sync", "Note"]));
+    for (const s of health.sources) {
+      lines.push(row([s.sourceSystem, s.status, s.lastSyncAt ?? "", s.note ?? ""]));
+    }
+    // Every domain divides by the same 100 (`aggregateHealthBasisPoints`) —
+    // the nine carry EQUAL weight. "Weighted" here, thirty lines under a
+    // table whose own column is headed "Weight (%)", read as though the
+    // domains were weighted like the close areas. They are not.
+    lines.push(
+      row([
+        "Aggregate",
+        `${health.aggregateBasisPoints} bps`,
+        "",
+        "Mean across the nine source domains, each counting equally",
+      ]),
+    );
+    lines.push("");
+    // Whether THIS reader can fetch the pbc table, asked of the same
+    // authorized service that table calls rather than of a role list here.
+    // Warehouse, Supply Chain and Legal hold close.read but not pbc.read: the
+    // two counts above are the only PBC figures they ever see, and
+    // /api/export/pbc answers them 403. A note sending them there would
+    // promise an availability that does not exist.
+    const pbcReadable = attempt(() => queries.getPbcPackage(ctx)) !== undefined;
+    lines.push(
+      row([
+        "Note",
+        pbcReadable
+          ? "A summary. Every population counted here is exported in full by its own table — exceptions, reconciliation, adjustments, evidence, pbc, inventory, procurement, physical-count and valuation."
+          : "A summary. Every population counted here is exported in full by its own table — exceptions, reconciliation, adjustments, evidence, inventory, procurement, physical-count and valuation — except the PBC package, which is outside your role's scope: the two counts above are all of it you can read.",
       ]),
     );
   } else {

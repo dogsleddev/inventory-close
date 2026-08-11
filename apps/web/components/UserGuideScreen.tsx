@@ -140,7 +140,7 @@ const DOES: readonly { rule: string; note: string }[] = [
   },
   {
     rule: "Lets the work leave",
-    note: "Where a population has an export table, its screen carries an EXPORT CSV control served by the same authorized reads the screen uses — so a file is scoped to the role that asked for it, and where the file covers more than the view, the control says so. Where a population has no export table, the screen says that instead of staying silent. PRINT in the header renders any screen as a workpaper.",
+    note: "Every screen that owns a population carries an EXPORT CSV control, served by the same authorized reads the screen itself uses — so a file is scoped to the role that asked for it, and where the file covers more than the view is showing, the control says so. PRINT in the header renders any screen as a workpaper.",
   },
 ];
 

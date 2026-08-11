@@ -6,7 +6,7 @@ import type { CountTestRow, PhysicalCountData, ShellData } from "../lib/view-mod
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
-  ExportUnavailableNote,
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -91,7 +91,13 @@ export function PhysicalCountScreen({
               {data.planNote ?? "FY2026 · balance-sheet date Dec. 31, 2026"}
             </div>
           </div>
-          <ExportUnavailableNote reason="The count populations have no export table in this build." />
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="physical-count"
+              label="the count populations"
+              scopeNote="All four populations, not just this tab: plans, results, test counts and movements."
+            />
+          )}
         </div>
 
         {data.restricted ? (
