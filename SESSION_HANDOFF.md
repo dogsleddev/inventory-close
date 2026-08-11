@@ -15,9 +15,10 @@ final data passes (HEAD is the close-out commit following `fb496a0`).
 data, 49 agents, 10 defects fixed at `fb496a0`) and pass 2 (highlight-set validation,
 42 agents, all highlights valid and consistent; wording/staleness fixes in the close-out
 commit). The release gate is recorded in `QA_RELEASE_GATE.md` (no P0 open), including the
-**register of three documented spec conflicts awaiting an owner decision** — most notably
-the EXC-001 count rows forced by §6's locked 1,061/4 against §8's locked delivery
-timeline. Never resolve those by silently changing a locked value.
+**register of documented spec conflicts**: the EXC-001 count rows forced by §6's locked
+1,061/4 against §8's locked delivery timeline were **accepted by the owner (2026-08-10)
+as a documented tension** — do not "fix" them; two P3 wording splits remain open.
+Never resolve any register item by silently changing a locked value.
 
 **The next task is push public / deploy** (see §8). Before anything else:
 
@@ -399,12 +400,12 @@ passes"). What remains, in order:
 
 1. **Push public / deploy**: Vercel Root Directory = `apps/web`; no environment variables
    exist; `apps/web/vercel.json` carries the security headers.
-2. **Owner decisions on the three documented conflicts** (register in
-   `QA_RELEASE_GATE.md`; never resolve by silently changing a locked value):
-   the EXC-001 count rows forced by §6's 1,061/4 against §8's delivery timeline (P1);
-   the §1 "81.42%" Overview headline vs the one-decimal overview scale everywhere else
-   (P3); the §5 "validated receipt timing" vs §9 "PO/receipt/GL timing" label (P3).
-   Editing `CANONICAL_SPEC.md` or any `docs/` file means recomputing its
+2. **Remaining owner decisions on the conflict register** (in `QA_RELEASE_GATE.md`;
+   never resolve by silently changing a locked value): the EXC-001 count-row item is
+   **settled — accepted 2026-08-10 as a documented tension, no change**. Still open,
+   both P3 wording: the §1 "81.42%" Overview headline vs the one-decimal overview scale
+   everywhere else, and the §5 "validated receipt timing" vs §9 "PO/receipt/GL timing"
+   label. Editing `CANONICAL_SPEC.md` or any `docs/` file means recomputing its
    `SPEC_MANIFEST.json` entry by hand (§7).
 3. Optional P2s, in value order: drawer dialog semantics (`aria-modal`/`inert` — conflicts
    with the pinned stage-05 `complementary` contract, needs a design decision); a

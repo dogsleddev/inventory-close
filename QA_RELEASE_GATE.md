@@ -207,19 +207,26 @@ bullet, a dead pre-formatted readiness string in the web view-model, the four-no
 comment in `answers.ts`, and the three-noun wording pact having no test. All fixed with
 this record; the pact is now pinned by `apps/web/test/pass2-wording-pact.test.ts`.
 
-### Register of documented conflicts (owner decision required, none blocking)
+### Register of documented conflicts (none blocking)
 
 Deliberately not fixed — each would change canonical spec wording or a locked total:
 
-1. **EXC-001 count rows vs the locked count baseline (P1, spec-internal).**
+1. **EXC-001 count rows vs the locked count baseline (P1, spec-internal) —
+   ACCEPTED by the owner, 2026-08-10, as a documented tension. No data or spec change.**
    CANONICAL_SPEC §6 locks first pass at 1,061 matched / 4 variances over the 1,065
    population; §8 locks the EXC-001 pair delivered 12/29 and installed 12/30 with book
    location still Warehouse. Because the book location puts the pair in the count
    population, the fixtures are forced to record them as physically found in the
    warehouse at the 12/31 snapshot (`CD-0512`/`CD-0513`) — two days after installation
    at the customer. Counting them missing (the physically true outcome) would make the
-   first pass 1,059/6 and give EXC-001 count-variance support §6 does not grant it.
-   Resolving this requires changing one locked value or accepting the tension.
+   first pass 1,059/6, give EXC-001 count-variance support §6 does not grant it, and
+   surface the pair as new CNT-EX-001 exceptions — changing the exception count,
+   blocker count and readiness. Rationale for acceptance: no screen juxtaposes the two
+   facts; the count rows are readable as a book-listing tick-off (a count team checking
+   listed serials rather than blind-counting — itself a realistic control weakness that
+   sits beside, and does not contradict, EXC-001's designed book-lag story); and every
+   alternative moves locked values. A fixture reader who spots it is looking at a
+   recorded, reasoned decision rather than an oversight.
 2. **§1 vs §11/docs on the Overview headline precision (P3).** §1 says the Overview must
    "immediately show 81.42%"; docs/11, docs/12, the approved design export and the
    shipped headline all use the one-decimal overview scale "81.4%" (the exact
