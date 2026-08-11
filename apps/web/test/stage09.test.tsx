@@ -38,12 +38,35 @@ afterEach(cleanup);
 
 let actingRole: Parameters<typeof userByRole>[0] = "CONTROLLER";
 
+import {
+  runRecordConclusion,
+  runRequestEvidence,
+  runSignOff,
+  runSubmitEvidence,
+} from "../lib/server/workflow-actions";
+
 vi.mock("../app/actions", () => ({
   setRole: vi.fn(async () => {}),
   askGaurd: async (question: string, scope: { exceptionId?: string; serial?: string }) =>
     askGaurdData(userByRole(actingRole), question, scope, "T-09"),
   resetDemo: async () => runResetDemo(userByRole(actingRole), "T-09"),
   reproduceClose: async () => runReproduceClose(userByRole(actingRole), "T-09"),
+  // The Stage W verbs. Wired to the real runners so a test that renders the
+  // exception screen exercises the same authorization the app does.
+  recordConclusion: async (input: {
+    exceptionId: string;
+    conclusion: "RESOLVED_NO_ADJUSTMENT" | "RESOLVED_ADJUSTMENT_PROPOSED" | "REMAINS_OPEN";
+    rationale: string;
+  }) => runRecordConclusion(userByRole(actingRole), "T-09", input),
+  requestEvidence: async (input: { exceptionId: string; requirement: string; askedOf: string }) =>
+    runRequestEvidence(userByRole(actingRole), "T-09", input),
+  submitEvidence: async (input: {
+    exceptionId: string;
+    requirement: string;
+    title: string;
+    note: string;
+  }) => runSubmitEvidence(userByRole(actingRole), "T-09", input),
+  recordSignOff: async () => runSignOff(userByRole(actingRole), "T-09"),
 }));
 
 const noopRole = vi.fn(async () => {});

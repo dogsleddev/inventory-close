@@ -2,7 +2,13 @@
 
 import { useState, type CSSProperties } from "react";
 import type { ExceptionDetailData, ShellData } from "../lib/view-model";
+import {
+  recordConclusion as recordConclusionAction,
+  requestEvidence as requestEvidenceAction,
+  submitEvidence as submitEvidenceAction,
+} from "../app/actions";
 import { AppShell } from "./AppShell";
+import { ConclusionPanel } from "./ConclusionPanel";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
 import {
   AuditDetails,
@@ -254,29 +260,21 @@ export function ExceptionDetailScreen({
               {/* No inline `display`: it would outrank the <1024 read-only
                   rule (.icg-action-conclude { display: none }), which must
                   REMOVE these actions, not merely intend to. */}
-              {/* Both verbs are disabled with their reason stated, never
-                  enabled-and-inert: an action that looks live and does
-                  nothing is the one thing a control product may not ship.
-                  Recording conclusions is a controlled command in the
-                  services layer; wiring it to this surface is its own
-                  reviewed change (COMPLETION_PLAN.md, Stage W). */}
-              <div
-                className="icg-action-conclude"
-                style={{ flexDirection: "column", gap: "3px", marginTop: "2px" }}
-              >
-                <div style={{ display: "flex", gap: "7px" }}>
-                  <button type="button" className="icg-btn icg-btn--disabled" disabled>
-                    Record conclusion
-                  </button>
-                  <button type="button" className="icg-btn icg-btn--disabled" disabled>
-                    Request evidence
-                  </button>
+              {/* The close loop (Stage W). Software flagged this item; a
+                  person concludes it, and cannot conclude it resolved while
+                  the record the rule asked for is missing. */}
+              {data.workflow !== undefined && data.workflow !== null ? (
+                <div style={{ marginTop: "2px" }}>
+                  <ConclusionPanel
+                    workflow={data.workflow}
+                    actions={{
+                      recordConclusion: recordConclusionAction,
+                      requestEvidence: requestEvidenceAction,
+                      submitEvidence: submitEvidenceAction,
+                    }}
+                  />
                 </div>
-                <span className="icg-btn-reason">
-                  Not yet enabled in this demo — conclusions are recorded by management, never
-                  by this product on its own.
-                </span>
-              </div>
+              ) : null}
             </div>
           </div>
         </Panel>

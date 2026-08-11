@@ -318,6 +318,23 @@ const EVENT_GLYPHS: Readonly<Record<string, { glyph: string; tone: ActivityItem[
   CONFIRMATION_RECEIVED: { glyph: "■", tone: "aurora" },
 };
 
+/**
+ * Says out loud when the screen has stopped showing the rules' own baseline.
+ *
+ * A demo where someone concluded three items and the headline silently moved
+ * is a demo that cannot be trusted the next time it says a number. The
+ * baseline stays quotable, and Reset Demo restores it exactly.
+ */
+function buildDivergenceNote(
+  live: { diverged: boolean; concludedCount: number } | undefined,
+  baselineBps: number,
+  baselineBlockers: number,
+): string | null {
+  if (live === undefined || !live.diverged) return null;
+  const items = `${live.concludedCount} item${live.concludedCount === 1 ? "" : "s"}`;
+  return `Showing this session's position: ${items} concluded since the run. The close as the rules derived it was ${formatBpsOverview(baselineBps)} ready with ${baselineBlockers} blockers — Reset Demo restores it.`;
+}
+
 export function buildOverviewData(user: DemoUser, correlationId: string): OverviewData {
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
@@ -334,8 +351,13 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   const units = attempt(() => queries.listInventoryUnits(ctx));
   const events = attempt(() => queries.getScenarioEvents(ctx)) ?? [];
   const pbc = attempt(() => queries.getPbcStatus(ctx));
+  // Live position: the rules' close plus this session's conclusions.
+  const live = attempt(() => queries.getEffectiveClose(ctx));
+  const capabilities = attempt(() => queries.getDemoCapabilities(ctx));
+  const period = attempt(() => queries.getPeriod(ctx));
 
-  const blockerIds = new Set(blockers.map((b) => b.exceptionId));
+  const liveBlockerIds = new Set((live?.blockers ?? blockers).map((b) => b.exceptionId));
+  const blockerIds = liveBlockerIds;
   const blockerViews = exceptions
     .filter((e) => blockerIds.has(e.exception.id))
     .sort((a, b) => b.exception.finding.exposureCents - a.exception.finding.exposureCents);
@@ -475,13 +497,30 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     restricted: false,
     roleLabel: roleLabel(user),
     gate: {
-      readinessOverview: formatBpsOverview(readiness.totalBasisPoints),
-      bps: readiness.totalBasisPoints,
+      // Live, like the blocker count beside it. A panel where one figure
+      // moved and its neighbour did not is a panel that cannot be read.
+      readinessOverview: formatBpsOverview(live?.readinessBps ?? readiness.totalBasisPoints),
+      bps: live?.readinessBps ?? readiness.totalBasisPoints,
       categories,
       stats,
-      blockerCount: agg.blockerCount,
-      blockerSummary: `${agg.blockerCount} blockers · ${formatCents(agg.blockerExposureCents)}`,
-      blockerExposure: `${formatCents(agg.blockerExposureCents)} exposure`,
+      // The gate reads LIVE state: conclusions recorded in this session
+      // count. The rules' own baseline stays reportable beside it, because a
+      // figure that moved is only meaningful next to the one it moved from.
+      blockerCount: live?.blockerCount ?? agg.blockerCount,
+      blockerSummary: `${live?.blockerCount ?? agg.blockerCount} blockers · ${formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents)}`,
+      blockerExposure: `${formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents)} exposure`,
+      signOff: {
+        available: (live?.blockerCount ?? agg.blockerCount) === 0,
+        permitted: capabilities?.canSignOff ?? false,
+        reason:
+          (live?.blockerCount ?? agg.blockerCount) > 0
+            ? `Unavailable — ${live?.blockerCount ?? agg.blockerCount} blockers open`
+            : capabilities?.canSignOff === true
+              ? "Every blocker has a management conclusion. Signing off locks the period."
+              : "Your demo role cannot record sign-off.",
+        locked: period?.state === "LOCKED" || period?.state === "SOFT_LOCKED",
+      },
+      divergence: buildDivergenceNote(live, readiness.totalBasisPoints, agg.blockerCount),
     },
     preventing: {
       rows: shown.map((e) => blockerRow(e, true)),
@@ -718,6 +757,13 @@ export function buildExceptionsData(
   };
 }
 
+/** How a recorded conclusion reads on screen. */
+const CONCLUSION_LABELS: Readonly<Record<string, string>> = {
+  RESOLVED_NO_ADJUSTMENT: "Resolved — no adjustment required",
+  RESOLVED_ADJUSTMENT_PROPOSED: "Resolved — adjustment proposed",
+  REMAINS_OPEN: "Remains open",
+};
+
 /**
  * The three facts the single word "coverage" used to collapse.
  *
@@ -822,6 +868,42 @@ export function buildExceptionDetailData(
     staleNote: staleNoteText(staleWarning),
   });
 
+  // Working state: what a person has done about this item, kept separate
+  // from what the rule found.
+  const capabilities = attempt(() => queries.getDemoCapabilities(ctx));
+  const wf = attempt(() => queries.getExceptionWorkflow(ctx, exceptionId));
+  const conclusionRecord = wf?.conclusion ?? null;
+  const workflow: ExceptionDetailData["workflow"] =
+    wf === undefined
+      ? null
+      : {
+          exceptionId,
+          owner: routing.actionParty,
+          unmetRequirements: wf.unmetRequirements,
+          canResolve: wf.canResolve,
+          canConclude: capabilities?.canConclude ?? false,
+          canRequest: capabilities?.canRequestEvidence ?? false,
+          canSubmit: capabilities?.canSubmitEvidence ?? false,
+          conclusion:
+            conclusionRecord !== null
+              ? { conclusion: conclusionRecord.conclusion, rationale: conclusionRecord.rationale }
+              : null,
+          conclusionLabel:
+            conclusionRecord !== null ? CONCLUSION_LABELS[conclusionRecord.conclusion] ?? conclusionRecord.conclusion : "",
+          conclusionBy:
+            conclusionRecord !== null
+              ? (DEMO_USERS.find((u) => u.id === conclusionRecord.byUserId)?.displayName ??
+                conclusionRecord.byUserId)
+              : "",
+          conclusionAt: conclusionRecord !== null ? formatInstant(conclusionRecord.at) : "",
+          requests: wf.requests.map((r) => ({ requirement: r.requirement, askedOf: r.askedOf })),
+          submissions: wf.submissions.map((s) => ({
+            title: s.title,
+            requirement: s.requirement,
+            reviewState: s.reviewState,
+          })),
+        };
+
   const evidenceState = assembleEvidenceState(context);
   const timeline = assembleTimeline(context);
 
@@ -881,6 +963,7 @@ export function buildExceptionDetailData(
         : "Resolved exception",
     },
     lenses,
+    workflow,
     chain: chainData,
     whyFlagged: {
       text: finding.whyFlagged,

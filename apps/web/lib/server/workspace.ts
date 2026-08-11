@@ -19,12 +19,26 @@ import { registerLocationNames } from "./humanize";
 
 const globalStore = globalThis as {
   __icgWorkspace?: Workspace;
+  __icgWorkspaceShape?: string;
   __icgLocationsRegistered?: boolean;
 };
 
+/**
+ * Bumped whenever the Workspace gains a field. The cached workspace survives
+ * dev-server module reloads, so without this a workspace built before a
+ * shape change lives on and the first read of a new field throws — which is
+ * exactly what happened when the close loop added `conclusions`. Tests never
+ * saw it because they build a workspace per test.
+ */
+const WORKSPACE_SHAPE = "conclusions+evidenceRequests";
+
 export function getWorkspace(): Workspace {
-  // Survives Next dev-server module reloads without re-deriving the close.
-  globalStore.__icgWorkspace ??= createWorkspace();
+  // Survives Next dev-server module reloads without re-deriving the close —
+  // but only while it is still the shape this build expects.
+  if (globalStore.__icgWorkspace === undefined || globalStore.__icgWorkspaceShape !== WORKSPACE_SHAPE) {
+    globalStore.__icgWorkspace = createWorkspace();
+    globalStore.__icgWorkspaceShape = WORKSPACE_SHAPE;
+  }
   return globalStore.__icgWorkspace;
 }
 

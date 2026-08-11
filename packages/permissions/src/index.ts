@@ -21,6 +21,18 @@ export type PermissionKey =
   | "evidence.read_restricted"
   | "evidence.submit"
   | "evidence.review"
+  /**
+   * Ask an owner for a record that does not exist. Anyone who can submit
+   * evidence can ask for it — requesting is not an accounting act.
+   */
+  | "evidence.request"
+  /**
+   * Record a management conclusion on an exception. Deliberately narrower
+   * than evidence.submit: concluding is the accounting judgement this whole
+   * product exists to leave with a person, so it sits with the roles that
+   * carry that authority and with no one else.
+   */
+  | "exception.conclude"
   | "comment.create"
   | "draft.create"
   | "review.request"
@@ -36,29 +48,31 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly PermissionKey[]>> = {
   HEAD_OF_FINANCE: [
     "close.read", "evidence.read", "evidence.read_restricted", "comment.create",
     "review.request", "review.approve", "period.lock", "period.reopen",
-    "pbc.read", "audit.read",
+    "pbc.read", "audit.read", "exception.conclude", "evidence.request",
   ],
   CONTROLLER: [
     "close.read", "evidence.read", "evidence.read_restricted", "evidence.submit",
     "evidence.review", "comment.create", "draft.create", "review.request",
     "review.approve", "period.lock", "period.reopen", "pbc.read", "pbc.prepare",
-    "audit.read",
+    "audit.read", "exception.conclude", "evidence.request",
   ],
   ACCOUNTING_MANAGER: [
     "close.read", "evidence.read", "evidence.read_restricted", "evidence.submit",
     "evidence.review", "comment.create", "draft.create", "review.request",
     "review.approve", "pbc.read", "pbc.prepare", "audit.read",
+    "exception.conclude", "evidence.request",
   ],
   PREPARER: [
     "close.read", "evidence.read", "evidence.submit", "comment.create",
     "draft.create", "review.request", "pbc.read", "pbc.prepare",
+    "evidence.request",
   ],
-  WAREHOUSE: ["close.read", "evidence.read", "evidence.submit", "comment.create"],
-  SUPPLY_CHAIN: ["close.read", "evidence.read", "evidence.submit", "comment.create"],
+  WAREHOUSE: ["close.read", "evidence.read", "evidence.submit", "comment.create", "evidence.request"],
+  SUPPLY_CHAIN: ["close.read", "evidence.read", "evidence.submit", "comment.create", "evidence.request"],
   FPA: ["close.read", "evidence.read", "comment.create", "pbc.read"],
   LEGAL: [
     "close.read", "evidence.read", "evidence.read_restricted", "evidence.submit",
-    "comment.create",
+    "comment.create", "evidence.request",
   ],
   // Auditor: read-only over close state and provided support. No commands.
   AUDITOR_READ_ONLY: ["close.read", "evidence.read", "pbc.read"],

@@ -6,7 +6,18 @@ import { DEMO_USERS } from "@icg/data";
 import { ROLE_COOKIE, currentUser, newCorrelationId } from "../lib/server/current-user";
 import { askGaurdData } from "../lib/server/ask-view";
 import { runReproduceClose, runResetDemo } from "../lib/server/integrity-view";
-import type { AskResult, ReplayResultView, ResetResultView } from "../lib/view-model";
+import {
+  runRecordConclusion,
+  runRequestEvidence,
+  runSignOff,
+  runSubmitEvidence,
+} from "../lib/server/workflow-actions";
+import type {
+  AskResult,
+  ReplayResultView,
+  ResetResultView,
+  WorkflowActionResult,
+} from "../lib/view-model";
 
 /**
  * Switch the acting demo role (stage 05). The cookie only selects which
@@ -62,4 +73,59 @@ export async function resetDemo(): Promise<ResetResultView> {
 export async function reproduceClose(): Promise<ReplayResultView> {
   const user = await currentUser();
   return runReproduceClose(user, newCorrelationId());
+}
+
+/**
+ * The close loop (COMPLETION_PLAN Stage W). Three verbs that were dead
+ * buttons: ask for a record, submit it, conclude.
+ *
+ * Every one authorizes inside @icg/services against the acting user's real
+ * permissions — the role cookie selects who is asking and can never widen
+ * what they may do. Each returns a plain result the screen renders; a
+ * refusal is reported as a refusal with its reason, never as a silent no-op.
+ */
+export async function recordConclusion(input: {
+  exceptionId: string;
+  conclusion: "RESOLVED_NO_ADJUSTMENT" | "RESOLVED_ADJUSTMENT_PROPOSED" | "REMAINS_OPEN";
+  rationale: string;
+}): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runRecordConclusion(user, newCorrelationId(), input);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+export async function requestEvidence(input: {
+  exceptionId: string;
+  requirement: string;
+  askedOf: string;
+}): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runRequestEvidence(user, newCorrelationId(), input);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+export async function submitEvidence(input: {
+  exceptionId: string;
+  requirement: string;
+  title: string;
+  note: string;
+}): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runSubmitEvidence(user, newCorrelationId(), input);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+/**
+ * Management sign-off. Reachable only when nothing is blocking it — the
+ * command re-checks that server-side, so a stale page cannot sign off a
+ * close that still has open blockers.
+ */
+export async function recordSignOff(): Promise<WorkflowActionResult> {
+  const user = await currentUser();
+  const result = runSignOff(user, newCorrelationId());
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
 }

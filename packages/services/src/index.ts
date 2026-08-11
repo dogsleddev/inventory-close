@@ -16,6 +16,8 @@ export {
 export type {
   Comment,
   Draft,
+  EvidenceRequest,
+  RecordedConclusion,
   SubmittedEvidence,
   Workspace,
 } from "./workspace.js";
@@ -69,6 +71,20 @@ export type {
   ValuationOut,
   ValuationPopulationOut,
 } from "@icg/rules";
-export { createCommandService, DEMO_RESET_PERMISSION, PeriodLockedError } from "./commands.js";
+export {
+  createCommandService,
+  DEMO_RESET_PERMISSION,
+  EvidenceIncompleteError,
+  PeriodLockedError,
+} from "./commands.js";
+export {
+  effectiveBlockers,
+  effectiveClose,
+  effectiveOpenExceptionIds,
+  effectiveStatus,
+  latestConclusion,
+  unmetRequirements,
+  type EffectiveClose,
+} from "./effective.js";
 export type { CommandService } from "./commands.js";
 export { getGlAccountReconciliation, INVENTORY_RESERVE_ACCOUNT, type GlAccountReconcilingItemOut, type GlAccountReconciliationOut, type GlAccountReconciliationState, type GlAccountRowOut, type GlReserveAccountOut } from "./glAccounts.js";

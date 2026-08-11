@@ -166,7 +166,8 @@ export function runResetDemo(user: DemoUser, correlationId: string): ResetResult
     detail:
       `${result.aggregates.exceptionCount} exceptions, ${result.aggregates.blockerCount} blockers and ` +
       `${formatBpsExact(result.aggregates.closeReadinessBps)} readiness were re-derived from the seed, the rules and the scenario events. ` +
-      `Cleared ${cleared.comments} comments, ${cleared.drafts} drafts, ${cleared.submittedEvidence} submitted evidence and ${cleared.reviews} reviews; ` +
+      `Cleared ${cleared.comments} comments, ${cleared.drafts} drafts, ${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews, ` +
+      `${cleared.conclusions} management conclusions and ${cleared.evidenceRequests} evidence requests; ` +
       `the append-only audit trail kept ${result.auditEventsRetained === 1 ? "its single event" : `all ${result.auditEventsRetained} events`}, including this reset.`,
   };
 }

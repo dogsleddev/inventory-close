@@ -986,6 +986,28 @@ button {
   gap: 14px 18px;
   align-content: center;
 }
+/* Text entry in the close loop (conclusions, support notes). Matches the
+   panel surfaces rather than the browser default, and keeps the 2px frost
+   focus ring the accessibility contract requires. */
+.icg-input {
+  background: var(--panel-2);
+  border: 1px solid var(--hair-2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+}
+.icg-input::placeholder {
+  color: var(--quiet);
+}
+.icg-input:focus-visible {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
+}
+
 /* A KPI tile is a link to the screen that derives it. It carries no link
    chrome — the figure is the affordance — but it must still show focus and
    answer to the pointer like one. */

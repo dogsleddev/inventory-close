@@ -257,8 +257,9 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
 
   return {
     filename: `icg-${table}-${manifest?.runId ?? "run"}.csv`,
-    // CRLF per RFC 4180, and a BOM so Excel reads the em dashes and the
-    // pound-free currency strings as UTF-8 rather than as mojibake.
-    body: `﻿${lines.join("\r\n")}\r\n`,
+    // CRLF per RFC 4180, and a BOM so Excel reads the em dashes as UTF-8
+    // rather than as mojibake. Written as an escape, never as a literal
+    // zero-width character in source nobody can see.
+    body: `\uFEFF${lines.join("\r\n")}\r\n`,
   };
 }

@@ -20,6 +20,15 @@ export interface SubmittedEvidence extends EvidenceItem {
   readonly reviewState: "PENDING" | "ACCEPTED" | "RETURNED";
   readonly reviewedByUserId?: string;
   readonly annotations: readonly { byUserId: string; at: string; note: string }[];
+  /**
+   * The requirement this submission answers, when it was submitted against
+   * one. Named explicitly and matched exactly — an upload must never satisfy
+   * a control by resembling it. Absent for evidence submitted on its own.
+   */
+  readonly satisfiesRequirement?: {
+    readonly exceptionId: string;
+    readonly requirement: string;
+  };
 }
 
 export interface Comment {
@@ -41,6 +50,44 @@ export interface Draft {
   readonly isApproval: false;
 }
 
+/**
+ * A management conclusion on an exception.
+ *
+ * The vocabulary is deliberately NOT `ExceptionStatus`: that enum is the
+ * rules' own output (CANONICAL_SPEC §9), hashed into the run and pinned by
+ * the golden baseline. A conclusion is what a person decided about the
+ * rule's result, recorded beside it.
+ *
+ * `RESOLVED_*` may only be recorded once every required record the rule
+ * asked for is in evidence — the command enforces it. Missing evidence never
+ * becomes a PASS, and a human saying so does not change that; it is the one
+ * rule this product does not let anyone, including its own users, talk their
+ * way around.
+ */
+export interface RecordedConclusion {
+  readonly id: string;
+  readonly exceptionId: string;
+  readonly conclusion:
+    | "RESOLVED_NO_ADJUSTMENT"
+    | "RESOLVED_ADJUSTMENT_PROPOSED"
+    | "REMAINS_OPEN";
+  readonly rationale: string;
+  readonly byUserId: string;
+  readonly at: string;
+  /** The derived status at the moment of the conclusion, for the trail. */
+  readonly priorStatus: string;
+}
+
+/** A request for a record that does not exist yet. Never itself evidence. */
+export interface EvidenceRequest {
+  readonly id: string;
+  readonly exceptionId: string;
+  readonly requirement: string;
+  readonly askedOf: string;
+  readonly byUserId: string;
+  readonly at: string;
+}
+
 export interface Workspace {
   dataset: IcgDataset;
   close: CloseRunResult;
@@ -51,6 +98,19 @@ export interface Workspace {
   comments: Comment[];
   drafts: Draft[];
   reviews: ReviewRecord[];
+  /**
+   * Management conclusions recorded against exceptions, and requests for
+   * evidence that does not exist yet.
+   *
+   * Both are WORKING STATE layered over the derived close, never written
+   * into `close`: the rules' own result stays exactly what the rules
+   * produced, and a conclusion sits beside it as the separate human act it
+   * is. That separation is the product's whole argument, and it is also what
+   * keeps the baseline derivation reproducible — Reset Demo clears these and
+   * the close is byte-identical again.
+   */
+  conclusions: RecordedConclusion[];
+  evidenceRequests: EvidenceRequest[];
   /** Controlled-state hash each PBC workpaper was prepared against. */
   pbcPreparedState: Map<string, string>;
   /** Deterministic logical clock: base instant + one minute per tick. */
@@ -156,6 +216,8 @@ export function createWorkspace(): Workspace {
     comments: [],
     drafts: [],
     reviews: [],
+    conclusions: [],
+    evidenceRequests: [],
     pbcPreparedState: preparedStateFor(state.close),
     clockSeq: 0,
     evidenceSeq: 0,
@@ -173,5 +235,7 @@ export function resetWorkspace(ws: Workspace): void {
   ws.comments = [];
   ws.drafts = [];
   ws.reviews = [];
+  ws.conclusions = [];
+  ws.evidenceRequests = [];
   ws.pbcPreparedState = preparedStateFor(ws.close);
 }

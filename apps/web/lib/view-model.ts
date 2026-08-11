@@ -217,6 +217,15 @@ export interface OverviewData {
     readonly blockerSummary: string;
     /** Exposure alone, for the gate where the count is already the figure. */
     readonly blockerExposure: string;
+    /** Whether sign-off is reachable now, and why not when it is not. */
+    readonly signOff: {
+      readonly available: boolean;
+      readonly permitted: boolean;
+      readonly reason: string;
+      readonly locked: boolean;
+    };
+    /** Set when this session's work has moved the figures off the baseline. */
+    readonly divergence: string | null;
   };
   readonly preventing?: {
     readonly rows: readonly BlockerRow[];
@@ -911,6 +920,45 @@ export interface ReconciliationData {
   readonly records: Readonly<Record<string, EvidenceRecordView>>;
 }
 
+/**
+ * The working state of one exception: what a person has concluded, asked
+ * for, or submitted — beside the rule result, never over it.
+ */
+export interface ExceptionWorkflowView {
+  readonly exceptionId: string;
+  readonly owner: string;
+  readonly unmetRequirements: readonly string[];
+  /** False while a required record is missing: "resolved" is not on offer. */
+  readonly canResolve: boolean;
+  readonly canConclude: boolean;
+  readonly canRequest: boolean;
+  readonly canSubmit: boolean;
+  readonly conclusion: {
+    readonly conclusion: string;
+    readonly rationale: string;
+  } | null;
+  readonly conclusionLabel: string;
+  readonly conclusionBy: string;
+  readonly conclusionAt: string;
+  readonly requests: readonly { readonly requirement: string; readonly askedOf: string }[];
+  readonly submissions: readonly {
+    readonly title: string;
+    readonly requirement: string;
+    readonly reviewState: string;
+  }[];
+}
+
+/**
+ * What a workflow verb did, in words a screen can render. A refusal is a
+ * result, not an error: it says what is needed rather than failing silently.
+ */
+export interface WorkflowActionResult {
+  readonly ok: boolean;
+  readonly message: string;
+  /** Requirements still missing, when that is why the verb refused. */
+  readonly unmet: readonly string[];
+}
+
 export interface EvidenceCenterData {
   readonly roleLabel: string;
   readonly restricted: boolean;
@@ -1008,6 +1056,8 @@ export interface ExceptionDetailData {
     readonly nextActionParty: string;
     readonly positionLabel: string;
   };
+  /** Working state: conclusions, requests and submissions on this item. */
+  readonly workflow?: ExceptionWorkflowView | null;
   readonly lenses?: {
     readonly panels: readonly LensView[];
     readonly interpretation: {

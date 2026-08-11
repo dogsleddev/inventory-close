@@ -10,11 +10,14 @@ import {
   transitionReview,
 } from "@icg/workflows";
 import type { ServiceContext } from "./queries.js";
+import { effectiveStatus, unmetRequirements } from "./effective.js";
 import {
   nextInstant,
   resetWorkspace,
   type Comment,
   type Draft,
+  type EvidenceRequest,
+  type RecordedConclusion,
   type SubmittedEvidence,
   type Workspace,
 } from "./workspace.js";
@@ -32,6 +35,23 @@ import {
  * must gate on THIS, never on a role list that happens to match today.
  */
 export const DEMO_RESET_PERMISSION = "period.lock" as const;
+
+/**
+ * Raised when a conclusion would resolve an exception whose rule still has
+ * a required record missing. The unmet requirements travel with the error so
+ * the surface can say what is needed rather than only that it refused.
+ */
+export class EvidenceIncompleteError extends Error {
+  constructor(
+    readonly exceptionId: string,
+    readonly unmet: readonly string[],
+  ) {
+    super(
+      `${exceptionId} cannot be concluded resolved while required evidence is missing: ${unmet.join("; ")}`,
+    );
+    this.name = "EvidenceIncompleteError";
+  }
+}
 
 export class PeriodLockedError extends Error {
   constructor(action: string) {
@@ -87,6 +107,12 @@ export function createCommandService(ws: Workspace) {
         content: unknown;
         sensitivity?: EvidenceSensitivity;
         relatedObjectRef: string;
+        /**
+         * The requirement this submission answers, when there is one. It is
+         * named by the caller and matched exactly — evidence never satisfies
+         * a control by resembling it.
+         */
+        satisfiesRequirement?: { exceptionId: string; requirement: string };
       },
     ): SubmittedEvidence {
       authorize(ctx.user, "evidence.submit");
@@ -110,11 +136,17 @@ export function createCommandService(ws: Workspace) {
         submittedAt: at,
         reviewState: "PENDING",
         annotations: [],
+        ...(input.satisfiesRequirement !== undefined
+          ? { satisfiesRequirement: input.satisfiesRequirement }
+          : {}),
       };
       ws.submittedEvidence.push(item);
       audit(ctx, "EVIDENCE_SUBMITTED", item.id, at, {
         newState: "PENDING",
-        detail: `${input.kind} for ${input.relatedObjectRef}`,
+        detail:
+          input.satisfiesRequirement !== undefined
+            ? `${input.kind} for ${input.relatedObjectRef} — answers "${input.satisfiesRequirement.requirement}"`
+            : `${input.kind} for ${input.relatedObjectRef}`,
       });
       return item;
     },
@@ -242,6 +274,89 @@ export function createCommandService(ws: Workspace) {
       return approved;
     },
 
+    /**
+     * Ask an owner for a record the close needs and does not have.
+     *
+     * A request is not evidence and never satisfies anything: it records
+     * that someone asked, so the next person can see the item is being
+     * worked rather than ignored.
+     */
+    requestEvidence(
+      ctx: ServiceContext,
+      input: { exceptionId: string; requirement: string; askedOf: string },
+    ): EvidenceRequest {
+      authorize(ctx.user, "evidence.request");
+      requireMutable(ws, "an evidence request");
+      const exception = ws.close.exceptions.find((e) => e.id === input.exceptionId);
+      if (exception === undefined) {
+        throw new Error(`Unknown exception ${input.exceptionId}`);
+      }
+      const at = nextInstant(ws);
+      const request: EvidenceRequest = {
+        id: `REQ-${String(ws.evidenceRequests.length + 1).padStart(3, "0")}`,
+        exceptionId: input.exceptionId,
+        requirement: input.requirement,
+        askedOf: input.askedOf,
+        byUserId: ctx.user.id,
+        at,
+      };
+      ws.evidenceRequests.push(request);
+      audit(ctx, "EVIDENCE_REQUESTED", input.exceptionId, at, {
+        detail: `${input.requirement} — asked of ${input.askedOf}`,
+      });
+      return request;
+    },
+
+    /**
+     * Record a management conclusion on an exception.
+     *
+     * The one rule this command will not bend: an exception whose rule still
+     * has a required record missing cannot be concluded RESOLVED. Management
+     * may record that it remains open and why; it may not conclude the
+     * evidence question closed while the evidence is absent. Submitting the
+     * record is the way through, which is exactly the order a close works in.
+     */
+    concludeException(
+      ctx: ServiceContext,
+      input: {
+        exceptionId: string;
+        conclusion: RecordedConclusion["conclusion"];
+        rationale: string;
+      },
+    ): RecordedConclusion {
+      authorize(ctx.user, "exception.conclude");
+      requireMutable(ws, "recording a conclusion");
+      const exception = ws.close.exceptions.find((e) => e.id === input.exceptionId);
+      if (exception === undefined) {
+        throw new Error(`Unknown exception ${input.exceptionId}`);
+      }
+      if (input.rationale.trim() === "") {
+        throw new Error("A conclusion must state its rationale.");
+      }
+      const unmet = unmetRequirements(ws, exception.id);
+      if (input.conclusion !== "REMAINS_OPEN" && unmet.length > 0) {
+        throw new EvidenceIncompleteError(exception.id, unmet);
+      }
+      const at = nextInstant(ws);
+      const priorStatus = effectiveStatus(ws, exception.id);
+      const record: RecordedConclusion = {
+        id: `CON-${String(ws.conclusions.length + 1).padStart(3, "0")}`,
+        exceptionId: input.exceptionId,
+        conclusion: input.conclusion,
+        rationale: input.rationale.trim(),
+        byUserId: ctx.user.id,
+        at,
+        priorStatus,
+      };
+      ws.conclusions.push(record);
+      audit(ctx, "EXCEPTION_CONCLUSION_RECORDED", input.exceptionId, at, {
+        priorState: priorStatus,
+        newState: input.conclusion,
+        reason: record.rationale,
+      });
+      return record;
+    },
+
     lockPeriod(ctx: ServiceContext, kind: "SOFT_LOCKED" | "LOCKED") {
       authorize(ctx.user, "period.lock");
       const at = nextInstant(ws);
@@ -281,6 +396,11 @@ export function createCommandService(ws: Workspace) {
         drafts: ws.drafts.length,
         submittedEvidence: ws.submittedEvidence.length,
         reviews: ws.reviews.length,
+        // The close loop's working state. Reported because a reset that
+        // silently discarded a management conclusion would be the one thing
+        // this report exists to prevent.
+        conclusions: ws.conclusions.length,
+        evidenceRequests: ws.evidenceRequests.length,
         period: ws.period.state,
       };
       resetWorkspace(ws);
@@ -290,7 +410,8 @@ export function createCommandService(ws: Workspace) {
         detail:
           `dataset ${ws.dataset.manifest.datasetVersion} rebuilt; run ${ws.close.runManifest.runId}; ` +
           `working state cleared: ${cleared.comments} comments, ${cleared.drafts} drafts, ` +
-          `${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews`,
+          `${cleared.submittedEvidence} submitted evidence, ${cleared.reviews} reviews, ` +
+          `${cleared.conclusions} conclusions, ${cleared.evidenceRequests} evidence requests`,
       });
       return {
         aggregates: ws.close.aggregates,

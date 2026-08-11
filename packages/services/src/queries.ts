@@ -42,6 +42,13 @@ import { RULE_DEFINITIONS } from "@icg/rules";
 import { traceExceptionLineage, type ExceptionLineage } from "@icg/evidence";
 import { authorize, canReadContent, hasPermission } from "@icg/permissions";
 import { DEMO_RESET_PERMISSION } from "./commands.js";
+import {
+  effectiveClose,
+  effectiveStatus,
+  latestConclusion,
+  unmetRequirements,
+  type EffectiveClose,
+} from "./effective.js";
 import { redactRestricted } from "./redaction.js";
 import {
   describeControls,
@@ -1157,8 +1164,58 @@ export function createQueryService(ws: Workspace) {
      */
     getDemoCapabilities(ctx: ServiceContext) {
       authorize(ctx.user, "close.read");
+      // Offer and allow are computed from the SAME permission keys the
+      // commands authorize against, so a control is never shown to someone
+      // the service would refuse.
       return {
         canResetDemo: hasPermission(ctx.user, DEMO_RESET_PERMISSION),
+        canConclude: hasPermission(ctx.user, "exception.conclude"),
+        canRequestEvidence: hasPermission(ctx.user, "evidence.request"),
+        canSubmitEvidence: hasPermission(ctx.user, "evidence.submit"),
+        canSignOff: hasPermission(ctx.user, "period.lock"),
+      };
+    },
+
+    /**
+     * Where the close stands once this session's conclusions and submitted
+     * evidence are taken into account, alongside the rules' own baseline.
+     *
+     * Both figures are returned deliberately: a surface that showed only the
+     * live number would lose the reproducible one, and a surface that showed
+     * only the baseline would tell a user their work had no effect.
+     */
+    getEffectiveClose(ctx: ServiceContext): EffectiveClose {
+      authorize(ctx.user, "close.read");
+      return effectiveClose(ws);
+    },
+
+    /**
+     * The working state of one exception: what a person concluded, what has
+     * been asked for, what has been submitted against it, and which required
+     * records are still missing.
+     */
+    getExceptionWorkflow(ctx: ServiceContext, exceptionId: string) {
+      authorize(ctx.user, "close.read");
+      const unmet = unmetRequirements(ws, exceptionId);
+      const conclusion = latestConclusion(ws, exceptionId);
+      return {
+        exceptionId,
+        unmetRequirements: unmet,
+        // The gate the conclusion command enforces, reported so a surface
+        // can explain the refusal before a user meets it.
+        canResolve: unmet.length === 0,
+        conclusion: conclusion ?? null,
+        requests: ws.evidenceRequests.filter((r) => r.exceptionId === exceptionId),
+        submissions: ws.submittedEvidence
+          .filter((e) => e.satisfiesRequirement?.exceptionId === exceptionId)
+          .map((e) => ({
+            id: e.id,
+            title: e.title,
+            requirement: e.satisfiesRequirement?.requirement ?? "",
+            reviewState: e.reviewState,
+            submittedAt: e.submittedAt,
+          })),
+        effectiveStatus: effectiveStatus(ws, exceptionId),
       };
     },
 

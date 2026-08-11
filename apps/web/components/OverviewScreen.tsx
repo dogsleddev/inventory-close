@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
-import type { OverviewData, ShellData } from "../lib/view-model";
+import { useState, useTransition, type CSSProperties } from "react";
+import type { OverviewData, ShellData, WorkflowActionResult } from "../lib/view-model";
+import { recordSignOff } from "../app/actions";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
@@ -31,6 +32,8 @@ export function OverviewScreen({
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const drawerData = openId !== null ? data.drawers?.[openId] : undefined;
+  const [signOffResult, setSignOffResult] = useState<WorkflowActionResult | null>(null);
+  const [signingOff, startSignOff] = useTransition();
 
   return (
     <AppShell
@@ -123,6 +126,23 @@ export function OverviewScreen({
                   Eight weighted close areas. Readiness is a management workflow measure — it
                   is not audit assurance or a statement of financial-statement accuracy.
                 </div>
+                {/* A figure that moved is only meaningful beside the one it
+                    moved from. When this session's work has changed the
+                    position, the screen says so and quotes the baseline. */}
+                {data.gate.divergence !== null ? (
+                  <div
+                    className="icg-quiet"
+                    style={{
+                      fontSize: "10.5px",
+                      lineHeight: 1.5,
+                      borderLeft: "2px solid var(--frost)",
+                      paddingLeft: "8px",
+                    }}
+                    role="status"
+                  >
+                    {data.gate.divergence}
+                  </div>
+                ) : null}
                 <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
                   <Link
                     href="/exceptions/EXC-001"
@@ -132,16 +152,41 @@ export function OverviewScreen({
                     Review the signature cutoff item
                   </Link>
                   {/* No inline `display` — see the read-only rule note on
-                      the exception screen. */}
+                      the exception screen. The gate opens only when every
+                      blocker carries a management conclusion; the command
+                      re-checks that server-side, so a stale page cannot sign
+                      off a close that is still blocked. */}
                   <div
                     className="icg-action-conclude"
                     style={{ flexDirection: "column", gap: "2px" }}
                   >
-                    <button type="button" className="icg-btn icg-btn--disabled" disabled>
-                      Record management sign-off
+                    <button
+                      type="button"
+                      className={
+                        data.gate.signOff.available && data.gate.signOff.permitted
+                          ? "icg-btn icg-btn--primary"
+                          : "icg-btn icg-btn--disabled"
+                      }
+                      disabled={
+                        !data.gate.signOff.available ||
+                        !data.gate.signOff.permitted ||
+                        data.gate.signOff.locked ||
+                        signingOff
+                      }
+                      onClick={() =>
+                        startSignOff(async () => {
+                          setSignOffResult(await recordSignOff());
+                        })
+                      }
+                    >
+                      {data.gate.signOff.locked
+                        ? "Period signed off"
+                        : signingOff
+                          ? "Recording…"
+                          : "Record management sign-off"}
                     </button>
                     <span className="icg-btn-reason">
-                      Unavailable — {data.gate.blockerCount} blockers open
+                      {signOffResult?.message ?? data.gate.signOff.reason}
                     </span>
                   </div>
                 </div>
