@@ -83,7 +83,13 @@ export function ProcurementScreen({
               FY2026 · balance-sheet date {data.asOf === "" ? "Dec. 31, 2026" : data.asOf}
             </div>
           </div>
-          <ExportCsvLink table="procurement" label="the procurement populations" />
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="procurement"
+              label="the procurement populations"
+              scopeNote="All five procurement populations, not just this tab."
+            />
+          )}
         </div>
 
         {data.restricted ? (

@@ -362,12 +362,39 @@ $1,196,700 ordered against $1,199,562 billed under a footnote calling the legs m
 clean example now excludes orders carrying a variance, and any card whose bill differs from
 its order names the difference on the vendor-bill leg.
 
-**Found, not fixed — out of Stage C's scope:** the CSV export routes built in Stage B were
-**unreachable from the UI**. Nothing in `apps/web` linked to `/api/export/*` or mentioned CSV;
-the only way to reach the one path out of this product was to type a URL. Stage C ships a
-shared `ExportCsvLink` in `components/kit.tsx` and wires it on `/procurement`. The other six
-tables — inventory, exceptions, reconciliation, adjustments, evidence, pbc — still have no
-affordance on their screens. One link each, on the page head.
+**Found during Stage C, fixed immediately after it (before Stage D):** the CSV export routes
+built in Stage B were **unreachable from the UI**. Nothing in `apps/web` linked to
+`/api/export/*` or used the word CSV; the only way out of the product was to type a URL. That
+is P0 3.2 above, which the route handlers had answered at the API level and nowhere else.
+
+Closing it took more than seven links, because a link is a claim:
+
+- All seven tables are now reachable from their screens, and `/`, `/physical-count` and
+  `/valuation` state that their population has no export table rather than staying silent —
+  the same reason this codebase never hides a disabled action.
+- Every link is gated on `!data.restricted`, so no viewer is offered a download the handler
+  would answer 403 to.
+- Where the file is broader than the view, a `scopeNote` says so (`/cutoff` shows 2 of 15
+  exceptions and downloads all 15; `/reconciliation` downloads the bridge from any of its
+  three tabs).
+- **Content defects the affordance would otherwise have shipped:** the inventory file's
+  `Classification` and `GL account` columns were empty on all 1,500 rows (the handler asked
+  the raw fixture for two fields that do not exist on it) — it now reads `listInventoryMaster`,
+  the query the screen reads; the pbc file wrote `versions.length` where the screen renders
+  `latestVersion`, so 15 rows read "1 version" beside a screen saying "None provided"; the
+  exceptions file left `OPEN` standing in for *blocks sign-off*; reconciling items carried no
+  `NOT POSTED` tag; and the auditor "Scope" line was applied by role to all seven tables
+  including the four where an auditor's file is byte-identical to a Controller's.
+- A 21-agent adversarial pass over the change confirmed 5 further defects, all fixed: the
+  Overview claimed "each section below exports its own" (false three ways — a screen may not
+  assert another screen's capability); the inventory file reported a SKU/bin count variance as
+  a unit's own on 19 rows; and the procurement scope note promised a withheld-document count
+  that only counts whole orders. Two of the confirmed findings were defects in the *new tests*,
+  caught by mutation — both now kill the mutation that exposed them.
+
+Deliberately still open: `/physical-count` and `/valuation` have no export table. Their
+populations are reachable in four of the seven existing files and via PRINT, and the screens
+say so, so this is a stated absence rather than a gap.
 
 ## 11. Acceptance criteria (the twenty questions)
 

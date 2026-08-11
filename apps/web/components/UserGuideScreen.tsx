@@ -138,6 +138,10 @@ const DOES: readonly { rule: string; note: string }[] = [
     rule: "Prepares the audit package",
     note: "Management-prepared workpapers, versioned and sealed when provided, with a manifest and a replay that rebuilds the close from its seed.",
   },
+  {
+    rule: "Lets the work leave",
+    note: "Where a population has an export table, its screen carries an EXPORT CSV control served by the same authorized reads the screen uses — so a file is scoped to the role that asked for it, and where the file covers more than the view, the control says so. Where a population has no export table, the screen says that instead of staying silent. PRINT in the header renders any screen as a workpaper.",
+  },
 ];
 
 const BOUNDARIES: readonly { rule: string; note: string }[] = [

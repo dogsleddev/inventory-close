@@ -166,6 +166,13 @@ Start at **User Guide** in the nav rail for the guided version, the secondary pa
 Life of the Unit, Reconciliation, Audit Package), and the role switcher. `Reset Demo` in the
 header restores the baseline; every screen reads the workspace it rebuilds.
 
+Work can leave. Every screen that owns a population carries `EXPORT CSV`, served by
+`/api/export/[table]` through the same authorized reads the screen uses — so an auditor's file is
+scoped exactly as their screen is, and where the file covers more than the view (the exception
+queue behind a control-domain filter, the reconciliation bridge behind its other tabs) the
+control says so. `PRINT` in the header renders any screen as a workpaper. A screen whose
+population has no export table states that rather than staying silent.
+
 ---
 
 ## Synthetic data disclosure

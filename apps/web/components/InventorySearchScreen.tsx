@@ -9,6 +9,7 @@ import type {
 import { AppShell } from "./AppShell";
 import { SerialSearchBar } from "./FinancialLifeScreen";
 import {
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -67,6 +68,13 @@ export function InventorySearchScreen({
                 : (data.bookCountNote ?? "FY2026 · balance-sheet date Dec. 31, 2026")}
             </div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="inventory"
+              label="the year-end inventory listing"
+              scopeNote="Every unit on the year-end listing — not this filter, page or search."
+            />
+          )}
         </div>
 
         {data.restricted ? (

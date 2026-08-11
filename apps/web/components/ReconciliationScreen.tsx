@@ -9,6 +9,7 @@ import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
   AuditDetails,
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -100,6 +101,16 @@ export function ReconciliationScreen({
             <h1 className="icg-page-title">Reconciliation</h1>
             <div className="icg-page-context">FY2026 · balance-sheet date Dec. 31, 2026</div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="reconciliation"
+              label="the inventory-to-GL bridge"
+              // Three tabs, one file. On the chain and serial tabs the overlap
+              // with what is on screen is nil, so the note names the bridge
+              // rather than letting the button inherit the tab.
+              scopeNote="The GL bridge only — not the chains, the serial view, or the GL accounts."
+            />
+          )}
         </div>
 
         {data.restricted ? (

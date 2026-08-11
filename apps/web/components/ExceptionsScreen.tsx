@@ -6,6 +6,7 @@ import type { ExceptionsData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -59,6 +60,16 @@ export function ExceptionsScreen({
                 : "FY2026 · balance-sheet date Dec. 31, 2026"}
             </div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="exceptions"
+              label="the exception queue"
+              // One component, four populations (/exceptions, ?filter=blockers,
+              // /cutoff, /ownership) and one file. The file is always all of
+              // them, so the button says so rather than promising the view.
+              scopeNote="Every designed exception, not just this view's rows."
+            />
+          )}
         </div>
 
         {data.restricted ? (

@@ -14,6 +14,7 @@ import { ExceptionDrawer } from "./ExceptionDrawer";
 import { PackageManifest } from "./PackageManifest";
 import {
   AuditDetails,
+  ExportCsvLink,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -93,6 +94,13 @@ export function AuditPackageScreen({
               Management-prepared · FY2026 · balance-sheet date Dec. 31, 2026
             </div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="pbc"
+              label="the PBC request register"
+              scopeNote="Every PBC request and its state — not the open workpaper's detail."
+            />
+          )}
         </div>
 
         {data.restricted ? (

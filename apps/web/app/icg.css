@@ -539,6 +539,33 @@ button {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  /* Wraps deliberately. The head gained a second child (the export cluster)
+     and an unwrapped flex row squeezes a long title against it on a narrow
+     viewport — the stage-10 review found the same failure twice, as clipped
+     panels and zero-width controls, so the head is no longer allowed it. */
+  flex-wrap: wrap;
+}
+
+/* The export cluster: the button, and — where the file is broader than the
+   view — the sentence that says so, right-aligned under it. */
+.icg-export {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.icg-export-note {
+  max-width: 280px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  text-align: right;
+  color: var(--quiet);
+}
+@media print {
+  /* A download control means nothing on paper. */
+  .icg-export {
+    display: none;
+  }
 }
 .icg-page-title {
   margin: 0;

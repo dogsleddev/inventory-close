@@ -67,10 +67,26 @@ Two things Stage C established that Stage D inherits:
   `makeRecordScope`, exported from `index.ts`, called from a `lib/server/*-view.ts`. It
   changes no rule, so no golden figure can move.
 
-**Still open from Stage C, for whoever picks it up:** the CSV export routes have no affordance
-on six of the seven screens they serve. `ExportCsvLink` exists in `components/kit.tsx` and is
-wired on `/procurement`; inventory, exceptions, reconciliation, adjustments, evidence and pbc
-still need one link each on their page heads.
+**The export affordance is DONE** (done after Stage C, before Stage D). All seven tables are
+reachable from their screens; the three population screens with no table say so in the same
+slot; `/user-guide` and the README describe it. `apps/web/test/export-affordance.test.tsx`
+pins the rules — a table nothing links to fails the suite, and so does a link offered to a role
+the handler would refuse.
+
+Four things it established that later stages inherit:
+
+- **A screen only ever states its own capability.** The Overview briefly claimed "each section
+  below exports its own", which is false three ways. A screen cannot check another screen's
+  capability, so it may not assert one.
+- **`ExportCsvLink` takes a `scopeNote`** for the case where the file is broader than the view
+  (`/cutoff` shows 2 of 15 exceptions and downloads all 15). It is tied to the link by
+  `aria-describedby`, not left loose beside it.
+- **The auditor "Scope" header line is per-table**, not per-role. It used to appear on every
+  file an auditor took, including the four where their file is byte-identical to a Controller's.
+  Measured withholding today: evidence 22 of 31 records, pbc 16 versions, procurement 1 order.
+- **A count line that did not name a unit may not report that unit's variance.**
+  `InventoryMasterCount.basis` distinguishes the two, and the inventory file now carries
+  separate `Unit variance` and `SKU / bin line variance` columns.
 
 ---
 

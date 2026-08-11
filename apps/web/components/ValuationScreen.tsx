@@ -5,7 +5,14 @@ import { useState } from "react";
 import type { ShellData, ValuationData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
-import { NoRecordsState, Panel, PanelHead, RestrictedState, StatusCapsule } from "./kit";
+import {
+  ExportUnavailableNote,
+  NoRecordsState,
+  Panel,
+  PanelHead,
+  RestrictedState,
+  StatusCapsule,
+} from "./kit";
 
 /**
  * Valuation — aging, review populations, damage/RMA, and the reserve
@@ -55,6 +62,7 @@ export function ValuationScreen({
               FY2026 · balance-sheet date Dec. 31, 2026
             </div>
           </div>
+          <ExportUnavailableNote reason="The valuation workspace has no export table in this build." />
         </div>
 
         {data.restricted || data.reserve === null ? (

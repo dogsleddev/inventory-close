@@ -5,7 +5,14 @@ import { useState } from "react";
 import type { EvidenceCenterData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
-import { NoRecordsState, Panel, PanelHead, RestrictedState, ScopeNotice } from "./kit";
+import {
+  ExportCsvLink,
+  NoRecordsState,
+  Panel,
+  PanelHead,
+  RestrictedState,
+  ScopeNotice,
+} from "./kit";
 
 /**
  * Evidence Center (completion Stage A).
@@ -58,6 +65,16 @@ export function EvidenceScreen({
               Every record the close reads, the source that produced it, and what it bears on
             </div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="evidence"
+              label="the evidence index"
+              // The gap list is the half of this screen a reader most needs
+              // and the file does not carry. Saying so stops the file being
+              // read as "the close is waiting on nothing".
+              scopeNote="Records on file only — not the missing-record list or source health."
+            />
+          )}
         </div>
 
         {data.restricted ? (

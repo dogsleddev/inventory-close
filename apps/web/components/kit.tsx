@@ -246,19 +246,66 @@ export function TabBar({
  * The export route handlers have existed since Stage B and nothing linked to
  * them, so the one path out of this product was reachable only by typing a
  * URL. A capability with no affordance is a capability the user does not
- * have. The file is scoped exactly as the screen is — same QueryService, same
- * role — so the label promises nothing the handler will not honour.
+ * have.
+ *
+ * `scopeNote` is not decoration. Several screens show a NARROWER population
+ * than their file contains — the exception queue filtered to a control
+ * domain, the reconciliation screen's non-financial tabs — and a bare
+ * "EXPORT CSV" on those screens would promise the view and deliver the
+ * population. Where the two differ, the difference is stated, and it is tied
+ * to the link by `aria-describedby` so it reaches a screen reader as part of
+ * the control rather than as loose text beside it.
+ *
+ * Render this only where the viewer can actually read the data: offering a
+ * download that answers 403 is a worse failure than offering nothing.
  */
-export function ExportCsvLink({ table, label }: { table: string; label: string }) {
+export function ExportCsvLink({
+  table,
+  label,
+  scopeNote,
+}: {
+  table: string;
+  label: string;
+  scopeNote?: string;
+}) {
+  const noteId = `icg-export-note-${table}`;
   return (
-    <a
-      className="icg-btn icg-btn--mono"
-      href={`/api/export/${table}`}
-      download
-      aria-label={`Export ${label} as CSV`}
-    >
-      EXPORT CSV
-    </a>
+    <div className="icg-export">
+      <a
+        className="icg-btn icg-btn--mono"
+        href={`/api/export/${table}`}
+        download
+        aria-label={`Export ${label} as CSV`}
+        {...(scopeNote !== undefined ? { "aria-describedby": noteId } : {})}
+      >
+        EXPORT CSV
+      </a>
+      {scopeNote !== undefined ? (
+        <span id={noteId} className="icg-export-note">
+          {scopeNote}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * A screen whose population has no export table says so, in the slot where
+ * the button sits everywhere else.
+ *
+ * Silence would be the one answer this codebase already rejects — disabled
+ * actions are never hidden here, they carry their reason beneath (the
+ * sign-off gate is the pattern). A reader who finds EXPORT CSV on six screens
+ * and nothing on the seventh has no way to tell "cannot be exported" from
+ * "someone forgot". A dead button would be worse still: these are permanently
+ * absent, not temporarily blocked, so there is a sentence rather than a
+ * control that can never become live.
+ */
+export function ExportUnavailableNote({ reason }: { reason: string }) {
+  return (
+    <div className="icg-export">
+      <span className="icg-export-note">{reason}</span>
+    </div>
   );
 }
 

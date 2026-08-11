@@ -5,7 +5,14 @@ import { useState } from "react";
 import type { AdjustmentsData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
-import { NoRecordsState, Panel, PanelHead, RestrictedState, StatusCapsule } from "./kit";
+import {
+  ExportCsvLink,
+  NoRecordsState,
+  Panel,
+  PanelHead,
+  RestrictedState,
+  StatusCapsule,
+} from "./kit";
 
 /**
  * Adjustments — the proposed-entry register (stage 07).
@@ -55,6 +62,13 @@ export function AdjustmentsScreen({
               FY2026 · balance-sheet date Dec. 31, 2026
             </div>
           </div>
+          {data.restricted ? null : (
+            <ExportCsvLink
+              table="adjustments"
+              label="the proposed-adjustment register"
+              scopeNote="One row per journal-entry line, not per adjustment. No totals in the file."
+            />
+          )}
         </div>
 
         {data.restricted ? (

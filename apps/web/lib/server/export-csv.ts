@@ -86,47 +86,126 @@ function header(
   ];
 }
 
+/**
+ * What an auditor's scope actually removes, PER TABLE.
+ *
+ * This used to be one sentence on every file, chosen from the viewer's role —
+ * a proxy for "something was withheld" rather than the fact itself. On four
+ * of these seven tables an auditor's file is byte-identical to a Controller's,
+ * so the line claimed a redaction that had not happened. Absent means nothing
+ * is withheld on that table, and a regression pins that reading.
+ */
+const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
+  evidence:
+    "Auditor scope — provided support only. Records behind workpapers that have not been provided are withheld.",
+  pbc: "Auditor scope — every request is listed, but versions that were never sealed are withheld. Each row counts its own withheld versions.",
+  // The count at the top is `withheldOrderCount`, which counts orders
+  // withheld WHOLE. An order whose own receipt or bill is withheld keeps its
+  // row, so the count does not cover it — and a note claiming the count
+  // covers everything withheld would be the over-claim this table is fixing.
+  procurement:
+    "Auditor scope — source documents behind workpapers that have not been provided are withheld. Orders withheld in full are counted at the top of this file; an order that keeps its row loses only the cells for its own withheld documents.",
+  inventory: null,
+  exceptions: null,
+  reconciliation: null,
+  adjustments: null,
+};
+
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
   const manifest = queries.getRunManifest(ctx);
   const auditor = user.roles.includes("AUDITOR_READ_ONLY");
-  const scopeNote = auditor
-    ? "Auditor scope — provided support only. Records behind workpapers that have not been provided are withheld."
-    : null;
+  const scopeNote = auditor ? AUDITOR_SCOPE_NOTES[table] : null;
   const lines = header(user, manifest, table, scopeNote);
 
   if (table === "inventory") {
+    // Reads `listInventoryMaster`, the same query the screen's master table
+    // reads — not `listInventoryUnits`.
+    //
+    // The first version of this handler read the raw fixture and asked it for
+    // `accountingClassification` and `glAccount`. Neither field exists on
+    // `InventoryItemFixture`: the classification is `classification`, and the
+    // GL account is DERIVED in the services layer. So both columns emitted an
+    // empty cell on all 1,500 rows — a header asserting that no unit in the
+    // population has a GL account. An absence must be stated, never implied,
+    // and this one was implied AND false.
+    const master = queries.listInventoryMaster(ctx);
     lines.push(
-      row(["Serial", "SKU", "Location", "Classification", "GL account", "Unit cost", "Acquired", "Last movement"]),
+      row([
+        "Serial",
+        "SKU",
+        "Product",
+        "Location",
+        "Custodian",
+        "Custody",
+        "Classification",
+        "GL account",
+        "Ownership",
+        "Unit cost",
+        "Carrying value",
+        "Acquired",
+        "Last movement",
+        "Age (days)",
+        "Last count",
+        "Count basis",
+        // Two variance columns, not one. `InventoryMasterCount.basis` says
+        // whether the count line NAMED this serial or covered its SKU and
+        // location as a quantity; a single "Count variance" column put a
+        // bin-level figure beside a serial and read as that unit's variance.
+        // The screen makes the same split in words ("SKU / bin line — unit
+        // not named"); the file makes it in columns.
+        "Unit variance",
+        "SKU / bin line variance",
+        "Exceptions naming this unit",
+      ]),
     );
-    for (const u of queries.listInventoryUnits(ctx)) {
-      const unit = u as {
-        serial: string;
-        sku: string;
-        location: string;
-        accountingClassification?: string;
-        unitCostCents: number;
-        acquiredAt?: string;
-        lastMovementAt?: string;
-        glAccount?: string;
-      };
+    for (const unit of master.rows) {
       lines.push(
         row([
           unit.serial,
           unit.sku,
+          unit.product,
           unit.location,
-          unit.accountingClassification ?? "",
-          unit.glAccount ?? "",
+          unit.custodian ?? "",
+          unit.custodyType,
+          unit.classification,
+          unit.glAccount,
+          unit.ownership,
           formatCents(unit.unitCostCents),
+          formatCents(unit.carryingCents),
           unit.acquiredAt ?? "",
           unit.lastMovementAt ?? "",
+          unit.ageDays ?? "",
+          unit.lastCount === undefined ? "No count line covers it" : unit.lastCount.planId,
+          unit.lastCount === undefined
+            ? ""
+            : unit.lastCount.basis === "UNIT"
+              ? "Unit named on the count line"
+              : "SKU and location counted as a quantity — unit not named",
+          unit.lastCount?.basis === "UNIT" ? unit.lastCount.variance : "",
+          unit.lastCount !== undefined && unit.lastCount.basis === "SKU_LOCATION"
+            ? unit.lastCount.variance
+            : "",
+          // Only exceptions that NAME this unit. A finding whose subject is a
+          // SKU or a location covers a population the unit sits in; listing
+          // those here would assert the unit is under exception when no rule
+          // said so.
+          unit.exceptions
+            .filter((e) => e.identifiesUnit)
+            .map((e) => e.exceptionId)
+            .join("; "),
         ]),
       );
     }
   } else if (table === "exceptions") {
+    // Blocker is its own column, read from `getBlockers`. Open and blocking
+    // are different facts that happen to coincide on this baseline — all 7
+    // open exceptions are blockers — and a file carrying only "OPEN" invites
+    // a reader to treat the coincidence as the definition.
+    const blocking = new Set(queries.getBlockers(ctx).map((b) => b.exceptionId));
     lines.push(
-      row(["ID", "Title", "Rule", "Rule version", "Risk", "Status", "Open", "Exposure", "Unmet requirements"]),
+      row(["ID", "Title", "Rule", "Rule version", "Risk", "Status", "Open", "Blocks sign-off", "Exposure", "Unmet requirements"]),
     );
     for (const view of queries.listExceptions(ctx)) {
       const f = view.exception.finding;
@@ -139,6 +218,7 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           f.risk,
           view.exception.status,
           view.open ? "OPEN" : "RESOLVED",
+          blocking.has(view.exception.id) ? "BLOCKER" : "",
           formatCents(f.exposureCents),
           f.evidenceRequirements
             .filter((r) => r.required && !r.satisfied)
@@ -160,9 +240,20 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       ]),
     );
     lines.push("");
-    lines.push(row(["Reconciling item", "Exception", "Amount"]));
+    // Every reconciling item states that it is unposted, on its own row. The
+    // screen makes the proposed/posted distinction with a literal tag rather
+    // than a colour; a file that dropped the tag would make the unqualified
+    // claim the screen exists to prevent.
+    lines.push(row(["Reconciling item", "Exception", "Amount", "Posted"]));
     for (const item of recon.items) {
-      lines.push(row([item.description, item.relatedExceptionId, formatCents(item.amountCents)]));
+      lines.push(
+        row([
+          item.description,
+          item.relatedExceptionId,
+          formatCents(item.amountCents),
+          "NOT POSTED",
+        ]),
+      );
     }
   } else if (table === "adjustments") {
     // One row per LINE, not per entry: a journal entry that cannot be read
@@ -436,8 +527,23 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     );
   } else {
     const pbc = queries.getPbcPackage(ctx);
+    // "Latest sealed version" is the figure the screen renders, and it is NOT
+    // `versions.length`: an unsealed working draft counts in the array and is
+    // not a provided version. The file said "1 version" on the fourteen rows
+    // whose screen said "None provided". The sealed figure comes first, and
+    // the raw count keeps its own column so neither has to stand in for the
+    // other.
     lines.push(
-      row(["ID", "Request", "Owner", "State", "Versions visible", "Versions withheld", "Blocked by"]),
+      row([
+        "ID",
+        "Request",
+        "Owner",
+        "State",
+        "Latest sealed version",
+        "Versions visible",
+        "Versions withheld",
+        "Blocked by",
+      ]),
     );
     for (const item of pbc) {
       lines.push(
@@ -446,6 +552,8 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           item.title,
           item.owner,
           item.status,
+          // The screen's own words for the absent case, so the two agree.
+          item.latestVersion === undefined ? "None provided" : `v${item.latestVersion}`,
           item.versions.length,
           // Never silently zero: a scope that hid versions says how many.
           item.withheldVersionCount,

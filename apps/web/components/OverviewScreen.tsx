@@ -7,6 +7,7 @@ import { recordSignOff } from "../app/actions";
 import { AppShell } from "./AppShell";
 import { ExceptionDrawer } from "./ExceptionDrawer";
 import {
+  ExportUnavailableNote,
   NoRecordsState,
   Panel,
   PanelHead,
@@ -65,6 +66,12 @@ export function OverviewScreen({
               FY2026 · balance-sheet date Dec. 31, 2026 · synthetic demo dataset
             </div>
           </div>
+          {/* Says only what is true of THIS screen. An earlier draft added
+              "each section below exports its own", which is false: Physical
+              Count and Valuation carry the opposite sentence, Cutoff and
+              Ownership export the whole exception queue rather than their
+              own view, and no Overview panel exports at all. */}
+          <ExportUnavailableNote reason="The overview has no export table; it summarises figures each section derives." />
         </div>
 
         {data.restricted || data.gate === undefined ? (
