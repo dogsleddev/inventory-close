@@ -602,6 +602,12 @@ export interface FinancialBridgeData {
     readonly figures: readonly StateFigure[];
     readonly footnote: string;
   };
+  /** Stated outright, so "posted" is never inferred from what is nearby. */
+  readonly postedAdjustments: {
+    readonly label: string;
+    readonly value: string;
+    readonly note: string;
+  };
   readonly bridge: {
     readonly summary: string;
     readonly rows: readonly BridgeRow[];

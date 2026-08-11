@@ -170,15 +170,34 @@ function buildFinancialBridge(
           ember: false,
         },
         {
-          label: "Current difference",
-          value: formatCents(recon.differenceCents),
-          note: "GL over subledger, gross of reserves",
+          // The direction is stated in words and derived from the sign, so
+          // the sentence cannot drift from the figure it describes. "Ledger
+          // difference" alone never says which side is larger.
+          label:
+            recon.differenceCents === 0
+              ? "Subledger agrees with GL"
+              : recon.differenceCents > 0
+                ? "GL exceeds subledger"
+                : "Subledger exceeds GL",
+          value: formatCents(Math.abs(recon.differenceCents)),
+          note: "Gross of reserves",
           emphasis: true,
-          ember: true,
+          ember: recon.differenceCents !== 0,
         },
       ],
       footnote:
         "This is what is recorded today. Nothing on this page has been posted to NetSuite, and Gaurd has no path that could post it.",
+    },
+    // Posted is its own statement, not an inference from the absence of one.
+    // A reader who sees only "current" and "potential" can be left believing
+    // something in between has already been booked.
+    postedAdjustments: {
+      label: "Posted adjustments",
+      value: formatCents(0),
+      note:
+        register !== undefined
+          ? `${register.postedCount} of the ${register.identifiedCount} identified items are posted. Posting happens in NetSuite; this product has no path that could do it.`
+          : "Nothing identified here has been posted.",
     },
     potential: {
       tag: "NOT POSTED · MANAGEMENT VIEW",

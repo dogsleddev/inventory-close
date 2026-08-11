@@ -7,9 +7,8 @@
  * absent or broken, and a number rendered there would be a number nothing
  * stands behind.
  *
- * Scope note (stage A): the app shell is being edited in a separate pass, so
- * this ships on the two standalone pages only. Mounting it under
- * `AppShell`'s workspace is the remaining step.
+ * Rendered inside the app shell on every screen, and on the standalone
+ * not-found and error pages.
  */
 
 /**
@@ -22,7 +21,16 @@
 const ATTRIBUTION =
   "Designed and built as an independent demonstration of inventory close controls. Not affiliated with any system it names.";
 
-export function SiteFooter() {
+export function SiteFooter({
+  /**
+   * The app shell's header already carries the canonical SYNTHETIC DEMO tag,
+   * so the footer states the disclosure in words there and shows the tag only
+   * where it stands alone (not-found, error) and nothing else would say it.
+   */
+  showDemoTag = true,
+}: {
+  showDemoTag?: boolean;
+} = {}) {
   return (
     <footer
       style={{
@@ -45,7 +53,7 @@ export function SiteFooter() {
           flexWrap: "wrap",
         }}
       >
-        <span className="icg-tag icg-tag--demo">SYNTHETIC DEMO</span>
+        {showDemoTag ? <span className="icg-tag icg-tag--demo">SYNTHETIC DEMO</span> : null}
         <span
           className="icg-quiet"
           style={{ fontSize: "11.5px", lineHeight: 1.6, flex: 1, minWidth: "220px" }}

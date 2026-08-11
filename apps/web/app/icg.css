@@ -2684,6 +2684,10 @@ button.icg-close-capsule {
     align-items: center;
   }
 }
+/* Printing is the one way anything leaves this product today, so the printed
+   page is a deliverable, not a fallback: rails and controls drop, every
+   scroll container un-clips so no column is silently cut off the paper, and
+   panels do not break across pages. */
 @media print {
   .icg-rail,
   .icg-askrail,
@@ -2697,5 +2701,18 @@ button.icg-close-capsule {
   }
   .icg-workspace {
     overflow: visible;
+  }
+  /* A horizontally-scrolling table clips on paper — the reader would never
+     know a column was missing. */
+  .icg-table-wrap,
+  .icg-chain,
+  .icg-tabs {
+    overflow: visible;
+  }
+  .icg-panel {
+    break-inside: avoid;
+  }
+  .icg-table tr {
+    break-inside: avoid;
   }
 }

@@ -215,10 +215,41 @@ export function ReconciliationScreen({
                   ))}
                 </div>
 
+                {/* Posted stated outright. Two panels reading "current" and
+                    "potential" leave a reader to infer what has been booked;
+                    this says it. */}
+                <Panel>
+                  <div
+                    style={{
+                      padding: "12px 18px",
+                      display: "flex",
+                      alignItems: "baseline",
+                      justifyContent: "space-between",
+                      gap: "14px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div>
+                      <h2 className="icg-label icg-label--md">
+                        {data.financial.postedAdjustments.label.toUpperCase()}
+                      </h2>
+                      <p
+                        className="icg-quiet"
+                        style={{ fontSize: "10.5px", lineHeight: 1.55, margin: "4px 0 0", maxWidth: "76ch" }}
+                      >
+                        {data.financial.postedAdjustments.note}
+                      </p>
+                    </div>
+                    <span className="icg-num" style={{ fontSize: "19px", fontWeight: 600 }}>
+                      {data.financial.postedAdjustments.value}
+                    </span>
+                  </div>
+                </Panel>
+
                 <Panel>
                   <PanelHead
-                    title="Reconciling bridge"
-                    sub="Each line traces to an exception with its own management conclusion."
+                    title="Inventory subledger-to-GL reconciliation"
+                    sub="Each line traces to an exception with its own management conclusion. Identified is not drafted, and drafted is not posted."
                     right={
                       <span className="icg-nstag">{data.financial.bridge.summary}</span>
                     }

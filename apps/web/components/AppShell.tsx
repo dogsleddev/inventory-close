@@ -13,6 +13,7 @@ import type { AskResult, ResetResultView, ShellData } from "../lib/view-model";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_KEY, type Theme } from "../lib/theme";
 import { AskGaurd, type AskState } from "./AskGaurd";
+import { SiteFooter } from "./SiteFooter";
 import { askGaurd, resetDemo } from "../app/actions";
 
 /**
@@ -414,6 +415,18 @@ export function AppShell(props: AppShellProps) {
                 </button>
               )
             ) : null}
+            {/* The print stylesheet has always existed — it drops the rails
+                and un-clips the tables so any screen prints as a single
+                workpaper. Nothing said so, which made the one path out of
+                this product invisible. */}
+            <button
+              type="button"
+              className="icg-btn icg-btn--mono"
+              onClick={() => window.print()}
+              title="Print this screen as a workpaper"
+            >
+              PRINT
+            </button>
             <button type="button" className="icg-btn icg-btn--mono" onClick={toggleTheme}>
               THEME
             </button>
@@ -456,6 +469,12 @@ export function AppShell(props: AppShellProps) {
         ) : null}
 
         {props.children}
+        {/* Attribution and the synthetic-data disclosure, on every screen and
+            on every printed page — the demo used to have no way to say who
+            built it or that its figures are invented. */}
+        <div style={{ padding: "0 20px 20px" }}>
+          <SiteFooter showDemoTag={false} />
+        </div>
       </div>
 
       {props.drawerOpen ? props.drawer : null}
