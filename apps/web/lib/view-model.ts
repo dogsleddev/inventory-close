@@ -884,6 +884,39 @@ export interface ReconciliationData {
   readonly records: Readonly<Record<string, EvidenceRecordView>>;
 }
 
+/**
+ * One evidence lens on an exception.
+ *
+ * The lenses are DOMAIN-AWARE: a cutoff exception separates what NetSuite
+ * says from what physical evidence says from what accounting evidence says
+ * (CANONICAL_SPEC §2, the canonical EXC-001 pattern), while a count
+ * exception separates book from count from movement, and a manual-entry
+ * exception has no physical dimension at all. A lens with nothing behind it
+ * is OMITTED — an empty lens filled with "nothing in scope" reads as a
+ * finding about the evidence when it is only a finding about the template.
+ */
+export interface LensView {
+  /** Stable key for tests and keys; never shown. */
+  readonly key: string;
+  /** Column heading, e.g. "NETSUITE SAYS" or "PHYSICAL COUNT". */
+  readonly label: string;
+  readonly headline: string;
+  readonly sub: string | null;
+  readonly facts: readonly { readonly label: string; readonly value: string }[];
+  readonly chips: readonly {
+    readonly src: string;
+    readonly kind: string | null;
+    readonly id: string;
+    readonly evidenceId: string | null;
+    readonly netsuite: boolean;
+  }[];
+  readonly note: string | null;
+  /** Ember treatment: this lens carries the gap or the contradiction. */
+  readonly conflict: boolean;
+  readonly missingChip: { readonly label: string; readonly src: string; readonly evidenceId: string | null } | null;
+  readonly staleNote: string | null;
+}
+
 export interface ExceptionDetailData {
   readonly restricted: boolean;
   readonly roleLabel: string;
@@ -905,25 +938,8 @@ export interface ExceptionDetailData {
     readonly nextActionParty: string;
     readonly positionLabel: string;
   };
-  readonly threeLayer?: {
-    readonly netsuite: {
-      readonly headline: string;
-      readonly sub: string;
-      readonly chips: readonly { src: string; kind: string; id: string; evidenceId: string | null; netsuite: boolean }[];
-      readonly note: string;
-    };
-    readonly physical: {
-      readonly headline: string;
-      readonly facts: readonly { label: string; value: string }[];
-      readonly chips: readonly { src: string; id: string; evidenceId: string | null; netsuite: boolean }[];
-    };
-    readonly accounting: {
-      readonly headline: string;
-      readonly sub: string;
-      readonly missing: boolean;
-      readonly missingChip: { label: string; src: string; evidenceId: string | null } | null;
-      readonly staleNote: string | null;
-    };
+  readonly lenses?: {
+    readonly panels: readonly LensView[];
     readonly interpretation: {
       readonly label: string;
       readonly text: string;
@@ -938,8 +954,21 @@ export interface ExceptionDetailData {
     readonly assertions: readonly string[];
     readonly ruleId: string;
     readonly ruleVersion: string;
+    /** Canonical rule vocabulary (CANONICAL_SPEC §10). Shown under Audit Details. */
     readonly result: string;
     readonly coverage: string;
+    /**
+     * Three facts the one word "coverage" used to collapse. A control can be
+     * fully evaluated (every in-scope input was read) while the accounting
+     * evidence behind it is still incomplete, and management may not have
+     * concluded either way. Display mapping only — the canonical enums above
+     * are untouched, because they are hashed into the run's output.
+     */
+    readonly state: {
+      readonly controlEvaluation: { readonly label: string; readonly note: string };
+      readonly accountingEvidence: { readonly label: string; readonly note: string };
+      readonly managementConclusion: { readonly label: string; readonly note: string };
+    };
     readonly audit: readonly { k: string; v: string }[];
   };
   readonly evidenceState?: {

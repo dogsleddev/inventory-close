@@ -303,7 +303,7 @@ export interface PbcPackageItem extends PbcItemOut {
 }
 
 /**
- * One custodian's company-owned holdings (stage 08). `supported` is false
+ * One custodian's holdings recorded as company-owned (stage 08). `supported` is false
  * when a close exception stands against the holding — never inferred from
  * the confirmation state alone, so the rule stays the single authority on
  * whether a holding is a problem.

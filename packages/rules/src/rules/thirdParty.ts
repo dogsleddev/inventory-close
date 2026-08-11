@@ -1,10 +1,20 @@
-﻿import type { RuleFinding, RuleOutput } from "../engine/findings.js";
+﻿import { cents, formatUsd } from "@icg/domain";
+import type { RuleFinding, RuleOutput } from "../engine/findings.js";
 import type { Rule } from "../engine/rule.js";
 
-/** TPI-CONF-001 - third-party custody confirmation (Existence, Rights). */
+/**
+ * TPI-CONF-001 - third-party custody confirmation (Existence, Rights).
+ *
+ * The prose separates what NetSuite RECORDS from what the confirmation
+ * EVIDENCES. Stock sitting at a custodian is custody, not title: with the
+ * confirmation outstanding the rule may not call the units company-owned as
+ * established fact, because Rights & Obligations is exactly what is still
+ * unconfirmed. Ownership is a conclusion management records, not one the
+ * rule reads off a location.
+ */
 export const tpiConf001: Rule = {
   id: "TPI-CONF-001",
-  version: "1.0.0",
+  version: "1.0.1",
   controlDomain: "THIRD_PARTY",
   evaluate(ctx): RuleOutput {
     const custodians = new Map<string, { units: number; exposure: number; skus: Map<string, number> }>();
@@ -30,10 +40,10 @@ export const tpiConf001: Rule = {
         // it must never silently become PASS (docs/16).
         findings.push({
           ruleId: "TPI-CONF-001",
-          ruleVersion: "1.0.0",
+          ruleVersion: "1.0.1",
           kind: "ACCOUNTING_EXCEPTION",
           title: "Third-party confirmation",
-          whyFlagged: `${custodian} holds ${holding.units} company-owned units and no year-end confirmation has been requested; existence and rights at the custodian are entirely unevidenced.`,
+          whyFlagged: `NetSuite records ${holding.units} units totaling ${formatUsd(cents(holding.exposure))} as company inventory held by ${custodian}. No year-end custodian confirmation has been requested, so existence and rights are entirely unevidenced and management has not concluded.`,
           reasonCodes: ["CONFIRMATION_NOT_REQUESTED"],
           assertions: ["EXISTENCE", "RIGHTS_AND_OBLIGATIONS"],
           risk: "HIGH",
@@ -50,10 +60,10 @@ export const tpiConf001: Rule = {
       if (statement.respondedAt === undefined) {
         findings.push({
           ruleId: "TPI-CONF-001",
-          ruleVersion: "1.0.0",
+          ruleVersion: "1.0.1",
           kind: "ACCOUNTING_EXCEPTION",
           title: "Third-party confirmation",
-          whyFlagged: `${custodian} holds ${holding.units} company-owned units; the year-end confirmation requested ${statement.requestedAt.slice(0, 10)} has not been answered, so existence and rights at the custodian are unconfirmed.`,
+          whyFlagged: `NetSuite records ${holding.units} units totaling ${formatUsd(cents(holding.exposure))} as company inventory held by ${custodian}. The year-end custodian confirmation requested ${statement.requestedAt.slice(0, 10)} has not been answered, so existence and rights remain unconfirmed and management has not concluded.`,
           reasonCodes: ["CONFIRMATION_OUTSTANDING"],
           assertions: ["EXISTENCE", "RIGHTS_AND_OBLIGATIONS"],
           risk: "HIGH",
@@ -80,7 +90,7 @@ export const tpiConf001: Rule = {
         );
         findings.push({
           ruleId: "TPI-CONF-001",
-          ruleVersion: "1.0.0",
+          ruleVersion: "1.0.1",
           kind: "ACCOUNTING_EXCEPTION",
           title: "Third-party confirmation variance",
           whyFlagged: `${custodian}'s confirmation does not agree with book holdings for ${mismatched.join(", ")}.`,

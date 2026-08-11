@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { buildExceptionsData, buildShellData } from "../../lib/server/data";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
 import { ExceptionsScreen } from "../../components/ExceptionsScreen";
 import { setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Ownership",
+  description:
+    "Units held somewhere other than a company warehouse, and whether the right to them is confirmed or still open.",
+};
 
 /**
  * Ownership (stage 09) — the exception queue filtered to the ownership and

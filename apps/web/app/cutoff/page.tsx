@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { buildExceptionsData, buildShellData } from "../../lib/server/data";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
 import { ExceptionsScreen } from "../../components/ExceptionsScreen";
 import { setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Cutoff",
+  description:
+    "Shipments and receipts that fall either side of the balance-sheet date, and the exceptions raised where the two disagree.",
+};
 
 /**
  * Cutoff (stage 09) — the exception queue filtered to the cutoff control

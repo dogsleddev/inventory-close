@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AuditPackageScreen } from "../../components/AuditPackageScreen";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
 import { buildAuditPackageData } from "../../lib/server/audit-package-view";
@@ -6,6 +7,12 @@ import { buildShellData } from "../../lib/server/data";
 import { reproduceClose, setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Audit Package",
+  description:
+    "The management-prepared workpapers an auditor would be handed, each with its source, its preparer and its reproduction manifest.",
+};
 
 /**
  * Audit Package — the management-prepared PBC workspace (stage 07). `?pbc=`

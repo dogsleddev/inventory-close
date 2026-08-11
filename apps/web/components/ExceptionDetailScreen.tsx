@@ -254,176 +254,160 @@ export function ExceptionDetailScreen({
               {/* No inline `display`: it would outrank the <1024 read-only
                   rule (.icg-action-conclude { display: none }), which must
                   REMOVE these actions, not merely intend to. */}
+              {/* Both verbs are disabled with their reason stated, never
+                  enabled-and-inert: an action that looks live and does
+                  nothing is the one thing a control product may not ship.
+                  Recording conclusions is a controlled command in the
+                  services layer; wiring it to this surface is its own
+                  reviewed change (COMPLETION_PLAN.md, Stage W). */}
               <div
                 className="icg-action-conclude"
-                style={{ gap: "7px", marginTop: "2px" }}
+                style={{ flexDirection: "column", gap: "3px", marginTop: "2px" }}
               >
-                <button type="button" className="icg-btn icg-btn--primary">
-                  Record conclusion
-                </button>
-                <button type="button" className="icg-btn icg-btn--ghost">
-                  Request evidence
-                </button>
+                <div style={{ display: "flex", gap: "7px" }}>
+                  <button type="button" className="icg-btn icg-btn--disabled" disabled>
+                    Record conclusion
+                  </button>
+                  <button type="button" className="icg-btn icg-btn--disabled" disabled>
+                    Request evidence
+                  </button>
+                </div>
+                <span className="icg-btn-reason">
+                  Not yet enabled in this demo — conclusions are recorded by management, never
+                  by this product on its own.
+                </span>
               </div>
             </div>
           </div>
         </Panel>
 
-        {/* 2 · Three-layer reality */}
-        {data.threeLayer !== undefined ? (
+        {/* 2 · Evidence lenses — domain-aware; three-layer on cutoff/ownership */}
+        {data.lenses !== undefined && data.lenses.panels.length > 0 ? (
           <Panel>
-            <div className="icg-three-layer">
-              <div className="icg-layer">
-                <div className="icg-label icg-label--md">NETSUITE SAYS</div>
-                <div className="icg-layer-title">{data.threeLayer.netsuite.headline}</div>
-                <div className="icg-soft" style={{ fontSize: "12px", marginTop: "2px" }}>
-                  {data.threeLayer.netsuite.sub}
-                </div>
+            <div
+              className={`icg-three-layer${data.lenses.panels.length === 3 ? " icg-three-layer--canonical" : ""}`}
+              style={{ "--icg-lens-count": data.lenses.panels.length } as CSSProperties}
+            >
+              {data.lenses.panels.map((panel) => (
                 <div
-                  style={{
-                    marginTop: "9px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "5px",
-                  }}
+                  key={panel.key}
+                  className={`icg-layer${panel.conflict ? " icg-layer--conflict" : ""}`}
                 >
-                  {data.threeLayer.netsuite.chips.map((chip) => (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      className={`icg-record-chip${chip.netsuite ? " icg-record-chip--netsuite" : ""}`}
-                      onClick={() => openEvidence(chip.evidenceId)}
-                    >
-                      <span className="icg-record-chip-src">{chip.src}</span>
-                      <span className="icg-record-chip-div" aria-hidden />
-                      <span className="icg-record-chip-kind">{chip.kind}</span>
-                      <span className="icg-record-chip-id">{chip.id}</span>
-                    </button>
-                  ))}
-                  <div className="icg-quiet" style={{ fontSize: "11px", lineHeight: 1.5 }}>
-                    {data.threeLayer.netsuite.note}
-                  </div>
-                </div>
-              </div>
-
-              <div className="icg-layer">
-                <div className="icg-label icg-label--md">PHYSICAL EVIDENCE SAYS</div>
-                <div className="icg-layer-title">{data.threeLayer.physical.headline}</div>
-                {data.threeLayer.physical.facts.length > 0 ? (
-                  <div className="icg-layer-facts">
-                    {data.threeLayer.physical.facts.map((f) => (
-                      <div key={f.label}>
-                        <div className="icg-label" style={{ color: "var(--quiet)" }}>
-                          {f.label}
-                        </div>
-                        <div className="icg-layer-fact-value">{f.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "5px",
-                    marginTop: "10px",
-                  }}
-                >
-                  {data.threeLayer.physical.chips.map((chip) => (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      className="icg-chip-inline"
-                      onClick={() => openEvidence(chip.evidenceId)}
-                    >
-                      {chip.src}
-                      <span className="icg-chip-inline-div" aria-hidden />
-                      <span className="icg-chip-inline-id">{chip.id}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                className={`icg-layer${data.threeLayer.accounting.missing ? " icg-layer--conflict" : ""}`}
-              >
-                <div
-                  className="icg-label icg-label--md"
-                  style={
-                    data.threeLayer.accounting.missing ? { color: "var(--ember)" } : undefined
-                  }
-                >
-                  ACCOUNTING EVIDENCE SAYS
-                </div>
-                <div
-                  className="icg-layer-title"
-                  style={
-                    data.threeLayer.accounting.missing ? { color: "var(--ember)" } : undefined
-                  }
-                >
-                  {data.threeLayer.accounting.headline}
-                </div>
-                <div
-                  className="icg-soft"
-                  style={{ fontSize: "12px", marginTop: "2px", lineHeight: 1.5 }}
-                >
-                  {data.threeLayer.accounting.sub}
-                </div>
-                {data.threeLayer.accounting.missingChip !== null ? (
                   <div
-                    style={{
-                      marginTop: "9px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
+                    className="icg-label icg-label--md"
+                    style={panel.conflict ? { color: "var(--ember)" } : undefined}
                   >
-                    <button
-                      type="button"
-                      className="icg-record-chip icg-record-chip--missing"
-                      onClick={() =>
-                        openEvidence(data.threeLayer?.accounting.missingChip?.evidenceId ?? null)
-                      }
-                    >
-                      <span className="icg-record-chip-src">
-                        {data.threeLayer.accounting.missingChip.src}
-                      </span>
-                      <span className="icg-record-chip-div" aria-hidden />
-                      <span className="icg-record-chip-kind">
-                        {data.threeLayer.accounting.missingChip.label}
-                      </span>
-                      <span className="icg-record-chip-id">MISSING</span>
-                    </button>
-                    {data.threeLayer.accounting.staleNote !== null ? (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          fontSize: "10.5px",
-                          color: "var(--warn)",
-                        }}
-                      >
-                        <span aria-hidden style={{ fontSize: "8px" }}>
-                          ◔
-                        </span>
-                        {data.threeLayer.accounting.staleNote}
-                      </div>
-                    ) : null}
+                    {panel.label}
                   </div>
-                ) : null}
-              </div>
+                  <div
+                    className="icg-layer-title"
+                    style={panel.conflict ? { color: "var(--ember)" } : undefined}
+                  >
+                    {panel.headline}
+                  </div>
+                  {panel.sub !== null ? (
+                    <div
+                      className="icg-soft"
+                      style={{ fontSize: "12px", marginTop: "2px", lineHeight: 1.5 }}
+                    >
+                      {panel.sub}
+                    </div>
+                  ) : null}
+                  {panel.facts.length > 0 ? (
+                    <div className="icg-layer-facts">
+                      {panel.facts.map((f) => (
+                        <div key={f.label}>
+                          <div className="icg-label" style={{ color: "var(--quiet)" }}>
+                            {f.label}
+                          </div>
+                          <div className="icg-layer-fact-value">{f.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  {panel.chips.length > 0 || panel.note !== null || panel.missingChip !== null ? (
+                    <div
+                      style={{
+                        marginTop: "9px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "5px",
+                      }}
+                    >
+                      {panel.chips.map((chip) =>
+                        chip.kind !== null ? (
+                          <button
+                            key={chip.id}
+                            type="button"
+                            className={`icg-record-chip${chip.netsuite ? " icg-record-chip--netsuite" : ""}`}
+                            onClick={() => openEvidence(chip.evidenceId)}
+                          >
+                            <span className="icg-record-chip-src">{chip.src}</span>
+                            <span className="icg-record-chip-div" aria-hidden />
+                            <span className="icg-record-chip-kind">{chip.kind}</span>
+                            <span className="icg-record-chip-id">{chip.id}</span>
+                          </button>
+                        ) : (
+                          <button
+                            key={chip.id}
+                            type="button"
+                            className="icg-chip-inline"
+                            onClick={() => openEvidence(chip.evidenceId)}
+                          >
+                            {chip.src}
+                            <span className="icg-chip-inline-div" aria-hidden />
+                            <span className="icg-chip-inline-id">{chip.id}</span>
+                          </button>
+                        ),
+                      )}
+                      {panel.missingChip !== null ? (
+                        <button
+                          type="button"
+                          className="icg-record-chip icg-record-chip--missing"
+                          onClick={() => openEvidence(panel.missingChip?.evidenceId ?? null)}
+                        >
+                          <span className="icg-record-chip-src">{panel.missingChip.src}</span>
+                          <span className="icg-record-chip-div" aria-hidden />
+                          <span className="icg-record-chip-kind">{panel.missingChip.label}</span>
+                          <span className="icg-record-chip-id">MISSING</span>
+                        </button>
+                      ) : null}
+                      {panel.staleNote !== null ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "10.5px",
+                            color: "var(--warn)",
+                          }}
+                        >
+                          <span aria-hidden style={{ fontSize: "8px" }}>
+                            ◔
+                          </span>
+                          {panel.staleNote}
+                        </div>
+                      ) : null}
+                      {panel.note !== null ? (
+                        <div className="icg-quiet" style={{ fontSize: "11px", lineHeight: 1.5 }}>
+                          {panel.note}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
             </div>
-            {data.threeLayer.interpretation !== null ? (
+            {data.lenses.interpretation !== null ? (
               <div className="icg-interpretation">
                 <span
                   className="icg-label icg-label--md"
                   style={{ whiteSpace: "nowrap" }}
                 >
-                  {data.threeLayer.interpretation.label}
+                  {data.lenses.interpretation.label}
                 </span>
                 <span className="icg-interpretation-text">
-                  {data.threeLayer.interpretation.text}
+                  {data.lenses.interpretation.text}
                 </span>
               </div>
             ) : null}
@@ -540,20 +524,62 @@ export function ExceptionDetailScreen({
                     {data.whyFlagged.ruleId} · v{data.whyFlagged.ruleVersion}
                   </span>
                 </div>
-                <div className="icg-kv" style={{ fontSize: "11.5px" }}>
-                  <span className="icg-kv-key">Result</span>
-                  <span
-                    className="icg-mono"
-                    style={{ fontSize: "11px", color: "var(--warn)" }}
-                  >
-                    {data.whyFlagged.result}
-                  </span>
-                </div>
-                <div className="icg-kv" style={{ fontSize: "11.5px" }}>
-                  <span className="icg-kv-key">Coverage</span>
-                  <span className="icg-mono" style={{ fontSize: "11px" }}>
-                    {data.whyFlagged.coverage}
-                  </span>
+                {/* Three separate facts, not one. A control can be fully
+                    evaluated while its accounting evidence is incomplete and
+                    management has not concluded — printing a single word
+                    "coverage" beside a missing record read as a contradiction.
+                    The canonical rule vocabulary is under Audit Details. */}
+                {(
+                  [
+                    ["Control evaluation", data.whyFlagged.state.controlEvaluation],
+                    ["Accounting evidence", data.whyFlagged.state.accountingEvidence],
+                    ["Management conclusion", data.whyFlagged.state.managementConclusion],
+                  ] as const
+                ).map(([key, v]) => (
+                  <div key={key}>
+                    <div className="icg-kv" style={{ fontSize: "11.5px" }}>
+                      <span className="icg-kv-key">{key}</span>
+                      <span
+                        style={{
+                          fontSize: "11.5px",
+                          fontWeight: 600,
+                          color: v.label === "Incomplete" ? "var(--ember)" : undefined,
+                        }}
+                      >
+                        {v.label}
+                      </span>
+                    </div>
+                    <div
+                      className="icg-quiet"
+                      style={{ fontSize: "10.5px", lineHeight: 1.45, marginTop: "1px" }}
+                    >
+                      {v.note}
+                    </div>
+                  </div>
+                ))}
+                {/* The rule's own canonical vocabulary stays on the surface,
+                    not buried: the three states above explain it, they do not
+                    replace it. "Input coverage" names what was covered — the
+                    rule's inputs — which is the distinction the single word
+                    "coverage" used to lose. */}
+                <div
+                  style={{ borderTop: "1px solid var(--hair)", paddingTop: "7px", marginTop: "1px" }}
+                >
+                  <div className="icg-kv" style={{ fontSize: "11.5px" }}>
+                    <span className="icg-kv-key">Rule result</span>
+                    <span
+                      className="icg-mono"
+                      style={{ fontSize: "11px", color: "var(--warn)" }}
+                    >
+                      {data.whyFlagged.result}
+                    </span>
+                  </div>
+                  <div className="icg-kv" style={{ fontSize: "11.5px", marginTop: "3px" }}>
+                    <span className="icg-kv-key">Input coverage</span>
+                    <span className="icg-mono" style={{ fontSize: "11px" }}>
+                      {data.whyFlagged.coverage}
+                    </span>
+                  </div>
                 </div>
                 <div className="icg-quiet" style={{ fontSize: "10.5px", lineHeight: 1.5 }}>
                   Missing required evidence never resolves to PASS.

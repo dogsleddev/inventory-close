@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PhysicalCountScreen } from "../../components/PhysicalCountScreen";
 import { buildPhysicalCountData } from "../../lib/server/count-view";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
@@ -5,6 +6,12 @@ import { buildShellData } from "../../lib/server/data";
 import { setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Physical Count",
+  description:
+    "The year-end count and its cycle history, test counts and movement controls — what was counted, by whom, and what the sheets did not reach.",
+};
 
 /**
  * Physical Count — year-end count, cycle history, test counts, movements.

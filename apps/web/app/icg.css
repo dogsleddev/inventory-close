@@ -1059,8 +1059,20 @@ button {
 }
 
 /* ============ Three-layer reality ============ */
+/* Evidence lenses. The canonical three-layer reality keeps its weighted
+   middle column (the physical evidence carries the most facts); a domain
+   with a different lens count divides evenly rather than inheriting a
+   weighting that means nothing to it. --icg-lens-count is set by the screen
+   from the number of lenses the exception actually has. */
 .icg-three-layer {
   display: grid;
+  grid-template-columns: repeat(var(--icg-lens-count, 3), minmax(0, 1fr));
+}
+/* The canonical three-layer reality keeps its weighted middle column: the
+   physical-evidence lens carries the most facts on the flagship exception.
+   A domain with a different lens count divides evenly instead of inheriting
+   a weighting that means nothing to it. */
+.icg-three-layer--canonical {
   grid-template-columns: 1fr 1.15fr 1fr;
 }
 .icg-layer {

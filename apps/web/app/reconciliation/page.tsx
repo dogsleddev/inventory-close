@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ReconciliationScreen } from "../../components/ReconciliationScreen";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
 import { buildShellData } from "../../lib/server/data";
@@ -5,6 +6,12 @@ import { buildReconciliationData } from "../../lib/server/recon-view";
 import { setRole } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Reconciliation",
+  description:
+    "Where the subledger and the general ledger part company, and what explains each step of the difference.",
+};
 
 /**
  * Reconciliation — the Financial bridge, Procurement Match, Commercial

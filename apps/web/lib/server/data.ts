@@ -33,14 +33,13 @@ import type {
   ShellData,
   SourceHealthRow,
 } from "../view-model";
+import { buildLenses, staleNoteText } from "./exception-lenses";
 import {
   assembleChainNodes,
   assembleDrawer,
   assembleEvidenceRecord,
   assembleEvidenceState,
   assembleTimeline,
-  carrierFact,
-  carrierPhrase,
   gatherExceptionContext,
 } from "./exception-view";
 import {
@@ -682,6 +681,59 @@ export function buildExceptionsData(
   };
 }
 
+/**
+ * The three facts the single word "coverage" used to collapse.
+ *
+ * A control can be fully evaluated — every in-scope input read — while the
+ * accounting evidence behind it is still incomplete, and management may not
+ * have concluded either way. Printing "Coverage COMPLETE" beside "Required
+ * evidence missing" made those read as a contradiction when they are three
+ * separate, simultaneously-true statements.
+ *
+ * This is a DISPLAY mapping. The canonical rule vocabulary (PASS / FAIL /
+ * REVIEW_REQUIRED / INCOMPLETE / NOT_APPLICABLE and COMPLETE / PARTIAL /
+ * INCOMPLETE, CANONICAL_SPEC §10) is hashed into the run's output and is
+ * reported unchanged under Audit Details.
+ */
+function controlState(
+  finding: ExceptionView["exception"]["finding"],
+  status: ExceptionView["exception"]["status"],
+  coverage: string | undefined,
+  warnings: ExceptionView["sourceCoverageWarnings"],
+): NonNullable<ExceptionDetailData["whyFlagged"]>["state"] {
+  const unmet = finding.evidenceRequirements.filter((r) => r.required && !r.satisfied);
+  const evaluated = coverage === "COMPLETE";
+  const warned = warnings
+    .map((w) => `${sourceName(w.sourceSystem)} ${w.status.toLowerCase()}`)
+    .join(" · ");
+  return {
+    controlEvaluation: {
+      label: evaluated ? "Complete" : "Incomplete",
+      note: evaluated
+        ? "Every input in scope for this rule was evaluated."
+        : warned !== ""
+          ? `A source did not answer in full: ${warned}.`
+          : "One or more inputs could not be evaluated.",
+    },
+    accountingEvidence: {
+      label: unmet.length === 0 ? "Complete" : "Incomplete",
+      note:
+        unmet.length === 0
+          ? "Every required record is in evidence."
+          : `Still required: ${unmet.map((r) => r.description).join("; ")}.`,
+    },
+    managementConclusion: {
+      label: conclusionLabel(status),
+      note:
+        status === "RESOLVED_NO_ADJUSTMENT"
+          ? "Management concluded the item is supported and no adjustment is required."
+          : status === "RESOLVED_ADJUSTMENT_PROPOSED"
+            ? "Management concluded an adjustment is required. Proposed — never posted by this product."
+            : "No management conclusion has been recorded. Software does not conclude on management's behalf.",
+    },
+  };
+}
+
 export function buildExceptionDetailData(
   user: DemoUser,
   exceptionId: string,
@@ -719,84 +771,19 @@ export function buildExceptionDetailData(
       ? `${formatCents(finding.exposureCents)} · ${serials.length} × ${skus.join(", ") || "unit"}`
       : formatCents(finding.exposureCents);
 
-  // Three-layer reality (generic; canonical on EXC-001 per design 03).
-  const unitLoc = context.bookUnits[0]
-    ? locationLabel(context.bookUnits[0].location)
-    : undefined;
-  const nsEvidence = context.evidence.filter(
-    (e) => e.sourceSystem === "NETSUITE_ERP" || e.sourceSystem === "NETSUITE_WMS",
-  );
-  const physicalEvidence = context.evidence.filter(
-    (e) =>
-      e.sourceSystem !== undefined &&
-      ["FLIGHTPATH", "DEPLOY_OPS", "DEVICE_CLOUD", "RETURN_LOOP"].includes(e.sourceSystem),
-  );
-  const physicalFacts: { label: string; value: string; at: string }[] = [];
-  const factOf = (kind: string, label: string) => {
-    const e = context.evidence.find((x) => x.kind === kind);
-    if (!e || !e.content) return;
-    const at =
-      kind === "ITEM_FULFILLMENT"
-        ? (e.content["shipDate"] as string | undefined)
-        : kind === "INSTALLATION"
-          ? (e.content["installedAt"] as string | undefined)
-          : (e.content["firstOnlineAt"] as string | undefined);
-    if (at !== undefined) physicalFacts.push({ label, value: formatDateShort(at), at });
-  };
-  factOf("ITEM_FULFILLMENT", "SHIPPED");
-  // The carrier's label is its actual position, not an assumed delivery.
-  const carrier = context.evidence.find((x) => x.kind === "CARRIER_SHIPMENT");
-  const carrierPosition = carrier !== undefined ? carrierFact(carrier) : undefined;
-  if (carrierPosition !== undefined) {
-    physicalFacts.push({
-      label: carrierPosition.label,
-      value: formatDateShort(carrierPosition.at),
-      at: carrierPosition.at,
-    });
-  }
-  factOf("INSTALLATION", "INSTALLED");
-  factOf("TELEMETRY", "FIRST ONLINE");
-
-  // Deployment is a conclusion about the operational facts, not an assumption:
-  // it is claimed only where installation or telemetry actually places the unit
-  // with the customer on or before the period end. Inbound goods still moving
-  // at year-end say exactly that instead.
+  // Evidence lenses. The three-layer reality is the CUTOFF/OWNERSHIP pattern
+  // (canonical on EXC-001 per design 03); other control domains get lenses
+  // that name what their own evidence actually is, and a lens with nothing
+  // behind it is omitted rather than filled. See exception-lenses.ts.
   const periodEnd = attempt(() => queries.getReconciliation(ctx))?.asOf;
-  const deployedAt = physicalFacts.find(
-    (f) => f.label === "INSTALLED" || f.label === "FIRST ONLINE",
-  )?.at;
-  const physicalHeadline =
-    deployedAt !== undefined && periodEnd !== undefined && deployedAt <= periodEnd
-      ? "Deployed to customer before year-end"
-      : carrierPosition !== undefined && carrierPosition.label !== "DELIVERED"
-        ? `${capitalize(carrierPhrase(carrierPosition.label.replace(/ /g, "_")))} — no delivery recorded`
-        : physicalFacts.length > 0 || physicalEvidence.length > 0
-          ? "Operational evidence on file"
-          : "No operational evidence in scope";
-
-  const missingReq = finding.evidenceRequirements.find((r) => r.required && !r.satisfied);
-  const requiredForEvidence = context.evidence.find((e) => e.linkType === "REQUIRED_FOR");
   const staleWarning = view.sourceCoverageWarnings[0];
-
-  // The accounting layer states the gap this exception actually has. Only a
-  // contract-provision gap may be described as a provision; a requirement with
-  // no record behind it is reported as absent rather than attributed to a
-  // document that does not exist.
-  const provisionGap = requiredForEvidence?.kind === "CONTRACT";
-  const accountingHeadline =
-    missingReq === undefined
-      ? conclusionLabel(status)
-      : provisionGap
-        ? "Required provision missing"
-        : "Required evidence missing";
-  const accountingSub =
-    missingReq === undefined
-      ? "Accounting evidence and management review state."
-      : finding.ruleId === "CUT-OUT-001"
-        ? "Ownership / acceptance terms governing transfer of control are not present in the executed agreement on file."
-        : provisionGap && requiredForEvidence !== undefined
-          ? `Not present in ${requiredForEvidence.title}: ${missingReq.description}.`
-          : `Not in evidence: ${missingReq.description}. Required for the ${finding.ruleId} conclusion.`;
+  const lenses = buildLenses({
+    finding,
+    status,
+    context,
+    periodEnd,
+    staleNote: staleNoteText(staleWarning),
+  });
 
   const evidenceState = assembleEvidenceState(context);
   const timeline = assembleTimeline(context);
@@ -856,60 +843,7 @@ export function buildExceptionDetailData(
         ? `Exception ${blockerIds.indexOf(exceptionId) + 1} of ${blockerIds.length} blockers`
         : "Resolved exception",
     },
-    threeLayer: {
-      netsuite: {
-        headline: unitLoc !== undefined ? `${unitLoc} Inventory` : "Transaction state",
-        sub:
-          unitLoc !== undefined
-            ? "At Dec. 31, 2026 · not relieved"
-            : "ERP records referenced by this exception",
-        chips: nsEvidence.map((e) => ({
-          src: e.sourceSystem !== undefined ? sourceLabel(e.sourceSystem) : "—",
-          kind: kindLabel(e.kind),
-          id: e.title,
-          evidenceId: e.id,
-          netsuite: true,
-        })),
-        note: "ERP transaction state. Read-only in this MVP — Gaurd never posts, edits or relieves inventory.",
-      },
-      physical: {
-        headline: physicalHeadline,
-        facts: physicalFacts.map(({ label, value }) => ({ label, value })),
-        chips: physicalEvidence.map((e) => ({
-          src: e.sourceSystem !== undefined ? sourceLabel(e.sourceSystem) : "—",
-          id: e.title,
-          evidenceId: e.id,
-          netsuite: false,
-        })),
-      },
-      accounting: {
-        headline: accountingHeadline,
-        sub: accountingSub,
-        missing: missingReq !== undefined,
-        missingChip:
-          missingReq !== undefined
-            ? {
-                label: missingReq.description,
-                src:
-                  requiredForEvidence?.sourceSystem !== undefined
-                    ? sourceLabel(requiredForEvidence.sourceSystem)
-                    : "—",
-                evidenceId: requiredForEvidence?.id ?? null,
-              }
-            : null,
-        staleNote:
-          staleWarning !== undefined
-            ? `${sourceName(staleWarning.sourceSystem)} source ${staleWarning.status.toLowerCase()}${staleWarning.note !== undefined ? ` — ${staleWarning.note}` : ""}`
-            : null,
-      },
-      interpretation:
-        finding.ruleId === "CUT-OUT-001"
-          ? {
-              label: "LOCATION IS NOT OWNERSHIP",
-              text: "Deployment, installation and telemetry establish where the units are and what happened. They do not establish transfer of control. The customer invoice is billing evidence only. Until the governing provision is in evidence, the conclusion stays Open.",
-            }
-          : null,
-    },
+    lenses,
     chain: chainData,
     whyFlagged: {
       text: finding.whyFlagged,
@@ -918,6 +852,7 @@ export function buildExceptionDetailData(
       ruleVersion: finding.ruleVersion,
       result: execution?.result ?? "—",
       coverage: execution?.coverage ?? "—",
+      state: controlState(finding, status, execution?.coverage, view.sourceCoverageWarnings),
       audit: [
         { k: "Object ID", v: exceptionId },
         { k: "Rule", v: `${finding.ruleId} · v${finding.ruleVersion}` },

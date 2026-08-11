@@ -44,7 +44,10 @@ describe("EXC-001 — 30-second acceptance (three-layer reality)", () => {
     expect(screen.getByText("ACCOUNTING EVIDENCE SAYS")).toBeTruthy();
     expect(screen.getByText("Required provision missing")).toBeTruthy();
     expect(screen.getByText("MANAGEMENT CONCLUSION")).toBeTruthy();
-    expect(screen.getByText("Open")).toBeTruthy();
+    // Twice by design: the decision panel carries the conclusion as a record,
+    // and the control-state trio repeats it beside the control evaluation and
+    // the accounting evidence so the three are read together.
+    expect(screen.getAllByText("Open").length).toBeGreaterThan(0);
     expect(screen.getByText("Waiting on Contract")).toBeTruthy();
   });
 

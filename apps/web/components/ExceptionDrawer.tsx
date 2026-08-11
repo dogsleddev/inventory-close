@@ -179,11 +179,10 @@ export function ExceptionDrawer({
             >
               Open full exception
             </Link>
-            {/* §5: an evidence-request action is REMOVED below 1024, not
-                disabled — the class sits on the button so navigation stays. */}
-            <button type="button" className="icg-btn icg-btn--ghost icg-action-conclude">
-              Request evidence
-            </button>
+            {/* The drawer carries the summary and nothing more: the verbs
+                belong on the full exception, which is one click away above.
+                A second inert copy of an action here only multiplied the
+                places a reader could click and get nothing. */}
           </div>
         </div>
       </div>
