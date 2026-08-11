@@ -47,8 +47,22 @@ import type { Workspace } from "./workspace.js";
 /* Custody — the book population by who is holding it                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Who is holding the unit, as a three-way answer.
+ *
+ * NOT_ESTABLISHED is its own value and not the absence of one: a custody type
+ * the location does not describe means nobody has said who holds the unit,
+ * which is a different statement from "somebody other than the company does".
+ * Both surfaces used to derive this by taking the COMPLEMENT of a small
+ * company-held set, which turned `UNDETERMINED` into a positive claim that a
+ * third party held the unit.
+ */
+export type CustodyHolder = "COMPANY" | "OTHER_PARTY" | "NOT_ESTABLISHED";
+
 export interface CustodyRowOut {
   readonly custodyType: PhysicalCustodyType;
+  /** Derived once, here. No surface may re-derive it from a set of its own. */
+  readonly heldBy: CustodyHolder;
   readonly units: number;
   readonly carryingCents: number;
   /** Locations contributing to this custody answer. */
@@ -70,6 +84,13 @@ export interface CustodyBreakdownOut {
    * Whether the custody cut accounts for the whole book. A custody breakdown
    * that drops a unit is worse than none: it invites a reader to treat the
    * rows as the population.
+   *
+   * `undeterminedUnits === 0` is a REQUIRED conjunct, and it is the only one
+   * that can realistically go false. Comparing the row sum against `bookUnits`
+   * is a tautology — `custodyTypeFor` is total, so every unit lands in some
+   * bucket and the sum always agrees — which left the flag true while
+   * `UNDETERMINED` units existed, so a green "every unit resolves to exactly
+   * one custody answer" rendered beside a stat counting units that had not.
    */
   readonly coversBook: boolean;
   /** Custody types in the taxonomy that no book unit resolves to. */
@@ -85,18 +106,34 @@ export interface CustodyBreakdownOut {
 }
 
 /**
- * Custody types where the holder is NOT the company. Used only to summarise
- * "how much of our stock is in someone else's hands" — it is a grouping of
- * the derived answer, never a second derivation.
+ * Custody type → who is holding it. Total over the taxonomy, and exhaustive
+ * by construction: `Record<PhysicalCustodyType, …>` means adding a custody
+ * type without answering this question is a compile error rather than a unit
+ * quietly reported as held by a third party.
+ *
+ * This is the ONE place the distinction is made. It used to exist three times
+ * — a positive six-type list here, and two three-type company-held sets in the
+ * web layer and the exporter whose COMPLEMENT was rendered as "Another party".
+ * The three were not complements of each other, so `UNDETERMINED` was held by
+ * nobody according to the summary figure and by a third party according to the
+ * table beside it.
  */
-const HELD_BY_OTHERS: readonly PhysicalCustodyType[] = [
-  "IN_TRANSIT_INBOUND",
-  "IN_TRANSIT_OUTBOUND",
-  "CUSTOMER_SITE",
-  "THIRD_PARTY_CUSTODIAN",
-  "CONTRACT_MANUFACTURER",
-  "FIELD_DEMO_LOANER",
-];
+const CUSTODY_HOLDER: Readonly<Record<PhysicalCustodyType, CustodyHolder>> = {
+  COMPANY_WAREHOUSE: "COMPANY",
+  REPAIR_RMA_HOLD: "COMPANY",
+  QUARANTINE_DAMAGED: "COMPANY",
+  IN_TRANSIT_INBOUND: "OTHER_PARTY",
+  IN_TRANSIT_OUTBOUND: "OTHER_PARTY",
+  CUSTOMER_SITE: "OTHER_PARTY",
+  THIRD_PARTY_CUSTODIAN: "OTHER_PARTY",
+  CONTRACT_MANUFACTURER: "OTHER_PARTY",
+  FIELD_DEMO_LOANER: "OTHER_PARTY",
+  // Vendor-owned stock in the company's custody is held BY the company; it is
+  // simply not the company's stock. No book unit resolves here.
+  CONSIGNMENT_IN: "COMPANY",
+  CONSIGNMENT_OUT: "OTHER_PARTY",
+  UNDETERMINED: "NOT_ESTABLISHED",
+};
 
 export function getCustodyBreakdown(
   ws: Workspace,
@@ -145,6 +182,7 @@ export function getCustodyBreakdown(
   const rows: CustodyRowOut[] = [...buckets.entries()]
     .map(([custodyType, b]) => ({
       custodyType,
+      heldBy: CUSTODY_HOLDER[custodyType],
       units: b.units,
       carryingCents: b.cents,
       locations: [...b.locations].sort(),
@@ -155,7 +193,8 @@ export function getCustodyBreakdown(
 
   const bookUnits = ws.dataset.inventoryUnits.length;
   const bookCarryingCents = rows.reduce((n, r) => n + r.carryingCents, 0);
-  const heldByOthers = rows.filter((r) => HELD_BY_OTHERS.includes(r.custodyType));
+  const heldByOthers = rows.filter((r) => r.heldBy === "OTHER_PARTY");
+  const undeterminedUnits = buckets.get("UNDETERMINED")?.units ?? 0;
 
   return {
     asOf: ws.close.reconciliation.asOf,
@@ -164,12 +203,13 @@ export function getCustodyBreakdown(
     bookCarryingCents,
     subledgerCents: ws.close.reconciliation.subledgerCents,
     coversBook:
+      undeterminedUnits === 0 &&
       rows.reduce((n, r) => n + r.units, 0) === bookUnits &&
       bookCarryingCents === ws.close.reconciliation.subledgerCents,
     unpopulatedTypes: PHYSICAL_CUSTODY_TYPES.filter(
       (t) => !buckets.has(t) && t !== "UNDETERMINED",
     ),
-    undeterminedUnits: buckets.get("UNDETERMINED")?.units ?? 0,
+    undeterminedUnits,
     heldByOthersUnits: heldByOthers.reduce((n, r) => n + r.units, 0),
     heldByOthersCents: heldByOthers.reduce((n, r) => n + r.carryingCents, 0),
   };

@@ -47,8 +47,17 @@ const METHOD_LABELS: Readonly<Record<string, string>> = {
   SALVAGE_SALE: "Salvage sale",
 };
 
-/** Custody types where the company itself is the holder. */
-const COMPANY_HELD = new Set(["COMPANY_WAREHOUSE", "REPAIR_RMA_HOLD", "QUARANTINE_DAMAGED"]);
+/**
+ * Who is holding it, in a reader's words. The ANSWER comes from the service
+ * (`row.heldBy`); this map is only the wording. Deriving it here from a set of
+ * company-held types made "custody not established" render as a positive claim
+ * that another party held the unit.
+ */
+const HOLDER_LABELS: Readonly<Record<string, string>> = {
+  COMPANY: "The company",
+  OTHER_PARTY: "Another party",
+  NOT_ESTABLISHED: "Not established",
+};
 
 /** Unit counts group at workpaper scale; a bare 1500 reads as an id. */
 const units = (n: number): string => n.toLocaleString("en-US");
@@ -85,13 +94,20 @@ export function buildCustodyData(user: DemoUser, correlationId: string): Custody
     units: units(r.units),
     carrying: formatCents(r.carryingCents),
     locations: r.locations.map(locationLabel).join(", "),
-    // A blank cell here would assert that nobody holds the unit. The listing
-    // records a named holder only where custody has passed to one.
+    // A blank cell would assert that nobody holds the unit, so the absence is
+    // stated. What it may NOT do is explain itself with a rule the row next to
+    // it breaks: "the listing records a holder only where a third party holds
+    // the unit" was false on 305 units at a customer site, in the demo pool or
+    // in transit — all held by another party, none carrying a name. The
+    // listing names a holder for the two custodian arrangements it records,
+    // and says nothing about the rest.
     custodians:
       r.custodians.length > 0
-        ? r.custodians.join(", ")
-        : `No named holder on ${r.unitsWithoutCustodian === r.units ? "any" : `${r.unitsWithoutCustodian} of these`} — the listing records one only where a third party holds the unit`,
-    heldByCompany: COMPANY_HELD.has(r.custodyType),
+        ? r.custodians.length === 1 || r.unitsWithoutCustodian === 0
+          ? r.custodians.join(", ")
+          : `${r.custodians.join(", ")} — and no name on ${units(r.unitsWithoutCustodian)} of these units`
+        : "No holder named on the listing",
+    heldBy: HOLDER_LABELS[r.heldBy] ?? r.heldBy,
   }));
 
   const custodyStats: ProcurementStat[] = [
@@ -241,7 +257,13 @@ export function buildCustodyData(user: DemoUser, correlationId: string): Custody
         custody.unpopulatedTypes.length === 0
           ? "Every custody type in the model has a population on this listing."
           : `The model can express ${custody.unpopulatedTypes.length} more custody types that no unit on this listing resolves to: ${custody.unpopulatedTypes.map((t) => CUSTODY_LABELS[t] ?? t).join(", ")}. Representable and empty is not the same as unsupported — consignment-in has its own population on the next tab, and it is off-book by construction.`,
-      note: "Custody says who is holding the unit. Ownership is the accounting conclusion beside it, and the two answer different questions: everything here is company-owned stock, including the units a customer, a carrier or an installer is holding. Location is not ownership.",
+      // "Everything here is company-owned" was too strong: presence on the
+      // listing is the company's RECORDED assertion of ownership, and the
+      // close has open exceptions disputing that assertion for some of these
+      // very units — EXC-007's third-party holding among them. Custody is
+      // still the question this screen answers; ownership is reported as what
+      // the listing asserts, with the dispute named rather than papered over.
+      note: "Custody says who is holding the unit. Ownership is the accounting conclusion beside it, and the two answer different questions: every unit here is stock the listing RECORDS as company-owned, including the units a customer, a carrier or an installer is holding. Where an open exception disputes that record, the Exceptions and Ownership screens carry it — this screen never treats a location as an ownership conclusion. Location is not ownership.",
     },
     consignment: {
       stats: consignmentStats,
@@ -259,10 +281,16 @@ export function buildCustodyData(user: DemoUser, correlationId: string): Custody
           ? "Checked, not assumed, and in two steps: no serial held here appears on the year-end listing, and the listing is exactly what the close reports as the inventory subledger. The second step is what makes the first one about value rather than about serial numbers."
           : `${consignment.consignedSerialsOnBook.join(", ")} appears both here and on the year-end listing. A unit cannot be both vendor-owned and part of the company's inventory, so one of the two records is wrong.`,
       },
+      // The measurement is "no count line records a consignment bin". The
+      // REASON must not overstate it: the counted population is drawn from
+      // book locations, but the count also runs floor-to-sheet tests that
+      // start from the floor — one of which found a unit that is not on the
+      // book at all. So this says what the count recorded, not what it could
+      // not have reached.
       countNote:
         consignment.countLinesTouchingConsignmentBins === 0
-          ? "No year-end count line reaches a consignment bin. The count population is drawn from the book, so these units were not in its scope — an omission by design, and one worth knowing when reading count coverage."
-          : `${consignment.countLinesTouchingConsignmentBins} count lines reach a consignment bin, so the count population includes stock the company does not own.`,
+          ? "No year-end count line records a consignment bin, so nothing in the count either corroborates or contradicts these holdings. The counted population is drawn from book locations and these units are not on the book — though the count does also run floor-to-sheet tests that start from the floor, so this states what was recorded rather than what the count could not have reached."
+          : `${consignment.countLinesTouchingConsignmentBins} count lines record a consignment bin, so the count reached stock the company does not own.`,
       note: "Vendor-owned units in the company's custody: the case the book population cannot express, because the book is a list of what the company owns. Value is the owner's, stated at the standard price for the part — the company never bought these units and has no cost basis in them, so no figure here is a cost.",
       withheldNote:
         consignment.withheldRowCount === 0

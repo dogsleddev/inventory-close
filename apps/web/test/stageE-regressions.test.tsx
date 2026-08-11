@@ -90,12 +90,20 @@ describe("the three populations are never presented as addable", () => {
     expect(tab?.label).toMatch(/vendor-owned/i);
   });
 
-  it("says every custody row is company-owned wherever it sits", () => {
+  it("says the listing RECORDS these units as company-owned, not that ownership is settled", () => {
+    // "Everything here is company-owned" was flatly too strong: presence on
+    // the listing is the company's recorded ASSERTION of ownership, and the
+    // close carries open exceptions disputing it for some of these very units.
     renderCustody("custody");
     expect(
-      screen.getByText(/Every unit here is company-owned, wherever it physically sits/),
+      screen.getByText(/Every unit here is stock the listing records as company-owned/),
     ).toBeTruthy();
     expect(screen.getByText(/Location is not ownership/)).toBeTruthy();
+    expect(screen.getByText(/Where an open exception disputes that record/)).toBeTruthy();
+    // The overclaim must not come back.
+    expect(document.body.textContent ?? "").not.toMatch(
+      /Every unit here is company-owned/,
+    );
   });
 });
 
@@ -133,8 +141,62 @@ describe("locations render the names the dataset gives them", () => {
     const rendered = document.body.textContent ?? "";
     const custody = getCustodyBreakdown(getWorkspace(), ctx());
     const shown = new Set(custody.rows.flatMap((r) => r.locations));
-    for (const location of divergent.filter((l) => shown.has(l.id))) {
+    const checked = divergent.filter((l) => shown.has(l.id));
+    // `shown` comes from the output under test, so an empty output would empty
+    // this loop and the test would pass having checked nothing.
+    expect(checked.length, "no divergent location reached the screen").toBeGreaterThan(0);
+    for (const location of checked) {
       expect(rendered, location.id).toContain(location.name);
+    }
+  });
+});
+
+describe("custody never turns an absence into a positive claim", () => {
+  it("labels the holder from the service's answer, in three values not two", () => {
+    // Both surfaces used to take the COMPLEMENT of a small company-held set,
+    // so a unit whose custody was NOT ESTABLISHED rendered as one another
+    // party holds — an affirmative claim manufactured from an absence. The
+    // answer now comes from the service and has three values.
+    const custody = getCustodyBreakdown(getWorkspace(), ctx());
+    const data = buildCustodyData(user(), "T-E");
+    const wording: Record<string, string> = {
+      COMPANY: "The company",
+      OTHER_PARTY: "Another party",
+      NOT_ESTABLISHED: "Not established",
+    };
+    expect(data.custody?.rows.length).toBe(custody.rows.length);
+    custody.rows.forEach((row, i) => {
+      expect(data.custody?.rows[i]?.heldBy, row.custodyType).toBe(wording[row.heldBy]);
+    });
+    // The view holds no set of its own to fall out of.
+    const view = readFileSync(
+      join(import.meta.dirname, "..", "lib", "server", "custody-view.ts"),
+      "utf8",
+    );
+    expect(view).not.toContain("COMPANY_HELD");
+    expect(view).toContain("r.heldBy");
+    const exporter = readFileSync(
+      join(import.meta.dirname, "..", "lib", "server", "export-csv.ts"),
+      "utf8",
+    );
+    expect(exporter).not.toContain("COMPANY_HELD_CUSTODY");
+  });
+
+  it("never explains a blank holder with a rule the same row breaks", () => {
+    // The fallback used to read "the listing records one only where a third
+    // party holds the unit" — false on every row the column beside it labels
+    // "Another party" and which carries no name: customer sites, the demo
+    // pool, and both transit rows, 305 units in all.
+    const data = buildCustodyData(user(), "T-E");
+    const nameless = (data.custody?.rows ?? []).filter(
+      (r) => r.custodians === "No holder named on the listing",
+    );
+    expect(nameless.length).toBeGreaterThan(0);
+    const namelessHeldByOthers = nameless.filter((r) => r.heldBy === "Another party");
+    // The contradiction must be reachable, or this proves nothing.
+    expect(namelessHeldByOthers.length).toBeGreaterThan(0);
+    for (const row of data.custody?.rows ?? []) {
+      expect(row.custodians, row.custody).not.toMatch(/only where a third party holds/);
     }
   });
 });
@@ -241,6 +303,32 @@ describe("the E&O methodology never becomes a reserve", () => {
     expect(screen.getByText(/no recovery rate has been applied to it/)).toBeTruthy();
     expect(screen.getByText(/not an exposure, not a proposed write-down/)).toBeTruthy();
 
+    // PLACEMENT, asserted rather than described. Both prose checks above sit
+    // in one string, so neither located the figure on the page nor related it
+    // to the reserve — the ordering was pinned only in the CSV.
+    const panels = [...document.querySelectorAll(".icg-panel")];
+    const at = (test: (el: Element) => boolean, what: string) => {
+      const i = panels.findIndex(test);
+      expect(i, what).toBeGreaterThan(-1);
+      return i;
+    };
+    const reserveAt = at(
+      (el) => (el.textContent ?? "").includes("UNDETERMINED"),
+      "reserve panel",
+    );
+    const excessAt = at(
+      (el) => (el.textContent ?? "").includes("no recovery rate has been applied to it"),
+      "excess panel",
+    );
+    expect(excessAt, "the excess figure must sit after the reserve").toBeGreaterThan(
+      reserveAt,
+    );
+    // And the excess figure is not inside the reserve panel.
+    const reservePanel = panels[reserveAt];
+    expect(reservePanel?.textContent ?? "").not.toContain(
+      formatCents(eo.excessOverHorizonCents),
+    );
+
     // The existing reserve guarantees still hold on this screen.
     expect(screen.queryByRole("button", { name: /reserve/i })).toBeNull();
     expect(screen.queryByText(/write.?off/i)).toBeNull();
@@ -288,8 +376,8 @@ describe("the custody file carries what the screens show", () => {
     const disp = getDispositions(getWorkspace(), ctx());
     for (const heading of [
       "PHYSICAL CUSTODY (COMPANY-OWNED STOCK)",
-      "CONSIGNMENT IN (VENDOR-OWNED, NOT COMPANY INVENTORY)",
-      "DISPOSITION (UNITS THAT LEFT THE BOOK IN FY2026)",
+      "CONSIGNMENT IN (VENDOR-OWNED / NOT COMPANY INVENTORY)",
+      "DISPOSITION (UNITS THAT LEFT THE BOOK IN THE YEAR)",
       "BY METHOD",
     ]) {
       expect(body, heading).toContain(heading);
@@ -298,9 +386,19 @@ describe("the custody file carries what the screens show", () => {
     expect(cellAt(body, "Total on the listing", 6)).toBe(
       formatCents(custody.bookCarryingCents),
     );
-    expect(cellAt(body, "Total held on consignment", 7)).toBe(
-      formatCents(consign.statedValueCents),
-    );
+    // The consignment section has no Units column, so the count lives in the
+    // label — it used to sit under "Received", filing a count against a date.
+    expect(
+      cellAt(body, `Total held on consignment (${consign.units} units)`, 7),
+    ).toBe(formatCents(consign.statedValueCents));
+    const consignHeader =
+      body
+        .split("\r\n")
+        .find((l) => l.startsWith('"Serial"'))
+        ?.slice(1, -1)
+        .split('","') ?? [];
+    expect(consignHeader[7]).toBe("Owner's stated value");
+    expect(consignHeader).not.toContain("Units");
     expect(cellAt(body, "Custody accounts for the whole listing", 1)).toBe("YES");
     expect(cellAt(body, "Outside the inventory subledger", 1)).toBe("YES");
     expect(cellAt(body, "None of these units is on the listing", 1)).toBe("YES");
@@ -403,18 +501,71 @@ describe("the valuation file keeps its reserve guarantee with the new sections",
   });
 
   it("is recognised as a boundary by the same splitter the suite uses", () => {
-    const body = csv("valuation");
-    for (const heading of [
-      "OBSOLESCENCE INDICATORS BY SKU",
-      "AGING BASIS",
-      "CONDITION AND RECOVERY EVIDENCE",
-    ]) {
-      expect(body, heading).toContain(heading);
-      expect(
-        new RegExp(`\\r\\n"[A-Z][A-Z ()/—-]{6,}"\\r\\n`).test(`\r\n"${heading}"\r\n`),
-        `${heading} is not seen as a section boundary`,
-      ).toBe(true);
+    // Run the splitter over the FILE, not over a string the test builds — a
+    // heading can be regex-compatible in isolation and still not be emitted
+    // as its own row. Every heading in both Stage E files is checked, which
+    // is how the comma in "CONSIGNMENT IN (VENDOR-OWNED, NOT COMPANY
+    // INVENTORY)" and the digits in "… IN FY2026" were found: the splitter's
+    // character class has neither, so both were invisible as boundaries.
+    const splitter = /\r\n"[A-Z][A-Z ()/—-]{6,}"\r\n/g;
+    for (const [table, headings] of [
+      [
+        "valuation",
+        ["OBSOLESCENCE INDICATORS BY SKU", "AGING BASIS", "CONDITION AND RECOVERY EVIDENCE"],
+      ],
+      [
+        "custody",
+        [
+          "PHYSICAL CUSTODY (COMPANY-OWNED STOCK)",
+          "CONSIGNMENT IN (VENDOR-OWNED / NOT COMPANY INVENTORY)",
+          "DISPOSITION (UNITS THAT LEFT THE BOOK IN THE YEAR)",
+          "BY METHOD",
+        ],
+      ],
+    ] as const) {
+      const body = csv(table);
+      const found = new Set((body.match(splitter) ?? []).map((m) => m.slice(3, -3)));
+      for (const heading of headings) {
+        expect(body, `${table}: ${heading} missing`).toContain(heading);
+        expect(
+          found.has(heading),
+          `${table}: "${heading}" is emitted but the section splitter does not see it as a boundary`,
+        ).toBe(true);
+      }
     }
+  });
+
+  it("never lets a closing note describe sections it does not cover", () => {
+    // The file used to end on one note calling every carrying value "gross
+    // exposure". Stage E inserted three methodology sections above it, so a
+    // file-level sentence ended up sitting under the one figure the same file
+    // explicitly says is NOT an exposure — asserted and denied 22 rows apart.
+    // A closing note has to name what it closes.
+    const body = csv("valuation");
+    const eo = getEoMethodology(getWorkspace(), ctx());
+    const lines = body.split("\r\n");
+    const at = (prefix: string) => {
+      const i = lines.findIndex((l) => l.startsWith('"' + prefix + '"'));
+      expect(i, prefix).toBeGreaterThan(-1);
+      return i;
+    };
+    const reserveNote = at("Note on the sections above");
+    const methodologyNote = at("Note on the methodology sections");
+    const methodologySection = lines.findIndex((l) =>
+      l.startsWith('"OBSOLESCENCE INDICATORS BY SKU"'),
+    );
+    // The reserve note closes the reserve sections and comes BEFORE the
+    // methodology begins; the methodology has its own note at the end.
+    expect(reserveNote).toBeLessThan(methodologySection);
+    expect(methodologyNote).toBeGreaterThan(methodologySection);
+
+    // Neither note calls the excess figure an exposure, and no unscoped
+    // "gross exposure" sentence survives anywhere after the methodology
+    // starts.
+    const afterMethodology = lines.slice(methodologySection).join("\r\n");
+    expect(afterMethodology).not.toContain("gross exposure");
+    expect(afterMethodology).toContain(formatCents(eo.excessOverHorizonCents));
+    expect(lines[reserveNote]).toContain("aging, review and damaged sections");
   });
 
   it("carries the methodology without deriving a reserve anywhere in the file", () => {

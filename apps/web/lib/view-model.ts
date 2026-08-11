@@ -1254,9 +1254,10 @@ export interface CustodyRowView {
   readonly units: string;
   readonly carrying: string;
   readonly locations: string;
-  /** Named holders, or the stated reason there is none. */
+  /** Named holders, or the stated absence of one. */
   readonly custodians: string;
-  readonly heldByCompany: boolean;
+  /** The service's own three-way answer, worded. Never re-derived here. */
+  readonly heldBy: string;
 }
 
 export interface ConsignmentRowView {

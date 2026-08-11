@@ -103,6 +103,23 @@ D (`costing.ts`) and E (`ownership.ts` + `eoMethodology.ts`):
    is itself a failure that test catches.
 6. Regressions that pin rules rather than strings, then **mutation-test them** before shipping.
 
+**Stage E's adversarial review found 14 of its 23 confirmed defects IN THE NEW TESTS.** Four
+shapes to check your own regressions against, because mutation-testing the obvious ones did not
+catch these:
+
+- **A conjunction whose terms are never broken separately.** `outsideSubledger = heldOffBook &&
+  subledgerIsBookPopulation`; the created-condition test pushed a normally-costed unit, which
+  broke BOTH terms at once, so the first was never shown to be load-bearing. Break each term
+  alone (here: a zero-cost unit).
+- **A tautological conjunct hiding a live one.** `coversBook` compared a row sum against
+  `bookUnits` — always equal, because the derivation is total — so the flag could not go false
+  for the reason its own false-branch text named.
+- **A cardinality assertion standing in for an identity one.** `metAge.length > metBoth.length`
+  constrains neither flag; hard-coding `metAgeTest: true` passed it. Assert WHICH.
+- **A loop whose iteration count comes from the output under test.** The location-name test
+  filtered the expected list by what the screen rendered, so an empty screen emptied the loop and
+  the test went green having checked nothing. Assert the loop ran.
+
 **Reusable pieces Stage E left behind:** `StatStrip` now lives in `apps/web/components/kit.tsx`
 (it was about to be copied a third time). `MeasuredClaimView` + the `ClaimPanel` pattern in
 `CustodyScreen.tsx` is the shape for any ✓/✕ panel whose sentence comes from a measured boolean.

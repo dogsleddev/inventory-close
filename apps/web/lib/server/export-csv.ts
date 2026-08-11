@@ -72,14 +72,16 @@ export const EXPORT_TABLES = [
 export type ExportTable = (typeof EXPORT_TABLES)[number];
 
 /**
- * Custody types where the company itself is the holder. A grouping of the
- * derived answer for display, never a second derivation of it.
+ * Who is holding it, in a reader's words. The ANSWER comes from the service's
+ * own `heldBy` field — this is only the wording. It used to be a set of
+ * company-held types whose complement was written as "Another party", which
+ * reported a unit with no established custody as one a third party held.
  */
-const COMPANY_HELD_CUSTODY = new Set([
-  "COMPANY_WAREHOUSE",
-  "REPAIR_RMA_HOLD",
-  "QUARANTINE_DAMAGED",
-]);
+const HOLDER_LABELS: Readonly<Record<string, string>> = {
+  COMPANY: "The company",
+  OTHER_PARTY: "Another party",
+  NOT_ESTABLISHED: "Not established",
+};
 
 export function isExportTable(value: string): value is ExportTable {
   return (EXPORT_TABLES as readonly string[]).includes(value);
@@ -755,7 +757,7 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       lines.push(
         row([
           r.custodyType,
-          COMPANY_HELD_CUSTODY.has(r.custodyType) ? "The company" : "Another party",
+          HOLDER_LABELS[r.heldBy] ?? r.heldBy,
           r.locations.join(" / "),
           r.custodians.length > 0 ? r.custodians.join(" / ") : "None recorded",
           r.unitsWithoutCustodian,
@@ -789,7 +791,12 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       ]),
     );
     lines.push("");
-    lines.push(row(["CONSIGNMENT IN (VENDOR-OWNED, NOT COMPANY INVENTORY)"]));
+    // No comma and no digits: the suite's section splitter recognises only
+    // A–Z, space, parentheses, slash and hyphen, so "CONSIGNMENT IN
+    // (VENDOR-OWNED, NOT COMPANY INVENTORY)" and "… IN FY2026" were invisible
+    // to it as boundaries — which is exactly what the comment above the
+    // custody branch warns about, broken by the branch it annotates.
+    lines.push(row(["CONSIGNMENT IN (VENDOR-OWNED / NOT COMPANY INVENTORY)"]));
     if (consignment.withheldRowCount > 0) {
       lines.push(
         row([
@@ -824,15 +831,18 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         ]),
       );
     }
+    // The unit count goes in the label, not under "Received": this section's
+    // header has no Units column, and a count sitting under a date heading is
+    // a figure filed against the wrong fact.
     lines.push(
       row([
-        "Total held on consignment",
+        `Total held on consignment (${consignment.units} units)`,
         "",
         "",
         "",
         "",
         "",
-        consignment.units,
+        "",
         formatCents(consignment.statedValueCents),
       ]),
     );
@@ -850,6 +860,9 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           : `${consignment.consignedSerialsOnBook.join(", ")} appears both here and on the year-end listing`,
       ]),
     );
+    // Branched on the measurement, like the screen. An unbranched sentence
+    // saying the units were out of scope would contradict any non-zero count
+    // in the cell beside it.
     lines.push(
       row([
         "Count lines reaching a consignment bin",
@@ -859,11 +872,13 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         "",
         "",
         "",
-        "The year-end count population is drawn from the book, so these units were not in its scope",
+        consignment.countLinesTouchingConsignmentBins === 0
+          ? "Nothing in the year-end count corroborates or contradicts these holdings. The counted population is drawn from book locations and these units are not on the book - but the count also runs floor-to-sheet tests that start from the floor, so this states what the count recorded, not what it could not have reached"
+          : "The count recorded lines in a consignment bin, so it reached stock the company does not own",
       ]),
     );
     lines.push("");
-    lines.push(row(["DISPOSITION (UNITS THAT LEFT THE BOOK IN FY2026)"]));
+    lines.push(row(["DISPOSITION (UNITS THAT LEFT THE BOOK IN THE YEAR)"]));
     if (dispositions.withheldRowCount > 0) {
       lines.push(
         row([
@@ -1247,6 +1262,19 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       );
     }
     lines.push("");
+    // This note closes the RESERVE-RELATED sections above it, and it is
+    // scoped to them by name. It used to be the file's last row, and Stage E
+    // inserted three methodology sections between it and what it described —
+    // so a file-level sentence calling every carrying value "gross exposure"
+    // ended up sitting under a figure the same file explicitly says is not an
+    // exposure. A closing note has to name what it closes.
+    lines.push(
+      row([
+        "Note on the sections above",
+        "Every population in the aging, review and damaged sections identifies stock for review. None of them is a write-down, and their carrying values are gross exposure — never a proposed reserve. No rule in this product can emit a reserve amount.",
+      ]),
+    );
+    lines.push("");
     // Stage E's methodology sections go HERE — after every reserve-related
     // block, never between them. The affordance test slices RESERVE POSITION
     // to the next heading matching /"[A-Z][A-Z ()\/—-]{6,}"/, so a section
@@ -1385,8 +1413,8 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     lines.push("");
     lines.push(
       row([
-        "Note",
-        "Every population here identifies stock for review. None of them is a write-down, and the carrying values are gross exposure — never a proposed reserve. No rule in this product can emit a reserve amount.",
+        "Note on the methodology sections",
+        "These sections describe HOW this close looks at obsolescence. Nothing in them is a reserve, a reserve range, a recovery rate or a net realisable value, and the carrying values here are what a population is carried at — not an exposure and not a proposed write-down. The reserve conclusion is UNDETERMINED and is management's. No rule in this product can emit a reserve amount.",
       ]),
     );
   } else if (table === "close-summary") {

@@ -90,11 +90,72 @@ describe("physical custody", () => {
 
     const custody = getCustodyBreakdown(ws, controller);
     expect(custody.undeterminedUnits).toBe(1);
+    // THE ASSERTION THIS TEST IS NAMED FOR. It was missing: the test created
+    // the violating condition and then checked everything except the flag the
+    // whole coverage panel speaks from, so `coversBook` was asserted true
+    // three times and false nowhere — and its first conjunct (row sum ===
+    // bookUnits) is a tautology, since `custodyTypeFor` is total.
+    expect(custody.coversBook).toBe(false);
     // Still every unit, so the population is whole — what changed is that one
     // of them has no custody answer, and the row says so rather than being
     // folded into a warehouse.
     expect(custody.rows.reduce((n, r) => n + r.units, 0)).toBe(1500);
     expect(custody.rows.some((r) => r.custodyType === "UNDETERMINED")).toBe(true);
+  });
+
+  it("reports custody with no established holder as neither the company nor a third party", () => {
+    // `heldBy` is a three-way answer derived once in the service. Both
+    // surfaces used to take the COMPLEMENT of a small company-held set, so a
+    // unit whose custody was not established was reported as one another
+    // party holds — a positive claim from an absence.
+    type Unit = (typeof ws.dataset.inventoryUnits)[number];
+    const victim = ws.dataset.inventoryUnits[0] as Unit;
+    victim.location = "A_LOCATION_THE_MODEL_DOES_NOT_DESCRIBE";
+    victim.classification = "FINISHED_HARDWARE";
+
+    const custody = getCustodyBreakdown(ws, controller);
+    const undetermined = custody.rows.find((r) => r.custodyType === "UNDETERMINED");
+    expect(undetermined?.heldBy).toBe("NOT_ESTABLISHED");
+    // And it is excluded from the held-by-others summary, so the stat and the
+    // table cannot disagree about the same unit.
+    expect(custody.heldByOthersUnits).toBe(
+      custody.rows.filter((r) => r.heldBy === "OTHER_PARTY").reduce((n, r) => n + r.units, 0),
+    );
+  });
+
+  it("summarises stock in other hands from the same answer the rows carry", () => {
+    const custody = getCustodyBreakdown(ws, controller);
+    const other = custody.rows.filter((r) => r.heldBy === "OTHER_PARTY");
+    expect(custody.heldByOthersUnits).toBe(other.reduce((n, r) => n + r.units, 0));
+    expect(custody.heldByOthersCents).toBe(
+      other.reduce((n, r) => n + r.carryingCents, 0),
+    );
+    // Pinned to a value, because both figures drive a headline stat and
+    // neither was asserted anywhere before.
+    expect(custody.heldByOthersUnits).toBe(435);
+    expect(custody.heldByOthersCents).toBe(139_050_000);
+    // 435 is ALSO the excess-over-horizon unit count on /valuation. The two
+    // populations are unrelated and the collision is a coincidence of this
+    // dataset, so a wire-crossing between them would be invisible in either
+    // figure alone. Assert they are computed from different things.
+    const eo = getEoMethodology(ws, controller);
+    expect(eo.excessOverHorizonUnits).toBe(435);
+    expect(eo.excessOverHorizonCents).not.toBe(custody.heldByOthersCents);
+  });
+
+  it("classifies every custody type in the taxonomy", () => {
+    // The holder map is a total Record over PHYSICAL_CUSTODY_TYPES, so adding
+    // a custody type without answering "who holds it" is a compile error
+    // rather than a unit quietly reported as third-party-held.
+    const custody = getCustodyBreakdown(ws, controller);
+    for (const row of custody.rows) {
+      expect(["COMPANY", "OTHER_PARTY", "NOT_ESTABLISHED"], row.custodyType).toContain(
+        row.heldBy,
+      );
+    }
+    // Both populated answers occur, or the mapping is barely tested.
+    expect(custody.rows.some((r) => r.heldBy === "COMPANY")).toBe(true);
+    expect(custody.rows.some((r) => r.heldBy === "OTHER_PARTY")).toBe(true);
   });
 });
 
@@ -128,7 +189,11 @@ describe("consignment-in", () => {
   });
 
   it("stops making that claim when a consigned serial reaches the book", () => {
-    // Created, because the baseline cannot produce it.
+    // Created, because the baseline cannot produce it — and created so that
+    // ONLY the serial half breaks. Pushing a normally-costed unit also moves
+    // the book sum away from the close's recorded subledger, which flips
+    // `subledgerIsBookPopulation` too and leaves the `heldOffBook &&` term
+    // never shown to be load-bearing. A zero-cost unit isolates it.
     type Unit = (typeof ws.dataset.inventoryUnits)[number];
     const template = ws.dataset.inventoryUnits[0] as Unit;
     const consigned = ws.dataset.consignmentInUnits[0];
@@ -136,11 +201,15 @@ describe("consignment-in", () => {
     (ws.dataset.inventoryUnits as Unit[]).push({
       ...template,
       serial: consigned?.serial ?? "",
+      unitCostCents: 0,
     });
 
     const c = getConsignmentHoldings(ws, controller);
     expect(c.consignedSerialsOnBook).toEqual([consigned?.serial]);
     expect(c.heldOffBook).toBe(false);
+    // The other half is untouched, so this proves the serial term alone can
+    // withdraw the claim.
+    expect(c.subledgerIsBookPopulation).toBe(true);
     expect(c.outsideSubledger).toBe(false);
   });
 
@@ -169,6 +238,13 @@ describe("consignment-in", () => {
     const template = ws.dataset.countResults[0] as Result;
     (ws.dataset.countResults as Result[]).push({ ...template, bin: bin as string });
     expect(getConsignmentHoldings(ws, controller).countLinesTouchingConsignmentBins).toBe(1);
+
+    // The count sums over BOTH countResults and countTests. Exercising only
+    // the first half leaves the second able to stop contributing unnoticed.
+    type Test = (typeof ws.dataset.countTests)[number];
+    const testTemplate = ws.dataset.countTests[0] as Test;
+    (ws.dataset.countTests as Test[]).push({ ...testTemplate, bin: bin as string });
+    expect(getConsignmentHoldings(ws, controller).countLinesTouchingConsignmentBins).toBe(2);
   });
 });
 
@@ -307,6 +383,25 @@ describe("E&O methodology", () => {
     const metBoth = eo.signals.filter((s) => s.metAgeTest && s.metForecastTest);
     expect(metAge.length).toBeGreaterThan(metBoth.length);
     expect(metBoth.map((s) => s.sku).sort()).toEqual(fromExceptions);
+
+    // WHICH SKUs met each half, not just how many. A cardinality inequality
+    // plus a conjunction constrains neither flag: hard-coding metAgeTest true
+    // for every row satisfied both of the assertions above.
+    for (const s of eo.signals) {
+      expect(s.metAgeTest, `${s.sku} age test`).toBe(s.agedUnits > 0);
+      expect(s.metForecastTest, `${s.sku} demand test`).toBe(
+        s.forecastUnits !== undefined && s.agedUnits > s.forecastUnits,
+      );
+    }
+    expect(metAge.map((s) => s.sku).sort()).toEqual([
+      "KE-I1",
+      "KE-M1",
+      "KE-Y1",
+      "KR-U1",
+      "KV-B1",
+      "KV-D1",
+      "KV-F1",
+    ]);
   });
 
   it("computes excess over the whole horizon, per SKU and in total", () => {
@@ -327,6 +422,22 @@ describe("E&O methodology", () => {
     // the point of the surface, and it must not be quietly equal.
     const agedCents = eo.signals.reduce((n, s) => n + s.agedCarryingCents, 0);
     expect(eo.excessOverHorizonCents).toBeGreaterThan(agedCents);
+
+    // PINNED TO A VALUE. Every assertion above is either derived from the same
+    // call it is checking or has an order of magnitude of slack — and this is
+    // the figure the stage treats as its most dangerous number, so it must not
+    // be free to move silently.
+    expect(eo.excessOverHorizonUnits).toBe(435);
+    expect(eo.excessOverHorizonCents).toBe(105_765_000);
+    expect(agedCents).toBe(9_450_000);
+    // Per SKU, against the standard cost the SKU master carries — computed
+    // here from the fixtures rather than from the projection's own arithmetic.
+    const standardOf = new Map(ws.dataset.skus.map((s) => [s.code, s.unitCostCents]));
+    for (const s of eo.signals) {
+      expect(s.excessOverHorizonCents, s.sku).toBe(
+        s.excessOverHorizonUnits * (standardOf.get(s.sku) ?? 0),
+      );
+    }
   });
 
   it("never derives a reserve, a recovery rate or a net realisable value", () => {
@@ -356,7 +467,29 @@ describe("E&O methodology", () => {
   });
 
   it("counts condition evidence only for units still on the book", () => {
+    const before = getEoMethodology(ws, controller).condition;
+
+    // The on-book restriction is a no-op on this dataset — every serialed
+    // return record is already on the book — so removing it changes nothing
+    // and the test would pass either way. Create a return record for a serial
+    // that is NOT on the book, and the restriction becomes load-bearing.
+    type Rma = (typeof ws.dataset.rmaRecords)[number];
+    const template = ws.dataset.rmaRecords[0] as Rma;
+    (ws.dataset.rmaRecords as Rma[]).push({
+      ...template,
+      id: "RMA-OFF-BOOK-TEST",
+      serial: "KE-X1-NOT-ON-THE-BOOK",
+      reason: "A reason no booked unit carries",
+    });
+
     const eo = getEoMethodology(ws, controller);
+    expect(eo.condition.unitsWithConditionRecord).toBe(
+      before.unitsWithConditionRecord,
+    );
+    // And its reason does not leak into the list either — the reasons describe
+    // the records the count covers, not every return the company ever took.
+    expect(eo.condition.recordedReasons).not.toContain("A reason no booked unit carries");
+
     const booked = new Set(ws.dataset.inventoryUnits.map((u) => u.serial));
     const expected = new Set(
       ws.dataset.rmaRecords

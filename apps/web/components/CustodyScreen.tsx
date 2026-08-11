@@ -114,7 +114,7 @@ export function CustodyScreen({
                   <Panel>
                     <PanelHead
                       title="Book units by custody"
-                      sub="Every unit here is company-owned, wherever it physically sits."
+                      sub="Every unit here is stock the listing records as company-owned, wherever it physically sits."
                     />
                     <div className="icg-table-wrap">
                       <table className="icg-table">
@@ -137,9 +137,7 @@ export function CustodyScreen({
                                 </span>
                               </td>
                               <td>
-                                <span className="icg-nstag">
-                                  {row.heldByCompany ? "The company" : "Another party"}
-                                </span>
+                                <span className="icg-nstag">{row.heldBy}</span>
                               </td>
                               <td>
                                 <span className="icg-soft" style={{ fontSize: "11px" }}>

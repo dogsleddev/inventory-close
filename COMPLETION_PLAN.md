@@ -541,6 +541,55 @@ containing an ampersand, silently extends the reserve block and its dollar figur
 one-money-figure rule with a message about the reserve. A regression pins that every new section
 follows `OPEN VALUATION REVIEWS`.
 
+**Adversarial review (117 agents, 6 lenses, 3 refuting verifiers per finding): 37 raw → 23
+confirmed / 14 refuted, all 23 fixed.** The severity spread was 1 P0, 11 P1, 8 P2, 3 P3, and
+**14 of the 23 were defects in Stage E's own new tests** — the highest test-defect ratio of any
+review in this repo so far.
+
+The P0 and its cluster: **`coversBook` could not go false.** Its first conjunct compared the row
+sum against `bookUnits`, which is a tautology — `custodyTypeFor` is total, so every unit lands in
+some bucket. The only live check was the value tie, so a green "every unit on the listing
+resolves to exactly one custody answer" would render beside a stat counting units that had not.
+The created-condition test made the violating condition and then asserted everything EXCEPT
+`coversBook`. Fixed by requiring `undeterminedUnits === 0`, and the test now asserts the flag.
+
+Second cluster: **the held-by distinction existed three times and the copies were not
+complements.** A positive six-type list in `ownership.ts`, and two three-type company-held sets in
+`custody-view.ts` and `export-csv.ts` whose COMPLEMENT was rendered as "Another party" — so a unit
+with no established custody was held by nobody according to the headline figure and by a third
+party according to the table beside it. Collapsed into one total `Record<PhysicalCustodyType,
+CustodyHolder>` in the service with a three-way answer (`COMPANY` / `OTHER_PARTY` /
+`NOT_ESTABLISHED`); adding a custody type without answering the question is now a compile error.
+
+Four claims were more precise than what enforced them, and all four are now narrower:
+- The custody table explained a blank holder with "the listing records one only where a third
+  party holds the unit" — read as a sufficient condition it is false on 305 units at customer
+  sites, in the demo pool and in transit. Now a plain statement of absence with no rule attached.
+- The custody tab said every unit is company-owned; presence on the listing is the company's
+  recorded ASSERTION, and open exceptions dispute it for some of these units. Now "stock the
+  listing records as company-owned", with the dispute named.
+- The consignment tab explained zero count coverage with "the count population is drawn from the
+  book" — false, because the count also runs floor-to-sheet tests that start from the floor, one
+  of which found a unit that is not on the book at all. Now states what was recorded rather than
+  what the count could not have reached.
+- The valuation CSV's closing note called every carrying value "gross exposure". Stage E inserted
+  three methodology sections between that note and what it described, so the file asserted and
+  denied that the same $1,057,650 was an exposure, 22 rows apart. Split into two scoped notes.
+
+Two CSV mechanics: **two of the four custody headings were invisible to the section splitter** the
+adjacent comment tells them to obey (a comma in "VENDOR-OWNED, NOT COMPANY INVENTORY", digits in
+"IN FY2026") — the comment was broken by the branch it annotates; and the consignment total put a
+unit count under the "Received" date column. The splitter test now runs the regex over the real
+file rather than over a string it builds itself.
+
+The test hardening is the rest: `outsideSubledger`'s serial half is now broken in isolation (a
+zero-cost unit, so the other conjunct stays true), `metAgeTest` is pinned per SKU rather than by
+cardinality, `excessOverHorizonCents` is pinned to a value and per-SKU against the SKU master,
+`heldByOthers` is asserted at all (it drove a headline stat and had no assertion anywhere — and
+its 435 collides with the unrelated excess-over-horizon count), the condition on-book filter is
+exercised with an off-book return record, the count-coverage check exercises both its halves, and
+the location-name test asserts its loop ran.
+
 **Deliberately NOT done:** converting `/valuation` to tabs (a §7 rework item, not Stage E scope).
 The methodology ships as appended panels instead. Retabbing would have risked ~20 assertions in
 `stage07.test.tsx`, and the E&O tab labels are a live hazard — no button on that screen may have
