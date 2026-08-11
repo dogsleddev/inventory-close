@@ -57,7 +57,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 
 ## 2. Current state (verified after both final data passes)
 
-- Repo: `C:\dev\Inventory Close`, branch `master`, **no git remote** (local only).
+- Repo: `C:\dev\Inventory Close`, branch `master`, published at
+  **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
+  which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
 - **628 tests across 47 files passing**; typecheck, lint, and production build all green
   (14 routes).
@@ -91,7 +93,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | LICENSE | Done — MIT (owner's choice), wired into README + package.json (`868b072`), tagged `v1.0.0-demo` |
 | Final data pass 1 | **Done** — adversarial data fleet, 10 defects fixed + category regressions (`fb496a0`) |
 | Final data pass 2 | **Done** — highlight validation, all valid/consistent; wording fixes in the close-out commit |
-| Remaining | **Push public / deploy** (see §8), plus the owner-decision register in `QA_RELEASE_GATE.md`. |
+| Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
+| Remaining | **Deploy** (see §8), plus the two open P3 items in the `QA_RELEASE_GATE.md` register. |
 
 ### Commit history (newest first)
 
@@ -398,8 +401,16 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 register and the owner-decision register live in `QA_RELEASE_GATE.md` ("Final data
 passes"). What remains, in order:
 
-1. **Push public / deploy**: Vercel Root Directory = `apps/web`; no environment variables
-   exist; `apps/web/vercel.json` carries the security headers.
+1. **Deploy**: the repo is already public at
+   **https://github.com/dogsleddev/inventory-close** (pushed 2026-08-10). For Vercel, set
+   Root Directory = `apps/web`; no environment variables exist; `apps/web/vercel.json`
+   carries the security headers.
+   *Repo note:* the owner's Prompt Driven Development GitHub App auto-plants
+   `.github/workflows/pdd-secrets-dispatch.yml` into new repos on this account. It is a
+   vendor tool the owner uses deliberately, but it is **deliberately kept out of this
+   project** — it arrived on a stray `main` branch that was deleted 2026-08-10. If it
+   reappears, delete it again rather than merging it; `master` is this repo's default
+   branch and must stay that way.
 2. **Remaining owner decisions on the conflict register** (in `QA_RELEASE_GATE.md`;
    never resolve by silently changing a locked value): the EXC-001 count-row item is
    **settled — accepted 2026-08-10 as a documented tension, no change**. Still open,
