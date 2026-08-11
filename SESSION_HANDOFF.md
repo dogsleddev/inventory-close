@@ -8,7 +8,28 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 
 ---
 
-## 0a. START HERE — Stage F's adversarial fleet review is the next task
+## 0a. START HERE — Stage G (Ask Gaurd tools) is the next task
+
+> **Stage F's review landed at `b1ccdc4`.** 26 confirmed defects fixed, tests 971 → 1004,
+> typecheck/lint/build clean, locked baseline unmoved, verified in a browser. Two things it
+> established that the next review should inherit:
+>
+> 1. **The confirmed/contested tally is not a signal.** Two skeptics with opposite burdens of
+>    proof (one told to default to refuted, one told to report only what it reproduced) produced
+>    6 confirmed / 26 contested / **0 refuted**. Expect to adjudicate the whole contested bucket,
+>    or give both skeptics the same burden.
+> 2. **Run a second fleet over the proposed FIXES before touching code.** 27 validators
+>    re-derived each item at HEAD and stress-tested its fix; **every one came back
+>    ADOPT_WITH_CHANGES**. The P1's own fix would have left a bare column header over zero rows —
+>    the same over-claim, one row smaller — and the matrix rewording would have hard-coded
+>    dataset facts into `packages/domain`, with the count wrong.
+>
+> The root cause it measured: where Stage F **derived** a claim it survived nine lenses; where it
+> **authored** one beside a measurement, nothing constrained it and several had drifted off the
+> data they describe. A sentence naming a population must be derived from it or asserted
+> against it.
+
+
 
 The original ten stages shipped and deployed. The work in flight is a **product-completion
 and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
@@ -27,10 +48,11 @@ but the *next task* is here, not in §8.
 | **D — Costing** | ✅ Done — `/costing`, four tabs, eleventh export table, no dataset work |
 | **E — Ownership & valuation lifecycle** | ✅ Done — `/custody` (3 tabs) + E&O methodology on `/valuation`, twelfth export table |
 | **F — Management outputs** | ✅ Done (`f900e79`, `8f0a827`) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
-| **Stage F review** | ⬅ **NEXT.** Adversarial fleet review — the owner asked for it explicitly |
-| G — Ask Gaurd tools · H — QA | Not started |
+| **Stage F review** | ✅ Done (`b1ccdc4`) — 26 confirmed defects fixed; tests 971 → 1004 |
+| **G — Ask Gaurd tools** | ⬅ **NEXT.** See "Stage G" below; gated on hardening the intent matcher |
+| H — QA | Not started |
 
-**971 tests across 66 files passing**; typecheck, lint and production build clean, 20 routes.
+**1,004 tests across 69 files passing**; typecheck, lint and production build clean, 20 routes.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
@@ -372,7 +394,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **971 tests across 66 files passing** (was 628/47 at the original release; the completion
+- **1,004 tests across 69 files passing** (was 628/47 at the original release; the completion
   pass added the rest); typecheck, lint, and production build all green — **20 routes**, with
   `/api/export/[table]` serving fourteen tables.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
@@ -838,7 +860,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 > section records the original ten-stage release, which is finished and deployed.
 >
 > **Before starting:** run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` (expect
-> **971 tests across 66 files**; `pnpm test` exits 1 on a reporter timeout — read the `Tests`
+> **1,004 tests across 69 files**; `pnpm test` exits 1 on a reporter timeout — read the `Tests`
 > line), and note that a push to `master` redeploys the live site — **the completion work has
 > NOT been pushed or deployed**, so the review is reviewing local commits.
 
