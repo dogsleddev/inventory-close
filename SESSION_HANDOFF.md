@@ -26,7 +26,7 @@ but the *next task* is here, not in §8.
 | **Export affordance** | ✅ Done (`32f6856` + `546e388`) — every population now has a way out |
 | **D — Costing** | ✅ Done — `/costing`, four tabs, eleventh export table, no dataset work |
 | **E — Ownership & valuation lifecycle** | ✅ Done — `/custody` (3 tabs) + E&O methodology on `/valuation`, twelfth export table |
-| **F — Management outputs** | ✅ Done (`f900e79` + the follow-up commit) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
+| **F — Management outputs** | ✅ Done (`f900e79`, `8f0a827`) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
 | **Stage F review** | ⬅ **NEXT.** Adversarial fleet review — the owner asked for it explicitly |
 | G — Ask Gaurd tools · H — QA | Not started |
 
@@ -47,9 +47,9 @@ the next request 500s on a missing vendor chunk.
 work and three host exits during stage 06 would each have stranded an uncommitted tree; that is
 why the stage lands first and the remediation is its own commit.
 
-**Review BOTH Stage F commits.** `f900e79` is the stage; the follow-up commit carries three
-owner-directed changes made after it, and the second is the largest structural change of the two
-commits:
+**Review BOTH Stage F commits** — `f900e79` (the stage) and `8f0a827`. The second carries three
+owner-directed changes made after it, and the middle one is the largest structural change of the
+two commits:
 
 1. **D12 superseded.** The Methodology page's "Assumptions" tab became **Judgements** and its
    `docs/04` principles panel was deleted — the dead `/assumptions` page's framing outliving its
