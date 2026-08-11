@@ -1,10 +1,56 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Last refreshed 2026-08-10 after both
-final data passes (HEAD is the close-out commit following `fb496a0`).
+re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
+**product-completion pass** (HEAD `546fe3a`).
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
+
+---
+
+## 0a. START HERE — the product-completion pass is in progress
+
+The original ten stages shipped and deployed. The work in flight now is a different
+thing: a **product-completion and accounting-credibility pass** driven by the owner's
+brief plus an independent 15-agent critique of the live site.
+
+**Read `COMPLETION_PLAN.md` at the repo root first.** It holds the current-state audit,
+the staged sequence A→H, the golden-test traps, and the D1–D12 decision register with
+each decision's outcome. Everything in §0 below still applies (it describes the ten
+stages and the locked baseline) — but the *next task* is in the plan, not in §8.
+
+**State as of HEAD `546fe3a`:**
+
+| Stage | State |
+|---|---|
+| **A — Credibility** | ✅ Done (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) |
+| **B — Inventory & GL** | ✅ Done (`3a359e7`, `de41445`) |
+| **W — Workflow verbs** | ✅ Done (`de41445`) |
+| C — Procurement · D — Costing · E — Ownership/valuation lifecycle | Not started |
+| F — Management outputs · G — Ask Gaurd tools · H — QA | Not started |
+
+**758 tests across 55 files passing**; typecheck clean; production build clean (15 routes,
+including `/api/export/[table]`). The locked financial baseline has not moved, and
+Reset Demo restores it exactly — verified in a browser, not only in tests.
+
+**Owner decisions already approved (2026-08-10), recorded in `COMPLETION_PLAN.md` §9:**
+
+- **D5** — dataset bump **FY2026-DEMO-v1.1.0 → v1.2.0** is approved for the new fixtures.
+  Stages C, D and E all need it: do it as **ONE regeneration** covering costing components,
+  R&D period costs, consignment-in, the scrapped serial and the PPV variance — not five
+  separate bumps. Update the `dataset_version` pin in `golden/baseline.json`,
+  `packages/data/test/controls.test.ts` and `packages/rules/test/replay.test.ts` in the
+  same change. Aggregates must stay byte-identical; only version/hash identity moves.
+- **D6** — a management conclusion may **not** resolve an exception whose rule still has a
+  required record missing. Already implemented; do not weaken it.
+- **D9** — seed a small non-blocking PPV variance under D5; it must stay a match-level
+  attribute and never become a 16th exception.
+
+**The next task is Stage C (Procurement)**: a dedicated section with three-way match
+re-hosted, GRNI, invoiced-not-received, goods in transit, and PPV. The audit found this is
+the best-provisioned cluster — 2 genuine GRNI rows and 4 INR POs already exist in the
+fixtures, and the dual native-vs-close match status is already modeled and golden-locked
+with EXC-002 as its demonstration. Only PPV needs authored data.
 
 ---
 
@@ -20,13 +66,15 @@ commit). The release gate is recorded in `QA_RELEASE_GATE.md` (no P0 open), incl
 as a documented tension** — do not "fix" them; two P3 wording splits remain open.
 Never resolve any register item by silently changing a locked value.
 
-**The next task is push public / deploy** (see §8). Before anything else:
+**Push public / deploy is DONE.** The next task now lives in §0a and `COMPLETION_PLAN.md`.
+Before anything else:
 
-1. Read this document, then `CANONICAL_SPEC.md`, then **`design/IMPLEMENTATION_HANDOFF.md`**
-   (component/reuse map, geometry, interaction rules, accessibility, demo states, and the
-   mockup defects in §9a you must correct rather than replicate).
+1. Read §0a, then `COMPLETION_PLAN.md`, then this document, then `CANONICAL_SPEC.md`, then
+   **`design/IMPLEMENTATION_HANDOFF.md`** (component/reuse map, geometry, interaction rules,
+   accessibility, demo states, and the mockup defects in §9a you must correct rather than
+   replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **628 tests across 47 files passing**. **Stop any `pnpm dev` server first** (see §7).
+   **758 tests across 55 files passing**. **Stop any `pnpm dev` server first** (see §7).
 
 **All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
@@ -61,8 +109,9 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **628 tests across 47 files passing**; typecheck, lint, and production build all green
-  (14 routes).
+- **758 tests across 55 files passing** (was 628/47 at the original release; the completion
+  pass added the rest); typecheck, lint, and production build all green — **15 routes**, now
+  including `/api/export/[table]`.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
@@ -95,12 +144,25 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Final data pass 2 | **Done** — highlight validation, all valid/consistent; wording fixes in the close-out commit |
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
-| Remaining | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
+| Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
+| **Completion pass A/B/W** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass C–H** | **Not started.** Stage C is next. |
 
 ### Commit history (newest first)
 
 ```
-(close-out) Record both final data passes and refresh this handoff
+546fe3a Record Stages B and W as complete
+de41445 Stage B + W: the master population, and a close loop that actually closes
+3a359e7 Stage B (part 1): per-account GL reconciliation, real JE detail, and a way out
+261c18f Record Stage A as complete in the completion plan
+8718d3e Stage A (part 4): reconciliation says which side is larger, and the product has a way out
+98688a5 Stage A (part 3): the Overview answers its own question, and its figures open
+cb73e2b Stage A (part 2): Evidence Center, no placeholders left, guide becomes three journeys
+53769b5 Stage A (part 1): domain-aware exception lenses, control-state language, honest verbs
+9b07e96 Record the live deployment at inventory.dogsled.dev
+5958240 Record the public repo and keep the PDD workflow out of this project
+ee5dc83 Accept the EXC-001 count-row tension as a documented decision
+3ec9f9a Record both final data passes; fix pass-2 wording findings
 fb496a0 Pass 1 data remediation: 10 fleet-confirmed fixture defects fixed
 fa3526b Hand off: two final data passes are the next task
 868b072 Add the MIT license and wire it into the README and package.json
@@ -229,6 +291,35 @@ Key files a new session will want first: `packages/rules/src/close.ts` (the orch
 
 ## 5. Authored decisions (not in the spec — don't re-litigate or accidentally revert)
 
+**From the completion pass (A/B/W), all pinned by tests:**
+
+- **Evidence lenses are domain-aware.** The three-layer reality (NetSuite / physical /
+  accounting) is the CUTOFF and OWNERSHIP pattern and EXC-001 keeps it verbatim, weighted
+  middle column and all. Count, valuation and GL exceptions get their own lenses, and a lens
+  with nothing behind it is **omitted** rather than filled — "No operational evidence in scope"
+  was a statement about the template, not about the evidence. See
+  `apps/web/lib/server/exception-lenses.ts`.
+- **Control state is three separate facts**, not one word: control evaluation, accounting
+  evidence, management conclusion. This is a **display mapping only** — the canonical
+  `RULE_RESULTS` / `RULE_COVERAGES` vocabulary is hashed into the run and still renders as
+  Rule result / Input coverage. Never rename the enums.
+- **The conclusion vocabulary is separate from `ExceptionStatus`** and lives in working state.
+- **Sign-off reads live state**; the Overview says so and quotes the baseline it moved from
+  (`gate.divergence`). A figure that moved is only meaningful beside the one it moved from.
+- **Chart of accounts is a code constant** in `packages/domain/src/accounts.ts`, never a
+  fixture — a fixture would move the dataset manifest hash for a display label.
+- **Physical custody is derived**, not stored: `custodyTypeFor(location, classification,
+  custodian?)` in `packages/domain/src/custody.ts`. `CONSIGNMENT_IN`/`OUT` are representable
+  and deliberately never occur until Stage E authors the population.
+- **Inventory age matches the valuation aging exactly** (same basis, same buckets) so two
+  screens cannot disagree about a unit.
+- **An exception "names" a unit vs "reaches its population"** — a finding carrying only SKU
+  and location tags a population, and the row says so rather than claiming the unit is under
+  exception. `transactionNumbers` in a finding's subjects excludes it from population matching
+  (RMA-DUP-001 would otherwise invent a 100+ unit population).
+- **The guide route stays `/user-guide`** though the page and nav read "How to Explore This
+  Demo" — it is the one address that may have been shared or recorded.
+
 The spec deferred these; they were authored during the build and are now pinned by tests.
 
 1. **Allocation plan** (`packages/data/src/allocation.ts`) — a solver-derived SKU × (location,
@@ -341,6 +432,41 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   `e0a603b`** by a `git add -A` during Stage 04 remediation; that commit message doesn't mention it.
   Harmless to the tree, but the history is misleading if that matters to you.
 
+**Traps found during the completion pass (A/B/W) — these cost real time:**
+
+- **`WORKSPACE_SHAPE` in `apps/web/lib/server/workspace.ts` must be bumped whenever the
+  `Workspace` interface gains a field.** The dev server caches the workspace on `globalThis`
+  across module reloads, so a workspace built before a shape change survives and the first
+  read of the new field throws. **Tests cannot catch this** — they build a fresh workspace per
+  test. It was found only by opening the page in a browser. The guard now rebuilds a
+  stale-shaped cache; keep the constant current.
+- **Three test files mock `../app/actions` with a factory** (`ask-gaurd.test.tsx`,
+  `stage09.test.tsx`, `close-loop.test.tsx`). A component that imports a NEW action from that
+  module fails in those files with "No export is defined on the mock" until the factory lists
+  it. Budget for this whenever you add a server action.
+- **`.click()` on a DOM node does not flush React state** in jsdom. Use
+  `userEvent.setup()` + `await user.click(...)`, or the panel you are asserting on never opens.
+- **No irregular whitespace in source.** A literal BOM (`﻿`) inside a template literal
+  fails `next build`'s lint even though tests pass. Write it as the escape. Note the shell
+  collapses backslashes: build it with `String.fromCharCode(92) + "uFEFF"` if scripting the edit.
+- **`computeReadiness` takes a 4th `policy` argument.** Pass `POLICY_V1` — the same policy the
+  baseline scored against. A second policy would be a second definition of readiness.
+- **A conclusion must never be written into `ws.close`.** It lives in `ws.conclusions` and is
+  layered by `packages/services/src/effective.ts`, which has no write path. That is what makes
+  Reset Demo's restoration structural rather than a discipline. Do not "simplify" it by mutating
+  the derived close.
+- **Evidence satisfies only the requirement it NAMES** (`satisfiesRequirement`, exact match), and
+  `RETURNED` evidence stops satisfying. Do not match on kind or title — an upload must never
+  satisfy a control by resembling it.
+- **`ExceptionStatus` is locked spec vocabulary** (CANONICAL_SPEC §9) and is hashed into the run.
+  The conclusion vocabulary is deliberately separate. Do not add values to the enum.
+- **The classification→GL map exists in two places** — exported from `packages/services/src/queries.ts`
+  and mirrored as `CLASSIFICATION_GL_ACCOUNT` in `packages/services/src/glAccounts.ts`. Both are
+  test-pinned against the query service so they cannot drift silently, but they should collapse
+  into the shared `INVENTORY_ACCOUNTING_MATRIX` when Stage F lands.
+- **Export handlers may import `QueryService` only** — never `@icg/data` or `ws.dataset`. That
+  single rule is what gives a CSV the same role scoping and redaction the screens have.
+
 **Traps that will bite a fresh session:**
 
 - Design exports are ~580KB **self-extracting bundles**: the real page HTML is a JSON string literal
@@ -398,9 +524,18 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
+> **Superseded for the active work — see §0a.** The next task is **Stage C (Procurement)**
+> of the product-completion pass in `COMPLETION_PLAN.md`, starting with the single approved
+> **FY2026-DEMO-v1.2.0** dataset regeneration that Stages C, D and E all share. The rest of
+> this section records the original ten-stage release, which is finished and deployed.
+>
+> **Before starting Stage C:** run `pnpm typecheck && pnpm test` (expect **758 across 55
+> files**), read `COMPLETION_PLAN.md` §4, §8 and §9, and note that a push to `master`
+> redeploys the live site — the completion work has NOT been pushed or deployed yet.
+
 **Both final data passes are complete** — full records, fix lists, refuted-finding
 register and the owner-decision register live in `QA_RELEASE_GATE.md` ("Final data
-passes"). What remains, in order:
+passes"). What remains from the original release, in order:
 
 1. **Published and deployed — nothing owed here.** The repo is public at
    **https://github.com/dogsleddev/inventory-close** and the site is live at
