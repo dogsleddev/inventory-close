@@ -172,7 +172,7 @@ const identityKey = (ref: SourceRecordRef): string =>
  * is not governed by the workpaper model and stays readable under
  * `close.read`, exactly as `listInventoryUnits` does.
  */
-function makeRecordScope(
+export function makeRecordScope(
   ws: Workspace,
   user: DemoUser,
 ): (ref: SourceRecordRef | undefined) => boolean {

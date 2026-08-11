@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import type { GlAccountsData } from "../lib/server/recon-view";
-import type { ProcurementCard, ReconciliationData, ShellData } from "../lib/view-model";
+import type { ReconciliationData, ShellData } from "../lib/view-model";
 import { AppShell } from "./AppShell";
 import { EvidenceDrawerPanel } from "./EvidenceDrawerPanel";
 import { ExceptionDrawer } from "./ExceptionDrawer";
@@ -18,12 +18,13 @@ import {
 } from "./kit";
 
 /**
- * Reconciliation: the Financial bridge (stage 07) plus Procurement Match,
- * Commercial Chain, and Serial Integrity (stage 06). The native NetSuite
- * match state is a muted mono tag; the close-control state is the colored
- * capsule — two different questions, never conflated. On the bridge, the
- * proposed/posted distinction gets the same treatment: every proposal row
- * carries a literal NOT POSTED tag, never a colour alone.
+ * Reconciliation: the Financial bridge (stage 07) plus Commercial Chain and
+ * Serial Integrity (stage 06). The proposed/posted distinction on the bridge
+ * is never colour alone: every proposal row carries a literal NOT POSTED tag.
+ *
+ * Procurement Match moved to `/procurement` in Stage C — it is a buy-side
+ * control, and hosting it here sent a reader looking for the other four
+ * procurement populations on a screen that did not have them.
  */
 export function ReconciliationScreen({
   shell,
@@ -89,7 +90,7 @@ export function ReconciliationScreen({
       askSuggestions={[
         "Why can a native match pass while the close stays open?",
         "Which chains are missing required components?",
-        "Which procurement matches are incomplete at year-end?",
+        "What explains the difference between the subledger and the GL?",
       ]}
       askContext="FY2026 Inventory Close · Reconciliation"
     >
@@ -389,128 +390,6 @@ export function ReconciliationScreen({
                 {data.glAccounts !== null ? (
                   <GlAccountsTable accounts={data.glAccounts} />
                 ) : null}
-              </>
-            ) : null}
-
-            {tab === "procurement" && data.procurement !== null ? (
-              <>
-                <Panel>
-                  <div
-                    style={{
-                      padding: "14px 18px",
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "18px",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div style={{ maxWidth: "560px" }}>
-                      <h2 className="icg-panel-title icg-panel-title--lg">
-                        Purchase Order ↔ Item Receipt ↔ Vendor Bill
-                      </h2>
-                      <p className="icg-soft" style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 0" }}>
-                        A native three-way match asks <em>can this bill be paid</em>. The close
-                        control asks <em>did we own this at the balance-sheet date</em>. The two
-                        answer different questions and are reported separately throughout.
-                      </p>
-                    </div>
-                    <div style={{ display: "flex", gap: "18px" }}>
-                      <div>
-                        <div className="icg-label">NETSUITE 3WM PASS</div>
-                        <div className="icg-num" style={{ fontSize: "16px", fontWeight: 600 }}>
-                          {data.procurement.nativeSummary}
-                        </div>
-                      </div>
-                      <div style={{ borderLeft: "1px solid var(--hair)", paddingLeft: "18px" }}>
-                        <div className="icg-label">CLOSE CONTROL</div>
-                        <div
-                          className="icg-num"
-                          style={{ fontSize: "16px", fontWeight: 600, color: "var(--ember)" }}
-                        >
-                          {data.procurement.closeSummary}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Panel>
-
-                {data.procurement.featured.map((card) => (
-                  <ProcurementCardView key={card.key} card={card} openException={openException} />
-                ))}
-
-                <Panel>
-                  <PanelHead
-                    title="All procurement matches"
-                    sub="Native NetSuite status and close-control status, side by side for every purchase order."
-                  />
-                  <div className="icg-table-wrap">
-                    <table className="icg-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Purchase order</th>
-                          <th scope="col">Item receipt</th>
-                          <th scope="col">Vendor bill</th>
-                          <th scope="col">Native NetSuite</th>
-                          <th scope="col">Close control</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.procurement.rows.map((row) => (
-                          <tr key={row.po} data-selected={row.exceptionId !== null && exceptionId === row.exceptionId}>
-                            <td>
-                              {row.exceptionId !== null ? (
-                                <button
-                                  type="button"
-                                  className="icg-row-btn"
-                                  aria-label={`Open ${row.exceptionId} summary`}
-                                  onClick={() => openException(row.exceptionId)}
-                                />
-                              ) : null}
-                              <span className="icg-mono" style={{ fontSize: "11px" }}>
-                                {row.po}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="icg-mono icg-soft" style={{ fontSize: "11px" }}>
-                                {row.ir}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="icg-mono icg-soft" style={{ fontSize: "11px" }}>
-                                {row.vb}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="icg-nstag">{row.native}</span>
-                            </td>
-                            <td>
-                              <span
-                                className={`icg-close-capsule${row.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
-                              >
-                                <span aria-hidden style={{ fontSize: "9px" }}>
-                                  {row.close.glyph}
-                                </span>
-                                {row.close.label}
-                                {row.exceptionId !== null ? (
-                                  <span className="icg-mono" style={{ fontSize: "9px" }}>
-                                    {row.exceptionId}
-                                  </span>
-                                ) : null}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="icg-panel-foot">
-                    <span className="icg-soft" style={{ fontSize: "11px" }}>
-                      A native three-way-match issue is not automatically an accounting
-                      exception; it escalates only when a period-end question is affected.
-                    </span>
-                  </div>
-                </Panel>
               </>
             ) : null}
 
@@ -1048,79 +927,6 @@ function GlAccountsTable({ accounts }: { accounts: GlAccountsData }) {
         </div>
       </div>
     </Panel>
-  );
-}
-
-function ProcurementCardView({
-  card,
-  openException,
-}: {
-  card: ProcurementCard;
-  openException: (id: string | null) => void;
-}) {
-  return (
-    <section className={`icg-proc-card${card.ember ? " icg-proc-card--ember" : ""}`}>
-      <div className="icg-proc-head">
-        <span className="icg-mono" style={{ fontSize: "11px", fontWeight: 600 }}>
-          {card.po}
-        </span>
-        <span style={{ fontSize: "13px", fontWeight: 600 }}>{card.title}</span>
-        {card.qtyAmount !== null ? (
-          <span className="icg-soft icg-num" style={{ fontSize: "11.5px" }}>
-            {card.qtyAmount}
-          </span>
-        ) : null}
-        <span style={{ flex: 1 }} />
-        <span className="icg-nstag">{card.nsTag}</span>
-        {card.exceptionId !== null ? (
-          <button
-            type="button"
-            className={`icg-close-capsule${card.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
-            onClick={() => openException(card.exceptionId)}
-          >
-            <span aria-hidden style={{ fontSize: "9px" }}>
-              {card.close.glyph}
-            </span>
-            {card.close.label}
-          </button>
-        ) : (
-          <span
-            className={`icg-close-capsule${card.close.variant === "aurora" ? " icg-close-capsule--aurora" : ""}`}
-          >
-            <span aria-hidden style={{ fontSize: "9px" }}>
-              {card.close.glyph}
-            </span>
-            {card.close.label}
-          </span>
-        )}
-      </div>
-      <div className="icg-proc-legs">
-        {card.legs.map((leg) => (
-          <div key={leg.label} className={`icg-proc-leg${leg.missing ? " icg-proc-leg--missing" : ""}`}>
-            <span className="icg-proc-leg-label">
-              <span aria-hidden style={{ fontSize: "9px" }}>
-                {leg.glyph}
-              </span>
-              {leg.label}
-            </span>
-            <div className="icg-proc-leg-value">{leg.value}</div>
-            <div className="icg-proc-leg-note">{leg.note}</div>
-          </div>
-        ))}
-      </div>
-      <div className="icg-proc-foot">
-        <span
-          aria-hidden
-          style={{
-            color: card.footnote.tone === "ember" ? "var(--ember)" : "var(--aurora)",
-            fontSize: "11px",
-          }}
-        >
-          {card.footnote.glyph}
-        </span>
-        <span>{card.footnote.text}</span>
-      </div>
-    </section>
   );
 }
 

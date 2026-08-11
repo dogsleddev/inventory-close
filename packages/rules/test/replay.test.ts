@@ -77,7 +77,7 @@ describe("scenario replay", () => {
 
   it("stamps the run manifest with every replay input version", () => {
     const m = baseline.runManifest;
-    expect(m.datasetVersion).toBe("FY2026-DEMO-v1.1.0");
+    expect(m.datasetVersion).toBe("FY2026-DEMO-v1.2.0");
     expect(m.scenarioScriptVersion).toBe("SCENARIO-EVENTS-v1.1.0");
     expect(m.rulesetVersion).toBe("RULESET-v1.0.0");
     expect(m.policyVersion).toBe("CLOSE-POLICY-v1.0.0");

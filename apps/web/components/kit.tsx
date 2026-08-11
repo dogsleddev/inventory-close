@@ -240,6 +240,28 @@ export function TabBar({
   );
 }
 
+/**
+ * The way out of a screen: this population as a spreadsheet.
+ *
+ * The export route handlers have existed since Stage B and nothing linked to
+ * them, so the one path out of this product was reachable only by typing a
+ * URL. A capability with no affordance is a capability the user does not
+ * have. The file is scoped exactly as the screen is — same QueryService, same
+ * role — so the label promises nothing the handler will not honour.
+ */
+export function ExportCsvLink({ table, label }: { table: string; label: string }) {
+  return (
+    <a
+      className="icg-btn icg-btn--mono"
+      href={`/api/export/${table}`}
+      download
+      aria-label={`Export ${label} as CSV`}
+    >
+      EXPORT CSV
+    </a>
+  );
+}
+
 /** Source-coverage chip: a degraded source states it inside the chip. */
 export function SourceStateChip({ text }: { text: string }) {
   const degraded = /STALE|PARTIAL|FAILED/.test(text);

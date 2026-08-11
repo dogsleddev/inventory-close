@@ -5,7 +5,6 @@ import type {
   AdjustmentRegisterOut,
   ExceptionView,
   GlAccountReconciliationOut,
-  ProcurementDetail,
   ReconciliationOut,
 } from "@icg/services";
 import { formatCents, formatDate, formatDateShort } from "../format";
@@ -15,8 +14,6 @@ import type {
   EvidenceRecordView,
   ExceptionDrawerData,
   FinancialBridgeData,
-  ProcurementCard,
-  ProcurementLeg,
   ReconciliationData,
   TabDef,
 } from "../view-model";
@@ -33,10 +30,13 @@ import { classificationLabel, locationLabel, titleCase } from "./humanize";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
- * Reconciliation — the Financial bridge (stage 07) plus the Procurement
- * Match, Commercial Chain, and Serial Integrity tabs (stage 06). The native
- * NetSuite match state and the close-control state are separate columns
- * everywhere; neither is ever derived from the other here.
+ * Reconciliation — the Financial bridge (stage 07) plus the Commercial Chain
+ * and Serial Integrity tabs (stage 06).
+ *
+ * The Procurement Match tab used to live here and now lives at `/procurement`
+ * (COMPLETION_PLAN Stage C), alongside the four other buy-side populations it
+ * belongs with. Nothing about it was rebuilt — the cards, legs and the
+ * native-vs-close separation moved intact to `procurement-view.ts`.
  */
 
 /**
@@ -409,37 +409,6 @@ function buildGlAccounts(
   };
 }
 
-/**
- * Document totals arrive from `getProcurementDetail().totals` — the web app
- * formats money, it never adds it up. An absent total renders as absent.
- */
-const money = (cents: number | undefined): string | null =>
-  cents === undefined ? null : formatCents(cents);
-
-/**
- * The close-control capsule. "No close exception" is a negative claim, so it
- * may only be made when no exception references the match at all — a match
- * whose exception is RESOLVED still has one, and it may carry an unposted
- * proposed adjustment that the reader must be able to reach.
- */
-function closeCapsule(
-  status: string,
-  view?: ExceptionView | undefined,
-): {
-  label: string;
-  glyph: string;
-  variant: "frost" | "aurora";
-} {
-  if (view !== undefined) {
-    return view.open
-      ? { label: statusView(view.exception.status).label, glyph: "◆", variant: "frost" }
-      : { label: statusView(view.exception.status).label, glyph: "✓", variant: "aurora" };
-  }
-  return status === "PASS"
-    ? { label: "No close exception", glyph: "✓", variant: "aurora" }
-    : { label: "Review required", glyph: "◆", variant: "frost" };
-}
-
 export function buildReconciliationData(
   user: DemoUser,
   serialQuery: string,
@@ -449,16 +418,14 @@ export function buildReconciliationData(
   const ctx = makeContext(user, correlationId);
   const role = roleLabel(user);
 
-  const matches = attempt(() => queries.getProcurementMatches(ctx));
   const chains = attempt(() => queries.getCommercialChains(ctx));
-  if (matches === undefined || chains === undefined) {
+  if (chains === undefined) {
     return {
       restricted: true,
       roleLabel: role,
       headerNote: null,
       tabs: [],
       financial: null,
-      procurement: null,
       commercial: null,
       serialTab: { query: "", notable: [], card: null, notFound: null },
       drawers: {},
@@ -500,211 +467,6 @@ export function buildReconciliationData(
           (e.exception.finding.subjects.transactionNumbers?.includes(ref) ?? false),
       ),
     );
-
-  /* ---------------- Procurement Match tab ---------------- */
-
-  const details = new Map<string, ProcurementDetail>();
-  const detailFor = (po: string): ProcurementDetail => {
-    let d = details.get(po);
-    if (d === undefined) {
-      d = attempt(() => queries.getProcurementDetail(ctx, po)) ?? { totals: {} };
-      details.set(po, d);
-    }
-    return d;
-  };
-
-  const nativePass = matches.filter((m) => m.nativeNetsuiteMatchStatus === "PASS").length;
-  const closeOpen = matches.filter((m) => m.closeMatchStatus !== "PASS").length;
-
-  const poLeg = (d: ProcurementDetail): ProcurementLeg => {
-    const po = d.purchaseOrder;
-    if (po === undefined) {
-      return {
-        label: "PURCHASE ORDER",
-        glyph: "○",
-        value: "No record",
-        note: "",
-        missing: true,
-      };
-    }
-    const amount = money(d.totals.purchaseOrderCents);
-    const qty = d.totals.purchaseOrderQuantity;
-    const skus = [...new Set(po.lines.map((l) => l.sku))].join(", ");
-    return {
-      label: "PURCHASE ORDER",
-      glyph: "✓",
-      value: `${po.transactionNumber} · ${formatDateShort(po.orderDate)}`,
-      note: `${po.vendor}${qty !== undefined ? ` · ${qty} × ${skus}` : ""}${amount !== null ? ` · ${amount}` : ""}`,
-      missing: false,
-    };
-  };
-  const irLeg = (d: ProcurementDetail): ProcurementLeg => {
-    const ir = d.itemReceipt;
-    if (ir === undefined) {
-      return {
-        label: "ITEM RECEIPT",
-        glyph: "○",
-        value: "No record",
-        note: "No item receipt references this order",
-        missing: true,
-      };
-    }
-    const inPeriod = periodEnd === undefined || ir.receiptDate <= periodEnd;
-    return inPeriod
-      ? {
-          label: "ITEM RECEIPT",
-          glyph: "✓",
-          value: `${ir.transactionNumber} · ${formatDateShort(ir.receiptDate)}`,
-          note: "Received and recorded in period",
-          missing: false,
-        }
-      : {
-          label: "ITEM RECEIPT",
-          glyph: "○",
-          value: `Absent at ${periodEnd !== undefined ? formatDateShort(periodEnd) : "period end"}`,
-          note: `Recorded ${formatDate(ir.receiptDate)}`,
-          missing: true,
-        };
-  };
-  const vbLeg = (d: ProcurementDetail): ProcurementLeg => {
-    const vb = d.vendorBill;
-    if (vb === undefined) {
-      return {
-        label: "VENDOR BILL",
-        glyph: "○",
-        value: "No record",
-        note: "No vendor bill references this order",
-        missing: true,
-      };
-    }
-    const amount = money(d.totals.vendorBillCents);
-    return {
-      label: "VENDOR BILL",
-      glyph: "✓",
-      value: `${vb.transactionNumber} · ${formatDateShort(vb.billDate)}`,
-      note: `Received and recorded${amount !== null ? ` · ${amount}` : ""}`,
-      missing: false,
-    };
-  };
-
-  const buildCard = (
-    poNumber: string,
-    title: string,
-    tone: "ember" | "clean" | "resolved",
-    view: ExceptionView | undefined,
-  ): ProcurementCard => {
-    const match = matches.find((m) => m.purchaseOrderNumber === poNumber);
-    const d = detailFor(poNumber);
-    const po = d.purchaseOrder;
-    const qty = d.totals.purchaseOrderQuantity;
-    const skus = po !== undefined ? [...new Set(po.lines.map((l) => l.sku))].join(", ") : "";
-    const amount = money(d.totals.purchaseOrderCents);
-    const f = view?.exception.finding;
-    return {
-      key: poNumber,
-      po: poNumber,
-      title,
-      qtyAmount:
-        qty !== undefined ? `${qty} × ${skus}${amount !== null ? ` · ${amount}` : ""}` : null,
-      nsTag: `NS 3WM · ${match?.nativeNetsuiteMatchStatus ?? "—"}`,
-      close: closeCapsule(match?.closeMatchStatus ?? "PASS", view),
-      ember: tone === "ember",
-      legs: [poLeg(d), irLeg(d), vbLeg(d)],
-      footnote:
-        view !== undefined
-          ? {
-              glyph: view.open ? "✕" : "✓",
-              tone: view.open ? "ember" : "aurora",
-              text: `${f?.whyFlagged ?? ""} ${view.exception.id} · ${f !== undefined ? formatCents(f.exposureCents) : ""} · ${statusView(view.exception.status).label}.`,
-            }
-          : {
-              glyph: "✓",
-              tone: "aurora",
-              text: "All three legs present and matched before year-end, and no cutoff or ownership question arises. Native match and close control agree here — the normal case, and the reason the two are still reported separately.",
-            },
-      exceptionId: drawerFor(view),
-    };
-  };
-
-  // Featured cards, all derived from service state: every close-open match
-  // (EXC-002), the resolved-historical timing example, and the largest clean
-  // cycle for contrast.
-  const featured: ProcurementCard[] = [];
-  for (const m of matches) {
-    if (m.closeMatchStatus === "PASS") continue;
-    const view = byTransaction(m.purchaseOrderNumber, m.itemReceiptNumber, m.vendorBillNumber);
-    featured.push(
-      buildCard(
-        m.purchaseOrderNumber,
-        view?.exception.finding.title ?? "Open close question",
-        "ember",
-        view,
-      ),
-    );
-  }
-  const resolvedHistorical = matches.find((m) => {
-    if (m.closeMatchStatus !== "PASS") return false;
-    const view = byTransaction(m.purchaseOrderNumber, m.itemReceiptNumber, m.vendorBillNumber);
-    return view !== undefined && !view.open;
-  });
-  if (resolvedHistorical !== undefined) {
-    const view = byTransaction(
-      resolvedHistorical.purchaseOrderNumber,
-      resolvedHistorical.itemReceiptNumber,
-      resolvedHistorical.vendorBillNumber,
-    );
-    featured.push(
-      buildCard(
-        resolvedHistorical.purchaseOrderNumber,
-        view?.exception.finding.title ?? "Resolved historical question",
-        "resolved",
-        view,
-      ),
-    );
-  }
-  const clean = matches
-    .filter(
-      (m) =>
-        m.nativeNetsuiteMatchStatus === "PASS" &&
-        m.closeMatchStatus === "PASS" &&
-        byTransaction(m.purchaseOrderNumber, m.itemReceiptNumber, m.vendorBillNumber) ===
-          undefined,
-    )
-    .map((m) => ({
-      m,
-      amount: detailFor(m.purchaseOrderNumber).totals.purchaseOrderCents ?? 0,
-    }))
-    .sort((a, b) =>
-      b.amount !== a.amount
-        ? b.amount - a.amount
-        : a.m.purchaseOrderNumber < b.m.purchaseOrderNumber
-          ? -1
-          : 1,
-    )[0];
-  if (clean !== undefined) {
-    featured.push(
-      buildCard(clean.m.purchaseOrderNumber, "Clean procurement cycle", "clean", undefined),
-    );
-  }
-
-  const procurementRows = matches.map((m) => {
-    // Every match is checked against the exception population, not only the
-    // close-open ones: a resolved exception is still an exception, and its
-    // row must reach it.
-    const view = byTransaction(
-      m.purchaseOrderNumber,
-      m.itemReceiptNumber,
-      m.vendorBillNumber,
-    );
-    return {
-      po: m.purchaseOrderNumber,
-      ir: m.itemReceiptNumber ?? "—",
-      vb: m.vendorBillNumber ?? "—",
-      native: `NS 3WM · ${m.nativeNetsuiteMatchStatus}`,
-      close: closeCapsule(m.closeMatchStatus, view),
-      exceptionId: drawerFor(view),
-    };
-  });
 
   /* ---------------- Commercial Chain tab ---------------- */
 
@@ -1055,7 +817,6 @@ export function buildReconciliationData(
       label: "Financial",
       count: recon !== undefined ? formatCents(recon.differenceCents) : null,
     },
-    { key: "procurement", label: "Procurement Match", count: String(matches.length) },
     { key: "commercial", label: "Commercial Chain", count: String(chains.length) },
     { key: "serial", label: "Serial Integrity", count: null },
   ];
@@ -1077,12 +838,6 @@ export function buildReconciliationData(
             drawerFor,
           )
         : null,
-    procurement: {
-      nativeSummary: `${nativePass} / ${matches.length}`,
-      closeSummary: `${closeOpen} open`,
-      featured,
-      rows: procurementRows,
-    },
     commercial: {
       featured: commercialFeatured,
       others,

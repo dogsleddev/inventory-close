@@ -1,5 +1,5 @@
 {
-  "datasetVersion": "FY2026-DEMO-v1.1.0",
+  "datasetVersion": "FY2026-DEMO-v1.2.0",
   "generatorSeed": "ICG-FY2026-DEMO-002",
   "scenarioScript": "SCENARIO-EVENTS-v1.1.0",
   "generatorVersion": "1.0.0",
@@ -33,7 +33,11 @@
     "forecasts": 14,
     "assignments": 21,
     "scenarioEvents": 10,
-    "sourceHealth": 9
+    "sourceHealth": 9,
+    "costComponents": 70,
+    "periodCosts": 6,
+    "consignmentInUnits": 12,
+    "dispositions": 4
   },
   "controlTotals": {
     "bookUnits": 1500,
@@ -51,7 +55,7 @@
     "inventoryUnits": "753b6b43e4e89bc80a40dd2111f2b4126a889280da7f0f09424e94a5fa5be7b7",
     "purchaseOrders": "ee478be635a5d0e8338751ad17b26e1067e52037e9bc515a7ae5fc647b4e8352",
     "itemReceipts": "1f1c74f65308adf9f939d1087893f7f6d7e716388097ae7952f93cbcf6357d81",
-    "vendorBills": "d858a8bdec7c69a16927bcc089633b6e49ee35de44781fd5053a57fdc49cf0cc",
+    "vendorBills": "0ac7eaefc947811128c5c3f2d46dbb2aa2f59c099f56d0425a9024c8b3a557f4",
     "salesOrders": "8c0732d3ea9223e7f0312208e0e57c62d6dc94071be390ffc6a624e4a7988cd7",
     "itemFulfillments": "a9bc3ce77986d5e7f366577a3b5902b2353f412b39185d29dd1df2c3fc39bb98",
     "customerInvoices": "4b6ef9e19bb7f70eb7954b86fff68baa315750693fb4d0f41d115fc41f86ade9",
@@ -72,7 +76,11 @@
     "forecasts": "b39a83d328572efdea719728b788bcce4ad01fbc5616fb6bfc3cd82c4a6c098b",
     "assignments": "474083d6558264a7c25975cf00dab868e443877e6a2f78dcf0d72536d5c958c2",
     "scenarioEvents": "a42bb042920c739fce01dab814194c490c75967e7e3399ccfa57445330f82ac5",
-    "sourceHealth": "73141e090c660ca755c7c55d8d767e926a817a8755de0e5d7b36838818a16c1e"
+    "sourceHealth": "73141e090c660ca755c7c55d8d767e926a817a8755de0e5d7b36838818a16c1e",
+    "costComponents": "67cadbdcb54c6343fc8889640d402201ce00545d7570ccc015a3a4d1125175d8",
+    "periodCosts": "bd4082f02292814303ad4337fa38a9095a72344ef100f928a7404d68eaea7c1b",
+    "consignmentInUnits": "95d45dfe84d2ae80796e406601a40b32ca73d76ca6033d40a940ba266dd3e354",
+    "dispositions": "64f45ec0d7dd1a82acdaddba5675d71e0c7f0dbf337f592231d8aedd0a504c80"
   },
-  "datasetHash": "672d7349c616f47888c7bd28fdf13a844884b3eaf153d32e45b8d4676f1a5ab0"
+  "datasetHash": "9f39105de59cb0c86ce494512d4c9498c886d21f128fe6607bb935db64cc0bcc"
 }

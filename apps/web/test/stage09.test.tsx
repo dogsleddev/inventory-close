@@ -279,11 +279,11 @@ describe("a demo stop is a link, not a sequence of clicks", () => {
       <ReconciliationScreen
         shell={buildShellData(user, "T-09")}
         data={buildReconciliationData(user, "", "T-09")}
-        initialTab="procurement"
+        initialTab="commercial"
         setRoleAction={noopRole}
       />,
     );
-    expect(screen.getByRole("tab", { name: /Procurement Match/ })).toHaveProperty(
+    expect(screen.getByRole("tab", { name: /Commercial Chain/ })).toHaveProperty(
       "ariaSelected",
       "true",
     );

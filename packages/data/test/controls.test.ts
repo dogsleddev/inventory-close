@@ -189,7 +189,7 @@ describe("facts-only boundary", () => {
   });
 
   it("keeps the manifest identity canonical", () => {
-    expect(dataset.manifest.datasetVersion).toBe("FY2026-DEMO-v1.1.0");
+    expect(dataset.manifest.datasetVersion).toBe("FY2026-DEMO-v1.2.0");
     expect(dataset.manifest.generatorSeed).toBe("ICG-FY2026-DEMO-002");
     expect(dataset.manifest.scenarioScript).toBe("SCENARIO-EVENTS-v1.1.0");
     expect(dataset.manifest.balanceSheetDate).toBe("2026-12-31");

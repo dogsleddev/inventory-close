@@ -1,0 +1,492 @@
+[
+  {
+    "sku": "KE-I1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 43400,
+    "costSource": "Volta Components Ltd price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-I1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 9800,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-I1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 11200,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-I1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 3500,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-I1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 2100,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-M1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 83700,
+    "costSource": "Meridian Contract Manufacturing price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-M1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 18900,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-M1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 21600,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-M1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 6750,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-M1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 4050,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-S1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 148800,
+    "costSource": "Meridian Contract Manufacturing price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-S1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 33600,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-S1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 38400,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-S1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 12000,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-S1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 7200,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 303800,
+    "costSource": "Volta Components Ltd price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 68600,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 78400,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 24500,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 14700,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E2",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 458800,
+    "costSource": "Meridian Contract Manufacturing price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E2",
+    "component": "DIRECT_LABOR",
+    "amountCents": 103600,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E2",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 118400,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E2",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 37000,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-E2",
+    "component": "IMPORT_DUTY",
+    "amountCents": 22200,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-X1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 570400,
+    "costSource": "Volta Components Ltd price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-X1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 128800,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-X1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 147200,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-X1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 46000,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-X1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 27600,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-Y1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 793600,
+    "costSource": "Meridian Contract Manufacturing price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-Y1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 179200,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-Y1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 204800,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-Y1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 64000,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KE-Y1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 38400,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-D1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 28900,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-D1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 3400,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-D1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 5100,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-D1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 2975,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-D1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 2125,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-B1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 45900,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-B1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 5400,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-B1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 8100,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-B1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 4725,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-B1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 3375,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-F1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 59500,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-F1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 7000,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-F1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 10500,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-F1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 6125,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-F1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 4375,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-Z1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 98600,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-Z1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 11600,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-Z1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 17400,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-Z1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 10150,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KV-Z1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 7250,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KA-41",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 84000,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KA-41",
+    "component": "DIRECT_LABOR",
+    "amountCents": 12000,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KA-41",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 15600,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KA-41",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 6000,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KA-41",
+    "component": "IMPORT_DUTY",
+    "amountCents": 2400,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KR-U1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 57750,
+    "costSource": "Volta Components Ltd price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KR-U1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 8250,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KR-U1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 10725,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KR-U1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 4125,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KR-U1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 1650,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KG-K1",
+    "component": "DIRECT_MATERIAL",
+    "amountCents": 101500,
+    "costSource": "Cascade Systems Assembly price list — FY2026 R2",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KG-K1",
+    "component": "DIRECT_LABOR",
+    "amountCents": 14500,
+    "costSource": "Standard labor rate study — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KG-K1",
+    "component": "MANUFACTURING_OVERHEAD",
+    "amountCents": 18850,
+    "costSource": "Overhead absorption rate — FY2026 annual roll",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KG-K1",
+    "component": "INBOUND_FREIGHT",
+    "amountCents": 7250,
+    "costSource": "Inbound freight rate schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  },
+  {
+    "sku": "KG-K1",
+    "component": "IMPORT_DUTY",
+    "amountCents": 2900,
+    "costSource": "Customs duty schedule — FY2026",
+    "effectiveFrom": "2026-01-01"
+  }
+]

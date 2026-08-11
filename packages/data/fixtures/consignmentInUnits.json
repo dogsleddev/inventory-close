@@ -1,0 +1,206 @@
+[
+  {
+    "serial": "KE-X1-2792",
+    "sku": "KE-X1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A1",
+    "receivedAt": "2026-09-14",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 920000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810001",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3672b3dcc2b645578bc21c62e05725c29f6853015ef9cc0d1fbb26e50808f22b"
+    }
+  },
+  {
+    "serial": "KE-X1-7193",
+    "sku": "KE-X1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A1",
+    "receivedAt": "2026-09-14",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 920000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810002",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "58378cc7ed6056340bf0377b185c6b2968be835b4c4e4a74922141a1408c4d7e"
+    }
+  },
+  {
+    "serial": "KE-X1-2141",
+    "sku": "KE-X1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A1",
+    "receivedAt": "2026-09-14",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 920000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810003",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "9633d6e399174b9d48b860272e3b9575040faa92f8cf9d6d48688284b3d5f41a"
+    }
+  },
+  {
+    "serial": "KE-X1-8377",
+    "sku": "KE-X1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A1",
+    "receivedAt": "2026-09-14",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 920000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810004",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "aef0979e0d5de39658c9dffdab2b6fa8f1a31b68c60d9f3ec289ea61992b3421"
+    }
+  },
+  {
+    "serial": "KE-X1-5238",
+    "sku": "KE-X1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A1",
+    "receivedAt": "2026-09-14",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 920000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810005",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "567812eff20a5ec3d3a84c536a309f78951689fb840d2e74ed8206b15bb8f601"
+    }
+  },
+  {
+    "serial": "KE-E1-1972",
+    "sku": "KE-E1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A2",
+    "receivedAt": "2026-10-26",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 490000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810006",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3f46be3922cf8ab1471ca08a27c059ebe3bb06aa394f8deda3c6b43b8b4dd323"
+    }
+  },
+  {
+    "serial": "KE-E1-7573",
+    "sku": "KE-E1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A2",
+    "receivedAt": "2026-10-26",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 490000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810007",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "40713e3f9931989b2c17d5bb60d52d265f427cde6049d3f47288e7374f99a883"
+    }
+  },
+  {
+    "serial": "KE-E1-4324",
+    "sku": "KE-E1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A2",
+    "receivedAt": "2026-10-26",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 490000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810008",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "a19b80cd0f01705412c834742e2c209a369feff48746f8fac8ee54b269088bc8"
+    }
+  },
+  {
+    "serial": "KE-E1-1461",
+    "sku": "KE-E1",
+    "owner": "Volta Components Ltd",
+    "location": "PRIMARY_WAREHOUSE",
+    "bin": "CONSIGN-A2",
+    "receivedAt": "2026-10-26",
+    "agreementRef": "CA-VOLTA-2026-01",
+    "vendorStatedValueCents": 490000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810009",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "b46441b173a137c0a835236074cd0389137581cdd21b84c47859652155c3768c"
+    }
+  },
+  {
+    "serial": "KE-S1-5742",
+    "sku": "KE-S1",
+    "owner": "Meridian Contract Manufacturing",
+    "location": "RECEIVING",
+    "bin": "CONSIGN-B2",
+    "receivedAt": "2026-11-09",
+    "agreementRef": "CA-MERIDIAN-2026-01",
+    "vendorStatedValueCents": 240000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810010",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "ea9477b18477b1f1f500f29ca8cc18223caaeb3988e1f1f4a67931d168fb2ec5"
+    }
+  },
+  {
+    "serial": "KE-S1-8531",
+    "sku": "KE-S1",
+    "owner": "Meridian Contract Manufacturing",
+    "location": "RECEIVING",
+    "bin": "CONSIGN-B2",
+    "receivedAt": "2026-11-09",
+    "agreementRef": "CA-MERIDIAN-2026-01",
+    "vendorStatedValueCents": 240000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810011",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "3462d5b56db453b765cd3f342332fe52956422391d4cc8225cc3d3afbec688e6"
+    }
+  },
+  {
+    "serial": "KE-S1-5170",
+    "sku": "KE-S1",
+    "owner": "Meridian Contract Manufacturing",
+    "location": "RECEIVING",
+    "bin": "CONSIGN-B2",
+    "receivedAt": "2026-11-09",
+    "agreementRef": "CA-MERIDIAN-2026-01",
+    "vendorStatedValueCents": 240000,
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_WMS",
+      "recordType": "CONSIGNMENT_HOLDING",
+      "internalId": "810012",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "8317475ce0e0e7e51925a9d957c4a2d184ab5549addf334b777f168cc393c2fc"
+    }
+  }
+]

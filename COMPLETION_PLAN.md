@@ -259,9 +259,9 @@ prior one is green.
 | **A — Credibility** ✅ **DONE** (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) | Evidence Center; remove `/assumptions`; "How to Explore This Demo" + glossary; Overview hierarchy + 6 clickable KPIs + blockers filter; domain-aware exception lenses; coverage terminology; ownership language (rule v1.0.1); reconciliation canonical language + posted block; honest treatment of dead buttons; per-route titles, favicon, OG, `not-found`/`error`, footer, Print button. | None (D1–D4 resolved above) |
 | **B — Inventory & GL** ✅ **DONE** (`3a359e7`, `de41445`) | All Inventory master list; GL accounts view; full JE detail; subledger-to-GL polish; **CSV export route handlers**. | D7, D10 |
 | **W — Workflow verbs** ✅ **DONE** (`de41445`) | `concludeException` + `requestEvidence` + `submitEvidence` wired; live effective-state overlay; sign-off reachable at zero live blockers. | **D6** |
-| **C — Procurement** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. | D5, D9 |
-| **D — Costing** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. | D5 |
-| **E — Ownership & valuation lifecycle** | Custody model; consignment-in; E&O methodology; scrap & disposition. | D5 |
+| **C — Procurement** ✅ **DONE** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. **Carried the single D5 regeneration for C/D/E.** | D5, D9 |
+| **D — Costing** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
+| **E — Ownership & valuation lifecycle** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **F — Management outputs** | Methodology & Calculations; Accounting Matrix; Close Memo with review workflow; guided-demo polish. | D8 |
 | **G — Ask Gaurd** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
 | **H — QA** | Baseline regression, accounting-language review, AI-off test, placeholder scan, 60-second demo test, full-tree adversarial pass. | — |
@@ -314,6 +314,60 @@ Design decisions worth remembering:
 **Still open from the audit:** the classification→GL map now exists in two places
 (`queries.ts` exported, and `glAccounts.ts`'s mirror). Both are pinned against the query service
 by tests, but they should collapse into the `INVENTORY_ACCOUNTING_MATRIX` in Stage F.
+
+### Stage C outcome (2026-08-11)
+
+**802 tests across 58 files**, typecheck/lint/build clean, 16 routes. Every locked figure
+unmoved and verified in a browser, not only in tests: 1,500 units · $4,800,000 subledger ·
+$4,812,450 GL · $12,450 difference · 15 exceptions · 7 blockers · $198,950 exposure ·
+81.42% readiness · 17/21 PBC · 91.67% source health.
+
+**The single D5 regeneration is done — dataset `FY2026-DEMO-v1.2.0`.** It carries everything
+Stages C, D and E need, so neither D nor E bumps the dataset again. Regenerating produced a
+diff of exactly what was intended: `vendorBills.json` (PPV) and `manifest.json` changed, four
+new collections appeared, and every other fixture stayed byte-identical. New collections:
+`costComponents` (70 rows), `periodCosts` (6), `consignmentInUnits` (12), `dispositions` (4).
+
+Delivered: `/procurement` with five populations — three-way match (re-hosted from
+Reconciliation, not rebuilt), received-not-invoiced, invoiced-not-received, inbound goods in
+transit, and purchase price variance. `getProcurementPopulations` in `@icg/services`, CSV
+export for the whole section, and the nav entry (13 sections).
+
+Design decisions worth remembering:
+
+- **No rule changed.** The populations are a projection over documents the close already
+  read, so every golden figure is protected by construction. PPV lives in services, not in
+  `PROC-3WM-001`.
+- **Invoiced-not-received and inbound goods in transit are ONE population**, and the screen
+  says so. The 4 orders billed but not received carry 55 units / $158,925; the book shows 55
+  units / $158,925 classified GIT inbound. The service returns an `inboundAgrees` flag and
+  the screen states the agreement, so no reader can add the two.
+- **Account 1210 is reported whole** — 55 inbound + 60 outbound = 115 units / $390,300 —
+  because reporting only the procurement half would put a smaller number beside the same
+  account code on the GL-account screen.
+- **PPV is expensed, not capitalized**, which is exactly why it can exist without touching a
+  locked figure. It stays a match-level attribute; the native three-way match still passes on
+  all three varying orders, and no sixteenth exception appears.
+- The generator hands ONE `lines` array to the purchase order, the receipt and the bill.
+  Repricing it in place would reprice all three; the bill gets a fresh array, and a regression
+  pins that the order and receipt still carry the ordered price.
+- New serials are minted from the same registry as the book population, so the lifecycle
+  module must run **last** in `buildDataset` — minting earlier renumbers every unit generated
+  after it.
+- `WORKSPACE_SHAPE` now covers the dataset version too, not only `Workspace` fields. A cached
+  v1.1.0 workspace would have served the Price Variance tab an empty population.
+
+**Found and fixed while verifying in the browser:** the "Clean procurement cycle" card showed
+$1,196,700 ordered against $1,199,562 billed under a footnote calling the legs matched. The
+clean example now excludes orders carrying a variance, and any card whose bill differs from
+its order names the difference on the vendor-bill leg.
+
+**Found, not fixed — out of Stage C's scope:** the CSV export routes built in Stage B were
+**unreachable from the UI**. Nothing in `apps/web` linked to `/api/export/*` or mentioned CSV;
+the only way to reach the one path out of this product was to type a URL. Stage C ships a
+shared `ExportCsvLink` in `components/kit.tsx` and wires it on `/procurement`. The other six
+tables — inventory, exceptions, reconciliation, adjustments, evidence, pbc — still have no
+affordance on their screens. One link each, on the page head.
 
 ## 11. Acceptance criteria (the twenty questions)
 

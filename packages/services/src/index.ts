@@ -88,3 +88,15 @@ export {
 } from "./effective.js";
 export type { CommandService } from "./commands.js";
 export { getGlAccountReconciliation, INVENTORY_RESERVE_ACCOUNT, type GlAccountReconcilingItemOut, type GlAccountReconciliationOut, type GlAccountReconciliationState, type GlAccountRowOut, type GlReserveAccountOut } from "./glAccounts.js";
+export { getProcurementPopulations } from "./procurement.js";
+export type {
+  GoodsInTransitOut,
+  GrniRowOut,
+  InvoicedNotReceivedRowOut,
+  PeriodEndPosition,
+  PriceVarianceOut,
+  PriceVarianceRowOut,
+  ProcurementMatchSummaryOut,
+  ProcurementOrderOut,
+  ProcurementPopulationsOut,
+} from "./procurement.js";

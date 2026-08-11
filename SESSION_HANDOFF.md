@@ -19,19 +19,25 @@ the staged sequence A→H, the golden-test traps, and the D1–D12 decision regi
 each decision's outcome. Everything in §0 below still applies (it describes the ten
 stages and the locked baseline) — but the *next task* is in the plan, not in §8.
 
-**State as of HEAD `546fe3a`:**
+**State after Stage C:**
 
 | Stage | State |
 |---|---|
 | **A — Credibility** | ✅ Done (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) |
 | **B — Inventory & GL** | ✅ Done (`3a359e7`, `de41445`) |
 | **W — Workflow verbs** | ✅ Done (`de41445`) |
-| C — Procurement · D — Costing · E — Ownership/valuation lifecycle | Not started |
+| **C — Procurement** | ✅ Done — and it carried the **one** D5 regeneration for C/D/E |
+| D — Costing · E — Ownership/valuation lifecycle | Not started — **their fixtures already exist**, no dataset bump left to do |
 | F — Management outputs · G — Ask Gaurd tools · H — QA | Not started |
 
-**758 tests across 55 files passing**; typecheck clean; production build clean (15 routes,
-including `/api/export/[table]`). The locked financial baseline has not moved, and
-Reset Demo restores it exactly — verified in a browser, not only in tests.
+**802 tests across 58 files passing**; typecheck and lint clean; production build clean
+(16 routes, including `/procurement` and `/api/export/[table]`). The locked financial
+baseline has not moved — verified in a browser, not only in tests.
+
+**Dataset is now `FY2026-DEMO-v1.2.0`** (hash `9f39105d…`). D5 is spent: `costComponents`,
+`periodCosts`, `consignmentInUnits`, `dispositions` and the seeded PPV all shipped in one
+regeneration. **Stages D and E build surfaces over fixtures that are already there.** If you
+find yourself about to regenerate, you are about to do the thing D5 exists to prevent.
 
 **Owner decisions already approved (2026-08-10), recorded in `COMPLETION_PLAN.md` §9:**
 
@@ -46,11 +52,25 @@ Reset Demo restores it exactly — verified in a browser, not only in tests.
 - **D9** — seed a small non-blocking PPV variance under D5; it must stay a match-level
   attribute and never become a 16th exception.
 
-**The next task is Stage C (Procurement)**: a dedicated section with three-way match
-re-hosted, GRNI, invoiced-not-received, goods in transit, and PPV. The audit found this is
-the best-provisioned cluster — 2 genuine GRNI rows and 4 INR POs already exist in the
-fixtures, and the dual native-vs-close match status is already modeled and golden-locked
-with EXC-002 as its demonstration. Only PPV needs authored data.
+**The next task is Stage D (Costing)**: the standard cost stack, fixed/variable/period
+classification, R&D, and COGS state. `packages/data/fixtures/costComponents.json` and
+`periodCosts.json` are already generated and validated — Stage D is a services projection
+plus a screen, with no fixture work at all.
+
+Two things Stage C established that Stage D inherits:
+
+- `costComponents` sums **exactly** to each SKU's locked unit cost, and a regression pins it.
+  The capitalized side of "which costs belong in inventory" is that stack; the expensed side
+  is `periodCosts`, every row carrying its basis. `periodCosts` must never reach `glBalances`.
+- The pattern for a new read-only projection is `packages/services/src/procurement.ts`:
+  a module taking `(ws, ctx)`, authorizing on `close.read`, scoping documents with
+  `makeRecordScope`, exported from `index.ts`, called from a `lib/server/*-view.ts`. It
+  changes no rule, so no golden figure can move.
+
+**Still open from Stage C, for whoever picks it up:** the CSV export routes have no affordance
+on six of the seven screens they serve. `ExportCsvLink` exists in `components/kit.tsx` and is
+wired on `/procurement`; inventory, exceptions, reconciliation, adjustments, evidence and pbc
+still need one link each on their page heads.
 
 ---
 
@@ -74,7 +94,7 @@ Before anything else:
    accessibility, demo states, and the mockup defects in §9a you must correct rather than
    replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **758 tests across 55 files passing**. **Stop any `pnpm dev` server first** (see §7).
+   **802 tests across 58 files passing**. **Stop any `pnpm dev` server first** (see §7).
 
 **All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
@@ -109,16 +129,17 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **758 tests across 55 files passing** (was 628/47 at the original release; the completion
-  pass added the rest); typecheck, lint, and production build all green — **15 routes**, now
-  including `/api/export/[table]`.
+- **802 tests across 58 files passing** (was 628/47 at the original release; the completion
+  pass added the rest); typecheck, lint, and production build all green — **16 routes**, now
+  including `/procurement` and `/api/export/[table]`.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
   scans; the four-command gate is unchanged.
   (Stage 06's handoff recorded 376 at `e18d94e`; the tree actually ran **375** there — an
   off-by-one in the note, not a skipped test.)
 - All 44 `SPEC_MANIFEST.json` hashes match disk — the spec package is pristine.
-- Committed dataset hash: `672d7349c616f47888c7bd28fdf13a844884b3eaf153d32e45b8d4676f1a5ab0`
-  (changed by the pass-1 data remediation; the locked financial baseline did not move).
+- Committed dataset hash: `9f39105de59cb0c86ce494512d4c9498c886d21f128fe6607bb935db64cc0bcc`
+  (`FY2026-DEMO-v1.2.0`, moved by the Stage C regeneration; the locked financial baseline did
+  not move). The prior v1.1.0 hash was `672d7349c616…`.
 
 ### Stage status
 
@@ -145,8 +166,8 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
-| **Completion pass A/B/W** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
-| **Completion pass C–H** | **Not started.** Stage C is next. |
+| **Completion pass A/B/W/C** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass D–H** | **Not started.** Stage D is next; its fixtures already ship. |
 
 ### Commit history (newest first)
 
@@ -211,7 +232,7 @@ cfbd22d Correct docs/13 build-order mnemonic to match CANONICAL_SPEC section 16
 
 ### Locked financial baseline — never silently change any of these
 
-Dataset `FY2026-DEMO-v1.1.0` · seed `ICG-FY2026-DEMO-002` · scenario `SCENARIO-EVENTS-v1.1.0`
+Dataset `FY2026-DEMO-v1.2.0` · seed `ICG-FY2026-DEMO-002` · scenario `SCENARIO-EVENTS-v1.1.0`
 
 - 1,500 units / **$4,800,000** gross carrying value
 - Gross inventory GL **$4,812,450**; difference **$12,450**; reserve 1290 **($54,000)** separate
@@ -435,11 +456,21 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 **Traps found during the completion pass (A/B/W) — these cost real time:**
 
 - **`WORKSPACE_SHAPE` in `apps/web/lib/server/workspace.ts` must be bumped whenever the
-  `Workspace` interface gains a field.** The dev server caches the workspace on `globalThis`
-  across module reloads, so a workspace built before a shape change survives and the first
-  read of the new field throws. **Tests cannot catch this** — they build a fresh workspace per
-  test. It was found only by opening the page in a browser. The guard now rebuilds a
-  stale-shaped cache; keep the constant current.
+  `Workspace` interface gains a field OR the dataset version moves.** The dev server caches
+  the workspace on `globalThis` across module reloads, so a workspace built before the change
+  survives: the first read of a new field throws, and a stale dataset quietly serves a screen
+  figures its own fixtures no longer contain (Stage C's price-variance tab would have rendered
+  an empty population against a v1.1.0 cache). **Tests cannot catch either** — they build a
+  fresh workspace per test. Both were found only by opening the page in a browser.
+- **The generator hands ONE `lines` array to the purchase order, the item receipt and the
+  vendor bill** (`costLines` in `packages/data/src/netsuite.ts`). Anything that reprices or
+  edits a bill line must build a NEW array — mutating in place silently rewrites all three
+  documents, and a three-way match whose legs all moved together looks matched while being
+  wrong. Stage C's seeded PPV depends on this; `stageC-fixtures.test.ts` pins it.
+- **New serials must be minted LAST in `buildDataset`.** `SerialRegistry.mint` advances a
+  per-SKU PRNG stream, so minting anywhere before the existing calls renumbers every unit
+  generated after it and rewrites half the fixtures. `lifecycle.ts` runs after every other
+  builder for exactly this reason.
 - **Three test files mock `../app/actions` with a factory** (`ask-gaurd.test.tsx`,
   `stage09.test.tsx`, `close-loop.test.tsx`). A component that imports a NEW action from that
   module fails in those files with "No export is defined on the mock" until the factory lists

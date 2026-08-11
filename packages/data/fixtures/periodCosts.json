@@ -1,0 +1,62 @@
+[
+  {
+    "id": "PC-2026-0001",
+    "category": "Research and development",
+    "department": "Product Engineering",
+    "fiscalYear": "FY2026",
+    "amountCents": 184500000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "ASC 730-10-25-1 — research and development is expensed as incurred. It is not a cost of bringing inventory to its present location and condition.",
+    "glAccount": "6710"
+  },
+  {
+    "id": "PC-2026-0002",
+    "category": "Research and development",
+    "department": "Firmware and Cloud",
+    "fiscalYear": "FY2026",
+    "amountCents": 61250000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "ASC 730-10-25-1 — firmware developed for future product generations is research and development, not a conversion cost of units on hand.",
+    "glAccount": "6710"
+  },
+  {
+    "id": "PC-2026-0003",
+    "category": "Prototype materials",
+    "department": "Product Engineering",
+    "fiscalYear": "FY2026",
+    "amountCents": 18430000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "Materials consumed in development builds. The resulting units are not held for sale and never enter the inventory subledger.",
+    "glAccount": "6715"
+  },
+  {
+    "id": "PC-2026-0004",
+    "category": "Product qualification and test",
+    "department": "Quality Engineering",
+    "fiscalYear": "FY2026",
+    "amountCents": 26800000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "Qualification of shipped configurations occurs after production is complete, so it is a period cost rather than a cost of conversion.",
+    "glAccount": "6720"
+  },
+  {
+    "id": "PC-2026-0005",
+    "category": "Idle capacity and unabsorbed overhead",
+    "department": "Operations",
+    "fiscalYear": "FY2026",
+    "amountCents": 9640000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "ASC 330-10-30-3 — abnormal idle capacity is charged to the period. Only overhead absorbed at normal capacity is in the standard cost stack.",
+    "glAccount": "6730"
+  },
+  {
+    "id": "PC-2026-0006",
+    "category": "Freight on non-inventory shipments",
+    "department": "Operations",
+    "fiscalYear": "FY2026",
+    "amountCents": 2380000,
+    "treatment": "EXPENSED_AS_INCURRED",
+    "basis": "Freight on demonstration and service shipments. Inbound freight on purchased inventory is capitalized as the INBOUND_FREIGHT component of standard cost instead.",
+    "glAccount": "6735"
+  }
+]

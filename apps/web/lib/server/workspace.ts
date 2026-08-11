@@ -24,13 +24,17 @@ const globalStore = globalThis as {
 };
 
 /**
- * Bumped whenever the Workspace gains a field. The cached workspace survives
- * dev-server module reloads, so without this a workspace built before a
- * shape change lives on and the first read of a new field throws — which is
- * exactly what happened when the close loop added `conclusions`. Tests never
- * saw it because they build a workspace per test.
+ * Bumped whenever a cached workspace would differ from what this build
+ * expects — a new `Workspace` field OR a new dataset version. The cached
+ * workspace survives dev-server module reloads, so without this a workspace
+ * built before the change lives on: the first read of a new field throws
+ * (which is what happened when the close loop added `conclusions`), and a
+ * stale dataset serves a screen figures its own fixtures no longer contain
+ * (Stage C's price variance would have rendered an empty population).
+ *
+ * Tests never catch either one, because they build a workspace per test.
  */
-const WORKSPACE_SHAPE = "conclusions+evidenceRequests";
+const WORKSPACE_SHAPE = "conclusions+evidenceRequests+dataset-v1.2.0";
 
 export function getWorkspace(): Workspace {
   // Survives Next dev-server module reloads without re-deriving the close —

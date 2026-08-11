@@ -1,0 +1,82 @@
+[
+  {
+    "id": "DSP-2026-0001",
+    "serial": "KE-S1-6448",
+    "sku": "KE-S1",
+    "method": "SCRAPPED",
+    "disposedAt": "2026-06-02",
+    "originalCostCents": 240000,
+    "proceedsCents": 0,
+    "reason": "Board-level failure outside warranty. Repair quote exceeded replacement cost, so the unit was scrapped rather than returned to stock.",
+    "authorizedBy": "R. Alvarez",
+    "evidenceRef": "SCRAP-CERT-2026-0031",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "820001",
+      "transactionNumber": "ADJ-2026-0188",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "0810f0d1aecb351e3d4182b61f24199fa600866c9ba6e95a90f1bf74bbf3fb49"
+    }
+  },
+  {
+    "id": "DSP-2026-0002",
+    "serial": "KE-M1-3589",
+    "sku": "KE-M1",
+    "method": "SCRAPPED",
+    "disposedAt": "2026-09-18",
+    "originalCostCents": 135000,
+    "proceedsCents": 0,
+    "reason": "Water ingress during a site survey. The unit failed post-repair test and was scrapped under the damaged-stock policy.",
+    "authorizedBy": "R. Alvarez",
+    "evidenceRef": "SCRAP-CERT-2026-0044",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "820002",
+      "transactionNumber": "ADJ-2026-0261",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "2321947984e9b96ac7d08496937f01e452e330a10bd252be334352772942e422"
+    }
+  },
+  {
+    "id": "DSP-2026-0003",
+    "serial": "KE-E1-7396",
+    "sku": "KE-E1",
+    "method": "RETURNED_TO_VENDOR",
+    "disposedAt": "2026-04-27",
+    "originalCostCents": 490000,
+    "proceedsCents": 490000,
+    "reason": "Returned to the vendor under warranty. A credit memo was issued for the full standard cost and the replacement unit was received separately.",
+    "authorizedBy": "D. Whitfield",
+    "evidenceRef": "VCM-2026-0117",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "820003",
+      "transactionNumber": "ADJ-2026-0126",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "e22a7eea2c1af31f51a91dac77711c4d04e5eab89baf556c00dac769ff42c18b"
+    }
+  },
+  {
+    "id": "DSP-2026-0004",
+    "serial": "KE-I1-8948",
+    "sku": "KE-I1",
+    "method": "SALVAGE_SALE",
+    "disposedAt": "2026-11-30",
+    "originalCostCents": 70000,
+    "proceedsCents": 12000,
+    "reason": "Cosmetic damage in transit made the unit unsellable as new. Sold for salvage to a refurbisher at the recovered amount.",
+    "authorizedBy": "D. Whitfield",
+    "evidenceRef": "SALV-2026-0009",
+    "sourceRef": {
+      "sourceSystem": "NETSUITE_ERP",
+      "recordType": "INVENTORY_ADJUSTMENT",
+      "internalId": "820004",
+      "transactionNumber": "ADJ-2026-0303",
+      "retrievedAt": "2027-01-07T06:00:00Z",
+      "sourceHash": "c24e741797dbf78114898f43586b336d84e11afbd628b2557032016d2411647d"
+    }
+  }
+]

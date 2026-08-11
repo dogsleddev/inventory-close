@@ -55,6 +55,29 @@ export const SKU_DEFS: readonly {
   { code: "KG-K1", description: "KestrelGrid K1 Site Kit", unitCostCents: 145000, units: 23, serialized: false },
 ];
 
+/**
+ * Vendor sourcing map: edge hardware from Meridian/Volta, accessories from
+ * Cascade. Shared, because the purchase documents and the standard-cost
+ * stack must name the SAME vendor for a SKU — two copies is how a price list
+ * in the cost stack starts citing a vendor the purchase orders never used.
+ */
+export const VENDOR_OF: Readonly<Record<string, string>> = {
+  "KE-I1": "Volta Components Ltd",
+  "KE-M1": "Meridian Contract Manufacturing",
+  "KE-S1": "Meridian Contract Manufacturing",
+  "KE-E1": "Volta Components Ltd",
+  "KE-E2": "Meridian Contract Manufacturing",
+  "KE-X1": "Volta Components Ltd",
+  "KE-Y1": "Meridian Contract Manufacturing",
+  "KV-D1": "Cascade Systems Assembly",
+  "KV-B1": "Cascade Systems Assembly",
+  "KV-F1": "Cascade Systems Assembly",
+  "KV-Z1": "Cascade Systems Assembly",
+  "KA-41": "Cascade Systems Assembly",
+  "KR-U1": "Volta Components Ltd",
+  "KG-K1": "Cascade Systems Assembly",
+};
+
 export const GL_BALANCES_CENTS: readonly { account: string; amountCents: number }[] = [
   { account: "1200", amountCents: 378915000 },
   { account: "1210", amountCents: 39030000 },
@@ -113,6 +136,25 @@ export const EXC009_DUPLICATE_JE = "JE-2026-0790";
 export const EXC014_RECEIPT = "IR-26-2214";
 export const EXC014_JAN_JE = "JE-2027-0012";
 export const EXC015_MANUAL_JE = "JE-2026-0847";
+
+/**
+ * Seeded purchase price variance (COMPLETION_PLAN D9, dataset v1.2.0).
+ *
+ * Inventory is carried at standard cost, so a vendor billing a different
+ * price produces PPV — which is expensed, never capitalized. That is exactly
+ * why this can exist without moving a single locked figure: no inventory
+ * account, no subledger row and no GL balance changes, and PPV stays a
+ * match-level attribute rather than becoming a sixteenth exception.
+ *
+ * Cents per unit, applied to the first line of each vendor's largest fully
+ * matched FY2026 purchase order. Positive is unfavorable (billed above
+ * standard); negative is favorable.
+ */
+export const PPV_PER_UNIT_CENTS: Readonly<Record<string, number>> = {
+  "Meridian Contract Manufacturing": 1800,
+  "Volta Components Ltd": -2250,
+  "Cascade Systems Assembly": 4500,
+};
 
 /** Redwood's designed 14-unit composition (CANONICAL_SPEC §9). */
 export const REDWOOD_COMPOSITION: readonly { sku: string; units: number }[] = [

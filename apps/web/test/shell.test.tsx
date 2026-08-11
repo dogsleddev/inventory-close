@@ -40,13 +40,14 @@ function renderShell(setRole: (userId: string) => Promise<void> = noopRole) {
 }
 
 describe("App shell — navigation and identity", () => {
-  it("renders all twelve sections with the blocker badge and start-here tag", () => {
+  it("renders all thirteen sections with the blocker badge and start-here tag", () => {
     renderShell();
     // Pinned against the canonical list, not against NAV_SECTIONS itself —
     // iterating the source array would shrink with it and pass on deletion.
     expect(NAV_SECTIONS.map((s) => s.label)).toEqual([
       "Overview",
       "Inventory",
+      "Procurement",
       "Physical Count",
       "Cutoff",
       "Ownership",

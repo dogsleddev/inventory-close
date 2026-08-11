@@ -569,6 +569,110 @@ export interface ProcurementCard {
 }
 
 /* ------------------------------------------------------------------ */
+/* Stage C — the Procurement section                                   */
+/* ------------------------------------------------------------------ */
+
+/** A figure in a population's summary strip. */
+export interface ProcurementStat {
+  readonly label: string;
+  readonly value: string;
+  readonly note: string | null;
+  readonly ember: boolean;
+}
+
+export interface GrniRowView {
+  readonly po: string;
+  readonly vendor: string;
+  readonly receipt: string;
+  readonly receiptDate: string;
+  readonly quantity: string;
+  readonly value: string | null;
+  /** The bill, when one has since arrived — always after the balance sheet. */
+  readonly billed: string | null;
+  readonly age: string;
+}
+
+export interface InvoicedNotReceivedRowView {
+  readonly po: string;
+  readonly vendor: string;
+  readonly bill: string;
+  readonly billDate: string;
+  readonly quantity: string;
+  readonly value: string | null;
+  readonly received: string;
+  readonly close: { readonly label: string; readonly glyph: string; readonly variant: "frost" | "aurora" };
+  readonly exceptionId: string | null;
+}
+
+export interface PriceVarianceRowView {
+  readonly key: string;
+  readonly po: string;
+  readonly vendor: string;
+  readonly bill: string;
+  readonly sku: string;
+  readonly quantity: string;
+  readonly ordered: string;
+  readonly billed: string;
+  readonly variance: string;
+  readonly direction: string;
+  readonly unfavorable: boolean;
+}
+
+export interface ProcurementOrderRowView {
+  readonly po: string;
+  readonly vendor: string;
+  readonly ir: string;
+  readonly vb: string;
+  readonly native: string;
+  readonly close: { readonly label: string; readonly glyph: string; readonly variant: "frost" | "aurora" };
+  readonly position: string;
+  readonly exceptionId: string | null;
+}
+
+export interface ProcurementData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly asOf: string;
+  readonly tabs: readonly TabDef[];
+  readonly match: {
+    readonly nativeSummary: string;
+    readonly closeSummary: string;
+    readonly divergentNote: string;
+    readonly featured: readonly ProcurementCard[];
+    readonly rows: readonly ProcurementOrderRowView[];
+  } | null;
+  readonly grni: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly GrniRowView[];
+    readonly note: string;
+  } | null;
+  readonly inr: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly InvoicedNotReceivedRowView[];
+    readonly note: string;
+  } | null;
+  readonly git: {
+    readonly stats: readonly ProcurementStat[];
+    /** The document side and the book side, stated as one reconciliation. */
+    readonly agreement: {
+      readonly agrees: boolean;
+      readonly headline: string;
+      readonly detail: string;
+    };
+    readonly accountNote: string;
+  } | null;
+  readonly ppv: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly PriceVarianceRowView[];
+    readonly treatment: string;
+    readonly note: string;
+  } | null;
+  readonly withheldNote: string | null;
+  readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
+}
+
+/* ------------------------------------------------------------------ */
 /* Stage 07 — bridge, adjustments, valuation, audit package            */
 /* ------------------------------------------------------------------ */
 
@@ -852,19 +956,6 @@ export interface ReconciliationData {
   readonly headerNote: string | null;
   readonly tabs: readonly TabDef[];
   readonly financial: FinancialBridgeData | null;
-  readonly procurement: {
-    readonly nativeSummary: string;
-    readonly closeSummary: string;
-    readonly featured: readonly ProcurementCard[];
-    readonly rows: readonly {
-      readonly po: string;
-      readonly ir: string;
-      readonly vb: string;
-      readonly native: string;
-      readonly close: { readonly label: string; readonly glyph: string; readonly variant: "frost" | "aurora" };
-      readonly exceptionId: string | null;
-    }[];
-  } | null;
   readonly commercial: {
     readonly featured: {
       readonly subject: string;

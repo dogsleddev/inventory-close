@@ -1,7 +1,8 @@
 import type { DemoUser } from "@icg/data";
 import { glAccountDescription } from "@icg/domain";
+import { getProcurementPopulations } from "@icg/services";
 import { formatCents } from "../format";
-import { getQueries, makeContext, roleLabel } from "./workspace";
+import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
  * CSV export.
@@ -12,11 +13,13 @@ import { getQueries, makeContext, roleLabel } from "./workspace";
  *
  * Two rules govern every table below, and a reviewer should check both:
  *
- *   1. **QueryService only.** No handler may touch `@icg/data` or the raw
- *      workspace dataset. Every row comes through the same authorized reads
- *      the screens use, so auditor scoping and restricted-content redaction
- *      apply to an export exactly as they apply to a page. An export that
- *      read the fixtures directly would be a side door around both.
+ *   1. **Authorized service reads only.** No handler may touch `@icg/data`
+ *      or read the workspace dataset itself. Every row comes through the
+ *      same authorized service call the screens use — `QueryService`, or a
+ *      services-layer projection that authorizes and scopes exactly as it
+ *      does — so auditor scoping and restricted-content redaction apply to
+ *      an export exactly as they apply to a page. An export that read the
+ *      fixtures directly would be a side door around both.
  *   2. **No figure is computed here.** Money is formatted, never summed.
  *      A total in a spreadsheet that no screen shows is a number nobody
  *      derived.
@@ -49,6 +52,7 @@ export const EXPORT_TABLES = [
   "adjustments",
   "evidence",
   "pbc",
+  "procurement",
 ] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number];
@@ -234,6 +238,202 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         ]),
       );
     }
+  } else if (table === "procurement") {
+    // One file, five populations, each under its own heading — a purchase
+    // order can sit in more than one of them, and splitting them across
+    // sheets would let a reader add up totals that overlap.
+    const p = getProcurementPopulations(getWorkspace(), ctx);
+    if (p.withheldOrderCount > 0) {
+      lines.push(
+        row([
+          "Withheld",
+          `${p.withheldOrderCount} orders are outside this role's scope and are not in this file`,
+        ]),
+      );
+      lines.push("");
+    }
+    lines.push(row(["THREE-WAY MATCH"]));
+    lines.push(
+      row([
+        "Purchase order",
+        "Vendor",
+        "Order date",
+        "Item receipt",
+        "Receipt date",
+        "Vendor bill",
+        "Bill date",
+        "Units",
+        "Ordered",
+        "Billed",
+        "Position at period end",
+        "Native NetSuite",
+        "Close control",
+        "Exception",
+      ]),
+    );
+    for (const o of p.orders) {
+      lines.push(
+        row([
+          o.purchaseOrderNumber,
+          o.vendor,
+          o.orderDate,
+          o.itemReceiptNumber ?? "",
+          o.receiptDate ?? "",
+          o.vendorBillNumber ?? "",
+          o.billDate ?? "",
+          o.quantity,
+          o.orderedCents === undefined ? "" : formatCents(o.orderedCents),
+          o.billedCents === undefined ? "" : formatCents(o.billedCents),
+          o.position,
+          o.nativeNetsuiteMatchStatus,
+          o.closeMatchStatus,
+          o.relatedExceptionId ?? "",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["RECEIVED NOT INVOICED"]));
+    lines.push(
+      row([
+        "Purchase order",
+        "Vendor",
+        "Item receipt",
+        "Received",
+        "Units",
+        "Value received",
+        "Days outstanding at period end",
+        "Bill since received",
+        "Bill date",
+      ]),
+    );
+    for (const g of p.grni) {
+      lines.push(
+        row([
+          g.purchaseOrderNumber,
+          g.vendor,
+          g.itemReceiptNumber,
+          g.receiptDate,
+          g.quantity,
+          g.receivedCents === undefined ? "" : formatCents(g.receivedCents),
+          g.daysOutstanding,
+          g.vendorBillNumber ?? "",
+          g.billDate ?? "",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["INVOICED NOT RECEIVED"]));
+    lines.push(
+      row([
+        "Purchase order",
+        "Vendor",
+        "Vendor bill",
+        "Billed",
+        "Units",
+        "Value billed",
+        "Item receipt",
+        "Receipt recorded",
+        "Close control",
+        "Exception",
+      ]),
+    );
+    for (const i of p.invoicedNotReceived) {
+      lines.push(
+        row([
+          i.purchaseOrderNumber,
+          i.vendor,
+          i.vendorBillNumber,
+          i.billDate,
+          i.quantity,
+          i.billedCents === undefined ? "" : formatCents(i.billedCents),
+          i.itemReceiptNumber ?? "",
+          i.recordedReceiptDate ?? "",
+          i.closeMatchStatus,
+          i.relatedExceptionId ?? "",
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(row(["GOODS IN TRANSIT"]));
+    lines.push(row(["Side", "Units", "Value", "Note"]));
+    const git = p.goodsInTransit;
+    lines.push(
+      row([
+        "Documents — invoiced not received",
+        git.documentUnits,
+        git.documentCents === undefined ? "" : formatCents(git.documentCents),
+        "Orders billed on or before the balance-sheet date whose receipt was recorded after it",
+      ]),
+    );
+    lines.push(
+      row([
+        "Book — inbound in transit",
+        git.inboundUnits,
+        formatCents(git.inboundCents),
+        // The two sides are one population; the file says so, because a
+        // spreadsheet with both rows and no note invites a sum.
+        git.inboundAgrees
+          ? "The same units as the row above, not an addition to them"
+          : "DOES NOT AGREE with the document side above",
+      ]),
+    );
+    lines.push(
+      row([
+        "Book — outbound in transit",
+        git.outboundUnits,
+        formatCents(git.outboundCents),
+        "Shares account 1210; a commercial-chain population, not a procurement one",
+      ]),
+    );
+    lines.push(
+      row([
+        `Account ${git.glAccount} total`,
+        git.accountUnits,
+        formatCents(git.accountCents),
+        "Inbound plus outbound",
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["PURCHASE PRICE VARIANCE"]));
+    lines.push(
+      row([
+        "Purchase order",
+        "Vendor",
+        "Vendor bill",
+        "Bill date",
+        "SKU",
+        "Units",
+        "Standard / unit",
+        "Ordered / unit",
+        "Billed / unit",
+        "Variance",
+        "Direction",
+      ]),
+    );
+    for (const v of p.priceVariance.rows) {
+      lines.push(
+        row([
+          v.purchaseOrderNumber,
+          v.vendor,
+          v.vendorBillNumber,
+          v.billDate,
+          v.sku,
+          v.quantity,
+          v.standardUnitCents === undefined ? "" : formatCents(v.standardUnitCents),
+          formatCents(v.orderedUnitCents),
+          formatCents(v.billedUnitCents),
+          formatCents(Math.abs(v.varianceCents)),
+          v.direction,
+        ]),
+      );
+    }
+    lines.push("");
+    lines.push(
+      row([
+        "Treatment",
+        "Inventory is carried at standard cost, so purchase price variance is expensed in the period. No figure in this section is in the inventory subledger, the inventory accounts, or the inventory-to-GL reconciliation.",
+      ]),
+    );
   } else {
     const pbc = queries.getPbcPackage(ctx);
     lines.push(

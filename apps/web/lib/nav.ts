@@ -11,6 +11,7 @@
 export const NAV_SECTIONS: readonly { label: string; href: string }[] = [
   { label: "Overview", href: "/" },
   { label: "Inventory", href: "/inventory" },
+  { label: "Procurement", href: "/procurement" },
   { label: "Physical Count", href: "/physical-count" },
   { label: "Cutoff", href: "/cutoff" },
   { label: "Ownership", href: "/ownership" },

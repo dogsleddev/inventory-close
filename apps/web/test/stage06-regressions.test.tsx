@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { userByRole } from "@icg/data";
 import { FinancialLifeScreen } from "../components/FinancialLifeScreen";
@@ -108,22 +108,10 @@ describe("a count that found nothing is evidence of absence, not absence of evid
 });
 
 describe("negative claims are only made when they are true", () => {
-  it("a match whose exception is resolved never reads 'No close exception'", async () => {
-    const { queries, ctx } = services();
-    // EXC-014 is resolved and rides on PO-26-1201's receipt.
-    const exc = queries.listExceptions(ctx).find((e) => e.exception.id === "EXC-014");
-    expect(exc?.open).toBe(false);
-    recon();
-    // Stage 07 made the financial bridge the default tab.
-    await userEvent.setup().click(screen.getByRole("tab", { name: /Procurement Match/ }));
-    const table = screen.getByText("All procurement matches").closest("section");
-    const row = within(table as HTMLElement)
-      .getAllByRole("row")
-      .find((r) => within(r).queryByText("PO-26-1201") !== null);
-    expect(row).toBeDefined();
-    expect(within(row as HTMLElement).queryByText("No close exception")).toBeNull();
-    expect(within(row as HTMLElement).getByText("EXC-014")).toBeTruthy();
-  });
+  // "a match whose exception is resolved never reads 'No close exception'"
+  // and "rows with nothing to open are not rendered as selected" moved to
+  // procurement.test.tsx with the three-way match itself in Stage C. The
+  // defects they pin are properties of that table, not of this file.
 
   it("the adjustment card reports a check that was actually performed", () => {
     const { queries, ctx } = services();
@@ -142,17 +130,6 @@ describe("negative claims are only made when they are true", () => {
 });
 
 describe("controls tell the truth about what they do", () => {
-  it("rows with nothing to open are not rendered as selected", async () => {
-    recon();
-    await userEvent.setup().click(screen.getByRole("tab", { name: /Procurement Match/ }));
-    const table = screen.getByText("All procurement matches").closest("section");
-    const selected = within(table as HTMLElement)
-      .getAllByRole("row")
-      .filter((r) => r.getAttribute("data-selected") === "true");
-    // Nothing is open, so nothing is selected.
-    expect(selected).toEqual([]);
-  });
-
   it("the tab bar honours the keyboard contract its role declares", async () => {
     const user = userEvent.setup();
     const u = userByRole("CONTROLLER");

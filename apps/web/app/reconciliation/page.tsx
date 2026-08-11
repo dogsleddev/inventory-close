@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ReconciliationScreen } from "../../components/ReconciliationScreen";
 import { currentUser, newCorrelationId } from "../../lib/server/current-user";
 import { buildShellData } from "../../lib/server/data";
@@ -14,9 +15,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * Reconciliation — the Financial bridge, Procurement Match, Commercial
- * Chain, and Serial Integrity tabs. `?serial=` drives the serial-integrity
- * search; `?tab=` opens a tab directly so a demo stop is a link (stage 09).
+ * Reconciliation — the Financial bridge, Commercial Chain, and Serial
+ * Integrity tabs. `?serial=` drives the serial-integrity search; `?tab=`
+ * opens a tab directly so a demo stop is a link (stage 09).
+ *
+ * The Procurement Match tab moved to `/procurement` in Stage C. Its deep
+ * link is redirected rather than dropped: a URL that worked in a recorded
+ * demo must not land on a screen that no longer has that tab and silently
+ * show a different one.
  */
 export default async function ReconciliationPage({
   searchParams,
@@ -24,6 +30,7 @@ export default async function ReconciliationPage({
   searchParams: Promise<{ serial?: string; tab?: string }>;
 }) {
   const { serial, tab } = await searchParams;
+  if (tab === "procurement") redirect("/procurement?tab=match");
   const user = await currentUser();
   const correlationId = newCorrelationId();
   return (

@@ -1,6 +1,6 @@
 {
   "package": "inventory-close-gaurd-kickoff",
-  "canonical_dataset": "FY2026-DEMO-v1.1.0",
+  "canonical_dataset": "FY2026-DEMO-v1.2.0",
   "prompt_packages": {
     "claude_design": "prompts/design/README.md",
     "claude_code": "prompts/code/README.md"
@@ -13,17 +13,17 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "353baaf59c2dec9144fac2be4b21102da6d4ed759fe3f9c62fe68761b268352f",
-      "bytes": 1221
+      "sha256": "602d235b0b5438865879393f24c54135030eb69ab216e1930b6d9fc4ccfb907a",
+      "bytes": 2794
     },
     {
       "path": "README.md",
-      "sha256": "a47bfe90ed8b151f19d890b917b8ca289addc03bf2eb19cb01afb10c0e24767b",
+      "sha256": "bd1b4728d4eec61a52e0ed029e7a658bdcd69ca7abb3e92a611988cdda4e2234",
       "bytes": 8671
     },
     {
       "path": "data/README.md",
-      "sha256": "221694bc1be9c01cf5ec183497f9b256b7cdc13f1d8582ff91bee70c4cf6b23f",
+      "sha256": "260e8a0fe304d5465bf498b14332bd79bf86df24a1f7266f4350bb5c1a30b9b4",
       "bytes": 347
     },
     {
@@ -63,8 +63,8 @@
     },
     {
       "path": "docs/07_MOCK_DATASET_SPEC.md",
-      "sha256": "f60b8c83d45da9d5ff3c0273b39a107ff9712e2561698faf3651df27397ab9ef",
-      "bytes": 1553
+      "sha256": "f9105350569b9b82cea960afe9e31775e31a823eb461a1ff8c78da13f6c60fc4",
+      "bytes": 3003
     },
     {
       "path": "docs/08_EXCEPTION_LIBRARY.md",
@@ -113,7 +113,7 @@
     },
     {
       "path": "golden/baseline.json",
-      "sha256": "f2eb8098cbdfb0f9a53b06eb4fea86c124de0ad59590a49166d3c97e84af913e",
+      "sha256": "88055275f337a332c4a6702835689648094da7605c53d0c1145fb57e7ad703a0",
       "bytes": 514
     },
     {

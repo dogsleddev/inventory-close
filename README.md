@@ -65,7 +65,7 @@ All synthetic, all derived from the seed — never hard-coded in the application
 
 | | |
 |---|---|
-| Dataset · seed · scenario | `FY2026-DEMO-v1.1.0` · `ICG-FY2026-DEMO-002` · `SCENARIO-EVENTS-v1.1.0` |
+| Dataset · seed · scenario | `FY2026-DEMO-v1.2.0` · `ICG-FY2026-DEMO-002` · `SCENARIO-EVENTS-v1.1.0` |
 | Balance-sheet date | December 31, 2026 |
 | Book inventory | 1,500 units · $4,800,000 gross carrying value |
 | Gross inventory GL · difference | $4,812,450 · **$12,450** over subledger |

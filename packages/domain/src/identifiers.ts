@@ -47,6 +47,6 @@ export interface SourceRecordRef {
 }
 
 /** Canonical dataset identifiers (README / data/README.md). */
-export const CANONICAL_DATASET_VERSION = "FY2026-DEMO-v1.1.0";
+export const CANONICAL_DATASET_VERSION = "FY2026-DEMO-v1.2.0";
 export const CANONICAL_GENERATOR_SEED = "ICG-FY2026-DEMO-002";
 export const CANONICAL_SCENARIO_SCRIPT = "SCENARIO-EVENTS-v1.1.0";

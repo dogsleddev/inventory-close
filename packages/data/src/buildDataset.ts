@@ -6,7 +6,9 @@ import {
   CANONICAL_GENERATOR_SEED,
   CANONICAL_SCENARIO_SCRIPT,
   carrierShipmentFixtureSchema,
+  consignmentUnitFixtureSchema,
   contractFixtureSchema,
+  costComponentFixtureSchema,
   countMovementFixtureSchema,
   countPlanFixtureSchema,
   countResultFixtureSchema,
@@ -15,6 +17,7 @@ import {
   custodianStatementFixtureSchema,
   customerInvoiceFixtureSchema,
   datasetManifestFixtureSchema,
+  dispositionFixtureSchema,
   forecastFixtureSchema,
   glBalanceFixtureSchema,
   glEntryFixtureSchema,
@@ -25,6 +28,7 @@ import {
   itemReceiptFixtureSchema,
   locationFixtureSchema,
   partyFixtureSchema,
+  periodCostFixtureSchema,
   purchaseOrderFixtureSchema,
   rmaRecordFixtureSchema,
   salesOrderFixtureSchema,
@@ -37,7 +41,9 @@ import {
 import type {
   AssignmentFixture,
   CarrierShipmentFixture,
+  ConsignmentUnitFixture,
   ContractFixture,
+  CostComponentFixture,
   CountMovementFixture,
   CountPlanFixture,
   CountResultFixture,
@@ -46,6 +52,7 @@ import type {
   CustodianStatementFixture,
   CustomerInvoiceFixture,
   DatasetManifestFixture,
+  DispositionFixture,
   ForecastFixture,
   GlBalanceFixture,
   GlEntryFixture,
@@ -56,6 +63,7 @@ import type {
   ItemReceiptFixture,
   LocationFixture,
   PartyFixture,
+  PeriodCostFixture,
   PurchaseOrderFixture,
   RmaRecordFixture,
   SalesOrderFixture,
@@ -74,7 +82,9 @@ import {
   PARTIES,
   SKU_DEFS,
 } from "./constants.js";
+import { buildCostComponents, buildPeriodCosts } from "./costing.js";
 import { buildCounts } from "./counts.js";
+import { buildConsignmentUnits, buildDispositions } from "./lifecycle.js";
 import { buildNetSuite } from "./netsuite.js";
 import { buildOperational } from "./operational.js";
 import { buildScenarioEvents } from "./scenarioEvents.js";
@@ -117,6 +127,16 @@ export interface IcgDataset {
   readonly assignments: readonly AssignmentFixture[];
   readonly scenarioEvents: readonly ScenarioEventFixture[];
   readonly sourceHealth: readonly SourceHealthFixture[];
+  /**
+   * Dataset v1.2.0 additions. None of these reaches `toCloseInput`, so no
+   * rule sees them and no derived figure can move: they answer questions the
+   * close asks ABOUT inventory (what it costs, which costs belong in it, who
+   * owns what is on the floor, what left) without being inventory.
+   */
+  readonly costComponents: readonly CostComponentFixture[];
+  readonly periodCosts: readonly PeriodCostFixture[];
+  readonly consignmentInUnits: readonly ConsignmentUnitFixture[];
+  readonly dispositions: readonly DispositionFixture[];
   /** Story serials, exported for tests and later stages (not a fixture). */
   readonly story: StoryUnits;
 }
@@ -140,6 +160,11 @@ export function buildDataset(seed: string = CANONICAL_GENERATOR_SEED): IcgDatase
   const counts = buildCounts(seed, unitsResult);
   const operational = buildOperational(seed, unitsResult, netsuite);
   const scenarioEvents = buildScenarioEvents(unitsResult);
+  // LAST, and deliberately so: these mint serials from the same registry the
+  // book population draws from, which advances a per-SKU PRNG stream. Minting
+  // them any earlier renumbers every unit generated after them.
+  const consignmentInUnits = buildConsignmentUnits(unitsResult.registry);
+  const dispositions = buildDispositions(unitsResult.registry);
 
   // Operational events own the book-movement story for installed and
   // assigned units (see OperationalResult.unitPatches). Location, cost and
@@ -186,6 +211,10 @@ export function buildDataset(seed: string = CANONICAL_GENERATOR_SEED): IcgDatase
     assignments: parseAll(assignmentFixtureSchema, operational.assignments, "assignments"),
     scenarioEvents: parseAll(scenarioEventFixtureSchema, scenarioEvents, "scenarioEvents"),
     sourceHealth: parseAll(sourceHealthFixtureSchema, SOURCE_HEALTH, "sourceHealth"),
+    costComponents: parseAll(costComponentFixtureSchema, buildCostComponents(), "costComponents"),
+    periodCosts: parseAll(periodCostFixtureSchema, buildPeriodCosts(), "periodCosts"),
+    consignmentInUnits: parseAll(consignmentUnitFixtureSchema, consignmentInUnits, "consignmentInUnits"),
+    dispositions: parseAll(dispositionFixtureSchema, dispositions, "dispositions"),
   };
 
   // Control totals computed from the generated facts, in integer cents.

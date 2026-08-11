@@ -631,7 +631,7 @@
         "lineId": "L1",
         "sku": "KG-K1",
         "quantity": 23,
-        "amountCents": 3335000
+        "amountCents": 3438500
       }
     ],
     "purchaseOrderNumber": "PO-26-3029",
@@ -1501,7 +1501,7 @@
         "lineId": "L1",
         "sku": "KE-E2",
         "quantity": 159,
-        "amountCents": 117660000,
+        "amountCents": 117946200,
         "serials": [
           "KE-E2-1048",
           "KE-E2-1051",
@@ -2686,7 +2686,7 @@
         "lineId": "L1",
         "sku": "KE-E1",
         "quantity": 127,
-        "amountCents": 62230000,
+        "amountCents": 61944250,
         "serials": [
           "KE-E1-1667",
           "KE-E1-5310",

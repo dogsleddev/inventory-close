@@ -216,3 +216,38 @@ export type ChainComponentImportance =
 /** CANONICAL_SPEC §15 — structured replay comparison outcome. */
 export const REPLAY_OUTCOMES = ["MATCH", "MISMATCH"] as const;
 export type ReplayOutcome = (typeof REPLAY_OUTCOMES)[number];
+
+/**
+ * The standard-cost build-up (dataset v1.2.0). A SKU's components sum
+ * EXACTLY to its `unitCostCents` — the generator refuses to emit a stack
+ * that does not, because a cost stack that almost adds up is worse than no
+ * cost stack at all: it invites a reader to trust a total nobody derived.
+ */
+export const COST_COMPONENT_TYPES = [
+  "DIRECT_MATERIAL",
+  "DIRECT_LABOR",
+  "MANUFACTURING_OVERHEAD",
+  "INBOUND_FREIGHT",
+  "IMPORT_DUTY",
+] as const;
+export type CostComponentType = (typeof COST_COMPONENT_TYPES)[number];
+
+/**
+ * Whether a cost is carried in inventory or taken to the period.
+ * CAPITALIZED_TO_INVENTORY describes the `costComponents` stack — the cost
+ * already inside the $4,800,000 subledger. `periodCosts` carries the other
+ * side: costs deliberately kept OUT of inventory, each with its basis.
+ */
+export const COST_TREATMENTS = [
+  "CAPITALIZED_TO_INVENTORY",
+  "EXPENSED_AS_INCURRED",
+] as const;
+export type CostTreatment = (typeof COST_TREATMENTS)[number];
+
+/** How a unit left the book population before the balance-sheet date. */
+export const DISPOSITION_METHODS = [
+  "SCRAPPED",
+  "RETURNED_TO_VENDOR",
+  "SALVAGE_SALE",
+] as const;
+export type DispositionMethod = (typeof DISPOSITION_METHODS)[number];

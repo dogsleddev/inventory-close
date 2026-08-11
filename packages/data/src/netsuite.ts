@@ -28,8 +28,10 @@ import {
   EXC015_MANUAL_JE,
   GL_BALANCES_CENTS,
   PARTIES,
+  PPV_PER_UNIT_CENTS,
   RETRIEVED_AT,
   SKU_DEFS,
+  VENDOR_OF,
 } from "./constants.js";
 import { addDays, atTime } from "./dateMath.js";
 import { hashObject } from "./hash.js";
@@ -38,24 +40,6 @@ import type { UnitsResult } from "./units.js";
 
 const skuByCode = new Map(SKU_DEFS.map((s) => [s.code, s]));
 const CUSTOMERS = PARTIES.filter((p) => p.kind === "CUSTOMER").map((p) => p.name);
-
-/** Vendor sourcing map: edge hardware from Meridian/Volta, accessories from Cascade. */
-const VENDOR_OF: Readonly<Record<string, string>> = {
-  "KE-I1": "Volta Components Ltd",
-  "KE-M1": "Meridian Contract Manufacturing",
-  "KE-S1": "Meridian Contract Manufacturing",
-  "KE-E1": "Volta Components Ltd",
-  "KE-E2": "Meridian Contract Manufacturing",
-  "KE-X1": "Volta Components Ltd",
-  "KE-Y1": "Meridian Contract Manufacturing",
-  "KV-D1": "Cascade Systems Assembly",
-  "KV-B1": "Cascade Systems Assembly",
-  "KV-F1": "Cascade Systems Assembly",
-  "KV-Z1": "Cascade Systems Assembly",
-  "KA-41": "Cascade Systems Assembly",
-  "KR-U1": "Volta Components Ltd",
-  "KG-K1": "Cascade Systems Assembly",
-};
 
 function mkRef(
   recordType: string,
@@ -282,6 +266,62 @@ export function buildNetSuite(seed: string, unitsResult: UnitsResult): NetSuiteR
       billDate,
       lines,
     });
+  }
+
+  // ---- Seeded purchase price variance (D9) ----
+  // The vendor billed a price other than the one on the order. Applied to
+  // the largest fully matched FY2026 order per vendor, on its first line.
+  //
+  // The bill gets a NEW lines array: `costLines` above returns one array that
+  // the PO, the receipt and the bill all reference, so repricing in place
+  // would silently reprice the order and the receipt too — and a three-way
+  // match where all three legs moved together is not a price variance, it is
+  // a corrupted fixture.
+  {
+    const largestPerVendor = new Map<string, { poNumber: string; totalCents: number }>();
+    for (const po of purchaseOrders) {
+      const receipt = itemReceipts.find(
+        (r) => r.purchaseOrderNumber === po.transactionNumber,
+      );
+      const bill = vendorBills.find(
+        (b) => b.purchaseOrderNumber === po.transactionNumber,
+      );
+      if (receipt === undefined || bill === undefined) continue;
+      // Fully matched inside FY2026 — never a GRNI, in-transit or cutoff
+      // order, so the variance is a clean price question and nothing else.
+      if (receipt.receiptDate < "2026-01-01" || receipt.receiptDate > BALANCE_SHEET_DATE) continue;
+      if (bill.billDate > BALANCE_SHEET_DATE) continue;
+      const totalCents = po.lines.reduce((sum, l) => sum + (l.amountCents ?? 0), 0);
+      const current = largestPerVendor.get(po.vendor);
+      if (
+        current === undefined ||
+        totalCents > current.totalCents ||
+        (totalCents === current.totalCents && po.transactionNumber < current.poNumber)
+      ) {
+        largestPerVendor.set(po.vendor, { poNumber: po.transactionNumber, totalCents });
+      }
+    }
+    for (const [vendor, { poNumber }] of [...largestPerVendor.entries()].sort(([a], [b]) =>
+      a < b ? -1 : 1,
+    )) {
+      const perUnit = PPV_PER_UNIT_CENTS[vendor];
+      if (perUnit === undefined) continue;
+      const index = vendorBills.findIndex((b) => b.purchaseOrderNumber === poNumber);
+      const bill = vendorBills[index];
+      const first = bill?.lines[0];
+      if (bill === undefined || first === undefined || first.amountCents === undefined) continue;
+      const standardUnitCents = first.amountCents / first.quantity;
+      const billedUnitCents = standardUnitCents + perUnit;
+      if (!Number.isInteger(billedUnitCents) || billedUnitCents <= 0) {
+        throw new Error(`PPV for ${poNumber} produced a non-integer or negative unit price`);
+      }
+      vendorBills[index] = {
+        ...bill,
+        lines: bill.lines.map((l, i) =>
+          i === 0 ? { ...l, amountCents: l.quantity * billedUnitCents } : l,
+        ),
+      };
+    }
   }
 
   // EXC-014: dedicated PO / receipt 12/30; the GL side posts in January.

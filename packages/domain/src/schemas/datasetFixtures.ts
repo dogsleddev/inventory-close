@@ -1,8 +1,11 @@
 import { z } from "zod";
 import {
+  COST_COMPONENT_TYPES,
+  COST_TREATMENTS,
   COUNT_TEST_DIRECTIONS,
   COUNT_TEST_SELECTION_SOURCES,
   COUNT_TYPES,
+  DISPOSITION_METHODS,
 } from "../enums.js";
 import {
   integerCentsSchema,
@@ -309,6 +312,89 @@ export const scenarioEventFixtureSchema = z.object({
   recordedBy: z.string().min(1),
 });
 
+/**
+ * One line of a SKU's standard-cost build-up (dataset v1.2.0). The rows for
+ * a SKU sum exactly to that SKU's `unitCostCents`; the generator throws
+ * rather than emit a stack that does not, and a regression pins it.
+ */
+export const costComponentFixtureSchema = z.object({
+  sku: z.string().min(1),
+  component: z.enum(COST_COMPONENT_TYPES),
+  amountCents: integerCentsSchema.nonnegative(),
+  /** Where the standard came from — a roll, a price list, a rate study. */
+  costSource: z.string().min(1),
+  effectiveFrom: isoDateSchema,
+});
+
+/**
+ * An FY2026 cost pool deliberately kept OUT of inventory, with the basis for
+ * keeping it out (dataset v1.2.0).
+ *
+ * These rows never appear in `glBalances`. That is a hard constraint, not a
+ * convenience: `buildReconciliation` sums every GL balance except 1290, so a
+ * period-cost row landing in that collection would silently move the locked
+ * $4,812,450. The GL account here is an expense account, and a regression
+ * asserts none of these is an inventory account.
+ */
+export const periodCostFixtureSchema = z.object({
+  id: z.string().regex(/^PC-\d{4}-\d{4}$/),
+  category: z.string().min(1),
+  department: z.string().min(1),
+  fiscalYear: z.string().regex(/^FY\d{4}$/),
+  amountCents: integerCentsSchema.nonnegative(),
+  treatment: z.enum(COST_TREATMENTS),
+  /** The accounting reason, in the words a workpaper would use. */
+  basis: z.string().min(1),
+  glAccount: z.string().regex(/^\d{4}$/, "expected a 4-digit GL account code"),
+});
+
+/**
+ * A unit held on site that the company does not own (dataset v1.2.0).
+ *
+ * Consignment-in is the custody case the book population cannot express: the
+ * unit is physically here and is not inventory. It is a separate collection
+ * precisely so it can never be summed into the 1,500 — and the value is
+ * labelled as the OWNER's stated value, because the company has no cost
+ * basis in a unit it never bought.
+ */
+export const consignmentUnitFixtureSchema = z.object({
+  serial: z.string().min(1),
+  sku: z.string().min(1),
+  /** The party that owns the unit. Never KestrelGrid. */
+  owner: z.string().min(1),
+  location: z.string().min(1),
+  bin: z.string().min(1).optional(),
+  receivedAt: isoDateSchema,
+  agreementRef: z.string().min(1),
+  /** Stated by the owner. Not a book amount and not in any inventory total. */
+  vendorStatedValueCents: integerCentsSchema.nonnegative(),
+  sourceRef: sourceRecordRefSchema.optional(),
+});
+
+/**
+ * A unit that left the book population during FY2026 (dataset v1.2.0).
+ *
+ * Disposed serials are minted outside the 1,500 by construction — a disposal
+ * that removed a unit from a population it is still counted in would be a
+ * contradiction, not a demo. `sourceRef` identifies the NetSuite inventory
+ * adjustment that performed the removal.
+ */
+export const dispositionFixtureSchema = z.object({
+  id: z.string().regex(/^DSP-\d{4}-\d{4}$/),
+  serial: z.string().min(1),
+  sku: z.string().min(1),
+  method: z.enum(DISPOSITION_METHODS),
+  disposedAt: isoDateSchema,
+  originalCostCents: integerCentsSchema.nonnegative(),
+  /** Zero for scrap; a vendor credit or salvage receipt otherwise. */
+  proceedsCents: integerCentsSchema.nonnegative(),
+  reason: z.string().min(1),
+  authorizedBy: z.string().min(1),
+  /** Scrap certificate, vendor credit memo, or salvage receipt. */
+  evidenceRef: z.string().min(1).optional(),
+  sourceRef: sourceRecordRefSchema,
+});
+
 /** The generated dataset manifest (CANONICAL_SPEC §15 lineage). */
 export const datasetManifestFixtureSchema = z.object({
   datasetVersion: z.string().min(1),
@@ -354,4 +440,8 @@ export type CrmAccountFixture = z.infer<typeof crmAccountFixtureSchema>;
 export type ForecastFixture = z.infer<typeof forecastFixtureSchema>;
 export type AssignmentFixture = z.infer<typeof assignmentFixtureSchema>;
 export type ScenarioEventFixture = z.infer<typeof scenarioEventFixtureSchema>;
+export type CostComponentFixture = z.infer<typeof costComponentFixtureSchema>;
+export type PeriodCostFixture = z.infer<typeof periodCostFixtureSchema>;
+export type ConsignmentUnitFixture = z.infer<typeof consignmentUnitFixtureSchema>;
+export type DispositionFixture = z.infer<typeof dispositionFixtureSchema>;
 export type DatasetManifestFixture = z.infer<typeof datasetManifestFixtureSchema>;
