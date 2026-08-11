@@ -20,7 +20,6 @@ import { registerLocationNames } from "./humanize";
 const globalStore = globalThis as {
   __icgWorkspace?: Workspace;
   __icgWorkspaceShape?: string;
-  __icgLocationsRegistered?: boolean;
 };
 
 /**
@@ -48,12 +47,19 @@ export function getWorkspace(): Workspace {
 
 export function getQueries(): QueryService {
   const queries = createQueryService(getWorkspace());
-  // Location display names belong to the dataset; register them once so
+  // Location display names belong to the dataset; register them so
   // locationLabel() reports what the data says rather than a transcription.
-  if (!globalStore.__icgLocationsRegistered) {
-    registerLocationNames(getWorkspace().dataset.locations);
-    globalStore.__icgLocationsRegistered = true;
-  }
+  //
+  // Registered on EVERY call, deliberately. This used to be guarded by a
+  // `__icgLocationsRegistered` flag on globalThis while the map it guarded
+  // lives in `humanize.ts` — so a dev-server module reload gave the map a
+  // fresh empty instance while the flag stayed true, registration never ran
+  // again, and every location on every screen silently fell back to
+  // title-casing its id: "RMA / Repair" rendered as "Rma Repair" and
+  // "Shipping / Install Staging" as "Staging". A guard must live in the same
+  // module as the state it guards, or a reload desynchronizes the two. The
+  // loop is eleven map writes; the flag was never worth its own bug.
+  registerLocationNames(getWorkspace().dataset.locations);
   return queries;
 }
 

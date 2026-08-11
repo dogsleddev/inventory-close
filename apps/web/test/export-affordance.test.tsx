@@ -7,6 +7,7 @@ import { userByRole, DEMO_USERS } from "@icg/data";
 import { AdjustmentsScreen } from "../components/AdjustmentsScreen";
 import { AuditPackageScreen } from "../components/AuditPackageScreen";
 import { CostingScreen } from "../components/CostingScreen";
+import { CustodyScreen } from "../components/CustodyScreen";
 import { EvidenceScreen } from "../components/EvidenceScreen";
 import { ExceptionsScreen } from "../components/ExceptionsScreen";
 import { InventorySearchScreen } from "../components/InventorySearchScreen";
@@ -21,6 +22,7 @@ import { getQueries, makeContext } from "../lib/server/workspace";
 import { buildAdjustmentsData } from "../lib/server/adjustments-view";
 import { buildAuditPackageData } from "../lib/server/audit-package-view";
 import { buildCostingData } from "../lib/server/costing-view";
+import { buildCustodyData } from "../lib/server/custody-view";
 import { buildPhysicalCountData } from "../lib/server/count-view";
 import {
   buildExceptionsData,
@@ -98,6 +100,17 @@ const SCREENS = [
       <CostingScreen
         shell={buildShellData(user(r), "T-EXP")}
         data={buildCostingData(user(r), "T-EXP")}
+        setRoleAction={noopRole}
+      />
+    ),
+  },
+  {
+    route: "/custody",
+    table: "custody",
+    element: (r: Parameters<typeof userByRole>[0]) => (
+      <CustodyScreen
+        shell={buildShellData(user(r), "T-EXP")}
+        data={buildCustodyData(user(r), "T-EXP")}
         setRoleAction={noopRole}
       />
     ),

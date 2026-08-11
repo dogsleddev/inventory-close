@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type KeyboardEvent, type ReactNode } from "react";
-import type { TabDef } from "../lib/view-model";
+import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import type { ProcurementStat, TabDef } from "../lib/view-model";
 import type { RiskView, StatusView } from "../lib/workflow-view";
 
 /**
@@ -18,6 +18,61 @@ export function StatusCapsule({ status }: { status: StatusView }) {
       </span>
       {status.label}
     </span>
+  );
+}
+
+/**
+ * A population's headline figures, each labelled with what it counts.
+ *
+ * Written for Procurement, copied for Costing, and moved here when Custody
+ * would have been the third copy. Keep the stat count to 3–4: `.icg-facts`
+ * drops to three columns at 1280 and two at 1279, and the column count is
+ * driven by `--icg-facts-cols` rather than by a wrap.
+ */
+export function StatStrip({
+  title,
+  sub,
+  stats,
+}: {
+  title: string;
+  sub: string;
+  stats: readonly ProcurementStat[];
+}) {
+  return (
+    <Panel>
+      <div style={{ padding: "14px 18px" }}>
+        <h2 className="icg-panel-title icg-panel-title--lg">{title}</h2>
+        <p
+          className="icg-soft"
+          style={{ fontSize: "11.5px", lineHeight: 1.55, margin: "5px 0 12px" }}
+        >
+          {sub}
+        </p>
+        <div className="icg-facts" style={{ "--icg-facts-cols": stats.length } as CSSProperties}>
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <div className="icg-label">{stat.label}</div>
+              <div
+                className="icg-num"
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginTop: "3px",
+                  color: stat.ember ? "var(--ember)" : undefined,
+                }}
+              >
+                {stat.value}
+              </div>
+              {stat.note !== null ? (
+                <div className="icg-quiet" style={{ fontSize: "10.5px", lineHeight: 1.45 }}>
+                  {stat.note}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
   );
 }
 

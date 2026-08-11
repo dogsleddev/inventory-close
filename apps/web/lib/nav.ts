@@ -16,6 +16,7 @@ export const NAV_SECTIONS: readonly { label: string; href: string }[] = [
   { label: "Physical Count", href: "/physical-count" },
   { label: "Cutoff", href: "/cutoff" },
   { label: "Ownership", href: "/ownership" },
+  { label: "Custody & Disposition", href: "/custody" },
   { label: "Valuation", href: "/valuation" },
   { label: "Exceptions", href: "/exceptions" },
   { label: "Evidence", href: "/evidence" },

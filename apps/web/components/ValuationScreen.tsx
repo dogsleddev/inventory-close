@@ -11,6 +11,7 @@ import {
   Panel,
   PanelHead,
   RestrictedState,
+  StatStrip,
   StatusCapsule,
 } from "./kit";
 
@@ -378,9 +379,168 @@ export function ValuationScreen({
                 </div>
               )}
             </Panel>
+
+            {data.methodology !== null ? (
+              <MethodologyBlock view={data.methodology} />
+            ) : null}
           </>
         )}
       </main>
     </AppShell>
+  );
+}
+
+/**
+ * How the close looks at slow-moving stock (Stage E) — placed after the
+ * reserve position and never inside it.
+ *
+ * This block carries the largest money figure on the screen, and it is not a
+ * reserve: it is what a population is CARRIED at. Every panel that states an
+ * absence states it as an absence, because condition and costs to sell are
+ * the legs of the method this close does not have.
+ */
+function MethodologyBlock({ view }: { view: NonNullable<ValuationData["methodology"]> }) {
+  return (
+    <>
+      <StatStrip
+        title="How this close looks at obsolescence"
+        sub="The signals behind the review population, and the ones the close does not hold."
+        stats={view.stats}
+      />
+
+      <Panel>
+        <PanelHead
+          title="Obsolescence indicators by SKU"
+          sub="Age and demand, per SKU, with which half of the policy test each one met."
+        />
+        <div className="icg-table-wrap">
+          <table className="icg-table">
+            <thead>
+              <tr>
+                <th scope="col">SKU</th>
+                <th scope="col">Product</th>
+                <th scope="col">On hand</th>
+                <th scope="col">Slow-moving</th>
+                <th scope="col">12-month forecast</th>
+                <th scope="col">Months of supply</th>
+                <th scope="col">Beyond horizon</th>
+                <th scope="col">Carried at</th>
+                <th scope="col">Age test</th>
+                <th scope="col">Demand test</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.signals.map((row) => (
+                <tr key={row.sku}>
+                  <td>
+                    <span className="icg-mono" style={{ fontSize: "11px" }}>
+                      {row.sku}
+                    </span>
+                    {row.underReview ? (
+                      <div style={{ fontSize: "10px", color: "var(--ember)", marginTop: "2px" }}>
+                        Under review
+                      </div>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span className="icg-soft" style={{ fontSize: "11px" }}>
+                      {row.description}
+                    </span>
+                    {row.note !== null ? (
+                      <div
+                        className="icg-quiet"
+                        style={{ fontSize: "10px", lineHeight: 1.45, marginTop: "3px" }}
+                      >
+                        {row.note}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="icg-num">{row.onHand}</td>
+                  <td className="icg-num">{row.aged}</td>
+                  <td className="icg-num">{row.forecast}</td>
+                  <td className="icg-num">{row.monthsOfSupply}</td>
+                  <td className="icg-num">{row.excessUnits}</td>
+                  <td className="icg-num">{row.excessCarrying}</td>
+                  <td>
+                    <span className="icg-nstag">{row.ageTest}</span>
+                  </td>
+                  <td>
+                    <span className="icg-nstag">{row.forecastTest}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="icg-panel-foot">
+          <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+            {view.excessNote} {view.basisNote}
+          </span>
+        </div>
+      </Panel>
+
+      <Panel>
+        <PanelHead
+          title="Aging basis"
+          sub="Which clock the policy runs on, and what a different one would select."
+        />
+        <FactRows rows={view.agingBasis} />
+        <div className="icg-panel-foot">
+          <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+            {view.agingNote}
+          </span>
+        </div>
+      </Panel>
+
+      <Panel>
+        <PanelHead
+          title="Condition evidence"
+          sub="What the close knows about the state of the units, which is very little."
+        />
+        <FactRows rows={view.condition} />
+        <div className="icg-panel-foot">
+          <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+            {view.conditionNote}
+          </span>
+        </div>
+      </Panel>
+
+      <Panel>
+        <PanelHead
+          title="Recovery evidence"
+          sub="What a unit might realise, and why this close does not put a number on it."
+        />
+        <FactRows rows={view.recovery} />
+        <div className="icg-panel-foot">
+          <span className="icg-soft" style={{ fontSize: "11px", lineHeight: 1.55 }}>
+            {view.recoveryNote}
+          </span>
+        </div>
+      </Panel>
+    </>
+  );
+}
+
+/** A labelled fact list, rendered as rows so each value keeps its label. */
+function FactRows({ rows }: { rows: readonly { k: string; v: string }[] }) {
+  return (
+    <div className="icg-table-wrap">
+      <table className="icg-table">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.k}>
+              <th scope="row" style={{ fontWeight: 500, textAlign: "left" }}>
+                <span className="icg-soft" style={{ fontSize: "11px" }}>
+                  {row.k}
+                </span>
+              </th>
+              <td>
+                <span style={{ fontSize: "11.5px" }}>{row.v}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

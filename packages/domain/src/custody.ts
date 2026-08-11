@@ -14,10 +14,16 @@ import type { AccountingClassification } from "./enums.js";
  * `CONSIGNMENT_IN` (vendor-owned stock in our custody) and
  * `CONSIGNMENT_OUT` (our stock in a customer's custody under a consignment
  * arrangement) are part of the taxonomy because the model must be able to
- * express them. Neither is derivable from the FY2026 dataset: no fixture
- * records a consignment arrangement, so `custodyTypeFor` never returns
- * them. They are representable and empty — never faked from a location that
- * merely resembles one.
+ * express them, and `custodyTypeFor` never returns either — not because the
+ * arrangements do not exist, but because this function derives custody for a
+ * unit on the YEAR-END LISTING, and the listing is what the company owns.
+ *
+ * Consignment-in is real in FY2026 and is recorded in its own off-book
+ * collection (`consignmentInUnits`), reported by `getConsignmentHoldings`.
+ * Feeding one of those rows through this function would return
+ * `COMPANY_WAREHOUSE`, because the vendor's stock sits in a company location
+ * — custody there is a fact the record states, not one a location derives.
+ * Consignment-out has no FY2026 population at all.
  *
  * `UNDETERMINED` is not a custody claim; it is the absence of one. It is
  * what the function returns rather than guessing when the inputs do not
@@ -42,7 +48,7 @@ export const PHYSICAL_CUSTODY_TYPES = [
   "REPAIR_RMA_HOLD",
   /** Quarantined pending a damage disposition. */
   "QUARANTINE_DAMAGED",
-  /** Vendor-owned stock in the company's custody. No population. */
+  /** Vendor-owned stock in the company's custody. Never a book unit. */
   "CONSIGNMENT_IN",
   /** Company stock in a customer's custody on consignment. No population. */
   "CONSIGNMENT_OUT",
@@ -51,7 +57,11 @@ export const PHYSICAL_CUSTODY_TYPES = [
 ] as const;
 export type PhysicalCustodyType = (typeof PHYSICAL_CUSTODY_TYPES)[number];
 
-/** The two custody types the dataset cannot produce (see the module note). */
+/**
+ * The two custody types no unit on the year-end listing can resolve to (see
+ * the module note). It is a statement about the BOOK population, not about
+ * the dataset: consignment-in has twelve off-book rows of its own.
+ */
 export const UNPOPULATED_CUSTODY_TYPES: readonly PhysicalCustodyType[] = [
   "CONSIGNMENT_IN",
   "CONSIGNMENT_OUT",

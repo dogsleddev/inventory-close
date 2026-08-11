@@ -208,7 +208,11 @@ describe("custody says who holds the unit, and never invents a holder", () => {
     expect(master.rows.every((r) => r.custodyType !== "UNDETERMINED")).toBe(true);
   });
 
-  it("never reports a consignment arrangement the dataset does not record", () => {
+  // The dataset DOES record consignment arrangements — twelve vendor-owned
+  // units, off the book by construction. What must never happen is a unit on
+  // the year-end listing resolving to consignment custody, because the
+  // listing is what the company owns.
+  it("never reports a book unit as consignment custody", () => {
     for (const unpopulated of UNPOPULATED_CUSTODY_TYPES) {
       expect(
         master.rows.filter((r) => r.custodyType === unpopulated),

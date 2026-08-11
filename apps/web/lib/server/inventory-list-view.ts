@@ -148,8 +148,12 @@ function attempt<T>(fn: () => T): T | undefined {
 /**
  * Custody display copy. The canonical values live in @icg/domain; the
  * words a Controller reads live here, beside every other label map.
+ *
+ * Exported so the Custody & Disposition screen reads the same words. Two
+ * copies of this map is how one screen calls a unit "Third-party custodian"
+ * and another calls the same unit something else.
  */
-const CUSTODY_LABELS: Readonly<Record<PhysicalCustodyType, string>> = {
+export const CUSTODY_LABELS: Readonly<Record<PhysicalCustodyType, string>> = {
   COMPANY_WAREHOUSE: "Company warehouse",
   IN_TRANSIT_INBOUND: "In transit — inbound",
   IN_TRANSIT_OUTBOUND: "In transit — outbound",
@@ -535,7 +539,7 @@ export function buildInventoryListData(
       "Carrying value is the listed unit cost. No reserve is allocated to any unit; the reserve conclusion is undetermined.",
       "Age runs from the unit's last movement to the balance-sheet date — the same basis, and the same buckets, the Valuation aging uses.",
       "An exception chip marked SKU or bin names that SKU or bin, not this unit. Only a finding carrying the serial, or the custodian recorded as holding the unit, names the unit itself.",
-      "Custody says who holds the unit; ownership is the accounting conclusion beside it. Consignment-in and consignment-out are part of the custody model and have no population here — no FY2026 record establishes a consignment arrangement.",
+      "Custody says who holds the unit; ownership is the accounting conclusion beside it. No unit on this listing is consignment custody, because this listing is what the company owns — the vendor-owned stock held on site is recorded off-book and is reported under Custody & Disposition.",
     ],
   };
 }

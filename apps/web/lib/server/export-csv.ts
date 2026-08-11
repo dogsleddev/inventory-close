@@ -1,8 +1,12 @@
 import type { DemoUser } from "@icg/data";
 import { glAccountDescription } from "@icg/domain";
 import {
+  getConsignmentHoldings,
   getCostClassification,
   getCostStandards,
+  getCustodyBreakdown,
+  getDispositions,
+  getEoMethodology,
   getProcurementPopulations,
 } from "@icg/services";
 import { formatCents } from "../format";
@@ -59,12 +63,23 @@ export const EXPORT_TABLES = [
   "pbc",
   "procurement",
   "costing",
+  "custody",
   "physical-count",
   "valuation",
   "close-summary",
 ] as const;
 
 export type ExportTable = (typeof EXPORT_TABLES)[number];
+
+/**
+ * Custody types where the company itself is the holder. A grouping of the
+ * derived answer for display, never a second derivation of it.
+ */
+const COMPANY_HELD_CUSTODY = new Set([
+  "COMPANY_WAREHOUSE",
+  "REPAIR_RMA_HOLD",
+  "QUARANTINE_DAMAGED",
+]);
 
 export function isExportTable(value: string): value is ExportTable {
   return (EXPORT_TABLES as readonly string[]).includes(value);
@@ -130,6 +145,12 @@ const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
   // role reads whole. An auditor's file is byte-identical to a Controller's,
   // so claiming a redaction here would be the over-claim this map exists for.
   costing: null,
+  // The consignment and disposition rows DO carry a sourceRef, so record
+  // scope is applied to them — but no such record is evidence for any
+  // exception, so nothing is withheld from anyone and an auditor's file is
+  // byte-identical. Scoping being applied is not the same as scoping removing
+  // something, and only the second would justify a note here.
+  custody: null,
 };
 
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
@@ -705,6 +726,251 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         "",
       ]),
     );
+  } else if (table === "custody") {
+    // Three populations in one file, and the headings say which is which,
+    // because the whole risk on this subject is a reader adding company-owned
+    // stock held elsewhere to vendor-owned stock held here.
+    //
+    // Section headings use A–Z, space, parentheses, slash and hyphen only:
+    // the affordance test's section splitter recognises nothing else as a
+    // boundary, so a heading with an ampersand silently extends the section
+    // above it.
+    const custody = getCustodyBreakdown(getWorkspace(), ctx);
+    const consignment = getConsignmentHoldings(getWorkspace(), ctx);
+    const dispositions = getDispositions(getWorkspace(), ctx);
+
+    lines.push(row(["PHYSICAL CUSTODY (COMPANY-OWNED STOCK)"]));
+    lines.push(
+      row([
+        "Custody",
+        "Held by",
+        "Locations",
+        "Named holders",
+        "Units without a named holder",
+        "Units",
+        "Carrying value",
+      ]),
+    );
+    for (const r of custody.rows) {
+      lines.push(
+        row([
+          r.custodyType,
+          COMPANY_HELD_CUSTODY.has(r.custodyType) ? "The company" : "Another party",
+          r.locations.join(" / "),
+          r.custodians.length > 0 ? r.custodians.join(" / ") : "None recorded",
+          r.unitsWithoutCustodian,
+          r.units,
+          formatCents(r.carryingCents),
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Total on the listing",
+        "",
+        "",
+        "",
+        "",
+        custody.bookUnits,
+        formatCents(custody.bookCarryingCents),
+      ]),
+    );
+    lines.push(
+      row([
+        "Custody accounts for the whole listing",
+        custody.coversBook ? "YES" : "NO",
+        "",
+        "",
+        "",
+        "",
+        custody.coversBook
+          ? "Every unit resolves to exactly one custody answer and the rows total the inventory subledger"
+          : `${custody.undeterminedUnits} units have no established custody`,
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["CONSIGNMENT IN (VENDOR-OWNED, NOT COMPANY INVENTORY)"]));
+    if (consignment.withheldRowCount > 0) {
+      lines.push(
+        row([
+          "Withheld",
+          `${consignment.withheldRowCount} holdings are outside this role's scope and are not in this file`,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Serial",
+        "SKU",
+        "Owner",
+        "Agreement",
+        "Location",
+        "Bin",
+        "Received",
+        "Owner's stated value",
+      ]),
+    );
+    for (const r of consignment.rows) {
+      lines.push(
+        row([
+          r.serial,
+          r.sku,
+          r.owner,
+          r.agreementRef,
+          r.location,
+          r.bin ?? "No bin recorded",
+          r.receivedAt,
+          formatCents(r.statedValueCents),
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Total held on consignment",
+        "",
+        "",
+        "",
+        "",
+        "",
+        consignment.units,
+        formatCents(consignment.statedValueCents),
+      ]),
+    );
+    lines.push(
+      row([
+        "Outside the inventory subledger",
+        consignment.outsideSubledger ? "YES" : "NO",
+        "",
+        "",
+        "",
+        "",
+        "",
+        consignment.outsideSubledger
+          ? "No serial held here appears on the year-end listing, and the listing is exactly what the close reports as the subledger - so none of this value is inside it"
+          : `${consignment.consignedSerialsOnBook.join(", ")} appears both here and on the year-end listing`,
+      ]),
+    );
+    lines.push(
+      row([
+        "Count lines reaching a consignment bin",
+        consignment.countLinesTouchingConsignmentBins,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "The year-end count population is drawn from the book, so these units were not in its scope",
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["DISPOSITION (UNITS THAT LEFT THE BOOK IN FY2026)"]));
+    if (dispositions.withheldRowCount > 0) {
+      lines.push(
+        row([
+          "Withheld",
+          `${dispositions.withheldRowCount} disposition records are outside this role's scope and are not in this file`,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Record",
+        "Serial",
+        "SKU",
+        "Method",
+        "Disposed",
+        "Original cost",
+        "Recovered",
+        "Not recovered",
+        "Authorised by",
+        "Adjustment named",
+        "Adjustment on file",
+        "Certificate named",
+        "Certificate on file",
+        "Reason",
+      ]),
+    );
+    for (const r of dispositions.rows) {
+      lines.push(
+        row([
+          r.id,
+          r.serial,
+          r.sku,
+          r.method,
+          r.disposedAt,
+          formatCents(r.originalCostCents),
+          formatCents(r.proceedsCents),
+          formatCents(r.lossCents),
+          r.authorizedBy,
+          r.adjustmentRef ?? "None named",
+          // The reference and whether it resolves are two different facts, so
+          // they are two different columns. A file that printed the number
+          // alone would claim the close holds a record it does not.
+          r.adjustmentOnFile ? "YES" : "NO",
+          r.evidenceRef ?? "None named",
+          r.evidenceOnFile ? "YES" : "NO",
+          r.reason,
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Total disposed",
+        "",
+        "",
+        "",
+        "",
+        formatCents(dispositions.originalCostCents),
+        formatCents(dispositions.proceedsCents),
+        formatCents(dispositions.lossCents),
+        "",
+        "",
+        String(dispositions.rowsWithAdjustmentOnFile),
+        "",
+        String(dispositions.rowsWithEvidenceOnFile),
+        "Counts are the records whose named support the close actually holds",
+      ]),
+    );
+    lines.push(
+      row([
+        "None of these units is on the listing",
+        dispositions.removedFromBook ? "YES" : "NO",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        dispositions.removedFromBook
+          ? "Checked against the year-end listing - a disposed unit left on the book would be counted twice"
+          : `${dispositions.disposedSerialsOnBook.join(", ")} was disposed of and is still on the year-end listing`,
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["BY METHOD"]));
+    lines.push(row(["Method", "Units", "Original cost", "Recovered", "Not recovered"]));
+    for (const m of dispositions.byMethod) {
+      lines.push(
+        row([
+          m.method,
+          m.units,
+          formatCents(m.originalCostCents),
+          formatCents(m.proceedsCents),
+          formatCents(m.lossCents),
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Note",
+        "What each disposal realised is a fact about that unit. It is not a recovery rate, and no figure here is applied to anything still on the year-end listing.",
+      ]),
+    );
   } else if (table === "physical-count") {
     const summary = queries.getCountSummary(ctx);
     const detail = queries.getCountDetail(ctx);
@@ -980,6 +1246,142 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         ]),
       );
     }
+    lines.push("");
+    // Stage E's methodology sections go HERE — after every reserve-related
+    // block, never between them. The affordance test slices RESERVE POSITION
+    // to the next heading matching /"[A-Z][A-Z ()\/—-]{6,}"/, so a section
+    // inserted above with a heading that regex does not recognise would
+    // silently extend the reserve block and its dollar figures with it.
+    const eo = getEoMethodology(getWorkspace(), ctx);
+    lines.push(row(["OBSOLESCENCE INDICATORS BY SKU"]));
+    lines.push(
+      row([
+        "SKU",
+        "Product",
+        "On hand",
+        "Slow-moving units",
+        "Carrying value of slow-moving units",
+        "Forecast units",
+        "Horizon months",
+        "Months of supply",
+        "Units beyond the horizon",
+        "Carrying value beyond the horizon",
+        "Met the age test",
+        "Met the demand test",
+        "Under review",
+        "Forecast note",
+      ]),
+    );
+    for (const s of eo.signals) {
+      lines.push(
+        row([
+          s.sku,
+          s.description,
+          s.onHandUnits,
+          s.agedUnits,
+          formatCents(s.agedCarryingCents),
+          // An absent forecast is stated. An empty cell would read as zero
+          // demand, which is a far stronger claim than "not on file".
+          s.forecastUnits === undefined ? "No forecast on file" : s.forecastUnits,
+          s.horizonMonths ?? "",
+          s.monthsOfSupply === undefined ? "Not derivable" : s.monthsOfSupply.toFixed(1),
+          s.excessOverHorizonUnits,
+          formatCents(s.excessOverHorizonCents),
+          s.metAgeTest ? "YES" : "NO",
+          s.metForecastTest ? "YES" : "NO",
+          s.underReview ? "YES" : "NO",
+          s.forecastNote ?? "",
+        ]),
+      );
+    }
+    lines.push(
+      row([
+        "Beyond the horizon",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        eo.excessOverHorizonUnits,
+        formatCents(eo.excessOverHorizonCents),
+        "",
+        "",
+        "",
+        "Carrying value of a population, NOT an exposure and not a proposed write-down. No recovery rate has been applied to it because none is on file.",
+      ]),
+    );
+    lines.push(row(["Basis", eo.basisNote]));
+    lines.push("");
+    lines.push(row(["AGING BASIS"]));
+    lines.push(row(["Measure", "Value"]));
+    lines.push(row(["Policy basis", "Last movement to the balance-sheet date"]));
+    lines.push(row(["Threshold days", eo.agingBasis.thresholdDays]));
+    lines.push(row(["Units aged on the policy basis", eo.agingBasis.agedOnPolicyBasis]));
+    lines.push(
+      row([
+        "Units aged measured from acquisition instead",
+        eo.agingBasis.agedOnAcquisitionBasis,
+      ]),
+    );
+    lines.push(
+      row(["Units with no last-movement date", eo.agingBasis.unitsWithoutMovementDate]),
+    );
+    lines.push(
+      row(["Units with no acquisition date", eo.agingBasis.unitsWithoutAcquisitionDate]),
+    );
+    lines.push(
+      row([
+        "Aging evidence complete",
+        eo.agingBasis.ageBasisComplete ? "YES" : "NO",
+        eo.agingBasis.ageBasisComplete
+          ? "Every unit carries the date the policy basis needs, so the aged population is a measurement rather than a floor"
+          : "Some units carry no last-movement date, so the aged population is a floor",
+      ]),
+    );
+    lines.push("");
+    lines.push(row(["CONDITION AND RECOVERY EVIDENCE"]));
+    lines.push(row(["Measure", "Value", "Note"]));
+    lines.push(
+      row([
+        "Units with a condition record",
+        eo.condition.unitsWithConditionRecord,
+        eo.condition.source,
+      ]),
+    );
+    lines.push(row(["Units with none", eo.condition.unitsWithoutConditionRecord, ""]));
+    lines.push(
+      row(["Condition reasons recorded", eo.condition.recordedReasons.join("; "), ""]),
+    );
+    lines.push(
+      row([
+        "SKUs with an observed FY2026 selling price",
+        eo.recovery.skusWithObservedPrice,
+        "",
+      ]),
+    );
+    lines.push(
+      row([
+        "SKUs with no observed selling price",
+        eo.recovery.skusWithoutObservedPrice.join("; ") || "None",
+        "Named rather than left blank - a blank cell would read as a price of zero",
+      ]),
+    );
+    lines.push(
+      row([
+        "Costs to complete and sell on file",
+        eo.recovery.costsToSellOnFile ? "YES" : "NO",
+        "Net realisable value needs both a price and the costs to sell",
+      ]),
+    );
+    lines.push(
+      row([
+        "Net realisable value computed",
+        eo.recovery.nrvComputed ? "YES" : "NO",
+        "No recovery rate is applied to anything on the year-end listing",
+      ]),
+    );
     lines.push("");
     lines.push(
       row([

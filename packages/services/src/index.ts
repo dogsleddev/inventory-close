@@ -99,6 +99,30 @@ export type {
   PeriodCostCategoryOut,
   PeriodCostRowOut,
 } from "./costing.js";
+export {
+  getConsignmentHoldings,
+  getCustodyBreakdown,
+  getDispositions,
+} from "./ownership.js";
+export type {
+  ConsignmentGroupOut,
+  ConsignmentHoldingsOut,
+  ConsignmentRowOut,
+  CustodyBreakdownOut,
+  CustodyRowOut,
+  DispositionMethodOut,
+  DispositionRowOut,
+  DispositionsOut,
+} from "./ownership.js";
+export { getEoMethodology, MONTHS_OF_SUPPLY_BASIS } from "./eoMethodology.js";
+export type {
+  AgingBasis,
+  AgingBasisOut,
+  ConditionEvidenceOut,
+  EoMethodologyOut,
+  EoSignalRowOut,
+  RecoveryEvidenceOut,
+} from "./eoMethodology.js";
 export { getProcurementPopulations } from "./procurement.js";
 export type {
   GoodsInTransitOut,

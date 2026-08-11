@@ -308,13 +308,22 @@ describe("ownership and custody are stated as what they are", () => {
     expect(within(masterTable()).getAllByText("Rights under review").length).toBeGreaterThan(0);
   });
 
-  it("never renders a consignment custody the dataset does not record", () => {
+  it("never renders a book unit as consignment custody, and says why", () => {
+    // The listing is what the company OWNS, so no row on it can be
+    // vendor-owned stock. That is still true and still worth stating.
     const data = view();
     expect(data.rows.some((r) => r.custody.startsWith("Consignment"))).toBe(false);
     const custody = data.filters.find((f) => f.name === "custody");
     expect(custody?.options.some((o) => o.value.startsWith("CONSIGNMENT"))).toBe(false);
     renderList(ONE_ROW);
-    expect(screen.getByText(/have no population here/)).toBeTruthy();
+    expect(screen.getByText(/No unit on this listing is consignment custody/)).toBeTruthy();
+
+    // What is NOT true any more: at dataset v1.2.0 twelve vendor-owned units
+    // ship in their own off-book collection, so the note this screen used to
+    // carry — that no FY2026 record establishes a consignment arrangement —
+    // became false the moment those fixtures landed. It must not come back.
+    expect(screen.queryByText(/no FY2026 record establishes a consignment/i)).toBeNull();
+    expect(screen.queryByText(/have no population here/)).toBeNull();
   });
 
   it("carries the custodian beside third-party custody", () => {

@@ -261,7 +261,7 @@ prior one is green.
 | **W — Workflow verbs** ✅ **DONE** (`de41445`) | `concludeException` + `requestEvidence` + `submitEvidence` wired; live effective-state overlay; sign-off reachable at zero live blockers. | **D6** |
 | **C — Procurement** ✅ **DONE** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. **Carried the single D5 regeneration for C/D/E.** | D5, D9 |
 | **D — Costing** ✅ **DONE** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
-| **E — Ownership & valuation lifecycle** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
+| **E — Ownership & valuation lifecycle** ✅ **DONE** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **F — Management outputs** | Methodology & Calculations; Accounting Matrix; Close Memo with review workflow; guided-demo polish. | D8 |
 | **G — Ask Gaurd** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
 | **H — QA** | Baseline regression, accounting-language review, AI-off test, placeholder scan, 60-second demo test, full-tree adversarial pass. | — |
@@ -473,6 +473,81 @@ so it stays. Fold it into the next dataset bump, if one is ever justified on its
 (`Timeout calling "onTaskUpdate"`) while reporting all tests passed. It reproduces at
 `546e388` before any Stage D change. `export-affordance.test.tsx` blocks its worker for ~45s in
 one test and starves the reporter channel; Stage D adds an eleventh screen to that sweep.
+
+### Stage E outcome (2026-08-11)
+
+`/custody` (Custody & Disposition) with three tabs, plus an E&O methodology block appended to
+`/valuation`. `packages/services/src/ownership.ts` (`getCustodyBreakdown`,
+`getConsignmentHoldings`, `getDispositions`) and `packages/services/src/eoMethodology.ts`
+(`getEoMethodology`). Nav is 15 entries, `EXPORT_TABLES` is twelve. Typecheck, lint and
+production build clean; every locked figure unmoved.
+
+**The custody model was already built.** `packages/domain/src/custody.ts` shipped in Stage B with
+twelve `PHYSICAL_CUSTODY_TYPES` and a total `custodyTypeFor` derivation, already a column and a
+filter on the All-Inventory list. Stage E did NOT rebuild it — it gave it a population surface and
+reused the same function and the same `CUSTODY_LABELS`. **There is no canonical list of exactly
+ten custody types anywhere in the repo**; "10 custody types" in §4 above is audit narrative, and
+the twelve-member enum is the real taxonomy. Nine are populated (1,500 units, $4,800,000);
+`CONSIGNMENT_IN` / `CONSIGNMENT_OUT` are representable and empty on the BOOK, which is a
+different statement from having no data.
+
+**Three claims, each measured rather than written**, because each is true today and prose would
+pass forever and then start lying: the custody cut covers the whole listing (`coversBook`), no
+consigned serial is on the book (`outsideSubledger`), no disposed serial is on the book
+(`removedFromBook`). All three have a negative branch in the view and a test that CREATES the
+violating condition — the baseline cannot produce one.
+
+`outsideSubledger` is deliberately a **conjunction**: serial exclusion only proves VALUE exclusion
+because the subledger IS the sum over the book population, so that equality is measured too
+(`subledgerIsBookPopulation`) and both halves are broken independently in tests. Without it, "none
+of this is in the $4,800,000" is an inference the reader has to make.
+
+**Three stale claims corrected — they became false when the v1.2.0 fixtures landed in Stage C.**
+`packages/domain/src/custody.ts` said "no fixture records a consignment arrangement";
+`inventory-list-view.ts` said "no FY2026 record establishes a consignment arrangement"; and two
+test NAMES said "the dataset does not record". Twelve vendor-owned units and two agreements ship.
+The replacement is the narrower statement that is still true and still load-bearing: no unit on
+the year-end listing is consignment custody, because the listing is what the company owns.
+
+**Dispositions name support the close does not hold.** Every record cites an inventory adjustment
+(ADJ-2026-0188/0261/0126/0303) and a certificate; the close holds neither. Rendering the
+reference as though it resolved would be a claim more precise than the enforcement, so the
+reference and whether it resolves are two separate columns on screen and in the CSV. The evidence
+lookup searches evidence-item TITLES — the namespace external references actually live in —
+because matching a certificate reference against `sourceRef.transactionNumber` would compare two
+different kinds of identifier and return "not on file" for every row forever, which is the right
+answer from a check that cannot fire. A test proves both lookups CAN resolve.
+
+**E&O methodology depth, with the line drawn explicitly.** Stage E reports: age on two bases (30
+units slow-moving on the policy's last-movement clock, 607 measured from acquisition — disclosed
+as a choice of clock, not a bigger population), demand coverage (1,500 on hand against a 1,096
+12-month forecast; KE-M1 at 438 months of supply), units held beyond a whole forecast horizon
+(435 units, and what they are CARRIED at), which half of the policy test each SKU met, and
+condition and recovery as measured absences. It reports NO reserve, no range, no recovery rate,
+no NRV, and no blended rate from the four FY2026 disposals — a whole-object scan in the tests
+fails on any field matching `/reserve/i` or `/recoveryRate/i`.
+
+The excess-over-horizon figure is the most dangerous number in the product: it is an order of
+magnitude larger than the population the rule flags and sits on the same screen as the reserve.
+It lives in its own block AFTER every reserve section, and the sentence saying no recovery rate
+has been applied to it travels in the same panel. The one authored assumption — that demand
+arrives ratably across the horizon — is held once in `MONTHS_OF_SUPPLY_BASIS` and rendered with
+the figure it produces.
+
+**Placement is load-bearing and is now pinned.** `export-affordance.test.tsx` slices the CSV's
+RESERVE POSITION block to the next heading matching `/"[A-Z][A-Z ()\/—-]{6,}"/` — a character
+class that excludes `&`, digits and lowercase. A methodology heading inserted above, or one
+containing an ampersand, silently extends the reserve block and its dollar figures, failing the
+one-money-figure rule with a message about the reserve. A regression pins that every new section
+follows `OPEN VALUATION REVIEWS`.
+
+**Deliberately NOT done:** converting `/valuation` to tabs (a §7 rework item, not Stage E scope).
+The methodology ships as appended panels instead. Retabbing would have risked ~20 assertions in
+`stage07.test.tsx`, and the E&O tab labels are a live hazard — no button on that screen may have
+"reserve" in its accessible name, and tabs render as buttons. `/ownership` is also untouched: it
+stays the exception queue filtered to the ownership and third-party domains, which is a different
+question from "who is holding it". Mounting the new screen there would have silently defeated the
+nav/affordance agreement test, which exempts that exact href.
 
 ## 11. Acceptance criteria (the twenty questions)
 

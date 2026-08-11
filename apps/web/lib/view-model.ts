@@ -839,6 +839,8 @@ export interface ValuationData {
     readonly note: string;
     readonly empty: string | null;
   };
+  /** Stage E — the method behind the conclusion, never a second conclusion. */
+  readonly methodology: EoMethodologyView | null;
   readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
 }
 
@@ -1241,6 +1243,123 @@ export interface ResetResultView {
   readonly ok: boolean;
   readonly headline: string;
   readonly detail: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage E — Custody, consignment, disposition, E&O methodology        */
+/* ------------------------------------------------------------------ */
+
+export interface CustodyRowView {
+  readonly custody: string;
+  readonly units: string;
+  readonly carrying: string;
+  readonly locations: string;
+  /** Named holders, or the stated reason there is none. */
+  readonly custodians: string;
+  readonly heldByCompany: boolean;
+}
+
+export interface ConsignmentRowView {
+  readonly serial: string;
+  readonly sku: string;
+  readonly owner: string;
+  readonly location: string;
+  readonly bin: string;
+  readonly received: string;
+  readonly agreement: string;
+  readonly statedValue: string;
+}
+
+export interface DispositionRowView {
+  readonly id: string;
+  readonly serial: string;
+  readonly sku: string;
+  readonly method: string;
+  readonly disposed: string;
+  readonly originalCost: string;
+  readonly proceeds: string;
+  readonly loss: string;
+  readonly reason: string;
+  readonly authorizedBy: string;
+  /** What the source record names, and whether the close holds it. */
+  readonly adjustment: string;
+  readonly evidence: string;
+}
+
+/** One agreed statement rendered from a measured boolean. */
+export interface MeasuredClaimView {
+  readonly holds: boolean;
+  readonly headline: string;
+  readonly detail: string;
+}
+
+export interface CustodyData {
+  readonly restricted: boolean;
+  readonly roleLabel: string;
+  readonly headerNote: string | null;
+  readonly asOf: string;
+  readonly tabs: readonly TabDef[];
+  readonly custody: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly CustodyRowView[];
+    readonly coverage: MeasuredClaimView;
+    readonly unpopulatedNote: string;
+    readonly note: string;
+  } | null;
+  readonly consignment: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly ConsignmentRowView[];
+    readonly byOwner: readonly { readonly key: string; readonly value: string }[];
+    readonly separation: MeasuredClaimView;
+    readonly countNote: string;
+    readonly note: string;
+    readonly withheldNote: string | null;
+  } | null;
+  readonly disposition: {
+    readonly stats: readonly ProcurementStat[];
+    readonly rows: readonly DispositionRowView[];
+    readonly byMethod: readonly {
+      readonly method: string;
+      readonly units: string;
+      readonly cost: string;
+      readonly proceeds: string;
+      readonly loss: string;
+    }[];
+    readonly removal: MeasuredClaimView;
+    readonly supportNote: string;
+    readonly note: string;
+    readonly withheldNote: string | null;
+  } | null;
+}
+
+export interface EoSignalRowView {
+  readonly sku: string;
+  readonly description: string;
+  readonly onHand: string;
+  readonly aged: string;
+  readonly forecast: string;
+  readonly monthsOfSupply: string;
+  readonly excessUnits: string;
+  readonly excessCarrying: string;
+  readonly ageTest: string;
+  readonly forecastTest: string;
+  readonly underReview: boolean;
+  readonly note: string | null;
+}
+
+/** Appended to `ValuationData`; null when the viewer cannot read it. */
+export interface EoMethodologyView {
+  readonly stats: readonly ProcurementStat[];
+  readonly signals: readonly EoSignalRowView[];
+  readonly basisNote: string;
+  /** Why the excess figure is not a reserve, stated where the figure is. */
+  readonly excessNote: string;
+  readonly agingBasis: readonly { readonly k: string; readonly v: string }[];
+  readonly agingNote: string;
+  readonly condition: readonly { readonly k: string; readonly v: string }[];
+  readonly conditionNote: string;
+  readonly recovery: readonly { readonly k: string; readonly v: string }[];
+  readonly recoveryNote: string;
 }
 
 /* ------------------------------------------------------------------ */
