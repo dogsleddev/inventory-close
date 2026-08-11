@@ -256,7 +256,7 @@ prior one is green.
 
 | Stage | Scope | Baseline decisions needed |
 |---|---|---|
-| **A — Credibility** | Evidence Center; remove `/assumptions`; "How to Explore This Demo" + glossary; Overview hierarchy + 6 clickable KPIs + blockers filter; domain-aware exception lenses; coverage terminology; ownership language (rule v1.0.1); reconciliation canonical language + four blocks; honest treatment of dead buttons; per-route titles, favicon, OG, `not-found`/`error`, footer, Print button. | None (D1–D4 resolved above) |
+| **A — Credibility** ✅ **DONE** (`53769b5`, `cb73e2b`, `98688a5`, `8718d3e`) | Evidence Center; remove `/assumptions`; "How to Explore This Demo" + glossary; Overview hierarchy + 6 clickable KPIs + blockers filter; domain-aware exception lenses; coverage terminology; ownership language (rule v1.0.1); reconciliation canonical language + posted block; honest treatment of dead buttons; per-route titles, favicon, OG, `not-found`/`error`, footer, Print button. | None (D1–D4 resolved above) |
 | **B — Inventory & GL** | All Inventory master list; GL accounts view; full JE detail; subledger-to-GL polish; **CSV export route handlers**. | D7, D10 |
 | **W — Workflow verbs** | `concludeException` + `requestEvidence` + `submitEvidence` wired; live effective-state overlay; sign-off reachable at zero live blockers. | **D6** |
 | **C — Procurement** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. | D5, D9 |
@@ -270,6 +270,26 @@ Nav grows with the stages: Stage A ships the grouped rail linking only to pages 
 later stage adds its own child link as its page lands.
 
 ---
+
+### Stage A outcome (2026-08-10)
+
+**643 tests green** (628 at start; +15 new regressions), production build clean, every locked
+figure unmoved: 1,500 units · $4,800,000 subledger · $4,812,450 GL · $12,450 difference ·
+15 exceptions · 7 blockers · $198,950 exposure · $255,650 designed · 81.42% readiness ·
+17/21 PBC · 91.67% source health.
+
+Delivered beyond the plan: a `@media print` improvement (scrolling tables un-clip on paper),
+and a shell-wide footer. Deliberately deferred out of Stage A: the per-GL-account table
+(needs a new query — Stage B) and wiring the conclusion verbs (Stage W, gated on **D6**).
+
+New regressions worth knowing about, because they pin rules rather than strings:
+- every nav href must resolve to a real `page.tsx`, and neither `[section]/page.tsx` nor
+  `NotDesignedScreen.tsx` may exist — the placeholder problem cannot return silently;
+- no lens may say its evidence is "out of scope"/"not applicable" as filler;
+- a missing-evidence chip may only resolve to the record the product itself lists as missing
+  (this caught a real defect in the new EXC-015 support lens during the build);
+- outstanding evidence gaps count open exceptions only;
+- every Overview KPI is a link whose accessible name names its destination.
 
 ## 11. Acceptance criteria (the twenty questions)
 
