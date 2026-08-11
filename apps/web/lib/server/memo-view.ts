@@ -98,6 +98,7 @@ export function buildCloseMemoData(
       withheldNote: null,
       canDraft: false,
       canIssue: false,
+      periodBlocks: null,
       notPartOfClose: "",
       note: "",
     };
@@ -182,15 +183,16 @@ export function buildCloseMemoData(
               ? "The close has moved since this version was issued."
               : "The close is where it was when this version was issued.",
             detail: memo.positionMoved
-              ? "The figures above are the close as it stands now, and they no longer match the state the issued version was sealed against. The issued version is not edited to catch up — it says what was said at the time. Issue a new version to state the current position."
-              : "The issued version was sealed against a hash of the same figures shown above, and they still agree. This is a comparison of the close state, not of the prose: it says the numbers the memo speaks about have not changed.",
+              ? // The remedy is only offered when it is available: under a
+                // locked period, "issue a new version" instructs the reader to
+                // do the thing the service will refuse.
+                `The close is no longer in the state the issued version was sealed against — the position below is the close as it stands now. The issued version is not edited to catch up; it says what was said at the time.${memo.periodBlocks === null ? " Issue a new version to state the current position." : ""}`
+              : "The issued version was sealed against a hash of the position below, and it still agrees. This is a comparison of the close state, not of the prose: it says that nothing the memo speaks about has changed.",
           },
-    withheldNote:
-      memo.withheldDraftCount === 0
-        ? null
-        : `${memo.withheldDraftCount} unissued ${memo.withheldDraftCount === 1 ? "draft is" : "drafts are"} withheld from this role. A draft is internal management working paper; issued versions are shown in full.`,
+    withheldNote: memo.withheldNote,
     canDraft: memo.canDraft,
     canIssue: memo.canIssue,
+    periodBlocks: memo.periodBlocks,
     notPartOfClose: memo.notPartOfClose,
     note: "The prose is management's. Every figure beside it is read from the close on each render, so the memo cannot come to disagree with the close it describes. Issuing seals both the text and a hash of the close position it was written against — which is what makes a later divergence visible instead of silent.",
   };

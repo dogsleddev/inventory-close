@@ -1,5 +1,6 @@
 import { hashObject } from "@icg/data";
 import { authorize, hasPermission } from "@icg/permissions";
+import { mutationAllowed } from "@icg/workflows";
 import { effectiveClose, effectiveOpenExceptionIds } from "./effective.js";
 import type { ServiceContext } from "./queries.js";
 import type { MemoVersion, Workspace } from "./workspace.js";
@@ -91,8 +92,27 @@ export interface MemoOut {
   readonly positionMoved: boolean | null;
   /** Drafts withheld from this viewer. Zero for anyone who may see them. */
   readonly withheldDraftCount: number;
+  /**
+   * The one sentence both surfaces state that in, or null when nothing is
+   * withheld. Authored here beside `notPartOfClose` so that a file and a
+   * screen cannot come to describe one withholding in two wordings.
+   *
+   * It states the display convention rather than a completeness claim: no
+   * surface carries a superseded version's text, so "shown in full" is said
+   * of the issued version only.
+   */
+  readonly withheldNote: string | null;
   readonly canDraft: boolean;
   readonly canIssue: boolean;
+  /**
+   * Why nobody may write the memo right now, or null when the period allows
+   * it. The two flags above answer "may this ROLE"; this answers "may anyone,
+   * at this moment" — the commands' second gate. They are separate because
+   * the two refusals have different answers and different remedies, and a
+   * surface that reads one as the other tells a Controller their role is at
+   * fault for a locked period.
+   */
+  readonly periodBlocks: string | null;
   /**
    * Stated on every read: the memo is not part of the close it describes.
    */
@@ -195,10 +215,18 @@ export function getMemo(ws: Workspace, ctx: ServiceContext): MemoOut {
         ? null
         : issued.closeStateHash !== closeStateHashFor(position),
     withheldDraftCount,
-    // Offer and allow read the SAME permission keys the commands authorize
-    // against, so a control is never shown to someone the service refuses.
+    withheldNote:
+      withheldDraftCount === 0
+        ? null
+        : `${withheldDraftCount} unissued ${withheldDraftCount === 1 ? "draft is" : "drafts are"} withheld from this role. A draft is internal management working paper. Nothing sealed is withheld from you: an issued version is shown with its text in full, and a superseded version with its title and content hash, not its text.`,
+    // Permission only: these two say whether the ROLE may act. The period is
+    // the commands' second gate and travels separately, because the two
+    // refusals have different answers and one must not be read as the other.
     canDraft: hasPermission(ctx.user, MEMO_DRAFT_PERMISSION),
     canIssue: hasPermission(ctx.user, MEMO_ISSUE_PERMISSION),
+    periodBlocks: mutationAllowed(ws.period.state)
+      ? null
+      : "The period is locked; the memo cannot be drafted or issued while it stands.",
     notPartOfClose:
       "The memo reports on the close; it is not one of the close's own artifacts. It is not an audit request, it is excluded from the reproducibility check, and nothing in it feeds a rule result, a blocker or the readiness figure.",
   };

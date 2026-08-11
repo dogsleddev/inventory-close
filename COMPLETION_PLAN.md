@@ -689,8 +689,11 @@ and that is what the assertion moved to.
 
 **`overview.test.tsx` was a fourth `vi.mock('../app/actions')` factory nobody had recorded**, and it
 omitted `recordSignOff` while rendering the screen that imports it. An omitted export in one of
-these factories is `undefined` rather than an error, so it passes until something clicks the
-control. All four factories now list every action.
+these factories is **not** `undefined` — vitest's factory proxy THROWS ``No "<name>" export is
+defined`` on the first read — so the omission is lazy rather than silent and survives until a
+test reaches the control. All four factories now list every action, and
+`test/actions-mock.test.ts` fails if one stops: the comment was the enforcement before, and a
+comment is not one.
 
 **Reusable pieces Stage F left behind:** `ClaimPanel` and `FactRows` moved into
 `apps/web/components/kit.tsx` — each was about to be copied a third time, the same threshold that

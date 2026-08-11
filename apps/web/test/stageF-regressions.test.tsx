@@ -5,6 +5,16 @@ import { join } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { userByRole } from "@icg/data";
+import {
+  COST_COMPONENT_TYPES,
+  PHYSICAL_CUSTODY_TYPES,
+  type PhysicalCustodyType,
+} from "@icg/domain";
+import { CUSTODY_LABELS } from "../lib/server/inventory-list-view";
+import { buildCostingData } from "../lib/server/costing-view";
+import { buildCustodyData } from "../lib/server/custody-view";
+import { buildInventoryListData } from "../lib/server/inventory-list-view";
+import { formatBpsExact, formatCents } from "../lib/format";
 import { CloseMemoScreen } from "../components/CloseMemoScreen";
 import { MethodologyScreen } from "../components/MethodologyScreen";
 import { NAV_SECTIONS } from "../lib/nav";
@@ -12,7 +22,8 @@ import { buildShellData } from "../lib/server/data";
 import { buildCloseMemoData } from "../lib/server/memo-view";
 import { buildMethodologyData } from "../lib/server/methodology-view";
 import { getCommands, getWorkspace, makeContext } from "../lib/server/workspace";
-import { getMethodology } from "@icg/services";
+import { getMemo, getMethodology } from "@icg/services";
+import { buildCsv } from "../lib/server/export-csv";
 import type { WorkflowActionResult } from "../lib/view-model";
 
 /**
@@ -144,9 +155,13 @@ describe("the methodology screen renders what the service derived", () => {
     );
     expect(view.readiness.categories.length).toBeGreaterThan(0);
     for (const c of view.readiness.categories) {
-      const score = (c.scoreHundredths / 100).toFixed(2);
+      // The app's own formatter, not an inline copy of it. The inline copy
+      // that used to be here is why a duplicate helper in the view module
+      // survived review: the test agreed with the duplicate, not with the app.
       expect(
-        screen.getByRole("heading", { name: `${c.label} — ${score}%` }),
+        screen.getByRole("heading", {
+          name: `${c.label} — ${formatBpsExact(c.scoreHundredths)}`,
+        }),
         c.key,
       ).toBeTruthy();
     }
@@ -185,6 +200,223 @@ describe("the methodology screen renders what the service derived", () => {
       "utf8",
     );
     expect(viewSource).not.toMatch(/81\.4|8142|\$4,800,000|12,450/);
+  });
+
+  it("spells no category count into its prose either", () => {
+    // The sibling above scans for DIGITS, which is why "Eight weighted
+    // categories" survived it. A count spelled as a word is the same
+    // transcription: it goes stale the moment the policy gains a category,
+    // and nothing derives it.
+    //
+    // Scoped to these two files on purpose — OverviewScreen.tsx:143's "Eight
+    // weighted close areas" is stage-05 copy pinned by a test NAME, and is
+    // not this page's claim to make.
+    const SPELLED_COUNT =
+      /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(weighted\s+categor|weights\b|categories\b)/i;
+    for (const rel of [
+      ["..", "components", "MethodologyScreen.tsx"],
+      ["..", "lib", "server", "methodology-view.ts"],
+    ]) {
+      const text = readFileSync(join(__dirname, ...rel), "utf8");
+      expect(SPELLED_COUNT.test(text), `${rel.at(-1)} spells a category count`).toBe(false);
+    }
+  });
+
+  it("heads the penalty column with the quantity its cells carry", () => {
+    const view = getMethodology(getWorkspace(), makeContext(user(), "T-F"));
+    render(
+      <MethodologyScreen
+        shell={buildShellData(user(), "T-F")}
+        data={buildMethodologyData(user(), "T-F")}
+        setRoleAction={noopRole}
+      />,
+    );
+    // Exact-name matching, so "Effect on the ledger" on the reconciliation
+    // table is correctly not counted here.
+    expect(
+      screen.getAllByRole("columnheader", { name: "Deduction" }),
+    ).toHaveLength(view.readiness.categories.length);
+    expect(screen.queryAllByRole("columnheader", { name: "Effect" })).toHaveLength(0);
+
+    for (const c of view.readiness.categories) {
+      for (const t of c.terms) {
+        const cell = t.penaltyPercent === 0 ? "No deduction" : `−${t.penaltyPercent} points`;
+        expect(screen.getAllByText(cell).length, `${c.key}: ${t.rule}`).toBeGreaterThan(0);
+      }
+    }
+
+    // The teeth: a category scoring below full while deducting nothing is
+    // exactly why the column cannot be headed "Effect" — those cells read
+    // "No deduction" and the category is still dragging the total down.
+    const silentDrag = view.readiness.categories.filter(
+      (c) => c.scoreHundredths < 10000 && c.terms.every((t) => t.penaltyPercent === 0),
+    );
+    expect(
+      silentDrag.length,
+      "no category scores below full without a deduction; the header question is moot",
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("the two new export files carry the values their labels name", () => {
+  /**
+   * Stage F added ~318 lines of export builder and no assertion on a single
+   * value in either file. Row counts, provenance strings and quoting are all
+   * invariant under a transposition, so swapping two figures would have
+   * shipped. These loops drive from the SERVICE, never from literals — a
+   * literal here would duplicate the baseline `no-hardcoded-totals` exists to
+   * keep out of the app, and would pass a swap that moved a figure the file
+   * also carries elsewhere.
+   */
+  const csv = (table: "methodology" | "close-memo") =>
+    buildCsv(user(), table, "T-F-CSV").body;
+
+  /** The value in the cell to the right of `label`, on the row that heads it. */
+  const valueFor = (body: string, label: string): string | null => {
+    const line = body.split("\r\n").find((l) => l.startsWith(`"${label}",`));
+    if (line === undefined) return null;
+    return line.split('","')[1]?.replace(/"$/, "") ?? null;
+  };
+
+  it("resolves every reconciliation cell in the methodology file to its service field", () => {
+    const m = getMethodology(getWorkspace(), makeContext(user(), "T-F-CSV"));
+    const body = csv("methodology");
+    const bridge: ReadonlyArray<readonly [string, string]> = [
+      ["Subledger", formatCents(m.reconciliation.subledgerCents)],
+      ["Gross general ledger", formatCents(m.reconciliation.grossGlCents)],
+      ["Difference", formatCents(m.reconciliation.differenceCents)],
+      ["Unexplained", formatCents(m.reconciliation.unexplainedCents)],
+    ];
+    for (const [label, expected] of bridge) {
+      expect(valueFor(body, label), `${label} in the methodology file`).toBe(expected);
+    }
+    // A transposition is only visible where two values differ, so the loop is
+    // only meaningful while they do.
+    const values = bridge.map(([, v]) => v);
+    expect(new Set(values).size, "two bridge figures coincide; a swap would be invisible").toBe(
+      values.length,
+    );
+  });
+
+  it("keeps the readiness figure numeric and names its unit in the label", () => {
+    const m = getMethodology(getWorkspace(), makeContext(user(), "T-F-CSV"));
+    const body = csv("methodology");
+    // The cell sits under a "Weighted contribution" header and is not one, so
+    // the unit has to travel with it — but as a label, because the bare
+    // integer is what makes the division checkable in a spreadsheet.
+    const line = body.split("\r\n").find((l) => l.startsWith('"Close readiness'));
+    expect(line, "no close-readiness row in the methodology file").toBeDefined();
+    expect(line!).toMatch(/\((basis points|bps)\)/);
+    expect(line!).toContain(`"${m.readiness.totalBasisPoints}"`);
+  });
+
+  it("resolves the close-memo position cells to the service that derived them", () => {
+    const memo = getMemo(getWorkspace(), makeContext(user(), "T-F-CSV"));
+    const body = csv("close-memo");
+    // `Exceptions open` and `Blockers` are BOTH 7 at this baseline, so
+    // transposing those two is invisible to any assertion of this shape.
+    // They are checked here for presence; the pairs below are what a swap
+    // would actually break.
+    const cells: ReadonlyArray<readonly [string, string]> = [
+      ["Inventory subledger", formatCents(memo.position.subledgerCents)],
+      [
+        "Gross inventory in the general ledger",
+        formatCents(memo.position.grossGlCents),
+      ],
+      ["Difference", formatCents(memo.position.differenceCents)],
+      ["Blocker exposure", formatCents(memo.position.blockerExposureCents)],
+      ["Close readiness (basis points)", String(memo.position.readinessBps)],
+    ];
+    for (const [label, expected] of cells) {
+      expect(valueFor(body, label), `${label} in the close-memo file`).toBe(expected);
+    }
+    const values = cells.map(([, v]) => v);
+    expect(new Set(values).size, "two position figures coincide").toBe(values.length);
+  });
+
+  it("emits every section heading as a boundary the splitter can find", () => {
+    // Copied byte-for-byte from stageE-regressions.test.tsx — the character
+    // class contains an em dash, and substituting a hyphen silently narrows
+    // it so the assertion passes without testing anything.
+    const boundary = /\r\n"[A-Z][A-Z ()/—-]{6,}"\r\n/g;
+    for (const table of ["methodology", "close-memo"] as const) {
+      const found = [...csv(table).matchAll(boundary)].length;
+      expect(found, `${table} emitted no section boundary the splitter recognises`).toBeGreaterThan(
+        0,
+      );
+    }
+  });
+});
+
+describe("one enum value, one rendered string, wherever a screen names it", () => {
+  /**
+   * Screens only. Every CSV export deliberately carries the canonical enum
+   * value (export-csv.ts passes `custodyType` through untouched), because an
+   * export is where the canonical value has to survive. Adding the exporters
+   * here would not find a defect, it would demand one.
+   */
+  it("renders every physical custody type the same way on every screen that names it", () => {
+    const u = user();
+    const methodology = buildMethodologyData(u, "T-F-LABELS");
+    const custody = buildCustodyData(u, "T-F-LABELS");
+    const inventory = buildInventoryListData(u, {}, "T-F-LABELS");
+    expect(methodology.interpretations, "the register is restricted").not.toBeNull();
+    expect(custody.custody, "the custody tab is restricted").not.toBeNull();
+
+    // The vocabulary itself is not pinned — renaming a label in CUSTODY_LABELS
+    // must stay green. What is pinned is that every screen speaks it.
+    const vocabulary = new Set(PHYSICAL_CUSTODY_TYPES.map((t) => CUSTODY_LABELS[t]));
+
+    // The register's SUBJECT column is the surface that was wrong: it routed
+    // custody types through the classification humanizer, so one row read
+    // "Repair Rma Hold" in the subject and "Repair / RMA hold" in the answer.
+    const registerRows = methodology.interpretations!.rows.filter((r) =>
+      r.id.startsWith("CUSTODY_HOLDER:"),
+    );
+    expect(registerRows, "the register contributed no custody rows").toHaveLength(
+      PHYSICAL_CUSTODY_TYPES.length,
+    );
+    for (const row of registerRows) {
+      const type = row.id.slice("CUSTODY_HOLDER:".length) as PhysicalCustodyType;
+      expect(row.subject, `${type} in the register's subject column`).toBe(
+        CUSTODY_LABELS[type],
+      );
+    }
+
+    // ...and no other screen may invent a rendering outside that vocabulary.
+    const elsewhere = [
+      ...custody.custody!.rows.map((r) => r.custody),
+      ...inventory.rows.map((r) => r.custody),
+    ];
+    expect(elsewhere.length, "no screen contributed a custody label").toBeGreaterThan(0);
+    for (const label of elsewhere) {
+      expect(vocabulary, `"${label}" is a custody rendering no other screen uses`).toContain(
+        label,
+      );
+    }
+  });
+
+  it("renders every cost component the same way on the register and the cost stack", () => {
+    const u = user();
+    const methodology = buildMethodologyData(u, "T-F-LABELS");
+    const costing = buildCostingData(u, "T-F-LABELS");
+
+    const fromRegister = new Map<string, string>();
+    expect(methodology.interpretations, "the register is restricted").not.toBeNull();
+    expect(costing.stack, "the cost stack is restricted").not.toBeNull();
+    for (const row of methodology.interpretations!.rows) {
+      const [dimension, type] = row.id.split(":");
+      if (dimension !== "COST_BEHAVIOR" || type === undefined) continue;
+      fromRegister.set(type, row.subject);
+    }
+    expect(fromRegister.size, "the register contributed no cost-component rows").toBe(
+      COST_COMPONENT_TYPES.length,
+    );
+
+    const onStack = new Set(costing.stack!.componentColumns);
+    for (const [, label] of fromRegister) {
+      expect(onStack, `${label} is not the label the cost stack uses`).toContain(label);
+    }
   });
 });
 
@@ -238,12 +470,12 @@ describe("the new sections are wired the way the shell expects", () => {
  * assert on a workspace with no draft in it. The reset at the end puts it
  * back.
  */
-describe("a refused issue keeps the note the user wrote", () => {
+describe("the issue note survives a refusal and clears on success", () => {
   afterAll(() => {
     getCommands().resetDemo(makeContext(user(), "T-F-RESET"));
   });
 
-  it("clears the note on success and keeps it on refusal", async () => {
+  it("keeps the note the user wrote when the issue is refused", async () => {
     getCommands().saveMemoDraft(makeContext(user(), "T-F-SEED"), {
       title: "FY2026 Inventory Close Memo",
       body: "Seeded so a version can be issued.",
@@ -277,5 +509,81 @@ describe("a refused issue keeps the note the user wrote", () => {
     // The note survives, because the clear runs only on success. Moving that
     // clear outside the ok branch is what this assertion catches.
     expect((note as HTMLInputElement).value).toBe("Reviewed with the CFO.");
+  });
+
+  it("clears the note when the issue succeeds", async () => {
+    // The other half of the contract. One branch alone cannot distinguish a
+    // conditional clear from an absent one: without this, deleting the
+    // `() => setIssueNote("")` argument entirely leaves the suite green.
+    getCommands().saveMemoDraft(makeContext(user(), "T-F-SEED-OK"), {
+      title: "FY2026 Inventory Close Memo",
+      body: "Seeded so a version can be issued.",
+    });
+    const person = userEvent.setup();
+    const succeed = vi.fn(
+      async (): Promise<WorkflowActionResult> => ({
+        ok: true,
+        message: "Version issued.",
+        unmet: [],
+      }),
+    );
+    render(
+      <CloseMemoScreen
+        shell={buildShellData(user(), "T-F")}
+        data={buildCloseMemoData(user(), "T-F")}
+        saveDraftAction={ok}
+        issueVersionAction={succeed}
+        setRoleAction={noopRole}
+      />,
+    );
+
+    const note = screen.getByLabelText("NOTE FOR THE AUDIT TRAIL (OPTIONAL)");
+    await person.type(note, "Reviewed with the CFO.");
+    await person.click(screen.getByRole("button", { name: "Issue this version" }));
+
+    expect(succeed).toHaveBeenCalledWith({ note: "Reviewed with the CFO." });
+    expect((await screen.findByRole("status")).textContent).toContain("Version issued.");
+    expect((note as HTMLInputElement).value).toBe("");
+  });
+
+  it("will not issue what is not on screen, and says why", async () => {
+    getCommands().saveMemoDraft(makeContext(user(), "T-F-SEED-DIRTY"), {
+      title: "FY2026 Inventory Close Memo",
+      body: "The saved draft of record.",
+    });
+    const person = userEvent.setup();
+    const issue = vi.fn(
+      async (): Promise<WorkflowActionResult> => ({ ok: true, message: "x", unmet: [] }),
+    );
+    render(
+      <CloseMemoScreen
+        shell={buildShellData(user(), "T-F")}
+        data={buildCloseMemoData(user(), "T-F")}
+        saveDraftAction={ok}
+        issueVersionAction={issue}
+        setRoleAction={noopRole}
+      />,
+    );
+
+    const button = () => screen.getByRole("button", { name: "Issue this version" });
+    expect((button() as HTMLButtonElement).disabled).toBe(false);
+
+    // Editing the BODY away from the draft of record.
+    const body = screen.getByLabelText("MEMO");
+    await person.type(body, " and an unsaved afterthought");
+    expect((button() as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/unsaved changes/)).toBeTruthy();
+    await person.click(button());
+    expect(issue, "issuing a draft the reader is not looking at").not.toHaveBeenCalled();
+
+    // Typing it back — not saving: a fake saveDraftAction never writes the
+    // workspace, so re-enabling has to come from the comparison itself.
+    await person.clear(body);
+    await person.type(body, "The saved draft of record.");
+    expect((button() as HTMLButtonElement).disabled).toBe(false);
+
+    // ...and the TITLE is half of what gets sealed, so it counts too.
+    await person.type(screen.getByLabelText("TITLE"), " (revised)");
+    expect((button() as HTMLButtonElement).disabled).toBe(true);
   });
 });

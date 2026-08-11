@@ -1,5 +1,5 @@
 import type { DemoUser } from "@icg/data";
-import type { PhysicalCustodyType } from "@icg/domain";
+import type { CostComponentType, PhysicalCustodyType } from "@icg/domain";
 import { getMethodology } from "@icg/services";
 import { formatBpsExact, formatCents } from "../format";
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "../view-model";
 import { attempt } from "./data";
 import { classificationLabel, holderLabel, titleCase } from "./humanize";
+import { COMPONENT_LABELS } from "./costing-view";
 import { CUSTODY_LABELS } from "./inventory-list-view";
 import { getWorkspace, makeContext, roleLabel } from "./workspace";
 
@@ -61,13 +62,27 @@ const COGS_LABELS: Readonly<Record<string, string>> = {
 const units = (n: number): string => n.toLocaleString("en-US");
 
 /**
- * Enum-shaped subjects (DIRECT_MATERIAL, COMPANY_WAREHOUSE) get the same
- * humanizing every other screen gives them; anything already written as a
- * phrase is left alone, because title-casing it would render "Months of
- * supply" as "Months Of Supply" and read as a machine's idea of a heading.
+ * An enum-shaped subject is rendered by the map its OWN dimension uses, not by
+ * whichever helper this module happened to import.
+ *
+ * Title-casing is right only for classifications. A custody type run through
+ * it comes out "Repair Rma Hold" beside the answer column of the same row
+ * reading "Repair / RMA hold" — one enum, one screen, two vocabularies, which
+ * is precisely what this page exists to spare a reader. Anything already
+ * written as a phrase is left alone, because title-casing "Months of supply"
+ * would render a machine's idea of a heading.
  */
-const subjectLabel = (subject: string): string =>
-  /^[A-Z0-9_]+$/.test(subject) ? classificationLabel(subject) : subject;
+function subjectLabel(dimension: string, subject: string): string {
+  if (!/^[A-Z0-9_]+$/.test(subject)) return subject;
+  switch (dimension) {
+    case "CUSTODY_HOLDER":
+      return CUSTODY_LABELS[subject as PhysicalCustodyType] ?? subject;
+    case "COST_BEHAVIOR":
+      return COMPONENT_LABELS[subject as CostComponentType] ?? subject;
+    default:
+      return classificationLabel(subject);
+  }
+}
 
 /**
  * The register's answers, in the same words the tabs beside it use.
@@ -93,9 +108,6 @@ function answerLabel(dimension: string, answer: string): string {
       return answer;
   }
 }
-
-/** Hundredths of a percent as a percentage, at the scale scores are set. */
-const score = (hundredths: number): string => `${(hundredths / 100).toFixed(2)}%`;
 
 export function buildMethodologyData(
   user: DemoUser,
@@ -128,7 +140,7 @@ export function buildMethodologyData(
     key: c.key,
     label: c.label,
     weight: `${c.weightPercent}%`,
-    score: score(c.scoreHundredths),
+    score: formatBpsExact(c.scoreHundredths),
     basis: c.basis,
     contribution: units(c.weightedContribution),
     terms: c.terms.map(
@@ -239,7 +251,7 @@ export function buildMethodologyData(
     (i): InterpretationRowView => ({
       id: i.id,
       dimension: DIMENSION_LABELS[i.dimension] ?? i.dimension,
-      subject: subjectLabel(i.subject),
+      subject: subjectLabel(i.dimension, i.subject),
       answer: answerLabel(i.dimension, i.answer),
       basis: i.basis,
       heldIn: i.heldIn,
@@ -283,7 +295,7 @@ export function buildMethodologyData(
           : "The weights do not total 100, so the total below is not on the basis-point scale it claims.",
         detail: weightsSumTo100
           ? "This is what makes the last step a division rather than a normalisation. It is measured here rather than assumed, because a policy edit that moved one weight would leave every figure looking exactly as plausible as it does now."
-          : `The eight weights total ${m.readiness.weightPercentTotal}%. Dividing the weighted sum by 100 no longer yields basis points, and the readiness figure on every other screen is on a scale nobody chose.`,
+          : `The ${m.readiness.categories.length} weights total ${m.readiness.weightPercentTotal}%. Dividing the weighted sum by 100 no longer yields basis points, and the readiness figure on every other screen is on a scale nobody chose.`,
       },
       note: "Readiness is a management workflow metric, not audit assurance. It measures how much of the close's own work is finished, and it is derived from close state through the tier rules above — resolve an exception and the score moves. It says nothing about whether the balance is fairly stated.",
     },

@@ -80,6 +80,14 @@ export function CloseMemoScreen({
     });
   };
 
+  // Issuing seals the last SAVED draft, not what is on screen. The title is
+  // part of that comparison because the seal hashes { title, body } — a
+  // body-only guard would be the same defect in a smaller box.
+  const unsavedEdits =
+    data.canDraft &&
+    data.draft !== null &&
+    (title !== data.draft.title || body !== data.draft.body);
+
   return (
     <AppShell
       shell={shell}
@@ -106,7 +114,7 @@ export function CloseMemoScreen({
             <ExportCsvLink
               table="close-memo"
               label="the memo and its position"
-              scopeNote="The issued text, the version history and the close position each version was sealed against."
+              scopeNote="The issued text, the version history and the close position as it stands now — a sealed version carries the hash of the close it was sealed against, not that position itself."
             />
           )}
         </div>
@@ -138,7 +146,7 @@ export function CloseMemoScreen({
                 <>
                   <StatStrip
                     title="The close this memo describes"
-                    sub="Read from the close on every render. No figure below is typed into the memo."
+                    sub="Read from the close on every render, never read back from the memo."
                     stats={data.positionStats}
                   />
 
@@ -250,11 +258,19 @@ export function CloseMemoScreen({
                           <button
                             type="button"
                             className="icg-btn icg-btn--primary"
-                            disabled={pending || title.trim() === "" || body.trim() === ""}
+                            disabled={
+                              pending ||
+                              data.periodBlocks !== null ||
+                              title.trim() === "" ||
+                              body.trim() === ""
+                            }
                             onClick={() => run(() => saveDraftAction({ title, body }))}
                           >
                             {pending ? "Saving…" : "Save draft"}
                           </button>
+                          {data.periodBlocks !== null ? (
+                            <span className="icg-btn-reason">{data.periodBlocks}</span>
+                          ) : null}
                           <button
                             type="button"
                             className="icg-linkbtn"
@@ -269,9 +285,11 @@ export function CloseMemoScreen({
                           style={{ fontSize: "10.5px", lineHeight: 1.5, margin: 0 }}
                         >
                           Starting from the close position fills the body with the
-                          figures above and leaves the assessment blank. It is a
-                          starting point, not a conclusion — this product never writes
-                          one.
+                          figures above and leaves the assessment blank. Figures
+                          written into the body are the close as it stands now; once
+                          a version is issued they are sealed with it and stop
+                          moving. It is a starting point, not a conclusion — this
+                          product never writes one.
                         </p>
                       </div>
                     </Panel>
@@ -312,11 +330,18 @@ export function CloseMemoScreen({
                           <button
                             type="button"
                             className={
-                              data.draft === null
+                              data.draft === null ||
+                              data.periodBlocks !== null ||
+                              unsavedEdits
                                 ? "icg-btn icg-btn--disabled"
                                 : "icg-btn icg-btn--primary"
                             }
-                            disabled={pending || data.draft === null}
+                            disabled={
+                              pending ||
+                              data.periodBlocks !== null ||
+                              data.draft === null ||
+                              unsavedEdits
+                            }
                             onClick={() =>
                               run(
                                 () => issueVersionAction({ note: issueNote }),
@@ -326,10 +351,16 @@ export function CloseMemoScreen({
                           >
                             {pending ? "Issuing…" : "Issue this version"}
                           </button>
+                          {/* Period first: under a lock, "there is no working
+                              draft" invites a save that is also refused. */}
                           <span className="icg-btn-reason">
-                            {data.draft === null
-                              ? "There is no working draft to issue."
-                              : "An issued version is sealed and can only be superseded."}
+                            {data.periodBlocks !== null
+                              ? data.periodBlocks
+                              : data.draft === null
+                                ? "There is no working draft to issue."
+                                : unsavedEdits
+                                  ? "There are unsaved changes. Issuing seals the last saved draft, so save first."
+                                  : "An issued version is sealed and can only be superseded."}
                           </span>
                         </div>
                       </div>

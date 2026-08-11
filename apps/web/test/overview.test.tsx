@@ -18,11 +18,39 @@ vi.mock("../app/actions", () => ({
   setRole: vi.fn(async () => {}),
   askGaurd: async (question: string, scope: { exceptionId?: string; serial?: string }) =>
     askGaurdData(userByRole("CONTROLLER"), question, scope, "T-ASK"),
-  // `OverviewScreen` imports `recordSignOff`, and a factory that omits an
-  // export replaces it with `undefined` rather than failing — silently, until
-  // something clicks the control. Listed here so the omission cannot become a
-  // hole the way it did before.
+  // A factory that omits an export does NOT yield `undefined`: vitest wraps
+  // the factory in a proxy that THROWS `No "<name>" export is defined` the
+  // first time anything reads the missing name. So the omission is lazy, not
+  // silent — it survives exactly as long as no test reaches the control, and
+  // then fails loudly. The stubs below are throwing on purpose: an
+  // `async () => ({})` stub would buy exhaustiveness by converting that loud
+  // failure into a silent pass, rendering a result view whose every field is
+  // undefined.
+  //
+  // `test/actions-mock.test.ts` is what keeps this list complete; this comment
+  // is not an enforcement.
   recordSignOff: vi.fn(async () => ({ ok: true, message: "ok", unmet: [] })),
+  resetDemo: vi.fn(async () => {
+    throw new Error("resetDemo is not wired in overview.test.tsx");
+  }),
+  reproduceClose: vi.fn(async () => {
+    throw new Error("reproduceClose is not wired in overview.test.tsx");
+  }),
+  recordConclusion: vi.fn(async () => {
+    throw new Error("recordConclusion is not wired in overview.test.tsx");
+  }),
+  requestEvidence: vi.fn(async () => {
+    throw new Error("requestEvidence is not wired in overview.test.tsx");
+  }),
+  submitEvidence: vi.fn(async () => {
+    throw new Error("submitEvidence is not wired in overview.test.tsx");
+  }),
+  saveMemoDraft: vi.fn(async () => {
+    throw new Error("saveMemoDraft is not wired in overview.test.tsx");
+  }),
+  issueMemoVersion: vi.fn(async () => {
+    throw new Error("issueMemoVersion is not wired in overview.test.tsx");
+  }),
 }));
 
 function services() {

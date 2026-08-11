@@ -50,13 +50,23 @@ vi.mock("../app/actions", () => ({
     note: string;
   }) => runSubmitEvidence(userByRole(actingRole), "T-ASK", input),
   recordSignOff: async () => runSignOff(userByRole(actingRole), "T-ASK"),
-  // Stage F. An omitted export here is `undefined` rather than an error, so a
-  // screen importing it fails only when something calls it — the factory has
-  // to list every action the module exports.
+  // Stage F. An omitted export here does NOT become `undefined`: vitest's
+  // factory proxy THROWS `No "<name>" export is defined` the first time
+  // anything reads it. The omission is therefore lazy rather than silent, and
+  // survives only until a test reaches the control. `test/actions-mock.test.ts`
+  // is what keeps this list complete — a comment is not an enforcement.
   saveMemoDraft: async (input: { title: string; body: string }) =>
     runSaveMemoDraft(userByRole(actingRole), "T-ASK", input),
   issueMemoVersion: async (input: { note: string }) =>
     runIssueMemoVersion(userByRole(actingRole), "T-ASK", input),
+  // Not exercised here. Throwing rather than returning a benign shape, so a
+  // future test that reaches one of these says so instead of quietly passing.
+  resetDemo: async () => {
+    throw new Error("resetDemo is not wired in ask-gaurd.test.tsx");
+  },
+  reproduceClose: async () => {
+    throw new Error("reproduceClose is not wired in ask-gaurd.test.tsx");
+  },
 }));
 
 const noopRole = vi.fn(async () => {});

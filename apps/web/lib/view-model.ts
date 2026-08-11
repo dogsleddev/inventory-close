@@ -1505,6 +1505,8 @@ export interface CloseMemoData {
   readonly withheldNote: string | null;
   readonly canDraft: boolean;
   readonly canIssue: boolean;
+  /** Why nobody may write the memo now, or null. Separate from the role flags. */
+  readonly periodBlocks: string | null;
   /** Why the memo is not part of the close it describes. */
   readonly notPartOfClose: string;
   readonly note: string;

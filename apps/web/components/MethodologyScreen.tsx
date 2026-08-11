@@ -105,7 +105,7 @@ export function MethodologyScreen({
                 <>
                   <StatStrip
                     title="How close readiness is derived"
-                    sub="Eight weighted categories, each scored from close state through a documented tier rule."
+                    sub="Every category is scored from close state through the rule its own panel documents."
                     stats={data.readiness.stats}
                   />
                   {data.readiness.divergenceNote !== null ? (
@@ -144,7 +144,7 @@ export function MethodologyScreen({
                             <tr>
                               <th scope="col">Term</th>
                               <th scope="col">What the close state was</th>
-                              <th scope="col">Effect</th>
+                              <th scope="col">Deduction</th>
                             </tr>
                           </thead>
                           <tbody>

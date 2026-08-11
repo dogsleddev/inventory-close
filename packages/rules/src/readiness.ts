@@ -154,7 +154,7 @@ function deriveScores(
   scores.set("CUTOFF", {
     score: clamp(100 - p.perOpenCutoffException * openCutoff.length),
     basis:
-      "Starts at 100 and loses a fixed amount for EACH open cutoff finding. Cutoff scales for the same reason count does, at twice the rate: a period-attribution question is unresolved in both directions until it is answered.",
+      "Starts at 100 and loses a fixed amount for EACH open cutoff finding. Cutoff scales for the same reason count does: a period-attribution question is unresolved in both directions until it is answered.",
     terms: [
       {
         rule: `Each open CUT- exception: −${p.perOpenCutoffException} points`,
@@ -189,7 +189,7 @@ function deriveScores(
   scores.set("THIRD_PARTY", {
     score: clamp(100 - (openThirdParty.length > 0 ? p.outstandingThirdPartyConfirmation : 0)),
     basis:
-      "A tier on the third-party confirmation control alone. It carries the heaviest single penalty in the policy because a custodian's confirmation is the only evidence the company cannot produce for itself.",
+      "A tier on the third-party confirmation control alone, because a custodian's confirmation is the only evidence the company cannot produce for itself.",
     terms: [
       tier(
         `Any outstanding TPI-CONF-001 confirmation: −${p.outstandingThirdPartyConfirmation} points, once`,
@@ -231,7 +231,9 @@ function deriveScores(
         observed:
           exceptions.length === 0
             ? "No exception was raised."
-            : `${resolvedCount} of ${exceptions.length} resolved; ${open.length} open: ${ids(open).join(", ")}`,
+            : open.length === 0
+              ? `${resolvedCount} of ${exceptions.length} resolved; none open.`
+              : `${resolvedCount} of ${exceptions.length} resolved; ${open.length} open: ${ids(open).join(", ")}`,
         penaltyPercent: 0,
         drivingExceptionIds: ids(open),
       },
@@ -332,7 +334,7 @@ export function explainReadiness(
     weightedSum,
     totalBasisPoints: Math.floor((weightedSum + 50) / 100),
     roundingRule:
-      "Each category's score in hundredths of a percent is multiplied by its integer weight and the products are summed exactly. The weights total 100, so dividing by 100 gives basis points; the division rounds half up.",
+      "Each category's score in hundredths of a percent is multiplied by its integer weight and the products are summed exactly. The sum is then divided by 100, rounding half up; that division yields basis points only if the weights total 100, which is measured rather than assumed.",
     policyVersion: policy.version,
     weightPercentTotal: policy.readinessCategories.reduce(
       (sum, c) => sum + c.weightPercent,

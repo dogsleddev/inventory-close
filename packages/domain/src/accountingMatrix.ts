@@ -153,7 +153,7 @@ export const INVENTORY_ACCOUNTING_MATRIX: Readonly<
       "Company-owned finished goods. Units sitting at a customer site are recorded as company-owned installed stock rather than as a sale, so the assertion covers them too — and an open cutoff or rights-and-obligations exception over such a unit is what puts that assertion under review.",
     cogsRelief: "NOT_EXPECTED",
     cogsBasis:
-      "A unit on the year-end listing has not been derecognized, and a company-owned unit at a customer site is installed stock rather than a sale. No relief would be expected against either.",
+      "The classification does not describe sold stock: a unit on the year-end listing is carried as on hand, and a company-owned unit at a customer site is installed stock rather than a sale. That is not a claim that every unit here belongs on the book — a unit that was fulfilled and whose cost should have left is carried in this classification until it does, and whether that has happened is answered per chain by O2C-CHAIN-001 and never from this row.",
     establishingRecord:
       "The item receipt that brought the unit onto the book, and — where it sits at a customer — the installation record placing it there.",
   },
@@ -165,7 +165,7 @@ export const INVENTORY_ACCOUNTING_MATRIX: Readonly<
       "Goods the company owns while they are with a carrier. The assertion depends on which way the unit is moving and on when title passes under the governing contract, which is why this classification carries both inbound and outbound stock and why a missing contract provision disputes the assertion rather than merely delaying it.",
     cogsRelief: "IN_QUESTION",
     cogsBasis:
-      "The outbound half of this classification is stock that has been fulfilled but is still carried on the book, so whether its cost has left the book is a live question. It is answered per chain by O2C-CHAIN-001 and never from this row.",
+      "The outbound half of this classification is stock in transit out of the company's own custody, so whether its cost has left the book is a live question rather than a settled one. It is answered per chain by O2C-CHAIN-001, which treats relief as a finding only where an item fulfillment exists and reports it as not applicable before that — and never from this row.",
     establishingRecord:
       "The carrier shipment trail for the unit, together with the contract provision that governs when title passes.",
   },

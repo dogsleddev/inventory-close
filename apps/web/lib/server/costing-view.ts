@@ -1,4 +1,5 @@
 import type { DemoUser } from "@icg/data";
+import type { CostComponentType } from "@icg/domain";
 import { getCostClassification, getCostStandards } from "@icg/services";
 import type {
   CogsChainRowOut,
@@ -44,7 +45,15 @@ import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
  * written as a statement of fact that happens to be true today.
  */
 
-const COMPONENT_LABELS: Readonly<Record<string, string>> = {
+/**
+ * Cost component → its display label, for every SCREEN that names one.
+ *
+ * Exported because the Methodology register names the same components: a
+ * second copy is how one screen comes to say "Direct labour" and another
+ * "Direct Labor" for one enum. Typed over `CostComponentType` so a sixth
+ * component is a compile error rather than a raw value two screens agree on.
+ */
+export const COMPONENT_LABELS: Readonly<Record<CostComponentType, string>> = {
   DIRECT_MATERIAL: "Direct material",
   DIRECT_LABOR: "Direct labour",
   MANUFACTURING_OVERHEAD: "Manufacturing overhead",
@@ -71,7 +80,8 @@ const COGS_PRESENTATION: Readonly<
   NOT_SHIPPED: { label: "Not shipped", glyph: "○", variant: "quiet" },
 };
 
-const componentLabel = (c: string): string => COMPONENT_LABELS[c] ?? c;
+const componentLabel = (c: string): string =>
+  COMPONENT_LABELS[c as CostComponentType] ?? c;
 
 function componentTotalView(t: CostComponentTotalOut): CostComponentTotalView {
   return {

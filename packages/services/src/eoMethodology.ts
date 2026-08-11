@@ -52,8 +52,19 @@ import type { Workspace } from "./workspace.js";
  * than in a fixture: an assumption a reader may disagree with should not
  * require regenerating a dataset to argue with.
  */
+export const MONTHS_OF_SUPPLY_ASSUMPTION =
+  "Demand is assumed to arrive ratably across the forecast horizon";
+
+/**
+ * Composed from the assumption rather than restating it, so the register's
+ * answer and this basis cannot drift apart: the surface READS the assumption
+ * out of here, and the sentence a reader checks it against contains the very
+ * same words.
+ */
 export const MONTHS_OF_SUPPLY_BASIS =
-  "Months of supply divides units on hand by the forecast's own monthly rate — the 12-month forecast spread evenly across its horizon. Demand is assumed to arrive ratably because the forecast records a horizon total and no monthly profile; a seasonal profile would move these figures and the close does not hold one.";
+  "Months of supply divides units on hand by the forecast's own monthly rate — the 12-month forecast spread evenly across its horizon. " +
+  MONTHS_OF_SUPPLY_ASSUMPTION +
+  " because the forecast records a horizon total and no monthly profile; a seasonal profile would move these figures and the close does not hold one.";
 
 /** Where the aging clock starts. The policy's basis, and the alternative. */
 export type AgingBasis = "LAST_MOVEMENT" | "ACQUISITION";

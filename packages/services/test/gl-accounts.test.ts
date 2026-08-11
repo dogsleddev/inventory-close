@@ -12,7 +12,7 @@ import {
 import { INVENTORY_GL_ACCOUNT_DESCRIPTIONS } from "../src/glAccounts.js";
 import {
   ACCOUNTING_CLASSIFICATIONS,
-  glAccountDescription,
+  GROSS_INVENTORY_ACCOUNT_CODES,
   glAccountForClassification,
 } from "@icg/domain";
 
@@ -126,19 +126,21 @@ describe("the four gross accounts", () => {
     }
   });
 
-  it("gives every classification an account the chart of accounts and the GL both know", () => {
+  it("maps every classification to one of the four gross inventory accounts", () => {
     // The mapping used to exist twice and this test compared the copies.
     // There is one map now (INVENTORY_ACCOUNTING_MATRIX), so that comparison
     // could only ever pass. What can still go wrong is the mapping naming an
     // account nothing else carries — a classification pointed at 1240 would
     // put its units in a bucket the GL has no balance for, and the row would
     // report a difference equal to its whole subledger.
-    const view = getGlAccountReconciliation(ws, ctx("CONTROLLER"));
-    const reported = new Set(view.accounts.map((a) => a.account));
+    //
+    // The expected set is the DOMAIN CONSTANT, never the reconciliation view:
+    // that view's rows are keyed partly by this very mapping, so asking
+    // whether the mapping's account appears among them is true by
+    // construction and cannot fail for the reason the comment above names.
     for (const classification of ACCOUNTING_CLASSIFICATIONS) {
       const account = glAccountForClassification(classification);
-      expect(glAccountDescription(account), `${classification} → ${account}`).toBeDefined();
-      expect(reported.has(account), `${classification} → ${account} has no GL row`).toBe(true);
+      expect(GROSS_INVENTORY_ACCOUNT_CODES, `${classification} → ${account}`).toContain(account);
     }
   });
 

@@ -160,6 +160,17 @@ export function runResetDemo(user: DemoUser, correlationId: string): ResetResult
     };
   }
 
+  // The period is working state too, and a reset moves it. It is not a
+  // collection, so `describeWorkingState` cannot carry it — read the state
+  // back rather than asserting where a reset lands, because `cleared` records
+  // only where the period WAS.
+  const periodPhrase = (state: string): string => state.toLowerCase().replace("_", " ");
+  const periodAfter = getQueries().getPeriod(ctx).state;
+  const periodMoved =
+    periodAfter === result.cleared.period
+      ? ""
+      : ` The period moved from ${periodPhrase(result.cleared.period)} to ${periodPhrase(periodAfter)}.`;
+
   return {
     ok: true,
     headline: `Rebuilt from ${result.datasetVersion} · run ${result.runId}`,
@@ -167,8 +178,10 @@ export function runResetDemo(user: DemoUser, correlationId: string): ResetResult
       `${result.aggregates.exceptionCount} exceptions, ${result.aggregates.blockerCount} blockers and ` +
       `${formatBpsExact(result.aggregates.closeReadinessBps)} readiness were re-derived from the seed, the rules and the scenario events. ` +
       // The SAME sentence the audit trail records, from the same helper, so
-      // the page and the log cannot describe one reset two ways.
+      // the page and the log cannot describe one reset two ways. The period
+      // is not in that helper, so it is reported on its own below.
       `Cleared ${describeWorkingState(result.cleared)}; ` +
-      `the append-only audit trail kept ${result.auditEventsRetained === 1 ? "its single event" : `all ${result.auditEventsRetained} events`}, including this reset.`,
+      `the append-only audit trail kept ${result.auditEventsRetained === 1 ? "its single event" : `all ${result.auditEventsRetained} events`}, including this reset.` +
+      periodMoved,
   };
 }

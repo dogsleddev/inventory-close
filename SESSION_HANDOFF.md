@@ -242,9 +242,14 @@ after living in the custody view and the exporter).
   a fresh workspace each time, so neither failure is catchable by the suite.
 - **Four** test files mock `../app/actions` with a factory — `close-loop`, `ask-gaurd`,
   `stage09` and `overview`. A component importing a new action fails there until the factory
-  lists it, and an omitted export is `undefined` rather than an error, so it passes until
-  something calls it. `overview.test.tsx` had been rendering the screen that imports
-  `recordSignOff` without listing it; Stage F closed that.
+  lists it. An omitted export is **not** `undefined`: vitest wraps the factory in a proxy that
+  THROWS ``No "<name>" export is defined`` the first time anything reads the missing name. The
+  omission is therefore lazy rather than silent — it survives exactly as long as no test reaches
+  that control, which is how `overview.test.tsx` rendered the screen importing `recordSignOff`
+  for four stages without failing. **`test/actions-mock.test.ts` now fails if any factory stops
+  listing every export**, and re-derives the four-file list from the tree so a fifth cannot be
+  added uncovered. The comment in each factory was the enforcement before, and a comment is not
+  one.
 - `.click()` does not flush React state in jsdom — use `userEvent`.
 - A `.tsx` test without the `// @vitest-environment jsdom` docblock fails obscurely.
 - Money figures in a CSV must be bound to their label in tests. `toContain("7")` passes on

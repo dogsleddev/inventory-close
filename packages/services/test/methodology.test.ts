@@ -13,11 +13,13 @@ import {
   createWorkspace,
   effectiveClose,
   effectiveExceptions,
+  getCostClassification,
   getMethodology,
   INTERPRETATION_CONSTANT_NAMES,
   type ServiceContext,
   type Workspace,
 } from "../src/index.js";
+import { MONTHS_OF_SUPPLY_BASIS } from "../src/eoMethodology.js";
 
 /**
  * Stage F — the methodology projection.
@@ -58,6 +60,73 @@ const explain = (w: Workspace) =>
   );
 
 describe("the explanation and the computation are one derivation", () => {
+  it("states no policy-dependent fact in prose that does not move with the policy", () => {
+    // An ALTERNATE policy object — POLICY_V1 is never mutated; it is the
+    // policy the locked baseline was scored against.
+    const alt = {
+      ...POLICY_V1,
+      readinessCategories: POLICY_V1.readinessCategories.map((c, i) =>
+        i === 0 ? { ...c, weightPercent: c.weightPercent + 5 } : c,
+      ),
+    };
+    const base = explain(ws);
+    const moved = explainReadiness(
+      effectiveExceptions(ws),
+      ws.close.reconciliation,
+      ws.close.proposedAdjustments.length,
+      alt,
+    );
+    expect(base.weightPercentTotal).toBe(100);
+    expect(moved.weightPercentTotal).toBe(105);
+
+    // Load-bearing: it says WHY the two assertions below exist. If someone
+    // later branches this string inside the rules package, this fails first
+    // and names the second authored copy rather than the symptom.
+    expect(moved.roundingRule, "roundingRule is policy-invariant by design").toBe(
+      base.roundingRule,
+    );
+    // ...so it must not assert the thing the same object measures.
+    expect(moved.roundingRule).not.toMatch(/The weights total 100/);
+    expect(moved.roundingRule).toMatch(/only if the weights total 100/);
+  });
+
+  it("makes no comparative claim about another category's penalty", () => {
+    // LEXICAL, deliberately: it catches the phrasings that actually drifted
+    // here ("at twice the rate", "the heaviest single penalty"), not every
+    // comparative a future author could invent. A basis may still describe
+    // its OWN policy value freely.
+    const comparativeRate = /\b(twice|double|triple|half)\s+(the\s+)?(rate|penalty|deduction)\b/i;
+    const superlative = /\b(heaviest|largest|highest|biggest|greatest|smallest|lightest)\b/i;
+    for (const c of explain(ws).categories) {
+      expect(comparativeRate.test(c.basis), `${c.key} compares its rate to another`).toBe(false);
+      expect(superlative.test(c.basis), `${c.key} ranks its penalty against the policy`).toBe(
+        false,
+      );
+    }
+  });
+
+  it("ends every term's observed sentence, at every close state", () => {
+    // A trailing "N open: " with nothing after it reads as a list that failed
+    // to render. Driven to the fully-concluded state so the empty case of
+    // EVERY term is exercised, not only the one that drifted.
+    const concluded = createWorkspace();
+    concluded.close = {
+      ...concluded.close,
+      exceptions: concluded.close.exceptions.map((e) => ({
+        ...e,
+        status: "RESOLVED_NO_ADJUSTMENT" as const,
+      })),
+    };
+    for (const w of [ws, concluded]) {
+      for (const c of explain(w).categories) {
+        for (const t of c.terms) {
+          expect(t.observed, `${c.key}: ${t.rule}`).not.toMatch(/[:;,]\s*$/);
+          expect(t.observed.trim(), `${c.key}: ${t.rule}`).not.toBe("");
+        }
+      }
+    }
+  });
+
   it("reports the same score for every category, and the same total", () => {
     const computed = computeReadiness(
       effectiveExceptions(ws),
@@ -134,20 +203,26 @@ describe("a readiness term reports the close state, not a sentence about it", ()
 
   it("fires a tier term exactly when it has something to count", () => {
     const view = getMethodology(ws, ctx("CONTROLLER"));
-    let checked = 0;
-    for (const c of view.readiness.categories) {
-      // Ratio categories carry no penalty by design; the tier and per-item
-      // categories are the ones whose term must move with the population.
-      if (c.key === "EXCEPTIONS" || c.key === "ADJUSTMENTS") continue;
+    // The exclusions are hoisted OUT of the loop so the set under test is
+    // named before iteration rather than discovered during it. A counter
+    // incremented inside a loop it also skips proves only that the loop ran,
+    // not that the assertion did — and it still reaches 1 when every category
+    // has been emptied.
+    const assertable = view.readiness.categories.filter(
+      // Ratio categories carry no penalty by design; POPULATION_GL is driven
+      // by a figure rather than by ids.
+      (c) => c.key !== "EXCEPTIONS" && c.key !== "ADJUSTMENTS" && c.key !== "POPULATION_GL",
+    );
+    expect(assertable.length, "no category was left to assert on").toBeGreaterThan(0);
+
+    for (const c of assertable) {
+      expect(c.terms.length, `${c.key} contributed no term to check`).toBeGreaterThan(0);
       for (const t of c.terms) {
-        checked += 1;
-        if (c.key === "POPULATION_GL") continue; // driven by a figure, not by ids
         expect(t.penaltyPercent > 0, `${c.key}: ${t.rule}`).toBe(
           t.drivingExceptionIds.length > 0,
         );
       }
     }
-    expect(checked).toBeGreaterThan(0);
   });
 
   it("drops the deduction when the condition it names goes away", () => {
@@ -344,5 +419,114 @@ describe("authorization", () => {
     expect(auditor.interpretations).toEqual(controller.interpretations);
     expect(auditor.matrix.rows).toEqual(controller.matrix.rows);
     expect(auditor.readiness.totalBasisPoints).toBe(controller.readiness.totalBasisPoints);
+  });
+});
+
+describe("the matrix's cost-relief prose stays tied to the population it describes", () => {
+  /**
+   * The matrix is the biggest authored surface in the stage and the one least
+   * protected by tests: five columns of accounting judgement, none of which
+   * the engine checks. These two properties tie the COGS column to the data,
+   * and neither names a classification — a test that says "GIT must not claim
+   * fulfillment" pins today's instance and would pass the same sentence
+   * written onto any other row tomorrow.
+   */
+
+  /** Serials on an item fulfillment that are STILL on the year-end book. */
+  const fulfilledStillOnBook = (w: Workspace): Map<string, string[]> => {
+    const classOf = new Map(w.dataset.inventoryUnits.map((u) => [u.serial, u.classification]));
+    const out = new Map<string, string[]>();
+    for (const f of w.dataset.itemFulfillments) {
+      for (const line of f.lines) {
+        for (const serial of line.serials ?? []) {
+          const c = classOf.get(serial);
+          if (c === undefined) continue; // relieved: no longer on the book
+          out.set(c, [...(out.get(c) ?? []), serial]);
+        }
+      }
+    }
+    return out;
+  };
+
+  it("never states fulfillment as a completed event for a classification no fulfillment reaches", () => {
+    // Only the TRIGGER is lexical — the set of phrases that assert fulfilment
+    // as something that has happened. The PERMISSION half is fully derived:
+    // a row may say it only if fulfilled serials of that classification are
+    // actually still on the book.
+    const claimsFulfilment = /has been fulfilled|have been fulfilled|was fulfilled|were fulfilled|fulfilled but/i;
+    const owners = fulfilledStillOnBook(ws);
+
+    for (const classification of ACCOUNTING_CLASSIFICATIONS) {
+      const basis = INVENTORY_ACCOUNTING_MATRIX[classification].cogsBasis;
+      if (!claimsFulfilment.test(basis)) continue;
+      expect(
+        owners.has(classification),
+        `${classification}.cogsBasis states stock has been fulfilled, but ${
+          (owners.get(classification) ?? []).length
+        } fulfilled serials of that classification remain on the book`,
+      ).toBe(true);
+    }
+  });
+
+  it("every classification owning an unrelieved chain names the rule that decides relief for it", () => {
+    const view = getCostClassification(ws, ctx("CONTROLLER"));
+    const classOf = new Map(ws.dataset.inventoryUnits.map((u) => [u.serial, u.classification]));
+
+    const live = new Set<string>();
+    for (const row of view.cogs.rows) {
+      if (row.state !== "NOT_RELIEVED") continue;
+      for (const f of ws.dataset.itemFulfillments) {
+        if (f.salesOrderNumber !== row.salesOrder) continue;
+        for (const line of f.lines) {
+          for (const serial of line.serials ?? []) {
+            const c = classOf.get(serial);
+            if (c !== undefined) live.add(c);
+          }
+        }
+      }
+    }
+
+    // Load-bearing: without it, a dataset carrying no unrelieved chain makes
+    // the property below vacuously true — the "measured claim that cannot go
+    // false" this file exists to prevent.
+    expect(live.size, "no classification owns an unrelieved chain to assert on").toBeGreaterThan(0);
+
+    for (const classification of live) {
+      expect(
+        INVENTORY_ACCOUNTING_MATRIX[classification as keyof typeof INVENTORY_ACCOUNTING_MATRIX]
+          .cogsBasis,
+        `${classification} owns an unrelieved chain, so its basis must route relief to the rule`,
+      ).toContain("O2C-CHAIN-001");
+    }
+  });
+});
+
+describe("the register reads its answers from the constants that hold them", () => {
+  it("no interpretation's answer is authored in the projection", () => {
+    // A category rule over all 58 rows: the panel claims each answer is read
+    // from the constant that holds it, never restated beside it. A restated
+    // answer appears in this module as a string literal.
+    const source = readFileSync(
+      join(process.cwd(), "packages/services/src/methodology.ts"),
+      "utf8",
+    );
+    const view = getMethodology(ws, ctx("CONTROLLER"));
+    const restated = view.interpretations
+      .filter((i) => source.includes(JSON.stringify(i.answer)))
+      .map((i) => i.id);
+    expect(restated, "answers authored in the projection rather than read from a constant").toEqual(
+      [],
+    );
+  });
+
+  it("composes the months-of-supply basis from the assumption it reports", () => {
+    const view = getMethodology(ws, ctx("CONTROLLER"));
+    const row = view.interpretations.find((i) => i.id === "EO:MONTHS_OF_SUPPLY");
+    expect(row).toBeDefined();
+    expect(row!.basis).toBe(MONTHS_OF_SUPPLY_BASIS);
+    // The pointer in `heldIn` is only true if the basis actually contains the
+    // answer; composition is what makes it so, rather than two strings that
+    // happen to agree today.
+    expect(row!.basis).toContain(row!.answer);
   });
 });

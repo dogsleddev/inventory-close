@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { DEMO_USERS, userByRole } from "@icg/data";
 import type { Role } from "@icg/domain";
-import { hasPermission } from "@icg/permissions";
+import { AuthorizationError, hasPermission } from "@icg/permissions";
+import { mutationAllowed } from "@icg/workflows";
 import {
   createCommandService,
   createWorkspace,
+  PeriodLockedError,
   describeWorkingState,
   effectiveClose,
   getMemo,
@@ -116,12 +118,19 @@ describe("issuing", () => {
 
   it("writes the act to the append-only trail", () => {
     commands.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
-    commands.issueMemoVersion(ctx("CONTROLLER"), { note: "Reviewed with the CFO." });
+    const version = commands.issueMemoVersion(ctx("CONTROLLER"), {
+      note: "Reviewed with the CFO.",
+    });
     const actions = ws.audit.list().map((e) => e.action);
     expect(actions).toContain("MEMO_DRAFT_SAVED");
     expect(actions).toContain("MEMO_VERSION_ISSUED");
     const issued = ws.audit.list().find((e) => e.action === "MEMO_VERSION_ISSUED");
     expect(issued?.reason).toBe("Reviewed with the CFO.");
+    // The trail outlives the memo a reset clears, so the event has to identify
+    // WHICH text was sealed on its own — the id alone cannot, since a later
+    // memo can carry the same displayed version number.
+    expect(version.contentHash, "the issued version must be sealed").toBeDefined();
+    expect(issued?.detail).toContain(version.contentHash!);
   });
 });
 
@@ -253,12 +262,59 @@ describe("who may do what", () => {
         hasPermission(user, MEMO_ISSUE_PERMISSION),
       );
 
-      const fresh = createWorkspace();
-      const cmds = createCommandService(fresh);
-      if (memo.canDraft) {
-        expect(() => cmds.saveMemoDraft(c, DRAFT)).not.toThrow();
-      } else {
-        expect(() => cmds.saveMemoDraft(c, DRAFT)).toThrow();
+      // Every offer is cross-checked against a REAL invocation, in both
+      // period states. Asserting the flag against the expression that
+      // produces it tests the projection and never the command — which is how
+      // issuing came to have no invocation test at all.
+      //
+      // What this cannot see: `review.approve`, `exception.conclude` and
+      // `audit.read` are held by exactly the roles that hold `memo.issue`, so
+      // `period.lock` is the only key that discriminates (U-003 is the only
+      // user separating them).
+      for (const state of ["OPEN", "LOCKED"] as const) {
+        const fresh = createWorkspace();
+        const cmds = createCommandService(fresh);
+        if (state === "LOCKED") cmds.lockPeriod(ctx("CONTROLLER"), "LOCKED");
+
+        const view = getMemo(fresh, c);
+        // The role flags stay role-only: the period is a separate refusal.
+        expect(view.canDraft, `${user.id} draft offer at ${state}`).toBe(
+          hasPermission(user, MEMO_DRAFT_PERMISSION),
+        );
+        expect(view.canIssue, `${user.id} issue offer at ${state}`).toBe(
+          hasPermission(user, MEMO_ISSUE_PERMISSION),
+        );
+        // Read the SHARED predicate rather than restating `state !== "LOCKED"`.
+        expect(view.periodBlocks === null, `${user.id} period gate at ${state}`).toBe(
+          mutationAllowed(fresh.period.state),
+        );
+
+        const mayWrite = view.periodBlocks === null;
+        if (memo.canDraft && mayWrite) {
+          expect(() => cmds.saveMemoDraft(c, DRAFT)).not.toThrow();
+        } else if (!memo.canDraft) {
+          // Pinned to the class: the guard order is authorize → requireMutable
+          // → "no working draft", so a bare `.toThrow()` passes for the wrong
+          // reason at LOCKED.
+          expect(() => cmds.saveMemoDraft(c, DRAFT)).toThrow(AuthorizationError);
+        } else {
+          expect(() => cmds.saveMemoDraft(c, DRAFT)).toThrow(PeriodLockedError);
+        }
+
+        // Issuing needs a draft to exist; issuing checks no authorship, so it
+        // may be seeded by anyone who may draft.
+        const seeder = createWorkspace();
+        const seedCmds = createCommandService(seeder);
+        seedCmds.saveMemoDraft(ctx("CONTROLLER"), DRAFT);
+        if (state === "LOCKED") seedCmds.lockPeriod(ctx("CONTROLLER"), "LOCKED");
+        const seeded = getMemo(seeder, c);
+        if (memo.canIssue && seeded.periodBlocks === null) {
+          expect(() => seedCmds.issueMemoVersion(c, {})).not.toThrow();
+        } else if (!memo.canIssue) {
+          expect(() => seedCmds.issueMemoVersion(c, {})).toThrow(AuthorizationError);
+        } else {
+          expect(() => seedCmds.issueMemoVersion(c, {})).toThrow(PeriodLockedError);
+        }
       }
     }
   });

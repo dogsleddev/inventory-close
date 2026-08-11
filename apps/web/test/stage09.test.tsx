@@ -23,7 +23,8 @@ import {
 } from "../lib/server/integrity-view";
 import { buildReconciliationData } from "../lib/server/recon-view";
 import { askGaurdData } from "../lib/server/ask-view";
-import { getQueries, makeContext } from "../lib/server/workspace";
+import { getCommands, getQueries, makeContext } from "../lib/server/workspace";
+import { WORKING_STATE_COLLECTIONS } from "@icg/services";
 import { formatBpsExact, formatCents } from "../lib/format";
 
 /**
@@ -156,6 +157,34 @@ describe("Reset Demo is offered only where the service would allow it", () => {
     expect(within(note).getByText(/re-derived from the seed, the rules and the scenario events/))
       .toBeTruthy();
     expect(within(note).getByText(/append-only audit trail kept/)).toBeTruthy();
+  });
+
+  it("accounts on the page for every field the reset reports clearing", () => {
+    // Iterates the KEYS of `cleared` rather than naming the nouns, so a new
+    // field has to reach the sentence to pass. `period` arrived exactly that
+    // way and went unmentioned; an enumeration written today would have said
+    // the seven collection nouns and stayed green through it.
+    const actor = userByRole("CONTROLLER");
+    const ctx = makeContext(actor, "T-09-PERIOD");
+    const commands = getCommands();
+
+    commands.lockPeriod(ctx, "LOCKED");
+    const cleared = commands.resetDemo(ctx).cleared;
+
+    commands.lockPeriod(ctx, "LOCKED");
+    const view = runResetDemo(actor, "T-09-PERIOD-VIEW");
+    expect(view.ok).toBe(true);
+
+    for (const [key, value] of Object.entries(cleared)) {
+      const collection = WORKING_STATE_COLLECTIONS.find((c) => c.key === key);
+      const expected =
+        collection === undefined
+          ? String(value).toLowerCase().replace("_", " ")
+          : `${value as number} ${(value as number) === 1 ? collection.singular : collection.plural}`;
+      expect(view.detail, `${key} is reported as cleared but is absent from the page`).toContain(
+        expected,
+      );
+    }
   });
 });
 

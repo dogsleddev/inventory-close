@@ -390,8 +390,13 @@ export function createCommandService(ws: Workspace) {
       }
       const at = nextInstant(ws);
       const existing = workingDraftOf(ws);
+      // Only a NEW draft consumes a sequence number. Re-saving the working
+      // draft must keep the id the audit trail already names.
+      if (existing === undefined) {
+        ws.memoSeq += 1;
+      }
       const draft: MemoVersion = {
-        id: existing?.id ?? `MEMO-D${String(ws.memoVersions.length + 1).padStart(3, "0")}`,
+        id: existing?.id ?? `MEMO-D${String(ws.memoSeq).padStart(3, "0")}`,
         state: "DRAFT",
         title: input.title.trim(),
         body: input.body.trim(),
@@ -432,15 +437,19 @@ export function createCommandService(ws: Workspace) {
       const version = (previous?.version ?? 0) + 1;
       const at = nextInstant(ws);
       const position = memoPosition(ws);
+      const contentHash = sha256Canonical({ title: draft.title, body: draft.body });
+      // `version` is what management calls the document and restarts after a
+      // reset; the id is an audit objectRef and must not. See `memoSeq`.
+      ws.memoSeq += 1;
       const issued: MemoVersion = {
-        id: `MEMO-V${String(version).padStart(3, "0")}`,
+        id: `MEMO-V${String(ws.memoSeq).padStart(3, "0")}`,
         version,
         state: "ISSUED",
         title: draft.title,
         body: draft.body,
         byUserId: ctx.user.id,
         at,
-        contentHash: sha256Canonical({ title: draft.title, body: draft.body }),
+        contentHash,
         closeStateHash: closeStateHashFor(position),
         sealed: true,
         editable: false,
@@ -461,7 +470,7 @@ export function createCommandService(ws: Workspace) {
         ...(input.note !== undefined && input.note.trim() !== ""
           ? { reason: input.note.trim() }
           : {}),
-        detail: `readiness ${position.readinessBps} bps, ${position.blockerCount} blockers open at issue`,
+        detail: `readiness ${position.readinessBps} bps, ${position.blockerCount} blockers open at issue; content ${contentHash}`,
       });
       return issued;
     },

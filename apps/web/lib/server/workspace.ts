@@ -33,7 +33,7 @@ const globalStore = globalThis as {
  *
  * Tests never catch either one, because they build a workspace per test.
  */
-const WORKSPACE_SHAPE = "memoVersions+conclusions+evidenceRequests+dataset-v1.2.0";
+const WORKSPACE_SHAPE = "memoSeq+memoVersions+conclusions+evidenceRequests+dataset-v1.2.0";
 
 export function getWorkspace(): Workspace {
   // Survives Next dev-server module reloads without re-deriving the close —

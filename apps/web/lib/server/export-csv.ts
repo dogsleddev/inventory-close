@@ -11,7 +11,7 @@ import {
   getMethodology,
   getProcurementPopulations,
 } from "@icg/services";
-import { formatCents } from "../format";
+import { formatBpsExact, formatCents } from "../format";
 import { attempt } from "./data";
 import { holderLabel } from "./humanize";
 import { getQueries, getWorkspace, makeContext, roleLabel, userById } from "./workspace";
@@ -156,6 +156,12 @@ const AUDITOR_SCOPE_NOTES: Readonly<Record<ExportTable, string | null>> = {
   // is chosen from what was actually withheld rather than from the role.
   "close-memo": null,
 };
+
+/**
+ * The close-memo file's absence line. Exported so a test can assert its
+ * presence against the population without pinning the wording.
+ */
+export const MEMO_NO_VERSION_LINE = "No version exists - the memo has not been drafted";
 
 export function buildCsv(user: DemoUser, table: ExportTable, correlationId: string): CsvTable {
   const queries = getQueries();
@@ -1017,8 +1023,11 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
             // label under a "Category" heading reads as a second category.
             i === 0 ? c.label : "",
             i === 0 ? `${c.weightPercent}%` : "",
-            i === 0 ? (c.scoreHundredths / 100).toFixed(2) : "",
-            i === 0 ? c.weightPercent * c.scoreHundredths : "",
+            i === 0 ? formatBpsExact(c.scoreHundredths) : "",
+            // Read, never recomputed: the module header's rule is that no
+            // figure is derived in this file, and the product of the two cells
+            // to the left is a derivation even when it agrees.
+            i === 0 ? c.weightedContribution : "",
             i === 0 ? c.basis : "",
             t.rule,
             t.observed,
@@ -1043,7 +1052,11 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     );
     lines.push(
       row([
-        "Close readiness",
+        // The unit is in the label, as it already is for the same figure in
+        // the close-memo table: this cell sits under a "Weighted contribution"
+        // header and is not one, and it stays a bare integer so a reader can
+        // still check the division in a spreadsheet.
+        "Close readiness (basis points)",
         "",
         "",
         m.readiness.totalBasisPoints,
@@ -1245,17 +1258,18 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     // baseline no draft exists, so an auditor's file is byte-identical to a
     // Controller's and a scope line here would claim a redaction that did not
     // happen.
-    if (memo.withheldDraftCount > 0) {
-      lines.push(
-        row([
-          "Withheld",
-          `${memo.withheldDraftCount} unissued draft(s) are withheld from this role - a draft is internal management working paper. Issued versions are shown in full.`,
-        ]),
-      );
+    if (memo.withheldNote !== null) {
+      lines.push(row(["Withheld", memo.withheldNote]));
     }
-    if (memo.versions.length === 0) {
-      lines.push(row(["No version exists - the memo has not been drafted"]));
-    } else {
+    // `memo.versions` is the ROLE-SCOPED list, so `length === 0` means
+    // "nothing you may see", not "nothing exists". Conjoined with
+    // `withheldDraftCount === 0` it is exactly `ws.memoVersions.length === 0`,
+    // so the absence is stated from the population rather than from the view —
+    // and the column header is emitted only when there is a row for it,
+    // because a header over nothing is the same over-claim one row smaller.
+    if (memo.versions.length === 0 && memo.withheldDraftCount === 0) {
+      lines.push(row([MEMO_NO_VERSION_LINE]));
+    } else if (memo.versions.length > 0) {
       lines.push(
         row(["Version", "State", "Lock", "Title", "Recorded at", "By", "Content hash", "Close-state hash"]),
       );

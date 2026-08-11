@@ -15,7 +15,7 @@ import {
 import { explainReadiness, POLICY_V1, type ReadinessExplanationOut } from "@icg/rules";
 import { authorize } from "@icg/permissions";
 import { effectiveExceptions } from "./effective.js";
-import { MONTHS_OF_SUPPLY_BASIS } from "./eoMethodology.js";
+import { MONTHS_OF_SUPPLY_ASSUMPTION, MONTHS_OF_SUPPLY_BASIS } from "./eoMethodology.js";
 import { INVENTORY_RESERVE_ACCOUNT } from "./glAccounts.js";
 import { REPLAY_EXCLUSIONS } from "./integrity.js";
 import type { ServiceContext } from "./queries.js";
@@ -341,7 +341,7 @@ function buildInterpretations(): readonly InterpretationOut[] {
       id: "EO:MONTHS_OF_SUPPLY",
       dimension: "VALUATION",
       subject: "Months of supply",
-      answer: "Demand is assumed to arrive ratably across the forecast horizon",
+      answer: MONTHS_OF_SUPPLY_ASSUMPTION,
       basis: MONTHS_OF_SUPPLY_BASIS,
       heldIn: "MONTHS_OF_SUPPLY_BASIS",
     },

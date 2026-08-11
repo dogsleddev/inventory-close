@@ -168,13 +168,35 @@ export interface Workspace {
    * reused by later submissions.
    */
   evidenceSeq: number;
+  /**
+   * Close-memo id sequence, for the same reason as `evidenceSeq`: a memo id
+   * is an audit `objectRef`, and the audit log survives a reset while
+   * `memoVersions` does not, so an id minted from the collection's own length
+   * would name a memo the trail already refers to.
+   *
+   * This makes the id and the displayed version diverge on purpose. The id is
+   * monotonic across resets; `MemoVersion.version` restarts, because it is
+   * what management calls the document. Read the version from `version` or
+   * from the label, never from the digits in the id.
+   */
+  memoSeq: number;
 }
 
 /* ------------------------------------------------------------------ */
 /* Working state, enumerated once                                       */
 /* ------------------------------------------------------------------ */
 
-/** Every `Workspace` field that is a collection — i.e. all of the working state. */
+/**
+ * Every `Workspace` field that is collection-valued. That is most of the
+ * working state, not all of it: the period machine — named in the header
+ * above — is working state too and is not an array, so it sits outside this
+ * type by construction and is handled by name instead.
+ *
+ * The distinction matters when reading the exhaustiveness guard below. It
+ * proves that no COLLECTION was forgotten. It cannot prove that no working
+ * state was forgotten, because a field that is not an array is invisible to
+ * it.
+ */
 type ArrayKeys<T> = {
   [K in keyof T]-?: T[K] extends readonly unknown[] ? K : never;
 }[keyof T];
@@ -377,6 +399,7 @@ export function createWorkspace(): Workspace {
     pbcPreparedState: preparedStateFor(state.close),
     clockSeq: 0,
     evidenceSeq: 0,
+    memoSeq: 0,
   };
 }
 
