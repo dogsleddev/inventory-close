@@ -235,6 +235,7 @@ export function askGaurdData(
       // explanation. Every string a reader sees goes through the same map.
       conflictingEvidence: a.conflictingEvidence.map(humanizeCanonical),
       missingEvidence: a.missingEvidence.map(humanizeCanonical),
+      scopeNotes: (a.scopeNotes ?? []).map(humanizeCanonical),
       // Worded with the same helper the exception screens use. Until Stage G
       // the drawer rendered these raw, so one screen said "Rights &
       // Obligations" and the assistant beside it said

@@ -253,7 +253,12 @@ describe("scope is never rendered as a finding", () => {
     ).answer;
     expect(answer, "the auditor's chip refused").toBeDefined();
     expect(answer!.conflictingEvidence).toEqual([]);
-    expect(answer!.missingEvidence.join(" ")).toMatch(/access scope/i);
+    // In the RESTRICTION channel, not the missing-evidence one. Under MISSING
+    // EVIDENCE the drawer renders it in ember, bulleted, suffixed " — missing,
+    // required" for a screen reader and counted as a required item reported
+    // missing — about a document the close holds and this reader may not read.
+    expect(answer!.scopeNotes?.join(" ") ?? "").toMatch(/access scope/i);
+    expect(answer!.missingEvidence.join(" ")).not.toMatch(/access scope/i);
     expect(answer!.managementConclusion).not.toMatch(/do not agree/i);
     // …and the withheld count is a figure, so the shorter population is
     // never silently shorter.
@@ -1000,8 +1005,10 @@ describe("a denied lookup is disclosed in the answer that used it", () => {
     // The premise: an answer really was produced, and a call really was denied.
     expect(r.answer).toBeDefined();
     expect(r.toolCalls.some((c) => c.outcome === "NOT_AUTHORIZED")).toBe(true);
-    expect(r.answer?.missingEvidence.join(" ")).toMatch(/refused at your access scope/);
-    expect(r.answer?.missingEvidence.join(" ")).toMatch(/restriction on what you may read/);
+    // A refusal is a restriction, so it lands in the restriction channel.
+    expect(r.answer?.scopeNotes?.join(" ") ?? "").toMatch(/refused at your access scope/);
+    expect(r.answer?.scopeNotes?.join(" ") ?? "").toMatch(/restriction on what you may read/);
+    expect(r.answer?.missingEvidence.join(" ")).not.toMatch(/refused at your access scope/);
   });
 
   it("says nothing about a refusal when none happened", () => {
@@ -1009,7 +1016,7 @@ describe("a denied lookup is disclosed in the answer that used it", () => {
     // assertion above and put a restriction notice on every clean drawer.
     const r = answerQuestion(t, "Financial life of KE-E2-1048", {});
     expect(r.toolCalls.some((c) => c.outcome === "NOT_AUTHORIZED")).toBe(false);
-    expect(r.answer?.missingEvidence.join(" ")).not.toMatch(/refused at your access scope/);
+    expect(r.answer?.scopeNotes?.join(" ") ?? "").not.toMatch(/refused at your access scope/);
   });
 });
 

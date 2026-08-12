@@ -79,6 +79,12 @@ export interface AskAnswerView {
   readonly knownFacts: readonly AskFigure[];
   readonly conflictingEvidence: readonly string[];
   readonly missingEvidence: readonly string[];
+  /**
+   * Records that exist and this reader may not read. A separate channel from
+   * `missingEvidence` because the drawer renders the two differently, and the
+   * live region counts only the first.
+   */
+  readonly scopeNotes: readonly string[];
   readonly assertions: readonly string[];
   readonly exposure: AskFigure | null;
   readonly managementConclusion: string;

@@ -211,6 +211,25 @@ export function AskGaurd({
                     </div>
                   ) : null}
 
+                  {/* Records that EXIST and this reader may not read.
+                      Deliberately not the block above: no ember, no "○", no
+                      " — missing, required", and not in the live region's
+                      count. An auditor was reading "1 source document is
+                      outside your access scope" under a heading saying MISSING
+                      EVIDENCE, and every one of those five signals said
+                      "missing" independently of the words. */}
+                  {answer.scopeNotes.length > 0 ? (
+                    <div className="icg-ask-sec">
+                      <div className="icg-label">WITHHELD AT YOUR ACCESS SCOPE</div>
+                      {answer.scopeNotes.map((m) => (
+                        <p key={m} className="icg-ask-body">
+                          {m}
+                          <span className="icg-sr-only"> — restricted, not missing</span>
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+
                   {/* Draft mode. The drawer has advertised this capability
                       since stage 08 with nothing behind it; what it produces
                       is wording, and the figures it refers to are on the

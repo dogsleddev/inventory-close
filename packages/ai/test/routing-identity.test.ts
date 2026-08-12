@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { userByRole } from "@icg/data";
+import { DEMO_USERS, userByRole } from "@icg/data";
 import { INVENTORY_GL_ACCOUNTS, OFFSET_GL_ACCOUNTS } from "@icg/domain";
 import {
   createProjectionService,
@@ -734,5 +734,55 @@ describe("the tool surface", () => {
         "NOT_AUTHORIZED",
       );
     }
+  });
+});
+
+/**
+ * A restriction is never filed as a gap.
+ *
+ * `missingEvidence` is rendered under a MISSING EVIDENCE heading in ember, each
+ * entry bulleted "○", suffixed " — missing, required" for assistive tech, and
+ * counted into the live region's "N required items of evidence reported
+ * missing." All five of those say "missing" independently of the sentence. So
+ * an auditor asking about procurement was told, in that channel, that a source
+ * document they may not read was missing evidence — when the close holds it and
+ * the sentence itself said so.
+ *
+ * Asserted over every intent and every role rather than over the three
+ * sentences that were wrong, because the channel is the defect and a new
+ * handler can put a new sentence in it tomorrow.
+ */
+describe("scope restrictions travel in their own channel", () => {
+  const ws = createWorkspace();
+  const RESTRICTION =
+    /access scope|outside your scope|withheld from (this role|you)|may not read|restricted at your/i;
+
+  it("puts no restriction sentence in the missing-evidence channel", () => {
+    let answers = 0;
+    let restrictionsSeen = 0;
+    for (const user of DEMO_USERS) {
+      const asUser: AiToolContext = {
+        queries: createQueryService(ws),
+        projections: createProjectionService(ws),
+        ctx: { user, correlationId: `T-SCOPE-${user.id}`, sourceInterface: "ASK_GAURD" },
+      };
+      for (const probe of PROBES) {
+        const r = answerQuestion(asUser, probe.q, probe.scope ?? {});
+        if (r.answer === undefined) continue;
+        answers += 1;
+        restrictionsSeen += r.answer.scopeNotes?.length ?? 0;
+        for (const line of r.answer.missingEvidence) {
+          expect(
+            RESTRICTION.test(line),
+            `${user.id} "${probe.q}": a restriction is filed as missing evidence — "${line}"`,
+          ).toBe(false);
+        }
+      }
+    }
+    // Both floors. Without answers the loop proves nothing; without a
+    // restriction actually being reported somewhere, a build that dropped the
+    // disclosure entirely would pass — which is the defect on the other side.
+    expect(answers).toBeGreaterThan(100);
+    expect(restrictionsSeen).toBeGreaterThan(0);
   });
 });

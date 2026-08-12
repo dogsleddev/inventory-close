@@ -161,7 +161,37 @@ export interface AiMaterialAnswer {
   readonly status: string;
   readonly knownFacts: readonly AiFigure[];
   readonly conflictingEvidence: readonly string[];
+  /**
+   * Records the close ASKED FOR and does not hold. A finding about the
+   * evidence file, and the reader is expected to act on it.
+   */
   readonly missingEvidence: readonly string[];
+  /**
+   * Records that EXIST and this reader may not read.
+   *
+   * A separate channel because it is a separate fact, and the drawer renders
+   * the two differently. `missingEvidence` was carrying both: an auditor asking
+   * about procurement read "1 source document is outside your access scope"
+   * under a heading reading MISSING EVIDENCE, in ember, each entry bulleted
+   * with "○", suffixed for assistive tech with " — missing, required", and
+   * counted into "2 required items of evidence reported missing." Nothing was
+   * missing. The documents exist, the close holds them, and the engine's own
+   * sentence said the reader may not read them.
+   *
+   * That is the scope-as-a-finding trap at the rendering layer — the same one
+   * `procurement-view.ts` closed at the data layer — and rewording the
+   * sentences would not have closed it, because the heading, the glyph, the
+   * colour, the screen-reader suffix and the count all say "missing"
+   * independently of the words.
+   *
+   * Optional on the handler and normalised to `[]` by `answerQuestion`, so the
+   * thirty-odd intents that have no restriction to report say nothing rather
+   * than each writing an empty array. `routing-identity.test.ts` asserts over
+   * every intent and every role that no restriction sentence is left in
+   * `missingEvidence`, which is the check that keeps the two channels apart —
+   * a field a handler may omit needs one.
+   */
+  readonly scopeNotes?: readonly string[];
   readonly assertions: readonly string[];
   readonly exposure?: AiFigure | undefined;
   readonly managementConclusion: string;

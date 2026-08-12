@@ -637,7 +637,9 @@ const INTENTS: readonly Intent[] = [
           ),
         ],
         conflictingEvidence: [],
-        missingEvidence: [
+        missingEvidence: [],
+        // A restriction, not a gap: these documents exist.
+        scopeNotes: [
           procurementScopeNote({
             missingRows: p.withheldFrom.grni,
             rowsMissingADocument: p.grni.filter((r) => r.withheldDocuments.length > 0).length,
@@ -714,21 +716,28 @@ const INTENTS: readonly Intent[] = [
                 "The document side and the book side describe different inbound populations. They are the same units seen two ways, so a difference is a finding rather than a rounding note.",
               ]
             : [],
-        missingEvidence: [
+        missingEvidence: [],
+        /**
+         * Both of these are restrictions, not gaps, so they travel in the
+         * channel that says so. Under MISSING EVIDENCE an auditor read them in
+         * ember, bulleted "○", suffixed " — missing, required" for a screen
+         * reader, and counted into "required items of evidence reported
+         * missing" — about documents the close holds and they simply may not
+         * read.
+         *
+         * The second clause is derived from the rows this answer DISPLAYS, and
+         * only those. It used to be written from the close-wide
+         * `withheldDocumentCount` and promised "an order that does appear
+         * above" whose row set never contained it: the withheld document sits
+         * on PO-26-1201 while the auditor's rows are PO-26-1241/1242/1243. The
+         * promise was the damaging half — an instruction to go looking for a
+         * cell that is not on the page, pointing away from the Three-Way Match
+         * tab where the disclosure is true.
+         */
+        scopeNotes: [
           git.inboundAgrees === null
             ? `The two sides cannot be compared at your access scope: ${p.withheldOrderCount} ${plural(p.withheldOrderCount, "order is", "orders are")} withheld from the document side while the book side is not scoped.`
             : null,
-          /**
-           * The rows this answer displays, and only those.
-           *
-           * This clause used to be written out by hand from the close-wide
-           * `withheldDocumentCount`, and promised "an order that does appear
-           * above" whose row set never contained it — the withheld document
-           * sits on PO-26-1201 while the auditor's rows are PO-26-1241/1242/
-           * 1243. The promise was the damaging half: it is an instruction to
-           * go looking for a cell that is not on the page, and it pointed away
-           * from the Three-Way Match tab where the disclosure is true.
-           */
           procurementScopeNote({
             missingRows: p.withheldFrom.invoicedNotReceived,
             rowsMissingADocument: p.invoicedNotReceived.filter(
@@ -792,7 +801,9 @@ const INTENTS: readonly Intent[] = [
             : []),
         ],
         conflictingEvidence: [],
-        missingEvidence: [
+        missingEvidence: [],
+        // A restriction, not a gap: these documents exist.
+        scopeNotes: [
           procurementScopeNote({
             missingRows: p.withheldFrom.priceVariance,
             // A price-variance row is a line comparison, and it names no
@@ -2807,8 +2818,12 @@ export function answerQuestion(
     ].sort();
     answer = {
       ...answer,
-      missingEvidence: [
-        ...answer.missingEvidence,
+      // A refusal is a restriction, so it goes in the restriction channel. Put
+      // in `missingEvidence` it would be rendered as a required record the
+      // close does not hold — which is the very confusion G04 is about, and
+      // this disclosure exists to prevent one like it.
+      scopeNotes: [
+        ...(answer.scopeNotes ?? []),
         `${denied.length} of the lookups behind this answer ${plural(denied.length, "was", "were")} refused at your access scope (${denied.join(", ")}). What is reported above is what the permitted lookups returned; it is not a complete answer, and the refusal is a restriction on what you may read rather than a finding about the close.`,
       ],
     };
@@ -2821,7 +2836,11 @@ export function answerQuestion(
     };
   }
 
-  if (answer !== undefined) return { ...base, answer };
+  // Normalised once, so a handler with no restriction to report writes nothing
+  // and every consumer still receives an array.
+  if (answer !== undefined) {
+    return { ...base, answer: { ...answer, scopeNotes: answer.scopeNotes ?? [] } };
+  }
 
   // No answer. Say WHICH kind of nothing this is — a denial, an unknown
   // object, and an out-of-scope question are three different states and an
