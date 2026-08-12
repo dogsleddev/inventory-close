@@ -263,7 +263,7 @@ prior one is green.
 | **D — Costing** ✅ **DONE** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **E — Ownership & valuation lifecycle** ✅ **DONE** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **F — Management outputs** ✅ **DONE + REVIEWED** (`b1ccdc4`, `406baaf`) | Methodology & Calculations; Accounting Matrix; Close Memo with draft/issue workflow; guided-demo polish. **First stage since W to add working state.** | D8 ✅ |
-| **G — Ask Gaurd** ⬅ **NEXT** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
+| **G — Ask Gaurd** ✅ **DONE** (`7333663`) | Matcher hardening + routing harness, then twenty-one grounded intents over eleven new tools; memo drafting (prose-only). **Review not yet run.** | — |
 | **H — QA** | Baseline regression, accounting-language review, AI-off test, placeholder scan, 60-second demo test, full-tree adversarial pass. | — |
 
 Nav grows with the stages: Stage A ships the grouped rail linking only to pages that exist; every
@@ -734,6 +734,69 @@ proof — one told to default to refuted, one told to report only what it reprod
 findings landed in "contested" as a pure artifact, making the tally useless. Giving both the same
 burden and a three-valued verdict (CONFIRMED / REFUTED / **UNCERTAIN**), differing only in angle,
 produced 11 / 2 / **0 contested**. `SESSION_HANDOFF.md` §0a carries the full shape.
+
+### Stage G outcome (2026-08-11) — `7333663`
+
+**The measurement that scoped the stage: twenty-two of the fifty-four suggestion
+chips the product ships refused with `OUT_OF_SCOPE`.** Every Costing, Custody and
+Methodology chip, both Procurement population chips, and the memo and
+reconciliation phrasings. The product was suggesting questions it could not
+answer, and the stage-08 test that was supposed to prevent exactly that listed
+thirteen chips **copied by hand** from screens that had since grown to
+seventeen.
+
+**The matcher is now a phrase language, not a regex table.** §3.9's defect was
+`/count/` claiming "GL **ac**count 1200"; the fix is not "add `\b`", because a
+boundary somebody types is a boundary somebody forgets. Intents declare phrases
+and `packages/ai/src/matching.ts` compiles the boundaries, so an unanchored
+pattern cannot be written. One test asserts the property over every phrase in
+the table — including phrases added after it was last read.
+
+**The harness asserts identity, not success.** `routing-identity.test.ts` pins
+WHICH handler each probe reaches, that every intent is reachable from some
+probe, that every figure cites a tool that actually ran, and that no sentence
+carries an ungrouped count. `ask-chips.test.ts` derives the chip population from
+the component tree — the technique `test/actions-mock.test.ts` uses for its four
+mocking files — so a new screen's chips are covered the day they are written.
+
+**Eleven new tools, none of them a new view of the close.** Each reaches a
+Stage B–F projection the screens already read, through a new
+`createProjectionService` rather than the workspace, so a tool handler still
+cannot reach a fixture. Draft mode is implemented rather than advertised: the
+memo intent returns wording only, checked by the *same* quantity and identifier
+functions that govern provider narration rather than a second copy of them.
+
+**Two defects found on the way, both fixed at the source:**
+
+- **P1 — scope reported as a control finding.** `inboundAgrees` compared a
+  scope-filtered document side against an unscoped book side. One withheld
+  order made it `false`, and the Procurement screen told **every auditor** "The
+  documents and the book do not agree… must be resolved before either figure is
+  relied on" — on the one tab whose job is to say the two sides are one
+  population. It is now `null` when the comparison could not be made, which is
+  D8's `positionMoved` rule applied to a second comparison, and the screen has a
+  third state (○, quiet) rather than a ✕.
+- **"1 orders are outside your role's scope"** — a hard-coded plural, invisible
+  until a role withheld exactly one. The auditor is that role. Same shape as
+  Stage F's "1 comments".
+
+**A display-vocabulary rule the stage had to establish.** @icg/ai emits
+canonical values because those are the structured ones; apps/web words them, and
+`ask-view.ts` now assembles that map from the modules that already own each
+vocabulary rather than restating any of it. `ask-chips.test.ts` fails on any
+screaming-snake token still in a rendered answer, which is what keeps the map
+complete rather than merely current.
+
+**Tests 1,010 → 1,690.** Typecheck, lint and production build clean; the locked
+baseline is unmoved and was confirmed in a browser, not only in tests.
+
+**Open, for Stage H rather than silently changed here:** Ask Gaurd answers from
+the BASELINE close, not the live effective one — `list_open_exceptions` and
+`get_blocking_conditions` read `ws.close`, so a conclusion recorded in the
+session moves every screen and no answer. That is pre-existing across the whole
+of stage 08 and wider than this stage's scope. Separately, the Procurement match
+tab renders `NS 3WM · REVIEW_REQUIRED` verbatim; whether NetSuite's own status
+should be worded is a question, not obviously a defect.
 
 ## 11. Acceptance criteria (the twenty questions)
 

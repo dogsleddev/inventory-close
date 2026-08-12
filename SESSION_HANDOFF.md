@@ -2,45 +2,42 @@
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
 re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
-**product-completion pass**, with Stage F as the next task.
+**product-completion pass**, with Stage G shipped and its review as the next task.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
 ---
 
-## 0a. START HERE — Stage G (Ask Gaurd tools) is the next task
+## 0a. START HERE — Stage G is shipped; REVIEWING it is the next task
 
-> **Stage F is reviewed, remediated, and the remediation is reviewed too.** Nothing is owed on
-> it. Three commits: `b1ccdc4` (26 defects from the stage review), `406baaf` (11 more from
-> reviewing that remediation — **two of them regressions the remediation itself introduced**).
-> Tests 971 → **1,010**; typecheck, lint and build clean; locked baseline unmoved and confirmed
-> in a browser.
+> **Stage G landed in `7333663`** — the Ask Gaurd matcher hardening, the routing-identity
+> harness COMPLETION_PLAN §3.9 required, eleven new tools and twenty-one new intents.
+> Tests **1,010 → 1,690**; typecheck, lint and production build clean; locked baseline
+> unmoved and confirmed in a browser. **No review has been run over it.** Run one, using
+> the corrected method below, and then review the remediation too.
 >
-> **Four things that cost real time and should not be re-derived:**
+> **Five things that cost real time and should not be re-derived:**
 >
-> 1. **Review what you WROTE, not just what you fixed.** `b1ccdc4` was 1,290 lines, 80% of them
->    tests, and nobody had looked at it. The pass over it found a P1: the new unsaved-edits guard
->    compared raw editor state against the draft of record, which `saveMemoDraft` stores
->    **trimmed** — so the screen's own "Start from the close position → Save draft" path
->    permanently disabled *Issue this version* behind a remedy saving could not satisfy, while the
->    service would have accepted the command. It was the exact mirror of the defect it closed.
-> 2. **Give both skeptics the SAME burden of proof.** The first fleet used one verifier told to
->    default to refuted and one told to report only what it reproduced: opposite calibrations, so
->    26 of 32 findings landed in "contested" as a pure artifact and the tally carried no signal.
->    The second used one burden, two *angles* (mechanism vs. consequence) and a three-valued
->    verdict including **UNCERTAIN** — and returned 11 confirmed, 2 refuted, **0 contested**.
->    Use that shape.
-> 3. **Run a fleet over the proposed FIXES before editing.** 27 validators re-derived each item
->    at HEAD and stress-tested its fix; **every one came back ADOPT_WITH_CHANGES**. The P1's own
->    fix would have left a bare column header over zero rows — the same over-claim, one row
->    smaller — and the matrix rewording would have hard-coded dataset facts into
->    `packages/domain`, with the count wrong.
-> 4. **The root cause, and it is measurable:** where Stage F **derived** a claim it survived nine
->    lenses untouched; where it **authored** one beside a measurement, nothing constrained it and
->    several had drifted off the data they describe. A sentence naming a population must be
->    derived from it or asserted against it.
-
-
+> 1. **Measure before scoping.** The stage's real size was not in the plan: routing every
+>    shipped chip through the engine before writing anything showed **22 of 54 refused**.
+>    That number set the scope, and it came from twenty lines of throwaway script.
+> 2. **A hand-copied population goes stale silently.** The stage-08 test that was supposed
+>    to prevent refusing chips listed thirteen of them, copied from screens that had since
+>    grown to seventeen. `ask-chips.test.ts` now derives the list from the component tree.
+>    Any test whose population is a literal array is a test with an expiry date nobody set.
+> 3. **Do not add `\b`; make it unforgettable.** The §3.9 mis-route was an unanchored
+>    regex. Intents now declare phrases and `matching.ts` compiles the boundaries, so the
+>    defect cannot be expressed — and one test asserts the property over every phrase,
+>    including phrases added after it was last read.
+> 4. **Writing the tests found the P1.** `inboundAgrees` compares a scope-filtered document
+>    side against an unscoped book side; probing per role to write an assertion is what
+>    showed it returning `false` for every auditor, which the Procurement screen printed as
+>    an unexplained control difference. Nothing else would have surfaced it: it is invisible
+>    as the Controller, and the Controller is who every earlier test was.
+> 5. **Ask Gaurd answers from the BASELINE close, not the live one.** `list_open_exceptions`
+>    and `get_blocking_conditions` read `ws.close`, so a conclusion recorded in the session
+>    moves every screen and no answer. Pre-existing across all of stage 08 and deliberately
+>    NOT changed in Stage G — it is wider than one stage. Decide it before Stage H closes.
 
 The original ten stages shipped and deployed. The work in flight is a **product-completion
 and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
@@ -61,10 +58,11 @@ but the *next task* is here, not in §8.
 | **F — Management outputs** | ✅ Done (`f900e79`, `8f0a827`) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
 | **Stage F review** | ✅ Done (`b1ccdc4`) — 9 lenses, 26 confirmed defects fixed |
 | **Remediation review** | ✅ Done (`406baaf`) — 4 lenses over `b1ccdc4`; 11 more fixed, 2 refuted |
-| **G — Ask Gaurd tools** | ⬅ **NEXT.** See "Stage G" below; gated on hardening the intent matcher |
+| **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents. **Review not run** |
+| **Stage G review** | ⬅ **NEXT.** Use the method below, then review the remediation too |
 | H — QA | Not started |
 
-**1,010 tests across 69 files passing**; typecheck, lint and production build clean, 20 routes.
+**1,690 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
@@ -144,32 +142,55 @@ them inline rather than trusting the tally.
 
 ---
 
-### Stage G — what to build. This is the next task.
+### Stage G — what it built, and what a review of it should attack
 
-Scope from `COMPLETION_PLAN.md` §10 and §6: **anchor the Ask Gaurd intent regexes, order
-specific-before-general, add a routing-identity regression harness, then add roughly ten
-grounded intents** — work-priority, GL-account inventory, GRNI, invoiced-not-received, the cost
-stack, scrap, JE detail, the SO accounting-impact walk, consignment custody, and memo drafting
-(prose only). **Everything those intents need now exists**: Stages B–F built the services behind
-all ten.
+`packages/ai` only; **no data work** — D5 was spent by Stage C and the dataset stays
+**`FY2026-DEMO-v1.2.0`** (hash `9f39105d…`).
 
-**There is no data work.** D5 was spent by Stage C; the dataset stays **`FY2026-DEMO-v1.2.0`**
-(hash `9f39105d…`). Stage G is a `packages/ai` stage.
+**What landed** (`7333663`):
 
-**The matcher is the gate, and it is a live defect, not a nicety.** `COMPLETION_PLAN` §3.9: the
-counts intent's unanchored `/count/` regex captures "GL **account** 1200" and "**account**ing
-impact of SO-26184" *today*. Roughly ten new intents cannot be added on top of that without a
-routing-identity harness that asserts, for every shipped chip and every intent, which handler a
-question reaches.
+- `packages/ai/src/matching.ts` — intents declare **phrases**, the compiler adds the word
+  boundaries. `intentPhrases` exposes every phrase so one test asserts the whole-word property
+  over the table. A stem marker (`reconcil*`) keeps lists short without loosening the LEFT
+  boundary, which is where §3.9's mis-routes came from.
+- `routeQuestion` is exported AND used by `answerQuestion`, so the harness and the engine cannot
+  disagree about what the table says. `AiInteraction.route` records which handler actually
+  answered — asserting on the recorded route rather than on a re-derivation matters, because the
+  fallbacks mean a question can match one intent and be answered by another.
+- **Twenty-one new intents**, ordered specific-before-general. Order IS the disambiguation.
+- **Eleven new tools**, each a one-line delegation to a Stage B–F projection through the new
+  `createProjectionService` in `packages/services/src/projections.ts`. That module exists so a
+  tool handler is never handed a workspace: it is a separate module rather than more methods on
+  `createQueryService` because `procurement.ts` and `ownership.ts` import `makeRecordScope` from
+  `queries.ts` at runtime, and a permission boundary should not rest on an import cycle
+  resolving.
+- **Draft mode is real.** The memo intent returns `AiDraftSection[]` — wording only, checked by
+  `statesQuantity` / `namesRecordIdentifier`, the same functions `checkNarration` uses. Not a
+  second copy: `guardrails.ts` exports them and both callers share the one definition.
+- `ask-view.ts` words canonical values using a map assembled from the modules that already own
+  each vocabulary (`CUSTODY_LABELS`, `METHOD_LABELS`, `COMPONENT_LABELS`, `statusView`,
+  `pbcStatusView`, `holderLabel`, `classificationLabel`, …). Nothing is restated there.
 
-**Two rules `packages/ai` already keeps that Stage G must not relax:**
+**Where to attack it.** These are the places the author knows are soft:
 
-- **Narration may not carry figures OR record identifiers at all.** Five guardrail bypasses came
-  from trying to decide whether a number in prose was the right one; that comparison is not
-  reliably decidable across spellings and phrasings, so it is not attempted. Quantities and ids
-  belong to the structured answer. Memo drafting is prose-only for exactly this reason — the memo
-  screen already assembles its figures from `memoPosition`, so a drafting intent must produce
-  wording and let the screen supply every number.
+- **Intent ORDER.** Thirty-three intents in one table, first match wins. Every probe is asserted,
+  but a question nobody wrote a probe for can still be claimed by the wrong intent. Read the
+  table looking for a phrase that belongs to two topics.
+- **Authored prose beside a measurement** — Stage F's measured root cause, and Stage G wrote a
+  lot of it. Every management conclusion that names a population should be derived from it or
+  asserted against it; `stage-g-regressions.test.ts` does that as biconditionals for six of them.
+  Find the ones it does not cover.
+- **`AiFigure.text` carrying composed values.** Several new intents put counts and dates into
+  `text` (`"IR-27-0007 · 3 units · 41 days outstanding"`). No money goes in there, which is the
+  rule that matters — check that it holds everywhere.
+- **The baseline-vs-effective gap** named in §0a. Every intent inherits it.
+
+**Two rules `packages/ai` keeps that nothing may relax:**
+
+- **Narration may not carry figures OR record identifiers at all**, and now neither may Draft
+  prose. Five guardrail bypasses came from trying to decide whether a number in prose was the
+  right one; that comparison is not reliably decidable across spellings and phrasings, so it is
+  not attempted. Quantities and ids belong to the structured answer.
 - **An enumerated denylist is not a category.** Every confirmed Ask Gaurd defect in the full-tree
   review was a guard listing the phrases somebody thought of. Add the category and a test that
   iterates it — writing those tests found two further holes in the first version of that fix.
@@ -463,7 +484,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
 | **Completion pass A/B/W/C/D/E/F + export affordance** | **Done**, and Stage F is reviewed AND its remediation reviewed (`b1ccdc4`, `406baaf`) — see §0a. NOT yet pushed or deployed. |
-| **Completion pass G–H** | **Not started.** Stage G (Ask Gaurd tools) is next; it needs no fixtures and is a `packages/ai` stage gated on hardening the intent matcher. |
+| **Completion pass G–H** | **G done** (`7333663`), its review not run. Stage H (QA) after that. Neither needs fixtures. |
 
 ### Commit history (newest first)
 
@@ -862,7 +883,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-> **Superseded for the active work — see §0a.** The next task is **Stage G (Ask Gaurd tools)**;
+> **Superseded for the active work — see §0a.** The next task is **reviewing Stage G**;
 > Stages A–F of the product-completion pass are done and committed, Stage F is reviewed, and its
 > remediation is reviewed. The rest of this section records the original ten-stage release, which
 > is finished and deployed.
