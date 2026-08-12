@@ -8,7 +8,22 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 
 ---
 
-## 0a. START HERE — Stage G is shipped; REVIEWING it is the next task
+## 0a. START HERE — the Stage G review ran and stopped at a usage limit
+
+> ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST.
+>
+> The fourteen-lens review RAN (2026-08-12). All 14 lenses completed — **96 raw findings, 78 deduped,
+> 48 confirmed, including 4 P0s** — and then the org's monthly spend limit killed the verification
+> fleet with 30 groups unjudged, one of them a P0. Nothing has been fixed. That document holds the
+> tally, the confirmed list, the unjudged list, where the artifacts are, and the resume order. It
+> also records two things you must not skip: **every one of the 90 skeptic verdicts came back
+> CONFIRMED**, which is a prompt-calibration bug rather than a result, and **three confirmed P1s are
+> defects in the `003525a` remediation itself** — the fix for the plan's §0 reopened the very class
+> it closed, on a narrower path.
+>
+> The section below describes the state before that review. It is still accurate about the code.
+
+## 0b. Stage G is shipped, and its §0 remediation with it
 
 > **Stage G landed in `7333663`** — the Ask Gaurd matcher hardening, the routing-identity
 > harness COMPLETION_PLAN §3.9 required, eleven new tools and twenty-one new intents.
@@ -70,7 +85,8 @@ but the *next task* is here, not in §8.
 | **Remediation review** | ✅ Done (`406baaf`) — 4 lenses over `b1ccdc4`; 11 more fixed, 2 refuted |
 | **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents |
 | **Stage G §0 remediation** | ✅ Done — the plan's four verified defects + five found fixing them |
-| **Stage G review** | ⬅ **NEXT.** Run the eleven lenses; then review the remediation too |
+| **Stage G review** | ⚠ RAN and stopped at a usage limit — 48 confirmed findings, 30 unjudged. See STAGE_G_REVIEW_STATUS.md |
+| **Stage G fix pass** | ⬅ **NEXT.** Verify G66, fix the 4 P0s + 3 remediation P1s, re-verify the tail |
 | H — QA | Not started |
 
 **1,749 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
