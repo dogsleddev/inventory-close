@@ -159,6 +159,8 @@ describe("every phrase is a whole word, by construction", () => {
   const phrases = INTENT_MATCHES.flatMap((i) =>
     intentPhrases(i.match).map((phrase) => ({ key: i.key, phrase })),
   );
+  /** Non-stem phrases: a stem's `[a-z]*` tail answers these questions itself. */
+  const closedPhraseRows = phrases.filter((p) => !p.phrase.endsWith("*"));
 
   it("has phrases to check", () => {
     // Without this, a table that failed to export would make every
@@ -168,7 +170,11 @@ describe("every phrase is a whole word, by construction", () => {
   });
 
   it.each(phrases)("$key: '$phrase' never matches inside a longer word", ({ phrase }) => {
-    const literal = phrase.endsWith("*") ? phrase.slice(0, -1) : phrase;
+    // Normalized, because that is the form the pattern is compiled from and the
+    // form a question arrives in. Testing the raw phrase would make this
+    // assertion fail on an encoding problem and report it as a boundary one;
+    // encoding is the ASCII assertion's job, below.
+    const literal = normalizeQuestion(phrase.endsWith("*") ? phrase.slice(0, -1) : phrase);
     const pattern = phrasePattern(phrase);
     // The phrase alone must match — otherwise the negative below proves
     // nothing, which is how a broken pattern passes a boundary test.
@@ -194,6 +200,65 @@ describe("every phrase is a whole word, by construction", () => {
     for (const { key, phrase } of phrases) {
       expect(phrase, `${key} phrase is not lower case`).toBe(phrase.toLowerCase());
     }
+  });
+
+  /**
+   * Every assertion above is SELF-REFERENTIAL: it tests a compiled pattern
+   * against the phrase that compiled it. That is the right shape for a boundary
+   * property and the wrong shape for an encoding one — all of them pass on a
+   * phrase that matches nothing a reader can type.
+   *
+   * The table's only apostrophe phrase is `hasn't moved`. Authored with a curly
+   * apostrophe, or mojibaked to `hasnâ€™t` by a Get-Content/Set-Content round
+   * trip on Windows, it compiles to a pattern no normalized question reaches —
+   * and the whole suite stays green, because each assertion folds the same
+   * corruption into both sides.
+   *
+   * `phrasePattern` now folds the phrase through `normalizeQuestion`, so a
+   * curly apostrophe survives. Folding cannot undo mojibake, though: `â€™` is
+   * not a character the fold set knows. So the guard is ASCII.
+   */
+  it("declares every phrase in ASCII, so a re-encoding fails here", () => {
+    for (const { key, phrase } of phrases) {
+      const offending = [...phrase].filter((ch) => ch.charCodeAt(0) > 127);
+      expect(
+        offending,
+        `${key} phrase "${phrase}" carries non-ASCII ${offending.map((c) => `U+${c.charCodeAt(0).toString(16)}`).join(" ")} — a curly character authored by hand, or a mojibaked file`,
+      ).toEqual([]);
+    }
+  });
+
+  it("routes a real question carrying a curly apostrophe", () => {
+    // Non-self-referential: a READER's question, built from char codes so no
+    // encoding in this file can flatter the result, against the shipped table.
+    const curly = String.fromCharCode(0x2019);
+    expect(routeQuestion(`What hasn${curly}t moved in a year?`)?.key).toBe("eo-aging");
+    expect(routeQuestion("What hasn't moved in a year?")?.key).toBe("eo-aging");
+  });
+
+  /**
+   * Hyphen and space are one spelling, in both directions.
+   *
+   * The join was `[\s-]+` and the split was `\s+`, so the property held one way
+   * only: an authored SPACE matched a hyphen, an authored HYPHEN matched
+   * nothing else. "What is in the sub-ledger?" answered and "What is in the sub
+   * ledger?" refused. Seven other hyphenated phrases looked fine only because
+   * an author had hand-listed the spaced twin — the allowlist standing in for
+   * the property, which is what number agreement had just been moved off.
+   */
+  it.each(closedPhraseRows)("$key: '$phrase' matches hyphenated and spaced alike", ({ phrase }) => {
+    const pattern = phrasePattern(phrase);
+    const literal = normalizeQuestion(phrase);
+    const spaced = literal.replace(/-/g, " ");
+    const hyphenated = literal.replace(/\s+/g, "-");
+    expect(pattern.test(spaced), `${phrase} does not match "${spaced}"`).toBe(true);
+    expect(pattern.test(hyphenated), `${phrase} does not match "${hyphenated}"`).toBe(true);
+  });
+
+  it("reaches the intent for a phrase a reader spaced out", () => {
+    expect(routeQuestion("What is in the sub ledger?")?.key).toBe("reconciliation");
+    expect(routeQuestion("What is in the sub-ledger?")?.key).toBe("reconciliation");
+    expect(routeQuestion("Show me the three way match.")?.key).toBe("procurement-chain");
   });
 });
 
@@ -246,7 +311,11 @@ describe("number agreement is compiled, not declared", () => {
 
   it.each(closedPhrases)("$key: '$phrase' matches in both numbers", ({ phrase }) => {
     const pattern = phrasePattern(phrase);
-    const words = phrase.split(/\s+/);
+    // Segmented the way the compiler segments — on `[\s-]+`, so the head of
+    // "sub-ledger" is "ledger" here as it is there. Splitting on whitespace
+    // alone would inflect "sub-ledger" whole and assert a form the compiler
+    // never produces.
+    const words = normalizeQuestion(phrase).split(/[\s-]+/);
     const head = words[words.length - 1]!;
     for (const form of numberForms(head)) {
       const written = [...words.slice(0, -1), form].join(" ");

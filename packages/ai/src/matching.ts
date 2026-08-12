@@ -119,11 +119,32 @@ export function normalizeQuestion(question: string): string {
  * Words inside a phrase are joined by `[\s-]+`, so "first pass" matches
  * "first-pass" and "sign off" matches "sign-off". A close is written both
  * ways on the same screen and neither spelling is the reader's mistake.
+ *
+ * The split is on `[\s-]+` too, and that is the half that was missing. Splitting
+ * on whitespace alone made the join one-directional: an authored SPACE matched a
+ * hyphen, an authored HYPHEN matched nothing else. `"sub-ledger"` compiled to
+ * `/\b(?:sub-ledgers|sub-ledger)\b/`, so "What is in the sub ledger?" refused
+ * while "What is in the sub-ledger?" answered. Seven other hyphenated phrases
+ * looked fine only because an author had hand-listed the spaced twin beside
+ * them — a hand-maintained allowlist standing in for a compiler property, which
+ * is the same shape number agreement removed one axis over. Splitting on the
+ * same class it joins on makes the property symmetric by construction, and
+ * inflection still lands on the head noun because the last SEGMENT is the last
+ * element either way.
+ *
+ * The phrase is folded by `normalizeQuestion` — the same function the question
+ * goes through, not a second spelling of it. Folding one side and not the other
+ * meant a phrase authored with a curly apostrophe compiled to a pattern no
+ * normalized question could match, and nothing said so: every assertion in the
+ * phrase-property suite tests a pattern against the phrase that produced it, so
+ * all of them pass on a phrase that matches nothing a reader can type.
+ * `routing-identity.test.ts` additionally requires every phrase to be ASCII,
+ * which is what catches the corruption folding cannot undo.
  */
 export function phrasePattern(phrase: string): RegExp {
   const stem = phrase.endsWith(STEM);
-  const literal = (stem ? phrase.slice(0, -STEM.length) : phrase).toLowerCase();
-  const words = literal.split(/\s+/).filter((w) => w !== "");
+  const literal = normalizeQuestion(stem ? phrase.slice(0, -STEM.length) : phrase);
+  const words = literal.split(/[\s-]+/).filter((w) => w !== "");
   if (words.length === 0) {
     throw new Error("An intent phrase must contain at least one word");
   }
