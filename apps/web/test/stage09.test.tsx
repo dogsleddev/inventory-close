@@ -159,11 +159,16 @@ describe("Reset Demo is offered only where the service would allow it", () => {
     expect(within(note).getByText(/append-only audit trail kept/)).toBeTruthy();
   });
 
-  it("accounts on the page for every field the reset reports clearing", () => {
+  it("accounts on the page for every field a reset that moves the period reports clearing", () => {
     // Iterates the KEYS of `cleared` rather than naming the nouns, so a new
     // field has to reach the sentence to pass. `period` arrived exactly that
     // way and went unmentioned; an enumeration written today would have said
     // the seven collection nouns and stayed green through it.
+    //
+    // The lock is the arrangement that makes the period clause live: it is
+    // emitted only on a transition, so on the default path `period` is
+    // reported as cleared and the page correctly says nothing about it. The
+    // no-move direction is the test below.
     const actor = userByRole("CONTROLLER");
     const ctx = makeContext(actor, "T-09-PERIOD");
     const commands = getCommands();
@@ -185,6 +190,25 @@ describe("Reset Demo is offered only where the service would allow it", () => {
         expected,
       );
     }
+
+    // The token the loop derives for `period` is the FROM state alone, which
+    // is satisfied by either ordering and by no destination at all. A reset
+    // returns the period to its seeded state, so the whole clause is
+    // assertable and the direction is pinned.
+    expect(view.detail, "the period transition is reported backwards").toContain(
+      "The period moved from locked to open.",
+    );
+  });
+
+  it("says nothing about the period when the reset did not move it", () => {
+    const actor = userByRole("CONTROLLER");
+    // A reset leaves the period OPEN, so the next one cannot move it.
+    getCommands().resetDemo(makeContext(actor, "T-09-UNMOVED-SEED"));
+    const view = runResetDemo(actor, "T-09-PERIOD-UNMOVED");
+    expect(view.ok).toBe(true);
+    expect(view.detail, "a transition reported where none occurred").not.toContain(
+      "The period moved",
+    );
   });
 });
 

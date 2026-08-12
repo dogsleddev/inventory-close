@@ -32,13 +32,19 @@ const MOCKING_FILES = [
   "apps/web/test/stage09.test.tsx",
 ] as const;
 
-const MOCK_CALL = 'vi.mock("../app/actions"';
+/**
+ * Matches the mock call by MODULE rather than by one spelling of its
+ * specifier: a test file one directory deeper has to write `../../app/actions`,
+ * and a substring match on the shallow form would silently exclude it from a
+ * scan whose whole job is to be exhaustive.
+ */
+const MOCK_CALL = /vi\.(?:do)?mock\(\s*["'](?:\.\.\/)+app\/actions(?:\.tsx?)?["']/;
 
 const read = (path: string): string => readFileSync(join(REPO_ROOT, path), "utf8");
 
 /** The exports the module actually has. */
 function realExports(): string[] {
-  return [...read(ACTIONS_PATH).matchAll(/^export async function (\w+)/gm)]
+  return [...read(ACTIONS_PATH).matchAll(/^export (?:async function|function|const) (\w+)/gm)]
     .map((m) => m[1]!)
     .sort();
 }
@@ -46,7 +52,7 @@ function realExports(): string[] {
 /** The keys one factory lists. */
 function factoryKeys(path: string): string[] {
   const source = read(path);
-  const start = source.indexOf(MOCK_CALL);
+  const start = source.search(MOCK_CALL);
   if (start === -1) return [];
   const end = source.indexOf("\n}));", start);
   if (end === -1) return [];
@@ -77,11 +83,23 @@ describe("the scan covers what it claims to cover", () => {
     }
   });
 
+  it("reads every export the module declares", () => {
+    // A regex over source text is an allowlist of SYNTAX, and it can never be
+    // complete — `export default`, `export { … } from` and `export *` all
+    // return nothing from it. This makes an unrecognised form loud instead of
+    // invisible, so the scan cannot certify a factory complete against a list
+    // it silently failed to build.
+    const declared = [...read(ACTIONS_PATH).matchAll(/^export /gm)].length;
+    expect(declared, "actions.ts has an export the scan's regex does not read").toBe(
+      realExports().length,
+    );
+  });
+
   it("knows about every file that mocks the actions module", () => {
     // Re-derived from the tree, so a fifth mocking file cannot be added
     // without either being covered or failing here.
     const found = collect(["apps/web/test"], [".ts", ".tsx"])
-      .filter((f) => f.text.includes(MOCK_CALL))
+      .filter((f) => MOCK_CALL.test(f.text))
       .map((f) => f.path)
       .sort();
     expect(found).toEqual([...MOCKING_FILES].sort());

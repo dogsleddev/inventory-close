@@ -506,10 +506,7 @@ describe("the register reads its answers from the constants that hold them", () 
     // A category rule over all 58 rows: the panel claims each answer is read
     // from the constant that holds it, never restated beside it. A restated
     // answer appears in this module as a string literal.
-    const source = readFileSync(
-      join(process.cwd(), "packages/services/src/methodology.ts"),
-      "utf8",
-    );
+    const source = readFileSync(join(__dirname, "..", "src", "methodology.ts"), "utf8");
     const view = getMethodology(ws, ctx("CONTROLLER"));
     const restated = view.interpretations
       .filter((i) => source.includes(JSON.stringify(i.answer)))

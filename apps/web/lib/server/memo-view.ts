@@ -183,10 +183,13 @@ export function buildCloseMemoData(
               ? "The close has moved since this version was issued."
               : "The close is where it was when this version was issued.",
             detail: memo.positionMoved
-              ? // The remedy is only offered when it is available: under a
-                // locked period, "issue a new version" instructs the reader to
-                // do the thing the service will refuse.
-                `The close is no longer in the state the issued version was sealed against — the position below is the close as it stands now. The issued version is not edited to catch up; it says what was said at the time.${memo.periodBlocks === null ? " Issue a new version to state the current position." : ""}`
+              ? // The remedy is only offered where the command would be
+                // accepted, and `issueMemoVersion` has TWO gates: the role
+                // (`authorize`) and the period (`requireMutable`). A preparer
+                // holds memo.draft without memo.issue, so it gets the editor,
+                // no Issue panel, and — without the role half of this
+                // condition — an instruction to issue anyway.
+                `The close is no longer in the state the issued version was sealed against — the position below is the close as it stands now. The issued version is not edited to catch up; it says what was said at the time.${memo.periodBlocks === null && memo.canIssue ? " Issue a new version to state the current position." : ""}`
               : "The issued version was sealed against a hash of the position below, and it still agrees. This is a comparison of the close state, not of the prose: it says that nothing the memo speaks about has changed.",
           },
     withheldNote: memo.withheldNote,

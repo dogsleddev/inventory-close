@@ -116,13 +116,30 @@ describe("what the file claims to show in full, it shows in full", () => {
       .map((v) => v.body);
     expect(sealedBodies.length, "the fixture must hold two sealed versions").toBe(2);
 
+    const issuedBody = getWorkspace().memoVersions.find((v) => v.state === "ISSUED")!.body;
+
     for (const surface of [csvFor(auditor()), csvFor(controller())]) {
-      const carriesEverySealedBody = sealedBodies.every((b) => surface.includes(b));
-      if (!carriesEverySealedBody) {
-        expect(surface).not.toMatch(/versions? (?:is|are) shown in full/i);
+      // Derived from the population rather than gated on one phrase. The
+      // earlier form guarded the assertion behind "does the file carry every
+      // sealed body", which is false on every run — so the only live check was
+      // a regex for wording this commit had already replaced, and it could
+      // never fail.
+      for (const withheld of sealedBodies.filter((b) => b !== issuedBody)) {
+        expect(surface, "a superseded version's text is carried in the file").not.toContain(
+          withheld,
+        );
       }
+      expect(
+        surface,
+        "a completeness claim wider than the bodies the file carries",
+      ).not.toMatch(/\b(?:versions|every|all|each)\b[^.]*\bin full\b/i);
       // The unissued draft's text is management working paper on every path.
       expect(surface).not.toContain("UNISSUEDDRAFTBODYMARKER");
     }
+
+    // ...and the note names the convention the file actually follows. Auditor
+    // only: `withheldNote` is null when nothing is withheld, so a Controller's
+    // file has never carried a completeness claim to check.
+    expect(csvFor(auditor())).toMatch(/not its text/);
   });
 });

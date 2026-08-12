@@ -62,10 +62,29 @@ export function CloseMemoScreen({
       ? initialTab
       : "memo",
   );
-  const [title, setTitle] = useState(
-    data.draft?.title ?? "FY2026 Inventory Close Memo",
-  );
-  const [body, setBody] = useState(data.draft?.body ?? "");
+  // `useState` seeds once, at mount, but `data.draft` can arrive later: an
+  // auditor is not shown the working draft at all, and switching role is a
+  // props update rather than a remount. Without re-seeding, the editor holds
+  // its mount-time placeholder while `data.draft` holds the real draft — and
+  // the guard below then reports the placeholder as this reader's unsaved
+  // edits, telling them to save it OVER the draft of record.
+  //
+  // Re-seeded during render rather than in an effect, so no frame is painted
+  // from the stale seed. Text the reader has touched is never discarded.
+  const draftKey = data.draft === null ? "none" : `${data.draft.at} ${data.draft.by}`;
+  const seedTitle = data.draft?.title ?? "FY2026 Inventory Close Memo";
+  const seedBody = data.draft?.body ?? "";
+  const [title, setTitle] = useState(seedTitle);
+  const [body, setBody] = useState(seedBody);
+  const [seed, setSeed] = useState({ key: draftKey, title: seedTitle, body: seedBody });
+  if (seed.key !== draftKey) {
+    const untouched = title === seed.title && body === seed.body;
+    setSeed({ key: draftKey, title: seedTitle, body: seedBody });
+    if (untouched) {
+      setTitle(seedTitle);
+      setBody(seedBody);
+    }
+  }
   const [issueNote, setIssueNote] = useState("");
   const [result, setResult] = useState<WorkflowActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -83,10 +102,18 @@ export function CloseMemoScreen({
   // Issuing seals the last SAVED draft, not what is on screen. The title is
   // part of that comparison because the seal hashes { title, body } — a
   // body-only guard would be the same defect in a smaller box.
+  //
+  // Both sides are trimmed because `saveMemoDraft` stores `input.title.trim()`
+  // / `input.body.trim()`: comparing raw keystrokes against the trimmed draft
+  // of record makes whitespace an edit that saving cannot clear, which turns
+  // this guard into the mirror of the defect it exists to prevent — refusing
+  // a control the service would accept, behind a remedy that does nothing.
+  // Exactly `.trim()`, the command's own normalisation, and not a general
+  // whitespace normaliser, or the guard drifts from the seal the other way.
   const unsavedEdits =
     data.canDraft &&
     data.draft !== null &&
-    (title !== data.draft.title || body !== data.draft.body);
+    (title.trim() !== data.draft.title || body.trim() !== data.draft.body);
 
   return (
     <AppShell

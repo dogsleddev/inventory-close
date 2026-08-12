@@ -335,15 +335,39 @@ describe("the two new export files carry the values their labels name", () => {
   });
 
   it("emits every section heading as a boundary the splitter can find", () => {
-    // Copied byte-for-byte from stageE-regressions.test.tsx — the character
-    // class contains an em dash, and substituting a hyphen silently narrows
-    // it so the assertion passes without testing anything.
+    // The regex is copied byte-for-byte from stageE-regressions.test.tsx — its
+    // character class contains an em dash, and substituting a hyphen silently
+    // narrows it so the assertion passes without testing anything.
     const boundary = /\r\n"[A-Z][A-Z ()/—-]{6,}"\r\n/g;
+    // Named, not counted. A count is satisfied by the wrong set of the right
+    // size: rename one heading so the splitter stops seeing it and a total
+    // stays plausible, while the section it heads silently merges into its
+    // neighbour. A named list also catches a heading deleted outright, which
+    // nothing derived from the file itself can.
+    const headings = {
+      methodology: [
+        "READINESS DERIVATION",
+        "SUBLEDGER TO GENERAL LEDGER",
+        "RECONCILING ITEMS",
+        "INVENTORY ACCOUNTING MATRIX",
+        "MATRIX ROWS",
+        "AUTHORED JUDGEMENTS",
+        "POLICY VALUES",
+        "NOT COVERED BY THE REPRODUCIBILITY CHECK",
+      ],
+      "close-memo": ["CLOSE POSITION THIS MEMO DESCRIBES", "VERSION HISTORY", "ISSUED TEXT"],
+    } as const;
+
     for (const table of ["methodology", "close-memo"] as const) {
-      const found = [...csv(table).matchAll(boundary)].length;
-      expect(found, `${table} emitted no section boundary the splitter recognises`).toBeGreaterThan(
-        0,
-      );
+      const body = csv(table);
+      const found = new Set((body.match(boundary) ?? []).map((m) => m.slice(3, -3)));
+      for (const heading of headings[table]) {
+        expect(body, `${table}: ${heading} is not emitted at all`).toContain(heading);
+        expect(
+          found.has(heading),
+          `${table}: "${heading}" is emitted but the splitter does not see it as a boundary`,
+        ).toBe(true);
+      }
     }
   });
 });
@@ -585,5 +609,127 @@ describe("the issue note survives a refusal and clears on success", () => {
     // ...and the TITLE is half of what gets sealed, so it counts too.
     await person.type(screen.getByLabelText("TITLE"), " (revised)");
     expect((button() as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("does not call whitespace an edit the reader has to save away", async () => {
+    // The screen's OWN recommended path: "Start from the close position",
+    // then "Save draft". The suggested body ends in a newline and the command
+    // stores it trimmed, so a guard comparing raw keystrokes against the draft
+    // of record finds a difference no amount of saving can clear — refusing a
+    // control the service would accept, which is the mirror of the defect this
+    // guard exists to prevent.
+    //
+    // Seeded through the real command rather than from a literal: a
+    // hand-written trimmed body is exactly what let this ship.
+    const person = userEvent.setup();
+    const ctx = () => makeContext(user(), "T-F-WS");
+    const save = async (input: { title: string; body: string }) => {
+      getCommands().saveMemoDraft(ctx(), input);
+      return { ok: true, message: "Saved.", unmet: [] } as WorkflowActionResult;
+    };
+
+    const first = buildCloseMemoData(user(), "T-F-WS");
+    // Non-vacuity: if the offered text ever stops carrying trailing
+    // whitespace, this case proves nothing and must say so.
+    expect(
+      first.suggestedBody,
+      "the suggested body no longer carries trailing whitespace",
+    ).not.toBe(first.suggestedBody.trim());
+
+    const view = render(
+      <CloseMemoScreen
+        shell={buildShellData(user(), "T-F-WS")}
+        data={first}
+        saveDraftAction={save}
+        issueVersionAction={ok}
+        setRoleAction={noopRole}
+      />,
+    );
+
+    await person.click(screen.getByRole("button", { name: "Start from the close position" }));
+    await person.click(screen.getByRole("button", { name: "Save draft" }));
+
+    // What `revalidatePath` produces: the same mounted root, fresh server data.
+    view.rerender(
+      <CloseMemoScreen
+        shell={buildShellData(user(), "T-F-WS")}
+        data={buildCloseMemoData(user(), "T-F-WS")}
+        saveDraftAction={save}
+        issueVersionAction={ok}
+        setRoleAction={noopRole}
+      />,
+    );
+
+    const issue = screen.getByRole("button", { name: "Issue this version" });
+    expect(
+      (issue as HTMLButtonElement).disabled,
+      "saved its own suggested text and still refuses to issue it",
+    ).toBe(false);
+    expect(screen.queryByText(/unsaved changes/)).toBeNull();
+  });
+
+  it("re-seeds the editor when the draft it was seeded from arrives late", async () => {
+    // An auditor is not shown the working draft, and switching role is a props
+    // update rather than a remount — so the editor keeps its mount-time
+    // placeholder while `data.draft` holds the real one. Left alone, the guard
+    // reports the placeholder as this reader's unsaved edits and instructs
+    // them to save it over the draft of record.
+    getCommands().saveMemoDraft(makeContext(user(), "T-F-SEED-LATE"), {
+      title: "FY2026 Inventory Close Memo",
+      body: "The controller's saved assessment.",
+    });
+
+    const asRole = (role: Parameters<typeof userByRole>[0]) => (
+      <CloseMemoScreen
+        shell={buildShellData(user(role), "T-F-LATE")}
+        data={buildCloseMemoData(user(role), "T-F-LATE")}
+        saveDraftAction={ok}
+        issueVersionAction={ok}
+        setRoleAction={noopRole}
+      />
+    );
+
+    const view = render(asRole("AUDITOR_READ_ONLY"));
+    view.rerender(asRole("CONTROLLER"));
+
+    expect((screen.getByLabelText("MEMO") as HTMLTextAreaElement).value).toBe(
+      "The controller's saved assessment.",
+    );
+    expect(
+      (screen.getByRole("button", { name: "Issue this version" }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  it("keeps what the reader typed when the draft changes underneath them", async () => {
+    // The other half: re-seeding must never discard the reader's own words.
+    // Mounted with no draft (so the editor is seeded empty), the reader types,
+    // and a draft then arrives — a naive unconditional re-seed would wipe what
+    // they wrote.
+    const person = userEvent.setup();
+    getCommands().resetDemo(makeContext(user(), "T-F-KEEP-RESET"));
+
+    const current = () => (
+      <CloseMemoScreen
+        shell={buildShellData(user(), "T-F-KEEP")}
+        data={buildCloseMemoData(user(), "T-F-KEEP")}
+        saveDraftAction={ok}
+        issueVersionAction={ok}
+        setRoleAction={noopRole}
+      />
+    );
+
+    const view = render(current());
+    await person.type(screen.getByLabelText("MEMO"), "Words the reader typed.");
+
+    // Somebody else saves a draft; this reader's props update underneath them.
+    getCommands().saveMemoDraft(makeContext(user("ACCOUNTING_MANAGER"), "T-F-KEEP-OTHER"), {
+      title: "FY2026 Inventory Close Memo",
+      body: "Another author's assessment.",
+    });
+    view.rerender(current());
+
+    expect((screen.getByLabelText("MEMO") as HTMLTextAreaElement).value).toContain(
+      "Words the reader typed.",
+    );
   });
 });
