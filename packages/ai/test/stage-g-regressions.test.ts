@@ -1059,3 +1059,126 @@ describe("a withheld timeline component is marked, never dropped", () => {
     expect(sawWithheld).toBeGreaterThan(0);
   });
 });
+
+/**
+ * The memo answer's two world-claims, each read from the field that decides it.
+ *
+ * "the close position is the one below" never consulted `positionMoved`, which
+ * sits on the same `MemoOut` the handler already holds — so it was
+ * byte-identical whether the close had moved since issue or not, printing the
+ * live figures under a sentence calling them the issued ones.
+ *
+ * "Nothing drafted and nothing issued" was a claim about the world made from a
+ * field the reader's own scope had nulled. An auditor read it three blocks
+ * above the same answer's note that a draft was withheld from them.
+ */
+describe("the memo answer reads the fields its sentences depend on", () => {
+  const memoWorld = () => {
+    const fresh = createWorkspace();
+    const commands = createCommandService(fresh);
+    const ctl: ServiceContext = {
+      user: userByRole("CONTROLLER"),
+      correlationId: "T-MEMO-W",
+      sourceInterface: "ASK_GAURD",
+    };
+    const asRole = (role: Role): AiToolContext => ({
+      queries: createQueryService(fresh),
+      projections: createProjectionService(fresh),
+      ctx: { user: userByRole(role), correlationId: "T-MEMO-W", sourceInterface: "ASK_GAURD" },
+    });
+    const status = (role: Role) =>
+      answerQuestion(asRole(role), "Draft the close memo for me.", {}).answer?.status ?? "";
+    return { fresh, commands, ctl, asRole, status };
+  };
+
+  it("does not tell a reader nothing is drafted when a draft is merely withheld", () => {
+    const w = memoWorld();
+    // Premise: at baseline the sentence is TRUE, for everyone.
+    expect(w.status("CONTROLLER")).toMatch(/Nothing drafted and nothing issued/);
+    expect(w.status("AUDITOR_READ_ONLY")).toMatch(/Nothing drafted and nothing issued/);
+
+    w.commands.saveMemoDraft(w.ctl, { title: "Working draft", body: "INTERNAL — do not circulate" });
+
+    const memo = createProjectionService(w.fresh).getMemo({
+      user: userByRole("AUDITOR_READ_ONLY"),
+      correlationId: "T-MEMO-W",
+      sourceInterface: "ASK_GAURD",
+    });
+    // The premise of the fix: the draft IS withheld from this reader.
+    expect(memo.workingDraft).toBeNull();
+    expect(memo.withheldDraftCount).toBeGreaterThan(0);
+
+    expect(w.status("AUDITOR_READ_ONLY")).not.toMatch(/Nothing drafted/);
+    expect(w.status("AUDITOR_READ_ONLY")).toMatch(/withheld from your role/);
+    // And the other direction: a reader who may see it is told it exists, not
+    // that something is being kept from them.
+    expect(w.status("CONTROLLER")).toMatch(/A working draft exists/);
+    expect(w.status("CONTROLLER")).not.toMatch(/withheld/);
+  });
+
+  it("says the close has moved exactly when the memo says it has", () => {
+    const w = memoWorld();
+    w.commands.saveMemoDraft(w.ctl, { title: "Working draft", body: "Draft." });
+    w.commands.issueMemoVersion(w.ctl, { note: "Issued." });
+
+    const memoOf = () =>
+      createProjectionService(w.fresh).getMemo({
+        user: userByRole("CONTROLLER"),
+        correlationId: "T-MEMO-W",
+        sourceInterface: "ASK_GAURD",
+      });
+    const moved = () => /the close has moved since it was sealed/.test(w.status("CONTROLLER"));
+
+    // Premise: issued and unmoved, so the original sentence is correct here.
+    expect(memoOf().positionMoved).toBe(false);
+    expect(moved()).toBe(false);
+
+    // Move the close through the product's own verbs.
+    const queries = createQueryService(w.fresh);
+    const id = w.fresh.close.blockers[0]!.exceptionId;
+    for (const requirement of queries.getExceptionWorkflow(w.ctl, id).unmetRequirements) {
+      const submitted = w.commands.submitEvidence(w.ctl, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: id,
+        satisfiesRequirement: { exceptionId: id, requirement },
+      });
+      w.commands.reviewEvidence(
+        {
+          user: userByRole("ACCOUNTING_MANAGER"),
+          correlationId: "T-MEMO-W",
+          sourceInterface: "ASK_GAURD",
+        },
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+    w.commands.concludeException(w.ctl, {
+      exceptionId: id,
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Support obtained.",
+    });
+
+    // The biconditional, both ends of it.
+    expect(memoOf().positionMoved).toBe(true);
+    expect(moved()).toBe(true);
+  });
+
+  it("reports no comparison before anything is issued", () => {
+    // `null` is not `false`: with nothing sealed there is nothing to compare,
+    // and "has not moved" would be a comparison that never happened reported
+    // as a negative result.
+    const w = memoWorld();
+    w.commands.saveMemoDraft(w.ctl, { title: "Working draft", body: "Draft." });
+    expect(
+      createProjectionService(w.fresh).getMemo({
+        user: userByRole("CONTROLLER"),
+        correlationId: "T-MEMO-W",
+        sourceInterface: "ASK_GAURD",
+      }).positionMoved,
+    ).toBeNull();
+    expect(w.status("CONTROLLER")).not.toMatch(/moved/);
+  });
+});

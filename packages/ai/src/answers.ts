@@ -348,12 +348,38 @@ const INTENTS: readonly Intent[] = [
             ? "Open Close Memo, then 'Start from the close position' — it fills the figures and leaves the assessment blank."
             : "Your role may read the memo but not draft it. Switch to a role that may, or hand this wording to whoever will.";
       return {
+        /**
+         * Two claims, each of which used to be made without consulting the
+         * field that decides it.
+         *
+         * **"the close position is the one below."** `positionMoved` sits on
+         * the same `MemoOut` this handler already holds and was never read, so
+         * the sentence was byte-identical whether the close had moved since
+         * issue or not. In the moved state the drawer printed 6 open and
+         * 83.58% under a sentence saying that was the issued position, when
+         * Version 1 was sealed against 7 and 81.42%. The Close Memo panel and
+         * the CSV export both state the divergence from this same boolean.
+         * `null` stays distinct from `false`: before anything is issued there
+         * is no comparison to report, and "has not moved" would be a
+         * comparison that never happened reported as a negative result.
+         *
+         * **"Nothing drafted and nothing issued."** That is a claim about the
+         * world, made from a field the reader's own scope had nulled. An
+         * auditor read it three blocks above this answer's own note that a
+         * draft was withheld from them. `withheldDraftCount` is the same guard
+         * `CloseMemoScreen` already applies before it will say the memo has
+         * not been drafted.
+         */
         status:
           memo.issued !== null
-            ? `${memo.issued.label} issued; the close position is the one below`
+            ? memo.positionMoved === true
+              ? `${memo.issued.label} issued; the close has moved since it was sealed, and the position below is the close as it stands now`
+              : `${memo.issued.label} issued; the close position is the one below`
             : memo.workingDraft !== null
               ? "A working draft exists; nothing has been issued"
-              : "Nothing drafted and nothing issued",
+              : memo.withheldDraftCount > 0
+                ? `Nothing issued. ${count(memo.withheldDraftCount)} unissued ${plural(memo.withheldDraftCount, "draft is", "drafts are")} withheld from your role, so whether one exists is not something this answer can tell you`
+                : "Nothing drafted and nothing issued",
         knownFacts: [
           { label: "Book units", count: p.bookUnits, source: "get_memo" },
           { label: "Subledger", valueCents: p.subledgerCents, source: "get_memo" },
