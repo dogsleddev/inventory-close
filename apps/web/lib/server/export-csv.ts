@@ -57,6 +57,18 @@ function row(values: readonly unknown[]): string {
   return values.map(cell).join(",");
 }
 
+/**
+ * A document cell that distinguishes withheld from absent.
+ *
+ * An empty cell in a spreadsheet reads as "there is nothing there", which is
+ * the wrong reading for a document that exists and is outside the reader's
+ * scope — the same reason the evidence table writes WITHHELD rather than
+ * leaving the content column blank.
+ */
+function documentCell(value: string | undefined, withheld: boolean): string {
+  return withheld ? "WITHHELD — outside this role's scope" : (value ?? "");
+}
+
 export const EXPORT_TABLES = [
   "inventory",
   "exceptions",
@@ -386,13 +398,29 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     // order can sit in more than one of them, and splitting them across
     // sheets would let a reader add up totals that overlap.
     const p = getProcurementPopulations(getWorkspace(), ctx);
-    if (p.withheldOrderCount > 0) {
-      lines.push(
-        row([
-          "Withheld",
-          `${p.withheldOrderCount} orders are outside this role's scope and are not in this file`,
-        ]),
-      );
+    if (p.withheldOrderCount > 0 || p.withheldDocumentCount > 0) {
+      // Two different omissions, reported separately: an order withheld whole
+      // has no row at all, while an order that keeps its row can still be
+      // missing a document. Reporting only the first understated the second.
+      // The plurals are counted, not assumed — the auditor withholds exactly
+      // one order, so a hard-coded "orders are" read "1 orders are" on every
+      // run of this export.
+      if (p.withheldOrderCount > 0) {
+        lines.push(
+          row([
+            "Withheld",
+            `${p.withheldOrderCount} ${p.withheldOrderCount === 1 ? "order is" : "orders are"} outside this role's scope and ${p.withheldOrderCount === 1 ? "is" : "are"} not in this file. The three-way match summary on the Procurement screen still counts the close's whole population of ${p.summary.orders} orders.`,
+          ]),
+        );
+      }
+      if (p.withheldDocumentCount > 0) {
+        lines.push(
+          row([
+            "Withheld",
+            `${p.withheldDocumentCount} source ${p.withheldDocumentCount === 1 ? "document is" : "documents are"} outside this role's scope on ${p.withheldDocumentCount === 1 ? "an order that keeps its row" : "orders that keep their rows"}. Those cells read WITHHELD, never blank.`,
+          ]),
+        );
+      }
       lines.push("");
     }
     lines.push(row(["THREE-WAY MATCH"]));
@@ -420,10 +448,10 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           o.purchaseOrderNumber,
           o.vendor,
           o.orderDate,
-          o.itemReceiptNumber ?? "",
-          o.receiptDate ?? "",
-          o.vendorBillNumber ?? "",
-          o.billDate ?? "",
+          documentCell(o.itemReceiptNumber, o.withheldDocuments.includes("ITEM_RECEIPT")),
+          documentCell(o.receiptDate, o.withheldDocuments.includes("ITEM_RECEIPT")),
+          documentCell(o.vendorBillNumber, o.withheldDocuments.includes("VENDOR_BILL")),
+          documentCell(o.billDate, o.withheldDocuments.includes("VENDOR_BILL")),
           o.quantity,
           o.orderedCents === undefined ? "" : formatCents(o.orderedCents),
           o.billedCents === undefined ? "" : formatCents(o.billedCents),
@@ -459,8 +487,8 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           g.quantity,
           g.receivedCents === undefined ? "" : formatCents(g.receivedCents),
           g.daysOutstanding,
-          g.vendorBillNumber ?? "",
-          g.billDate ?? "",
+          documentCell(g.vendorBillNumber, g.withheldDocuments.includes("VENDOR_BILL")),
+          documentCell(g.billDate, g.withheldDocuments.includes("VENDOR_BILL")),
         ]),
       );
     }
@@ -489,8 +517,8 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           i.billDate,
           i.quantity,
           i.billedCents === undefined ? "" : formatCents(i.billedCents),
-          i.itemReceiptNumber ?? "",
-          i.recordedReceiptDate ?? "",
+          documentCell(i.itemReceiptNumber, i.withheldDocuments.includes("ITEM_RECEIPT")),
+          documentCell(i.recordedReceiptDate, i.withheldDocuments.includes("ITEM_RECEIPT")),
           i.closeMatchStatus,
           i.relatedExceptionId ?? "",
         ]),

@@ -37,6 +37,7 @@ export {
 } from "./matching.js";
 export type { IntentMatch } from "./matching.js";
 export {
+  checkDraft,
   checkNarration,
   describeAvailability,
   fenceUntrusted,

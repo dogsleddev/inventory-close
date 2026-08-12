@@ -236,6 +236,12 @@ describe("routing identity", () => {
      * property that makes "no figure comes from anywhere else" true rather
      * than intended, so it runs over the whole probe table — which the
      * reachability test above proves covers every intent.
+     *
+     * This is a NECESSARY condition and not the property `AiFigure.source`
+     * documents. It asserts membership in the set of tools the interaction
+     * ran, and 28 of the 34 probes call exactly one tool, so it has content on
+     * six — where it passed over two intents citing the wrong one of the two
+     * tools they called. The identity check is the test below.
      */
     const r = answerQuestion(t, q, scope ?? {});
     const called = new Set(r.toolCalls.filter((c) => c.outcome === "OK").map((c) => c.tool));
@@ -249,6 +255,184 @@ describe("routing identity", () => {
         true,
       );
     }
+  });
+
+  /**
+   * Figure provenance, by identity rather than by membership.
+   *
+   * `AiFigure.source` is documented as "the tool this figure came from — makes
+   * drift auditable", and the drawer prints it as "Answered from …". The test
+   * above cannot see the difference between that and "a tool this answer
+   * happened to call", and two intents were citing the wrong one: `pbc`
+   * declared `get_pbc_status` on two counts it read from
+   * `readiness.aggregates`, and `blockers` declared `get_blocking_conditions`
+   * on a count and on its exposure figure, read from the same place. A drift
+   * audit run against those citations would have agreed with itself.
+   *
+   * So each called tool's output is perturbed in turn and the figures are
+   * diffed. The assertion is the defect's exact signature: a figure citing
+   * tool S that does NOT move when S moves, but DOES move when another tool
+   * this same answer called moves. That figure demonstrably tracks the other
+   * tool, whatever it says. The tool's service methods are discovered by
+   * running the real handler through a recording proxy, so nothing here
+   * restates the `HANDLERS` table — a tool added later is covered without this
+   * test being edited.
+   *
+   * The weaker form — "a figure citing S must move when S moves" — was tried
+   * first and reported two figures that were sourced correctly. `count:
+   * matches.filter(m => m.closeMatchStatus !== "PASS").length` does not move
+   * when the numbers inside those matches move, and no perturbation of a
+   * result can be relied on to move an arbitrary derived count. A figure that
+   * moves with nothing is not evidence of anything, and this test now says so
+   * by staying silent about it rather than by failing.
+   *
+   * One further limit, honestly: where two tools share a service method (both
+   * financial-lifecycle tools read `getFinancialLife`) perturbing one moves the
+   * other, which can only hide a defect, never invent one.
+   */
+  const DELTA = 7_000_003;
+
+  const perturb = (value: unknown): unknown => {
+    if (typeof value === "number") return Number.isInteger(value) ? value + DELTA : value;
+    if (Array.isArray(value)) {
+      // Lengths move as well as numbers. Many figures are `rows.length`, and a
+      // perturbation that only touched the numbers INSIDE a row left every
+      // count of rows unmoved — which reads exactly like a figure sourced
+      // elsewhere. The last element is duplicated rather than removed so no
+      // handler loses a row it indexes.
+      const mapped = value.map(perturb);
+      return value.length > 0 ? [...mapped, mapped[mapped.length - 1]] : mapped;
+    }
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, perturb(v)]),
+      );
+    }
+    return value;
+  };
+
+  /** Wrap a service object, optionally transforming the result of named methods. */
+  const wrap = <T extends object>(
+    target: T,
+    onCall: (method: string) => void,
+    transform: ReadonlySet<string> | null,
+  ): T =>
+    new Proxy(target, {
+      get(obj, prop) {
+        const value = (obj as Record<string | symbol, unknown>)[prop];
+        if (typeof value !== "function") return value;
+        const fn = value as (...args: unknown[]) => unknown;
+        return (...args: unknown[]) => {
+          onCall(String(prop));
+          const out = fn.apply(obj, args);
+          return transform?.has(String(prop)) === true ? perturb(out) : out;
+        };
+      },
+    }) as T;
+
+  /** Which service methods each tool actually reaches, from the real handlers. */
+  const methodsByTool = new Map<string, ReadonlySet<string>>();
+  beforeAll(() => {
+    for (const tool of AI_TOOL_NAMES) {
+      const seen = new Set<string>();
+      const record = (m: string) => seen.add(m);
+      const probe: AiToolContext = {
+        queries: wrap(t.queries, record, null),
+        projections: wrap(t.projections, record, null),
+        ctx: t.ctx,
+      };
+      // Args every id-taking tool accepts; a tool that needs none ignores them.
+      runTool(probe, tool, { exceptionId: "EXC-001", serial: "KE-E2-1048" });
+      methodsByTool.set(tool, seen);
+    }
+  });
+
+  const numberOf = (f: {
+    count?: number | undefined;
+    valueCents?: number | undefined;
+    valueBps?: number | undefined;
+  }): number | undefined => f.count ?? f.valueCents ?? f.valueBps;
+
+  it.each(PROBES)("$intent reads every figure from the tool it cites", ({ q, scope }) => {
+    const baseline = answerQuestion(t, q, scope ?? {});
+    const called = [
+      ...new Set(baseline.toolCalls.filter((c) => c.outcome === "OK").map((c) => c.tool)),
+    ];
+    // With one tool called, the citation cannot name anything else and there is
+    // nothing to distinguish. The intents this test exists for call two.
+    if (called.length < 2) return;
+
+    const figuresOf = (r: typeof baseline) =>
+      new Map(
+        [
+          ...(r.answer?.knownFacts ?? []),
+          ...(r.answer?.exposure !== undefined ? [r.answer.exposure] : []),
+        ]
+          .filter((f) => numberOf(f) !== undefined)
+          .map((f) => [`${f.source}|${f.label}`, numberOf(f) as number]),
+      );
+
+    const before = figuresOf(baseline);
+
+    /** Per called tool: the figures whose value moved when only that tool moved. */
+    const movedBy = new Map<string, ReadonlySet<string>>();
+    for (const tool of called) {
+      const methods = methodsByTool.get(tool);
+      expect(methods, `no service method recorded for ${tool}`).toBeDefined();
+      const shifted: AiToolContext = {
+        queries: wrap(t.queries, () => {}, methods as ReadonlySet<string>),
+        projections: wrap(t.projections, () => {}, methods as ReadonlySet<string>),
+        ctx: t.ctx,
+      };
+      let after: Map<string, number>;
+      try {
+        after = figuresOf(answerQuestion(shifted, q, scope ?? {}));
+      } catch {
+        // Perturbed numbers can drive an intent down a branch that throws.
+        // Inconclusive for this tool; it contributes no evidence either way.
+        continue;
+      }
+      movedBy.set(
+        tool,
+        new Set([...before].filter(([k, v]) => after.has(k) && after.get(k) !== v).map(([k]) => k)),
+      );
+    }
+
+    for (const key of before.keys()) {
+      const cited = key.split("|")[0] as string;
+      if (movedBy.get(cited)?.has(key) === true) continue; // moves with what it cites
+      const tracks = called.filter((tool) => tool !== cited && movedBy.get(tool)?.has(key) === true);
+      expect(
+        tracks,
+        `${q}: "${key}" cites ${cited} but its value moved with ${tracks.join(", ")} instead`,
+      ).toEqual([]);
+    }
+  });
+
+  it("would catch a figure citing the wrong tool of two", () => {
+    // The guard above is only as good as its power to fail, and it must fail
+    // on the exact shape just fixed: a multi-tool intent whose figure cites
+    // the tool it did NOT read from.
+    const r = answerQuestion(t, "How ready is the PBC package?", {});
+    const called = new Set(r.toolCalls.filter((c) => c.outcome === "OK").map((c) => c.tool));
+    expect(called).toEqual(new Set(["get_close_readiness", "get_pbc_status"]));
+    const readiness = methodsByTool.get("get_close_readiness") as ReadonlySet<string>;
+    const pbc = methodsByTool.get("get_pbc_status") as ReadonlySet<string>;
+    // The two tools must not share a service method, or perturbing one would
+    // move the other's figures and the check would pass on either citation.
+    expect([...readiness].filter((m) => pbc.has(m))).toEqual([]);
+    const ready = r.answer?.knownFacts.find((f) => f.label === "Ready or provided");
+    expect(ready?.source).toBe("get_close_readiness");
+    // Perturbing the tool it does NOT cite must leave it alone.
+    const moved: AiToolContext = {
+      queries: wrap(t.queries, () => {}, pbc),
+      projections: wrap(t.projections, () => {}, pbc),
+      ctx: t.ctx,
+    };
+    const after = answerQuestion(moved, "How ready is the PBC package?", {});
+    expect(after.answer?.knownFacts.find((f) => f.label === "Ready or provided")?.count).toBe(
+      ready?.count,
+    );
   });
 
   it.each(PROBES)("$intent groups every count it writes into a sentence", ({ q, scope }) => {

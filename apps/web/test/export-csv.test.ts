@@ -86,3 +86,56 @@ describe("CSV export — the register is readable line by line", () => {
     expect(out.body).toContain("ACCOUNTING REVIEW REQUIRED");
   });
 });
+
+/**
+ * The exported file is where a withheld document is least recoverable: no
+ * screen wording applies, no drawer note travels with it, and an empty cell in
+ * a spreadsheet reads as "there is nothing there". The review plan named this
+ * the highest-value gap in its own coverage, and it was right — the scope note
+ * at the top of this table already promised that "an order that keeps its row
+ * loses only the cells for its own withheld documents" while those cells were
+ * simply blank.
+ */
+describe("CSV export — a withheld document is not an absent one", () => {
+  const line = (body: string, po: string): string =>
+    body.split("\n").find((l) => l.startsWith(`"${po}"`)) ?? "";
+
+  it("marks the withheld cells and leaves every derived fact agreeing", () => {
+    const auditor = csv("AUDITOR_READ_ONLY", "procurement").body;
+    const controller = csv("CONTROLLER", "procurement").body;
+    const a = line(auditor, "PO-26-1201");
+    const c = line(controller, "PO-26-1201");
+    expect(a).not.toBe("");
+    // The receipt this auditor may not read.
+    expect(c).toContain("IR-26-2214");
+    expect(a).not.toContain("IR-26-2214");
+    expect(a).toContain("WITHHELD");
+    // And every fact the close derived is identical: the cutoff position and
+    // the exception link. A visibility-derived position wrote
+    // INVOICED_NOT_RECEIVED into this cell and dropped EXC-014 beside it.
+    expect(a).toContain("MATCHED_IN_PERIOD");
+    expect(a).toContain("EXC-014");
+    expect(c).toContain("MATCHED_IN_PERIOD");
+  });
+
+  it("does not put a manufactured cutoff row in the auditor's file", () => {
+    const auditor = csv("AUDITOR_READ_ONLY", "procurement").body;
+    const inr = auditor.slice(auditor.indexOf("INVOICED NOT RECEIVED"));
+    const section = inr.slice(0, inr.indexOf("\n\n"));
+    expect(section).toContain("PO-26-1241");
+    expect(section).not.toContain("PO-26-1201");
+  });
+
+  it("counts the two kinds of omission separately and in words that fit", () => {
+    const auditor = csv("AUDITOR_READ_ONLY", "procurement").body;
+    // An order withheld whole has no row; a document withheld on a row that
+    // stays is a different omission, and reporting only the first understated
+    // the second. Both are exactly one here, which is why the plurals matter.
+    expect(auditor).toContain("1 order is outside this role's scope");
+    expect(auditor).toContain("1 source document is outside this role's scope");
+    expect(auditor).not.toMatch(/\b1 orders\b/);
+    expect(auditor).not.toMatch(/\b1 source documents\b/);
+    // The Controller withholds nothing, so neither line may appear.
+    expect(csv("CONTROLLER", "procurement").body).not.toContain("outside this role's scope\"");
+  });
+});

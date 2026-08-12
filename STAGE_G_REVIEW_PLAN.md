@@ -23,6 +23,13 @@ separate and is the author's own verification of what those vantages turned up w
 
 ## 0. Already found and verified — do not spend a lens rediscovering these
 
+> **✅ ALL FOUR ARE FIXED** (2026-08-12), each re-derived against the workspace before the edit and
+> mutation-tested after it: every fix was reverted and the new regression watched to fail. Suite
+> **1,690 → 1,749**; typecheck, lint and build clean; both roles confirmed in a browser and the
+> exporter confirmed with `curl -H "Cookie: icg-role=U-009"`. The lenses should now look for what
+> these did not cover — but read **§0.5 below**, which records five more defects found while fixing
+> them, three of which no lens brief targets.
+
 These surfaced while the lenses were being designed. **Each figure below was re-derived directly
 against the workspace**, not taken from an agent's report. Fix them; use the lenses to find what
 they did not.
@@ -98,6 +105,56 @@ called **only** from `checkNarration`, and nothing in production calls `checkNar
 The only check on `MEMO_DRAFT_SECTIONS` walks a frozen module-level constant inside
 `stage-g-regressions.test.ts`. The claim is true of today's constant and false of the mechanism —
 the guard cannot generalise to a second draft-emitting path.
+
+### 0.5 Found while fixing §0 — also fixed, and mostly outside the lens briefs
+
+**(a) "Withheld by your access scope" printed to a CONTROLLER, on 40 of the 1,500 serials.**
+`get_evidence_timeline`'s withheld branch tested only whether the UNSCOPED side named a record, never
+whether the reader's own side also did. An inbound unit with a visible carrier shipment and no
+delivery yet has a readable `ref` and `present: false`, so it fell through and every reader was told
+`FP-IN-2288 · withheld by your access scope` about a delivery that had not happened — the recurring
+trap running backwards, a restriction claimed over a world fact. The handler's own second rule
+already said a carrier shipment is not a delivery. Now withheld requires the scoped ref to be absent,
+and the CONTROLLER's count is 0 where the auditor's is 4. **No lens brief covers this**; lens 6 owns
+`scopeReduced` but only as an unread flag.
+
+**(b) The flagship card contradicted its own narrative.** Over PO-26-1201 the auditor's Three-Way
+Match card read `ITEM RECEIPT · No record · No item receipt references this order` three lines above
+that card's own exception text naming `IR-26-2214` and its 2026-12-30 receipt date. Second root
+cause, second service: `getProcurementDetail` (`queries.ts`) drops a withheld document with no
+distinguisher, exactly as `getProcurementPopulations` did. **Found by opening the page as the
+auditor** — nothing in §0.1's measurements reached it.
+
+**(c) The invoiced-not-received tab told every auditor to look for "the EXC-002 case below"** while
+EXC-002 rides on the one order their scope withholds, so all three visible rows read "No close
+exception". A hard-coded note, so no assertion about the rows could reach it. Lens 2's shape, found
+in the browser.
+
+**(d) A live hard-coded plural in the procurement export**: `"1 orders are outside this role's
+scope"`, the auditor being the role that withholds exactly one. Same shape as Stage F's "1 comments",
+in a file no lens opens.
+
+**(e) The claim-content guardrails cannot be extended to the engine's own prose, and trying is the
+finding.** The first `checkDraft` applied `FORBIDDEN_ACTION_CLAIMS` as well as the structural rules
+and instantly rejected the shipped "Reconciling items" section over `has been posted` — inside
+*"Nothing in this product has been posted, so the memo should not describe the ledger as
+corrected."* Those patterns catch a PROVIDER claiming the product acted; draft prose says those verbs
+to tell a writer what the product does not do. Separating the two means deciding whether a claim is
+negated, which is the same undecidable comparison as deciding whether a figure is the right figure.
+`checkDraft` therefore applies the two structural rules only, and a test records why.
+**Lens 8's brief plans to run `checkNarration` over every `managementConclusion` and `nextAction`;
+expect the same false positives, and treat a hit as a question about the guard, not the sentence.**
+
+Two method notes for the lenses:
+
+- **Diff row IDENTITY, never row count** — §0.1's worst finding swapped one purchase order for
+  another and left the count at 4. The repo's own test had asserted `auditor.orders.length +
+  withheldOrderCount === controller.orders.length`, which was true throughout.
+- **The membership-vs-identity figure test (§0.2) now perturbs each tool's result and asserts the
+  precise defect signature**: a figure citing tool S that does not move with S but does move with
+  another tool the same answer called. Two weaker forms were tried first and both reported
+  correctly-sourced figures — `count: matches.filter(…).length` moves with no perturbation of the
+  numbers inside those matches. Lens 5 should start from the test, not from the 126 literals.
 
 ---
 

@@ -336,6 +336,13 @@ export interface ThirdPartyHolding {
 }
 
 /** PO ↔ IR ↔ VB source documents behind one procurement match (stage 06). */
+/**
+ * A source document behind a purchase order, for naming one a reader may not
+ * see. Declared here rather than in `procurement.ts` because that module
+ * imports `makeRecordScope` from this one, and the dependency runs one way.
+ */
+export type ProcurementDocumentKind = "ITEM_RECEIPT" | "VENDOR_BILL";
+
 export interface ProcurementDetail {
   readonly purchaseOrder?: PurchaseOrderFixture | undefined;
   readonly itemReceipt?: ItemReceiptFixture | undefined;
@@ -350,6 +357,17 @@ export interface ProcurementDetail {
     readonly vendorBillCents?: number | undefined;
     readonly purchaseOrderQuantity?: number | undefined;
   };
+  /**
+   * Which of the three legs EXIST and are outside the reader's scope.
+   *
+   * Without this the three optional fields above say only "not here", and the
+   * Procurement screen's featured card read that as a world fact: over
+   * PO-26-1201 it printed "ITEM RECEIPT · No record · No item receipt
+   * references this order" to an auditor, three lines above its own exception
+   * narrative naming IR-26-2214 and its 2026-12-30 receipt date. The card and
+   * the paragraph under it contradicted each other on the same screen.
+   */
+  readonly withheldDocuments: readonly ProcurementDocumentKind[];
 }
 
 /** Sum of line amounts, or undefined when any line has no amount. */
@@ -925,11 +943,18 @@ export function createQueryService(ws: Workspace) {
         (b) => b.purchaseOrderNumber === poNumber,
       );
       const poVisible = po !== undefined && inScope(po.sourceRef);
+      const receiptVisible = receipt !== undefined && inScope(receipt.sourceRef);
       const billVisible = bill !== undefined && inScope(bill.sourceRef);
       return {
         ...(poVisible ? { purchaseOrder: po } : {}),
-        ...(receipt && inScope(receipt.sourceRef) ? { itemReceipt: receipt } : {}),
+        ...(receiptVisible ? { itemReceipt: receipt } : {}),
         ...(billVisible ? { vendorBill: bill } : {}),
+        withheldDocuments: [
+          ...(receipt !== undefined && !receiptVisible
+            ? (["ITEM_RECEIPT"] as const)
+            : []),
+          ...(bill !== undefined && !billVisible ? (["VENDOR_BILL"] as const) : []),
+        ],
         totals: {
           ...(poVisible
             ? {

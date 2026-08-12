@@ -149,6 +149,18 @@ export function namesRecordIdentifier(text: string): boolean {
 }
 
 /**
+ * The vocabulary of finality, wider than "resolved": an open blocker described
+ * as concluded, settled or finalised is the same false claim in a different
+ * word, and the reader has no way to tell which one the engine checked.
+ *
+ * At module scope because `checkDraft` applies the identical rule. A second
+ * copy of this alternation is the drift the review keeps finding — and here it
+ * would be two different answers to "does this prose contradict the status".
+ */
+const FINALITY_CLAIM =
+  /\bresolv|\bclosed\b|\bno longer open\b|\bconclud|\bsettled\b|\bfinalis|\binaliz|\bnothing (?:further |more |else )?(?:is |are |remains? )?(?:outstanding|remaining|left|to do|to resolve)\b|\bno (?:open|outstanding|remaining) (?:item|items|issue|issues)\b|\bfully (?:complete|completed|addressed|satisfied)\b/i;
+
+/**
  * Validate a provider's narration against the deterministic answer beside it.
  * Returns the violations rather than a boolean so a caller can log which
  * P0 category fired.
@@ -218,14 +230,9 @@ export function checkNarration(
     );
   }
 
-  // Prose must not contradict the answer's own status. The vocabulary of
-  // finality is wider than "resolved": an open blocker described as
-  // concluded, settled or finalised is the same false claim in a different
-  // word, and the reader has no way to tell which one the engine checked.
+  // Prose must not contradict the answer's own status.
   const status = interaction.answer?.status;
-  const FINALITY =
-    /\bresolv|\bclosed\b|\bno longer open\b|\bconclud|\bsettled\b|\bfinalis|\binaliz|\bnothing (?:further |more |else )?(?:is |are |remains? )?(?:outstanding|remaining|left|to do|to resolve)\b|\bno (?:open|outstanding|remaining) (?:item|items|issue|issues)\b|\bfully (?:complete|completed|addressed|satisfied)\b/i;
-  if (status !== undefined && FINALITY.test(narration)) {
+  if (status !== undefined && FINALITY_CLAIM.test(narration)) {
     if (!/RESOLVED/i.test(status)) {
       violations.push("FORBIDDEN_ACTION");
       detail.push(
@@ -237,6 +244,63 @@ export function checkNarration(
   if (new RegExp(`\\b${AI_FORBIDDEN_MODE}\\b`, "i").test(narration)) {
     violations.push("DECIDE_MODE");
     detail.push("Narration claims a decision mode that does not exist");
+  }
+
+  return { ok: violations.length === 0, violations: [...new Set(violations)], detail };
+}
+
+/**
+ * The same rules over Draft-mode prose, in production.
+ *
+ * Stage G said Draft output was "checked by the same quantity and identifier
+ * guards that govern provider narration". `statesQuantity` and
+ * `namesRecordIdentifier` were exported for it, and then the only thing that
+ * ever called them on a draft was a test walking the frozen
+ * `MEMO_DRAFT_SECTIONS` constant. That claim was true of today's constant and
+ * false of the mechanism: a second draft-emitting path — one interpolating a
+ * live value, which is exactly what a draft is tempted to do — would have been
+ * guarded by nothing, and the test would still have passed.
+ *
+ * The rule is the narration rule and for the narration reason: prose may not
+ * carry a figure or an identifier at all, because deciding whether the figure
+ * in prose is the RIGHT figure is the comparison that produced every earlier
+ * bypass. A draft is offered as wording for a person to adopt, so a number
+ * inside it is a number nobody sourced.
+ *
+ * **The claim-content checks are deliberately NOT applied here**, and the first
+ * run of this function is why. `FORBIDDEN_ACTION_CLAIMS` immediately rejected
+ * the shipped "Reconciling items" section over the phrase "has been posted",
+ * inside the sentence *"Nothing in this product has been posted, so the memo
+ * should not describe the ledger as corrected."* Those patterns exist to catch
+ * a PROVIDER claiming the product acted; the engine's own draft prose exists in
+ * part to tell a writer what the product does not do, so it says those verbs on
+ * purpose. Separating the two readings means deciding whether a claim is
+ * negated — the same undecidable comparison as deciding whether a figure is the
+ * right figure, and the reason this codebase refuses to make either. The two
+ * structural rules below need no such judgement, which is exactly why they are
+ * the two the stage claimed.
+ */
+export function checkDraft(
+  sections: readonly { heading: string; body: string }[],
+): GuardrailVerdict {
+  const violations: GuardrailViolation[] = [];
+  const detail: string[] = [];
+
+  for (const section of sections) {
+    const where = `Draft section "${section.heading}"`;
+    // The heading is prose a reader adopts as well, so both are checked.
+    for (const text of [section.heading, section.body]) {
+      if (statesQuantity(text)) {
+        violations.push("NUMERIC_DRIFT");
+        detail.push(
+          `${where} states a quantity. A figure in suggested wording is a figure no tool sourced.`,
+        );
+      }
+      if (namesRecordIdentifier(text)) {
+        violations.push("UNRESOLVED_CITATION");
+        detail.push(`${where} names a record identifier, which belongs to the citations.`);
+      }
+    }
   }
 
   return { ok: violations.length === 0, violations: [...new Set(violations)], detail };

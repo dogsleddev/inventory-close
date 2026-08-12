@@ -1,6 +1,10 @@
 import type { RuleResult } from "@icg/domain";
 import { authorize } from "@icg/permissions";
-import { makeRecordScope, type ServiceContext } from "./queries.js";
+import {
+  makeRecordScope,
+  type ProcurementDocumentKind as QueriesProcurementDocumentKind,
+  type ServiceContext,
+} from "./queries.js";
 import type { Workspace } from "./workspace.js";
 
 /**
@@ -36,6 +40,14 @@ export type PeriodEndPosition =
   | "INVOICED_NOT_RECEIVED"
   | "NEITHER_IN_PERIOD";
 
+/**
+ * A source document behind a match, for naming one the reader may not see.
+ * Declared in `queries.ts` (which this module already depends on) so the
+ * record projections and these populations cannot disagree about the two
+ * documents that can be withheld.
+ */
+export type ProcurementDocumentKind = QueriesProcurementDocumentKind;
+
 export interface ProcurementOrderOut {
   readonly purchaseOrderNumber: string;
   readonly vendor: string;
@@ -51,13 +63,31 @@ export interface ProcurementOrderOut {
   readonly orderedCents?: number | undefined;
   readonly billedCents?: number | undefined;
   readonly position: PeriodEndPosition;
+  /**
+   * Documents that EXIST on this order and are outside the reader's scope.
+   * The identifier, date and amount fields above are omitted for each one, so
+   * without this list "no receipt" and "a receipt you may not see" render
+   * identically — the withheld-as-absence trap this repository keeps finding.
+   */
+  readonly withheldDocuments: readonly ProcurementDocumentKind[];
   /** The close's own exception on this order, when one exists. */
   readonly relatedExceptionId?: string | undefined;
   readonly relatedExceptionOpen?: boolean | undefined;
 }
 
 export interface ProcurementMatchSummaryOut {
+  /**
+   * Orders the close matched — one per `procurementMatches` entry, counted
+   * over the close's own population and NOT over the rows this reader can
+   * open. Both match statuses are close-control facts; deriving these counts
+   * from the scope-filtered row list told an auditor that **zero** orders
+   * required close review while the close held one, and shortened the
+   * divergence count CANONICAL_SPEC §7 exists to make visible. `ordersVisible`
+   * carries the other number, so neither stands in for the other.
+   */
   readonly orders: number;
+  /** Rows in `orders` — what this reader can open. Never presented as the population. */
+  readonly ordersVisible: number;
   readonly nativePass: number;
   readonly nativeReviewRequired: number;
   readonly nativeIncomplete: number;
@@ -82,6 +112,8 @@ export interface GrniRowOut {
   readonly vendorBillNumber?: string | undefined;
   readonly billDate?: string | undefined;
   readonly daysOutstanding: number;
+  /** As `ProcurementOrderOut.withheldDocuments`: "not yet billed" is not "billed, withheld". */
+  readonly withheldDocuments: readonly ProcurementDocumentKind[];
 }
 
 /** Invoiced before period end, received after it. */
@@ -96,6 +128,8 @@ export interface InvoicedNotReceivedRowOut {
   readonly recordedReceiptDate?: string | undefined;
   readonly itemReceiptNumber?: string | undefined;
   readonly closeMatchStatus: RuleResult;
+  /** As `ProcurementOrderOut.withheldDocuments`. */
+  readonly withheldDocuments: readonly ProcurementDocumentKind[];
   readonly relatedExceptionId?: string | undefined;
   readonly relatedExceptionOpen?: boolean | undefined;
 }
@@ -155,6 +189,14 @@ export interface PriceVarianceOut {
   readonly netCents: number;
   /** Orders compared — the denominator behind "3 of 84 varied". */
   readonly ordersCompared: number;
+  /**
+   * Orders that could NOT be compared because the reader's scope withheld the
+   * order or its bill. `ordersCompared` is an honest count of comparisons that
+   * happened, which is exactly why it must never be printed alone: "3 of 83
+   * compared orders" is a ratio over a silently smaller denominator, and the
+   * reader has no way to tell 83 from the population.
+   */
+  readonly ordersNotComparedAtScope: number;
 }
 
 export interface ProcurementPopulationsOut {
@@ -169,10 +211,18 @@ export interface ProcurementPopulationsOut {
   readonly goodsInTransit: GoodsInTransitOut;
   readonly priceVariance: PriceVarianceOut;
   /**
-   * Documents the viewer's scope withheld. Never silently zero: an auditor
-   * looking at a shorter population must be told it is shorter.
+   * Orders the viewer's scope withheld entirely — the purchase order itself is
+   * out of scope, so the order has no row above. Never silently zero: an
+   * auditor looking at a shorter population must be told it is shorter.
    */
   readonly withheldOrderCount: number;
+  /**
+   * Source documents withheld on orders that DO have a row: the sum of every
+   * row's `withheldDocuments`. A row can be complete-looking and still be
+   * missing a document, so a screen that discloses only `withheldOrderCount`
+   * discloses the wrong omission.
+   */
+  readonly withheldDocumentCount: number;
 }
 
 /** Sum of line amounts, or undefined when any line has no amount. */
@@ -240,24 +290,45 @@ export function getProcurementPopulations(
   const invoicedNotReceived: InvoicedNotReceivedRowOut[] = [];
   const priceVarianceRows: PriceVarianceRowOut[] = [];
   let withheldOrderCount = 0;
+  let withheldDocumentCount = 0;
   let ordersCompared = 0;
+  let ordersNotComparedAtScope = 0;
 
   for (const match of ws.close.procurementMatches) {
     const po = d.purchaseOrders.find(
       (p) => p.transactionNumber === match.purchaseOrderNumber,
     );
-    // The match status is a close-control fact and stays visible; the source
-    // documents behind it obey the same scoping the record projections use.
+    // The source documents behind a match obey the same scoping the record
+    // projections use. When the ORDER itself is out of scope there is nothing
+    // to hang a row on, so the row goes and is counted — but the close's own
+    // matching still reports over its whole population, below.
     if (po === undefined || !inScope(po.sourceRef)) {
       withheldOrderCount += 1;
+      // A comparison that scope prevented is not a comparison that found
+      // nothing: the price-variance denominator has to be able to say so.
+      if (billByPo.has(match.purchaseOrderNumber)) ordersNotComparedAtScope += 1;
       continue;
     }
     const receipt = receiptByPo.get(po.transactionNumber);
     const bill = billByPo.get(po.transactionNumber);
     const receiptVisible = receipt !== undefined && inScope(receipt.sourceRef);
     const billVisible = bill !== undefined && inScope(bill.sourceRef);
-    const receivedInPeriod = receiptVisible && receipt.receiptDate <= asOf;
-    const billedInPeriod = billVisible && bill.billDate <= asOf;
+
+    /**
+     * The period-end position is a CUTOFF fact about the order, so it is
+     * derived from whether each document exists and when it is dated — never
+     * from whether this reader may see it. Deriving it from visibility
+     * manufactured a control finding out of an access restriction: for an
+     * auditor, PO-26-1201's receipt is out of scope, so `receivedInPeriod`
+     * was false, so a matched order was classified INVOICED_NOT_RECEIVED and
+     * printed on the Invoiced Not Received tab as a named cutoff exposure —
+     * and the withheld receipt also cost it its `relatedExceptionId`, so it
+     * arrived with nothing to explain it. Another order left the population at
+     * the same moment, so the row COUNT was 4 either way and no surface
+     * revealed the swap. Diff row identity here, never row count.
+     */
+    const receivedInPeriod = receipt !== undefined && receipt.receiptDate <= asOf;
+    const billedInPeriod = bill !== undefined && bill.billDate <= asOf;
 
     const position: PeriodEndPosition = receivedInPeriod
       ? billedInPeriod
@@ -267,10 +338,25 @@ export function getProcurementPopulations(
         ? "INVOICED_NOT_RECEIVED"
         : "NEITHER_IN_PERIOD";
 
+    // Existing but unreadable, per document. The row omits each one's
+    // identifier, date and amount; this is what keeps that omission from
+    // reading as "there is none".
+    const withheldDocuments: ProcurementDocumentKind[] = [
+      ...(receipt !== undefined && !receiptVisible
+        ? (["ITEM_RECEIPT"] as const)
+        : []),
+      ...(bill !== undefined && !billVisible ? (["VENDOR_BILL"] as const) : []),
+    ];
+    withheldDocumentCount += withheldDocuments.length;
+
+    // Exceptions are not record-scoped (`listExceptions` governs those), so the
+    // close's exception on this order is matched on the documents' own numbers.
+    // Matching on the VISIBLE numbers dropped EXC-014 from the very row a
+    // withheld receipt had just misclassified.
     const exception = exceptionFor(
       po.transactionNumber,
-      receiptVisible ? receipt.transactionNumber : undefined,
-      billVisible ? bill.transactionNumber : undefined,
+      receipt?.transactionNumber,
+      bill?.transactionNumber,
     );
 
     orders.push({
@@ -289,6 +375,7 @@ export function getProcurementPopulations(
       orderedCents: documentTotalCents(po.lines),
       ...(billVisible ? { billedCents: documentTotalCents(bill.lines) } : {}),
       position,
+      withheldDocuments,
       ...(exception !== undefined
         ? { relatedExceptionId: exception.id, relatedExceptionOpen: exception.open }
         : {}),
@@ -306,6 +393,10 @@ export function getProcurementPopulations(
           ? { vendorBillNumber: bill.transactionNumber, billDate: bill.billDate }
           : {}),
         daysOutstanding: daysBetween(receipt.receiptDate, asOf),
+        // On a GRNI row this can only be the bill, and that is the point: a
+        // bill that has since arrived but is out of scope must not read as
+        // "still not invoiced", which is the whole claim of this population.
+        withheldDocuments,
       });
     }
 
@@ -324,6 +415,10 @@ export function getProcurementPopulations(
             }
           : {}),
         closeMatchStatus: match.closeMatchStatus,
+        // On an INR row this can only be the receipt: the recorded receipt
+        // date is what makes the cutoff visible, so its absence must not be
+        // confusable with "no receipt has been recorded at all".
+        withheldDocuments,
         ...(exception !== undefined
           ? { relatedExceptionId: exception.id, relatedExceptionOpen: exception.open }
           : {}),
@@ -333,7 +428,10 @@ export function getProcurementPopulations(
     // Price variance: the same order line, ordered against billed. Compared
     // only where both documents are visible and both carry an amount — a
     // variance computed against a missing figure is not a variance.
-    if (!billVisible) continue;
+    if (!billVisible) {
+      if (bill !== undefined) ordersNotComparedAtScope += 1;
+      continue;
+    }
     ordersCompared += 1;
     for (const orderLine of po.lines) {
       const billLine = bill.lines.find((l) => l.lineId === orderLine.lineId);
@@ -385,20 +483,29 @@ export function getProcurementPopulations(
       ? rows.reduce((sum, r) => sum + (r.receivedCents ?? 0), 0)
       : undefined;
 
+  // Both match statuses are the close's own control facts, so the summary is
+  // counted over every match the close made and not over the rows this reader
+  // can open. Counting the filtered rows reported ZERO orders requiring close
+  // review to an auditor while the close held one, and shortened the native
+  // and divergence counts with it. `withheldOrderCount` above says how many
+  // rows are missing; that is the omission to disclose, not a smaller total.
+  const matches = ws.close.procurementMatches;
   return {
     asOf,
     summary: {
-      orders: orders.length,
-      nativePass: orders.filter((o) => o.nativeNetsuiteMatchStatus === "PASS").length,
-      nativeReviewRequired: orders.filter(
-        (o) => o.nativeNetsuiteMatchStatus === "REVIEW_REQUIRED",
+      orders: matches.length,
+      ordersVisible: orders.length,
+      nativePass: matches.filter((m) => m.nativeNetsuiteMatchStatus === "PASS").length,
+      nativeReviewRequired: matches.filter(
+        (m) => m.nativeNetsuiteMatchStatus === "REVIEW_REQUIRED",
       ).length,
-      nativeIncomplete: orders.filter((o) => o.nativeNetsuiteMatchStatus === "INCOMPLETE")
-        .length,
-      closePass: orders.filter((o) => o.closeMatchStatus === "PASS").length,
-      closeReviewRequired: orders.filter((o) => o.closeMatchStatus !== "PASS").length,
-      divergent: orders.filter(
-        (o) => o.nativeNetsuiteMatchStatus !== o.closeMatchStatus,
+      nativeIncomplete: matches.filter(
+        (m) => m.nativeNetsuiteMatchStatus === "INCOMPLETE",
+      ).length,
+      closePass: matches.filter((m) => m.closeMatchStatus === "PASS").length,
+      closeReviewRequired: matches.filter((m) => m.closeMatchStatus !== "PASS").length,
+      divergent: matches.filter(
+        (m) => m.nativeNetsuiteMatchStatus !== m.closeMatchStatus,
       ).length,
     },
     orders,
@@ -434,7 +541,9 @@ export function getProcurementPopulations(
         .reduce((sum, r) => sum + r.varianceCents, 0),
       netCents: priceVarianceRows.reduce((sum, r) => sum + r.varianceCents, 0),
       ordersCompared,
+      ordersNotComparedAtScope,
     },
     withheldOrderCount,
+    withheldDocumentCount,
   };
 }

@@ -17,10 +17,14 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 > the corrected method below, and then review the remediation too.
 >
 > **`STAGE_G_REVIEW_PLAN.md` is the ready-to-run plan** — eleven lenses designed by six independent
-> vantages over the diff, with per-lens false-positive lists, coverage gaps and run order. Its §0
-> carries **four defects already found and verified**, including a P1: Stage G's own scope fix was
-> incomplete, and an auditor is shown a cutoff finding on PO-26-1201 that does not exist. Fix those;
-> use the lenses to find what they did not.
+> vantages over the diff, with per-lens false-positive lists, coverage gaps and run order.
+>
+> **Its §0 four defects are FIXED** (2026-08-12), including the P1, each mutation-tested. **§0.5 of
+> that plan records five more found while fixing them** — three of which no lens brief covers,
+> including "withheld by your access scope" printed to a CONTROLLER on 40 of the 1,500 serials, and
+> the flagship Procurement card contradicting its own narrative. Two of the five were found only by
+> opening the page as the auditor. **The eleven lenses have still not been run**; that is the task.
+> Read §0.5's two method notes first — they change how lenses 5 and 8 should read their results.
 >
 > **Five things that cost real time and should not be re-derived:**
 >
@@ -64,11 +68,12 @@ but the *next task* is here, not in §8.
 | **F — Management outputs** | ✅ Done (`f900e79`, `8f0a827`) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
 | **Stage F review** | ✅ Done (`b1ccdc4`) — 9 lenses, 26 confirmed defects fixed |
 | **Remediation review** | ✅ Done (`406baaf`) — 4 lenses over `b1ccdc4`; 11 more fixed, 2 refuted |
-| **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents. **Review not run** |
-| **Stage G review** | ⬅ **NEXT.** Use the method below, then review the remediation too |
+| **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents |
+| **Stage G §0 remediation** | ✅ Done — the plan's four verified defects + five found fixing them |
+| **Stage G review** | ⬅ **NEXT.** Run the eleven lenses; then review the remediation too |
 | H — QA | Not started |
 
-**1,690 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
+**1,749 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.

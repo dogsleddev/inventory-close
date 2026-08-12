@@ -11,6 +11,7 @@ import type {
   MethodologyOut,
   ProcurementPopulationsOut,
 } from "@icg/services";
+import { checkDraft } from "./guardrails.js";
 import {
   extractExceptionId,
   extractSerial,
@@ -115,6 +116,42 @@ const count = (n: number): string => n.toLocaleString("en-US");
  */
 const NOTHING_IS_POSTED =
   "Nothing here has been posted. Approval is a human act recorded outside this product, and posting happens in NetSuite.";
+
+/**
+ * What the reader's scope removed from the procurement populations, in one
+ * sentence, or null when it removed nothing.
+ *
+ * Written once and used by every procurement intent because each one reports a
+ * population that scope can shorten, and a shortened population presented as a
+ * completed measurement is this repository's recurring defect. The
+ * invoiced-not-received intent had the only such sentence; its neighbours
+ * printed "3 of 83 compared orders" and a two-row accrual population with
+ * `missingEvidence: []` and nothing saying either was short.
+ *
+ * Two omissions, never merged: an order withheld whole has no row at all,
+ * while an order that keeps its row can still be missing a document.
+ */
+const procurementScopeNote = (p: {
+  withheldOrderCount: number;
+  withheldDocumentCount: number;
+  summary: { orders: number };
+}): string | null => {
+  const parts: string[] = [];
+  if (p.withheldOrderCount > 0) {
+    // The population noun takes the POPULATION's number and the verb takes the
+    // withheld count's: "1 of the close's 84 orders is", never "84 order is".
+    parts.push(
+      `${p.withheldOrderCount} of the close's ${p.summary.orders} ${plural(p.summary.orders, "order")} ${plural(p.withheldOrderCount, "is", "are")} outside your access scope, so ${plural(p.withheldOrderCount, "it does", "they do")} not appear in the rows above`,
+    );
+  }
+  if (p.withheldDocumentCount > 0) {
+    parts.push(
+      `${p.withheldDocumentCount} source ${plural(p.withheldDocumentCount, "document is", "documents are")} withheld on ${plural(p.withheldDocumentCount, "an order that does appear", "orders that do appear")}`,
+    );
+  }
+  if (parts.length === 0) return null;
+  return `${parts.join(", and ")}. The close's own match figures count its whole population either way, and a period-end position is derived from the documents' own dates rather than from what you may read.`;
+};
 
 /* ------------------------------------------------------------------ */
 /* Shapes of the query results the tools return. Declared structurally  */
@@ -546,13 +583,15 @@ const INTENTS: readonly Intent[] = [
           ...rows.map(
             (r): AiFigure => ({
               label: `${r.purchaseOrderNumber} — ${r.vendor}, received ${r.receiptDate}`,
-              text: `${r.itemReceiptNumber} · ${count(r.quantity)} units · ${r.daysOutstanding} days outstanding${r.vendorBillNumber !== undefined ? ` · billed ${r.billDate} on ${r.vendorBillNumber}` : ""}`,
+              // A bill withheld by scope is not a bill that has not arrived,
+              // and "no vendor bill" is the entire claim of this population.
+              text: `${r.itemReceiptNumber} · ${count(r.quantity)} units · ${r.daysOutstanding} days outstanding${r.withheldDocuments.includes("VENDOR_BILL") ? " · a bill on this order is outside your access scope" : r.vendorBillNumber !== undefined ? ` · billed ${r.billDate} on ${r.vendorBillNumber}` : ""}`,
               source: "get_procurement_populations",
             }),
           ),
         ],
         conflictingEvidence: [],
-        missingEvidence: [],
+        missingEvidence: [procurementScopeNote(p)].filter((n): n is string => n !== null),
         assertions: ["COMPLETENESS", "CUTOFF"],
         managementConclusion:
           "Goods received without a bill are an accrued liability at the balance-sheet date. This product identifies the population; the accrual is management's entry and is not proposed here.",
@@ -590,7 +629,9 @@ const INTENTS: readonly Intent[] = [
           ...rows.map(
             (r): AiFigure => ({
               label: `${r.purchaseOrderNumber} — ${r.vendor}, billed ${r.billDate}`,
-              text: `${r.vendorBillNumber} · ${count(r.quantity)} units · close match ${r.closeMatchStatus}${r.recordedReceiptDate !== undefined ? ` · received ${r.recordedReceiptDate}` : ""}`,
+              // The recorded receipt date is what makes the cutoff visible. A
+              // receipt withheld by scope must not read as no receipt at all.
+              text: `${r.vendorBillNumber} · ${count(r.quantity)} units · close match ${r.closeMatchStatus}${r.withheldDocuments.includes("ITEM_RECEIPT") ? " · the receipt on this order is outside your access scope" : r.recordedReceiptDate !== undefined ? ` · received ${r.recordedReceiptDate}` : ""}`,
               source: "get_procurement_populations",
             }),
           ),
@@ -621,12 +662,17 @@ const INTENTS: readonly Intent[] = [
                 "The document side and the book side describe different inbound populations. They are the same units seen two ways, so a difference is a finding rather than a rounding note.",
               ]
             : [],
-        missingEvidence:
+        missingEvidence: [
           git.inboundAgrees === null
-            ? [
-                `The two sides cannot be compared at your access scope: ${p.withheldOrderCount} ${plural(p.withheldOrderCount, "order is", "orders are")} withheld from the document side while the book side is not scoped.`,
-              ]
-            : [],
+            ? `The two sides cannot be compared at your access scope: ${p.withheldOrderCount} ${plural(p.withheldOrderCount, "order is", "orders are")} withheld from the document side while the book side is not scoped.`
+            : null,
+          // A separate omission from a withheld ORDER, and the one this
+          // population is most exposed to: the row stays, so the reader has no
+          // way to know the receipt behind its cutoff is unreadable.
+          p.withheldDocumentCount > 0
+            ? `${p.withheldDocumentCount} source ${plural(p.withheldDocumentCount, "document is", "documents are")} withheld on ${plural(p.withheldDocumentCount, "an order that does appear above", "orders that do appear above")}. Each such row names the withholding rather than leaving the cell blank, and no order's period-end position was derived from it.`
+            : null,
+        ].filter((n): n is string => n !== null),
         assertions: ["EXISTENCE", "CUTOFF"],
         managementConclusion:
           git.inboundAgrees === null
@@ -663,9 +709,26 @@ const INTENTS: readonly Intent[] = [
           { label: "Unfavourable", valueCents: v.unfavorableCents, source: "get_procurement_populations" },
           { label: "Favourable", valueCents: v.favorableCents, source: "get_procurement_populations" },
           { label: "Net", valueCents: v.netCents, source: "get_procurement_populations" },
+          // `ordersCompared` is the denominator in the status above and counts
+          // comparisons that happened, so where scope prevented one the reader
+          // needs both numbers to read the ratio at all.
+          ...(v.ordersNotComparedAtScope > 0
+            ? [
+                {
+                  label: "Orders the close matched",
+                  count: p.summary.orders,
+                  source: "get_procurement_populations" as const,
+                },
+                {
+                  label: "Orders your scope left uncompared",
+                  count: v.ordersNotComparedAtScope,
+                  source: "get_procurement_populations" as const,
+                },
+              ]
+            : []),
         ],
         conflictingEvidence: [],
-        missingEvidence: [],
+        missingEvidence: [procurementScopeNote(p)].filter((n): n is string => n !== null),
         assertions: ["VALUATION"],
         managementConclusion:
           "Variance here is billed against ORDERED price, extended. It is a purchasing signal reported beside the close; no rule reads it and nothing is proposed from it.",
@@ -1436,8 +1499,15 @@ const INTENTS: readonly Intent[] = [
       return {
         status: `PBC package ${a.pbcReady} of ${a.pbcTotal} ready or provided`,
         knownFacts: [
-          { label: "Ready or provided", count: a.pbcReady, source: "get_pbc_status" },
-          { label: "Total requests", count: a.pbcTotal, source: "get_pbc_status" },
+          // All three read `readiness.aggregates`, so all three cite the tool
+          // that produced it. The first two named `get_pbc_status` — the other
+          // tool this intent calls, and the one a reader would assume — while
+          // the third, one line down, named the right one. `AiFigure.source` is
+          // documented as the tool the figure came FROM, and the drawer prints
+          // it as "Answered from …", so a plausible-looking citation is worse
+          // than none: it makes a drift audit agree with itself.
+          { label: "Ready or provided", count: a.pbcReady, source: "get_close_readiness" },
+          { label: "Total requests", count: a.pbcTotal, source: "get_close_readiness" },
           { label: "PBC readiness", valueBps: a.pbcReadinessBps, source: "get_close_readiness" },
           ...attention.map(
             (i): AiFigure => ({
@@ -1878,7 +1948,9 @@ const INTENTS: readonly Intent[] = [
       return {
         status: "Sign-off is blocked",
         knownFacts: [
-          { label: "Open blockers", count: a.blockerCount, source: "get_blocking_conditions" },
+          // `a` is `readiness.aggregates`: this count came from
+          // `get_close_readiness`, not from the blocker list beside it.
+          { label: "Open blockers", count: a.blockerCount, source: "get_close_readiness" },
           { label: "Close readiness", valueBps: a.closeReadinessBps, source: "get_close_readiness" },
           ...blockers.map(
             (b): AiFigure => ({
@@ -1894,7 +1966,9 @@ const INTENTS: readonly Intent[] = [
         exposure: {
           label: "Blocker exposure",
           valueCents: a.blockerExposureCents,
-          source: "get_blocking_conditions",
+          // Also `readiness.aggregates`, and the exposure slot is the figure a
+          // reader is most likely to carry off this answer.
+          source: "get_close_readiness",
         },
         managementConclusion:
           "The period cannot be signed off while these items are open. Each carries its own conclusion and owner.",
@@ -1926,6 +2000,17 @@ const INTENTS: readonly Intent[] = [
       ],
     },
     answer: (s) => {
+      /**
+       * `managementLensInScope` is deliberately NOT declared here.
+       *
+       * The tool computes it so a caller can tell an auditor's empty
+       * `managementIndicators` list from a genuinely empty one. This answer
+       * reports no indicator — every figure below is identical for all ten
+       * demo users, `managementTests` included — so there is no emptiness on
+       * this surface to qualify, and a flag declared and dropped reads as a
+       * disclosure that was made. If an indicator is ever surfaced here, the
+       * flag has to come with it.
+       */
       const detail = s.run<{
         summary: {
           populationUnits: number;
@@ -1935,7 +2020,6 @@ const INTENTS: readonly Intent[] = [
           managementTests: number;
           auditorTests: number;
         };
-        managementLensInScope: boolean;
       }>("get_cycle_count_history");
       if (detail === undefined) return undefined;
       const c = detail.summary;
@@ -1998,6 +2082,19 @@ const INTENTS: readonly Intent[] = [
               source: "get_evidence_timeline",
             }),
           ),
+          // The per-event labels above distinguish a withheld component from an
+          // absent one, but a reader scanning nine rows should not have to
+          // count them. `scopeReduced` and `withheldCount` were computed for
+          // exactly this and declared here without ever being read.
+          ...(timeline.scopeReduced
+            ? [
+                {
+                  label: "Components withheld from you",
+                  count: timeline.withheldCount,
+                  source: "get_evidence_timeline" as const,
+                },
+              ]
+            : []),
         ],
         conflictingEvidence: [],
         // Only structured existing events — absences stay absent.
@@ -2094,6 +2191,24 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
           source: "get_exception",
         }),
       ),
+      /**
+       * `lineageInScope` exists — and says so at `tools.ts:71` — to keep
+       * "withheld from you" apart from "there is none". It was declared here
+       * and never read, so the citation list below simply got shorter: on
+       * thirteen of the fifteen exceptions an auditor sees fewer cited
+       * workpapers than a Controller, with the same status, the same missing
+       * evidence and nothing saying anything was withheld. On the screen whose
+       * whole job is to show the reader where an answer came from.
+       */
+      ...(view.lineageInScope
+        ? []
+        : [
+            {
+              label: "Evidence lineage",
+              text: "Not available at your access scope, so the workpapers behind this exception are not among the citations below. This is a restriction on what you may read, not an absence of support.",
+              source: "get_exception" as const,
+            },
+          ]),
     ],
     conflictingEvidence: view.open ? [f.whyFlagged] : [],
     // Stated as missing, never inferred. This is the refusal — and it is
@@ -2255,6 +2370,38 @@ export function answerQuestion(
       answerEngineVersion: ANSWER_ENGINE_VERSION,
     },
   };
+
+  /**
+   * Draft prose runs the guard HERE, not inside the intent that produced it.
+   *
+   * The stage's claim was that Draft output is checked by the same quantity and
+   * identifier guards as provider narration; what existed was a test walking
+   * the frozen `MEMO_DRAFT_SECTIONS` constant, so the claim held for today's
+   * wording and for no mechanism. Checking at the single point where a draft
+   * becomes part of an interaction covers every intent that ever emits one,
+   * including one that interpolates a live value.
+   *
+   * A failing section is dropped rather than corrected, and the reader is told
+   * a section was withheld — the same shape as `withNarration`, which renders
+   * the answer as though no provider had spoken. Silently rendering prose that
+   * fails the figure rule would be the bypass arriving through the Draft door.
+   */
+  if (answer?.draft !== undefined) {
+    const verdict = checkDraft(answer.draft);
+    if (!verdict.ok) {
+      const kept = answer.draft.filter(
+        (section) => checkDraft([section]).ok,
+      );
+      answer = {
+        ...answer,
+        draft: kept,
+        missingEvidence: [
+          ...answer.missingEvidence,
+          `${answer.draft.length - kept.length} suggested ${plural(answer.draft.length - kept.length, "section is", "sections are")} withheld: suggested wording may not state a figure or name a record, because a number inside prose is one no tool sourced. The figures are on the Close Memo screen, which seals them with the version.`,
+        ],
+      };
+    }
+  }
 
   if (answer !== undefined) return { ...base, answer };
 

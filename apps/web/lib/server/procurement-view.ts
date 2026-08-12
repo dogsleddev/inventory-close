@@ -61,6 +61,17 @@ function closeCapsule(
     : { label: "Review required", glyph: "◆", variant: "frost" };
 }
 
+/**
+ * A document cell for a reader whose scope withheld the document.
+ *
+ * "—" and "Not yet recorded" are claims about the world. Printing either one
+ * over a document that exists and is merely unreadable here is the
+ * withheld-as-absence trap, and on the invoiced-not-received tab it printed
+ * the cutoff claim itself: an auditor was told a receipt had not been recorded
+ * when the receipt was recorded before year-end and simply out of scope.
+ */
+const withheldCell = (label: string): string => `Withheld — ${label}`;
+
 /** How an order stood at the balance-sheet date, in a reader's words. */
 const POSITION_LABELS: Readonly<Record<ProcurementOrderOut["position"], string>> = {
   MATCHED_IN_PERIOD: "Matched in period",
@@ -121,7 +132,10 @@ export function buildProcurementData(
   const detailFor = (po: string): ProcurementDetail => {
     let d = details.get(po);
     if (d === undefined) {
-      d = attempt(() => queries.getProcurementDetail(ctx, po)) ?? { totals: {} };
+      d = attempt(() => queries.getProcurementDetail(ctx, po)) ?? {
+        totals: {},
+        withheldDocuments: [],
+      };
       details.set(po, d);
     }
     return d;
@@ -146,13 +160,28 @@ export function buildProcurementData(
   const irLeg = (d: ProcurementDetail): ProcurementLeg => {
     const ir = d.itemReceipt;
     if (ir === undefined) {
-      return {
-        label: "ITEM RECEIPT",
-        glyph: "○",
-        value: "No record",
-        note: "No item receipt references this order",
-        missing: true,
-      };
+      /**
+       * Found in the browser, on the auditor's own view of the flagship card.
+       * "No item receipt references this order" is a claim about the world, and
+       * over PO-26-1201 it sat three lines above this card's own narrative
+       * naming IR-26-2214 and its 2026-12-30 receipt date. The screen
+       * contradicted itself, and only the withheld reading was wrong.
+       */
+      return d.withheldDocuments.includes("ITEM_RECEIPT")
+        ? {
+            label: "ITEM RECEIPT",
+            glyph: "○",
+            value: "Withheld",
+            note: "A receipt references this order and is outside your role's scope",
+            missing: false,
+          }
+        : {
+            label: "ITEM RECEIPT",
+            glyph: "○",
+            value: "No record",
+            note: "No item receipt references this order",
+            missing: true,
+          };
     }
     const inPeriod = ir.receiptDate <= periodEnd;
     return inPeriod
@@ -183,13 +212,22 @@ export function buildProcurementData(
   const vbLeg = (d: ProcurementDetail, poNumber: string): ProcurementLeg => {
     const vb = d.vendorBill;
     if (vb === undefined) {
-      return {
-        label: "VENDOR BILL",
-        glyph: "○",
-        value: "No record",
-        note: "No vendor bill references this order",
-        missing: true,
-      };
+      // Same distinction as the receipt leg above.
+      return d.withheldDocuments.includes("VENDOR_BILL")
+        ? {
+            label: "VENDOR BILL",
+            glyph: "○",
+            value: "Withheld",
+            note: "A bill references this order and is outside your role's scope",
+            missing: false,
+          }
+        : {
+            label: "VENDOR BILL",
+            glyph: "○",
+            value: "No record",
+            note: "No vendor bill references this order",
+            missing: true,
+          };
     }
     const amount = money(d.totals.vendorBillCents);
     const inPeriod = vb.billDate <= periodEnd;
@@ -301,8 +339,12 @@ export function buildProcurementData(
   const rows: ProcurementOrderRowView[] = populations.orders.map((o) => ({
     po: o.purchaseOrderNumber,
     vendor: o.vendor,
-    ir: o.itemReceiptNumber ?? "—",
-    vb: o.vendorBillNumber ?? "—",
+    ir: o.withheldDocuments.includes("ITEM_RECEIPT")
+      ? withheldCell("outside your scope")
+      : (o.itemReceiptNumber ?? "—"),
+    vb: o.withheldDocuments.includes("VENDOR_BILL")
+      ? withheldCell("outside your scope")
+      : (o.vendorBillNumber ?? "—"),
     native: `NS 3WM · ${o.nativeNetsuiteMatchStatus}`,
     close: closeCapsule(o.closeMatchStatus, viewFor(o.relatedExceptionId)),
     position: POSITION_LABELS[o.position],
@@ -320,8 +362,9 @@ export function buildProcurementData(
     receiptDate: formatDateShort(r.receiptDate),
     quantity: String(r.quantity),
     value: money(r.receivedCents),
-    billed:
-      r.vendorBillNumber === undefined || r.billDate === undefined
+    billed: r.withheldDocuments.includes("VENDOR_BILL")
+      ? withheldCell("a bill on this order is outside your scope")
+      : r.vendorBillNumber === undefined || r.billDate === undefined
         ? null
         : `${r.vendorBillNumber} · ${formatDateShort(r.billDate)}`,
     age: `${r.daysOutstanding} ${r.daysOutstanding === 1 ? "day" : "days"}`,
@@ -338,8 +381,9 @@ export function buildProcurementData(
       billDate: formatDateShort(r.billDate),
       quantity: String(r.quantity),
       value: money(r.billedCents),
-      received:
-        r.recordedReceiptDate === undefined
+      received: r.withheldDocuments.includes("ITEM_RECEIPT")
+        ? withheldCell("the receipt on this order is outside your scope")
+        : r.recordedReceiptDate === undefined
           ? "Not yet recorded"
           : `${r.itemReceiptNumber ?? "—"} · ${formatDateShort(r.recordedReceiptDate)}`,
       close: closeCapsule(r.closeMatchStatus, view),
@@ -370,7 +414,11 @@ export function buildProcurementData(
   const ppv = populations.priceVariance;
 
   const tabs: TabDef[] = [
-    { key: "match", label: "Three-Way Match", count: String(s.orders) },
+    // The rows behind the tab, not the close's population: a tab count is a
+    // promise about how much table is there. `s.orders` is the close's own
+    // matched population and is reported in the summary below, where the
+    // withheld note sits beside it.
+    { key: "match", label: "Three-Way Match", count: String(s.ordersVisible) },
     { key: "grni", label: "Received Not Invoiced", count: String(populations.grni.length) },
     {
       key: "inr",
@@ -423,7 +471,18 @@ export function buildProcurementData(
         },
       ],
       rows: inrRows,
-      note: "A vendor bill dated in the period is not by itself proof that title passed. Where the shipping terms are unresolved, the close control holds the order open even though the native three-way match has nothing to say about it — that is the EXC-002 case below, and it is a blocker.",
+      /**
+       * The example is named only when it is on screen.
+       *
+       * EXC-002 rides on the one order an auditor's scope withholds, so this
+       * sentence sent every auditor looking for "the EXC-002 case below" among
+       * three rows that each read "No close exception". Pre-existing, and found
+       * by opening the tab as the auditor rather than by any test: the note is
+       * a hard-coded string, so no assertion about the rows could reach it.
+       */
+      note: populations.invoicedNotReceived.some((r) => r.relatedExceptionOpen === true)
+        ? "A vendor bill dated in the period is not by itself proof that title passed. Where the shipping terms are unresolved, the close control holds the order open even though the native three-way match has nothing to say about it — that is the EXC-002 case below, and it is a blocker."
+        : "A vendor bill dated in the period is not by itself proof that title passed. Where the shipping terms are unresolved, the close control holds the order open even though the native three-way match has nothing to say about it. No such order is listed above at your access scope.",
     },
     git: {
       stats: [
@@ -476,7 +535,13 @@ export function buildProcurementData(
         {
           label: "ORDERS VARYING",
           value: `${new Set(ppv.rows.map((r) => r.purchaseOrderNumber)).size} / ${ppv.ordersCompared}`,
-          note: "orders where a billed price differed from the ordered price",
+          // The denominator is comparisons that HAPPENED, so where scope
+          // prevented one the tile has to say so. Printed alone it read as a
+          // ratio over the population, and the population is larger.
+          note:
+            ppv.ordersNotComparedAtScope === 0
+              ? "orders where a billed price differed from the ordered price"
+              : `orders where a billed price differed from the ordered price, out of the ${ppv.ordersCompared} that could be compared — ${ppv.ordersNotComparedAtScope} of the close's ${s.orders} ${s.orders === 1 ? "order" : "orders"} ${ppv.ordersNotComparedAtScope === 1 ? "is" : "are"} outside your scope and ${ppv.ordersNotComparedAtScope === 1 ? "was" : "were"} not compared`,
           ember: false,
         },
       ],
@@ -485,13 +550,30 @@ export function buildProcurementData(
         "Inventory is carried at standard cost, so a price variance is expensed in the period rather than capitalized. That is why no figure on this tab appears in the inventory subledger, in the inventory accounts, or in the inventory-to-GL reconciliation.",
       note: "A price difference is not a quantity difference: the native three-way match still passes on every order in this table, and no exception is raised. These are reported as an attribute of the match so a reviewer can see them, not as a control failure.",
     },
+    // Two omissions, and the note used to claim the wrong one. It said the
+    // withheld orders were "not counted in the figures above" — which was true
+    // of the summary only because the summary was being counted over the rows
+    // this reader can see, and that is what told an auditor zero orders
+    // required close review while the close held one. The summary now counts
+    // the close's own population, so what is missing is ROWS, plus any
+    // document withheld on a row that stayed.
+    //
+    // A hard-coded plural, invisible until a role withheld exactly one: the
+    // auditor is that role, and the note read "1 orders" on every run. Same
+    // shape as the reset report's "1 comments" in Stage F.
     withheldNote:
-      populations.withheldOrderCount === 0
+      populations.withheldOrderCount === 0 && populations.withheldDocumentCount === 0
         ? null
-        : // A hard-coded plural, invisible until a role withheld exactly one:
-          // the auditor is that role, and the note read "1 orders" on every
-          // run. Same shape as the reset report's "1 comments" in Stage F.
-          `${populations.withheldOrderCount} ${populations.withheldOrderCount === 1 ? "order is" : "orders are"} outside your role's scope in this demo and ${populations.withheldOrderCount === 1 ? "is" : "are"} not counted in the figures above.`,
+        : [
+            populations.withheldOrderCount === 0
+              ? null
+              : `${populations.withheldOrderCount} ${populations.withheldOrderCount === 1 ? "order is" : "orders are"} outside your role's scope in this demo, so ${populations.withheldOrderCount === 1 ? "it has" : "they have"} no row in the table above. The match figures count the close's own population of ${s.orders} orders either way.`,
+            populations.withheldDocumentCount === 0
+              ? null
+              : `${populations.withheldDocumentCount} source ${populations.withheldDocumentCount === 1 ? "document is" : "documents are"} outside your scope on ${populations.withheldDocumentCount === 1 ? "an order that keeps its row" : "orders that keep their rows"}; ${populations.withheldDocumentCount === 1 ? "that cell reads" : "those cells read"} "Withheld", never blank. A period-end position is a cutoff fact and is derived from the documents' own dates, so it does not move with your scope.`,
+          ]
+            .filter((s): s is string => s !== null)
+            .join(" "),
     drawers,
   };
 }

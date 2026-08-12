@@ -139,8 +139,24 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
         undated.push({ label: e.label, ref: e.ref, state: "UNDATED" });
         continue;
       }
+      /**
+       * Withheld means the unscoped side names a record and the reader's own
+       * side does not. Testing only the unscoped side made "the event has not
+       * happened" indistinguishable from "the record is restricted", and in
+       * the wrong direction: an inbound unit with a carrier shipment and no
+       * delivery yet has `ref` (the shipment is visible) and `present` false
+       * (there is no delivery date), so it fell through to here and every
+       * reader — including a CONTROLLER, whose scope withholds nothing — was
+       * told "FP-IN-2288 · withheld by your access scope" about a delivery
+       * that simply has not occurred. Forty of the fifteen hundred serials.
+       *
+       * When the reader CAN see the reference and the defining fact does not
+       * exist, the event is not on the timeline at all — that is this
+       * handler's second rule, and `life.missing` is where a genuine absence
+       * is reported.
+       */
       const unscoped = unscopedRefs[e.label];
-      if (unscoped !== undefined) {
+      if (e.ref === undefined && unscoped !== undefined) {
         withheld.push({ label: e.label, ref: unscoped, state: "WITHHELD" });
       }
     }

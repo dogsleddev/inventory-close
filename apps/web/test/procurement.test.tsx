@@ -315,4 +315,69 @@ describe("Procurement — a scoped reader is not shown their own scope as a find
     expect(note.textContent).not.toMatch(/\b1 orders\b/);
     expect(note.textContent).toMatch(/\b1 order is\b/);
   });
+
+  /**
+   * The rest of that same defect, which the fix above did not reach.
+   *
+   * `inboundAgrees` was one consumer of the scope-shortened order array. Its
+   * siblings — the match summary, the price-variance denominator and the
+   * period-end classification — were computed in the same loop and left alone.
+   * The worst of them was not a short count but a fabricated one: PO-26-1201's
+   * RECEIPT is outside an auditor's scope, so a visibility-derived position
+   * classified a matched order INVOICED_NOT_RECEIVED and printed it on that
+   * tab as a named cutoff exposure, with its EXC-014 link gone because the
+   * exception was matched on the withheld receipt's number. A second order
+   * left the population at the same moment, so the row COUNT was 4 for both
+   * roles and no surface revealed the swap.
+   */
+  it("does not show the auditor a cutoff finding on an order they cannot fully see", async () => {
+    renderProcurement("AUDITOR_READ_ONLY", "inr");
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).queryByText("PO-26-1201")).toBeNull();
+    // And the claim that row used to carry: "Not yet recorded" over a receipt
+    // that was recorded on 2026-12-30 and is merely unreadable here.
+    expect(within(panel).queryByText("Not yet recorded")).toBeNull();
+    // The premise, so this cannot pass on an empty tab.
+    expect(within(panel).getByText("PO-26-1241")).toBeTruthy();
+  });
+
+  it("names a withheld document in the cell rather than dashing it out", async () => {
+    renderProcurement("AUDITOR_READ_ONLY", "match");
+    const cells = screen.getAllByText(/Withheld — outside your scope/);
+    expect(cells.length).toBeGreaterThan(0);
+    const controller = buildProcurementData(userByRole("CONTROLLER"), "T-PROC-CTL");
+    const auditor = buildProcurementData(userByRole("AUDITOR_READ_ONLY"), "T-PROC-AUD");
+    // The Controller sees the identifier; the auditor sees that there is one.
+    const row = (d: typeof controller) =>
+      d.match?.rows.find((r) => r.po === "PO-26-1201");
+    expect(row(controller)?.ir).toBe("IR-26-2214");
+    expect(row(auditor)?.ir).toMatch(/^Withheld/);
+    expect(row(auditor)?.position).toBe(row(controller)?.position);
+  });
+
+  it("reports the close's own review count to a reader whose rows are shorter", async () => {
+    // The close holds one order requiring close review. Counting the filtered
+    // rows told the auditor ZERO — a control state the close does not hold.
+    renderProcurement("AUDITOR_READ_ONLY", "match");
+    const controller = buildProcurementData(userByRole("CONTROLLER"), "T-PROC-CTL");
+    const auditor = buildProcurementData(userByRole("AUDITOR_READ_ONLY"), "T-PROC-AUD");
+    expect(auditor.match?.closeSummary).toBe(controller.match?.closeSummary);
+    expect(auditor.match?.divergentNote).toBe(controller.match?.divergentNote);
+    expect(auditor.match?.nativeSummary).toBe(controller.match?.nativeSummary);
+    // And the tab still promises only the rows it has.
+    expect(auditor.tabs.find((t) => t.key === "match")?.count).toBe(
+      String(auditor.match?.rows.length),
+    );
+  });
+
+  it("qualifies the price-variance denominator it could not fill", async () => {
+    renderProcurement("AUDITOR_READ_ONLY", "ppv");
+    const tile = screen.getByText(/could be compared/);
+    expect(tile.textContent).toMatch(/1 of the close.s 84 orders is outside your scope/);
+    // The Controller compared every order, so the qualification must not
+    // appear for them — a note that is always on says nothing.
+    cleanup();
+    renderProcurement("CONTROLLER", "ppv");
+    expect(screen.queryByText(/could be compared/)).toBeNull();
+  });
 });

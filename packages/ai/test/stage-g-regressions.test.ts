@@ -11,6 +11,7 @@ import {
 } from "@icg/services";
 import {
   answerQuestion,
+  checkDraft,
   namesRecordIdentifier,
   statesQuantity,
   type AiToolContext,
@@ -363,5 +364,207 @@ describe("an object the question names is the object answered about", () => {
     const r = answerQuestion(t, "Tell me about this one.", { serial: "KE-E2-1048" });
     expect(r.answer, r.refusal?.reason).toBeDefined();
     expect(r.route).toBe("unit-detail");
+  });
+});
+
+/**
+ * Scope, told rather than implied.
+ *
+ * `tools.ts` computes four flags whose stated purpose (`tools.ts:71`) is to
+ * keep "withheld from you" distinguishable from "there is none". Three were
+ * declared in `answers.ts` result interfaces and read by nothing, and one was
+ * destructured and dropped. A flag that is computed and not read is a
+ * disclosure the code looks like it makes.
+ */
+describe("a restriction reaches the reader, and only a real one", () => {
+  const lineageOutOfScope = (c: AiToolContext) =>
+    ws.close.exceptions
+      .filter((e) => {
+        const r = answerQuestion(c, "Why is this still open?", { exceptionId: e.id });
+        return r.answer?.knownFacts.some((f) => f.label === "Evidence lineage") === true;
+      })
+      .map((e) => e.id);
+
+  it("says so when an exception's lineage is outside the reader's scope", () => {
+    // Thirteen of fifteen, not one: `traceLineage` returns undefined for an
+    // auditor on any exception without provided support, so the citation list
+    // silently shortened on almost every exception in the demo.
+    const withheld = lineageOutOfScope(auditor);
+    expect(withheld.length).toBeGreaterThan(1);
+    expect(withheld).toContain("EXC-004");
+    // And never claims a restriction for a reader who has none.
+    expect(lineageOutOfScope(t)).toEqual([]);
+  });
+
+  it("pairs every shortened citation list with the sentence that explains it", () => {
+    // The biconditional: fewer citations than the unscoped reader gets IF AND
+    // ONLY IF the answer says why. Either half alone is the defect — a silent
+    // omission, or a disclosure of something that was not withheld.
+    for (const e of ws.close.exceptions) {
+      const asked = (c: AiToolContext) =>
+        answerQuestion(c, "Why is this still open?", { exceptionId: e.id }).answer;
+      const full = asked(t);
+      const scoped = asked(auditor);
+      const shortened = (scoped?.citations.length ?? 0) < (full?.citations.length ?? 0);
+      const explained =
+        scoped?.knownFacts.some((f) => f.label === "Evidence lineage") === true;
+      expect(explained, `${e.id}: shortened=${shortened} explained=${explained}`).toBe(
+        shortened,
+      );
+    }
+  });
+
+  it("counts the withheld components of a scope-reduced timeline", () => {
+    const serials = [...new Set(ws.dataset.inventoryUnits.map((u) => u.serial))].filter(
+      (s): s is string => s !== undefined,
+    );
+    let reducedForAuditor = 0;
+    for (const serial of serials) {
+      for (const [role, c] of [
+        ["CONTROLLER", t],
+        ["AUDITOR_READ_ONLY", auditor],
+      ] as const) {
+        const facts =
+          answerQuestion(c, "Show me the financial life of this unit", { serial }).answer
+            ?.knownFacts ?? [];
+        const withheldRows = facts.filter((f) => /withheld by your access scope/.test(String(f.text)));
+        const summary = facts.find((f) => f.label === "Components withheld from you");
+        // The summary figure and the rows it counts are read on one run.
+        expect(summary?.count ?? 0, `${role} ${serial}`).toBe(withheldRows.length);
+        if (role === "CONTROLLER") {
+          /**
+           * A CONTROLLER withholds nothing, so no row may say otherwise — and
+           * forty of these fifteen hundred serials said otherwise. An inbound
+           * unit with a visible carrier shipment and no delivery yet has a
+           * readable reference and no defining fact, and the withheld branch
+           * tested only whether the unscoped side named a record. "FP-IN-2288
+           * · withheld by your access scope" was printed to every reader about
+           * a delivery that had not happened.
+           */
+          expect(withheldRows, `CONTROLLER ${serial}`).toEqual([]);
+        } else if (withheldRows.length > 0) {
+          reducedForAuditor += 1;
+        }
+      }
+    }
+    // Without a real restriction somewhere, the CONTROLLER assertion above
+    // would pass on an implementation that never reports a withholding at all.
+    expect(reducedForAuditor).toBeGreaterThan(0);
+  });
+
+  it("leaves an event that has not happened off the timeline entirely", () => {
+    // The other direction of the same fix: not relabelled, not present. The
+    // handler's own rule is that a delivery exists only where a delivery event
+    // does, and `life.missing` is where a genuine absence is reported.
+    const facts =
+      answerQuestion(t, "Show me the financial life of this unit", { serial: "KE-E1-9506" })
+        .answer?.knownFacts ?? [];
+    const life = t.queries.getFinancialLife(t.ctx, "KE-E1-9506");
+    expect(life.records.carrierShipment).toBeDefined();
+    expect(life.sellSide.deliveredAt).toBeUndefined();
+    expect(facts.some((f) => f.label === "Delivery")).toBe(false);
+  });
+});
+
+/**
+ * The Draft guard, in production rather than in a test.
+ *
+ * The block above asserts the shipped `MEMO_DRAFT_SECTIONS` constant satisfies
+ * the figure and identifier rules — which was ALL that ever enforced them. The
+ * stage's own words were that Draft output is "checked by the same quantity and
+ * identifier guards that govern provider narration"; `statesQuantity` and
+ * `namesRecordIdentifier` were exported for that and then called only from
+ * `checkNarration`, and nothing in production called `checkNarration` on a
+ * draft. True of the constant, false of the mechanism — and the assertions
+ * above would have passed unchanged for a second draft-emitting path that
+ * interpolated a live figure.
+ *
+ * `answerQuestion` now runs `checkDraft` at the one point a draft becomes part
+ * of an interaction, so every present and future draft path is covered.
+ */
+describe("suggested wording is guarded where it is emitted", () => {
+  const ALL_SHAPES: readonly { name: string; body: string }[] = [
+    { name: "a digit", body: "The difference is 12,450 dollars at the balance-sheet date." },
+    { name: "a spelled-out number", body: "There are seven items holding sign-off." },
+    { name: "a record identifier", body: "Describe the position, including EXC-001." },
+    { name: "a zero-count claim", body: "No exceptions remain open at the date." },
+  ];
+
+  it("fires on every shape it claims to catch", () => {
+    // A guard that runs and never fires is the same as one that does not run.
+    for (const shape of ALL_SHAPES) {
+      const verdict = checkDraft([{ heading: "Position", body: shape.body }]);
+      expect(verdict.ok, `${shape.name} passed the draft guard`).toBe(false);
+      expect(verdict.detail.join(" ")).toMatch(/Draft section "Position"/);
+    }
+    // And passes prose that keeps its figures out.
+    expect(
+      checkDraft(
+        [{ heading: "Position", body: "Describe the gap in words; the screen supplies the amounts." }],
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("applies the narration rule from the narration definition", () => {
+    // Not a second copy of the patterns: the same predicates, so the two
+    // cannot answer differently about the same sentence.
+    for (const shape of ALL_SHAPES) {
+      const byPredicate =
+        statesQuantity(shape.body) || namesRecordIdentifier(shape.body);
+      expect(byPredicate, shape.name).toBe(true);
+    }
+  });
+
+  it("does not extend the claim-content denylists to the engine's own prose", () => {
+    /**
+     * Recorded as a test because the first version of `checkDraft` DID extend
+     * them, and the shipped "Reconciling items" section failed instantly on the
+     * phrase "has been posted" — inside the sentence "Nothing in this product
+     * has been posted, so the memo should not describe the ledger as
+     * corrected." Draft prose tells a writer what the product does not do, so
+     * it says those verbs deliberately. Telling that apart from a claim that
+     * the product acted means deciding whether the claim is negated: the same
+     * undecidable comparison as deciding whether a figure is the right figure.
+     *
+     * So a section may discuss posting, and may not carry a number.
+     */
+    const denial = [
+      {
+        heading: "Reconciling items",
+        body: "Nothing in this product has been posted, so the memo should not describe the ledger as corrected.",
+      },
+    ];
+    expect(checkDraft(denial).ok).toBe(true);
+    expect(statesQuantity(denial[0]!.body)).toBe(false);
+    expect(namesRecordIdentifier(denial[0]!.body)).toBe(false);
+    // And the shipped constant still contains that exact sentence, so this is
+    // a live property of the product's wording rather than a hypothetical.
+    const bodies = (answerQuestion(t, "Draft the close memo for me.").answer?.draft ?? [])
+      .map((s) => s.body)
+      .join(" ");
+    expect(bodies).toMatch(/Nothing in this product has been posted/);
+  });
+
+  it("emits only sections that survive the guard, and says when one did not", () => {
+    /**
+     * The wiring, as a biconditional over what production actually returns: a
+     * section reaches the reader IF AND ONLY IF it passes, and a dropped
+     * section is disclosed. Verified by adding a violating section to
+     * `MEMO_DRAFT_SECTIONS` and watching this fail — without the guard wired
+     * in, the violating wording rendered and nothing said so.
+     */
+    const answer = answerQuestion(t, "Draft the close memo for me.").answer;
+    const sections = answer?.draft ?? [];
+    expect(sections.length).toBeGreaterThan(3);
+    for (const section of sections) {
+      expect(checkDraft([section]).ok, `"${section.heading}" reached the reader`).toBe(
+        true,
+      );
+    }
+    const withheldNote = (answer?.missingEvidence ?? []).filter((m) =>
+      /suggested .* withheld/.test(m),
+    );
+    // Nothing is dropped today, so nothing may claim to have been.
+    expect(withheldNote).toEqual([]);
   });
 });
