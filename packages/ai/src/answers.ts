@@ -249,6 +249,12 @@ interface ReconResult {
   subledgerCents: number;
   grossGlCents: number;
   differenceCents: number;
+  /**
+   * The part of the difference no reconciling item accounts for. Distinct from
+   * `differenceCents`, which is the whole gap — the exposure slot called the
+   * whole gap "unreconciled" while this was zero.
+   */
+  unexplainedCents: number;
   potentialAdjustedGlCents: number;
   items: readonly { id: string; description: string; amountCents: number; relatedExceptionId: string }[];
 }
@@ -1526,11 +1532,33 @@ const INTENTS: readonly Intent[] = [
         conflictingEvidence: [],
         missingEvidence: [],
         assertions: ["EXISTENCE", "COMPLETENESS"],
-        exposure: {
-          label: "Unreconciled difference",
-          valueCents: recon.differenceCents,
-          source: "get_reconciliation_status",
-        },
+        /**
+         * Named for what was summed, and named the way the screen names it.
+         *
+         * This read "Unreconciled difference" over `differenceCents`, while
+         * `unexplainedCents` on the same tool result is zero — and three lines
+         * above, the same answer says "Every dollar of the difference is
+         * identified and attributed." So the exposure slot, which is the figure
+         * a reader is most likely to carry off, contradicted the sentence
+         * beside it and disagreed with `recon-view.ts`, which calls this same
+         * number "Current GL difference". One number, two names, across the
+         * assistant and the screen.
+         *
+         * "Unreconciled" is the right word for `unexplainedCents` and only for
+         * that, so it is used exactly when there is some.
+         */
+        exposure:
+          recon.unexplainedCents > 0
+            ? {
+                label: "Unreconciled difference",
+                valueCents: recon.unexplainedCents,
+                source: "get_reconciliation_status",
+              }
+            : {
+                label: "GL difference",
+                valueCents: recon.differenceCents,
+                source: "get_reconciliation_status",
+              },
         managementConclusion: `Every dollar of the difference is identified and attributed. Applying all ${recon.items.length} would bring the gross GL to the subledger, but none has been posted.`,
         nextAction: "Conclude the open reconciling items, then prepare and approve the entries.",
         citations: recon.items.map((i) =>
@@ -2222,15 +2250,63 @@ const INTENTS: readonly Intent[] = [
           managementTests: number;
           auditorTests: number;
         };
+        results: readonly { serial?: string | undefined; variance: number }[];
       }>("get_cycle_count_history");
       if (detail === undefined) return undefined;
       const c = detail.summary;
+      /**
+       * How many of those variance rows are still OPEN.
+       *
+       * `varianceRows` counts every year-end variance the count produced,
+       * open or not, and the imperative under it — "Resolve the open count
+       * variances" — was unconditional. The shipped chip on the Physical Count
+       * screen asks "Which count issues are still open?", so a reader was
+       * answered "4" where one is open, and told to go and resolve three items
+       * that were resolved. A count of a filtered population and a sentence
+       * asserting work outstanding are the same claim, so both branch on the
+       * same set.
+       *
+       * Cross-referenced through the exceptions rather than re-derived: a
+       * variance is open exactly when an exception naming its serial is open,
+       * and that is the effective open set, not the frozen one.
+       */
+      const effective = s.run<readonly EffectiveExceptionResult[]>("get_effective_exceptions");
+      const openSerials = new Set(
+        (effective ?? [])
+          .filter((e) => e.open)
+          .flatMap((e) => [...(e.exception.finding.subjects.serials ?? [])]),
+      );
+      const varianceSerials = detail.results
+        .filter((r) => r.variance !== 0 && r.serial !== undefined)
+        .map((r) => r.serial as string);
+      const openVariances = varianceSerials.filter((serial) => openSerials.has(serial));
       return {
         status: `${count(c.firstPassMatchedUnits)} of ${count(c.populationUnits)} units matched on the first pass`,
         knownFacts: [
           { label: "Counted population", count: c.populationUnits, source: "get_cycle_count_history" },
           { label: "Matched first pass", count: c.firstPassMatchedUnits, source: "get_cycle_count_history" },
           { label: "Variance rows", count: c.varianceRows, source: "get_cycle_count_history" },
+          /**
+           * The figure the chip actually asks for, beside the total it was
+           * being answered with.
+           *
+           * Cited to `get_cycle_count_history`, which is the tool the counted
+           * ROWS come from — `get_effective_exceptions` only decides which of
+           * them are still open. The routing-identity harness settles this
+           * rather than taste: it perturbs one tool at a time and requires a
+           * figure to move with what it cites, and this one moves with the
+           * count history. A citation that merely looks plausible is worse
+           * than none, because the drawer prints it as "Answered from …".
+           */
+          ...(effective === undefined
+            ? []
+            : [
+                {
+                  label: "Variance rows still open",
+                  count: openVariances.length,
+                  source: "get_cycle_count_history" as const,
+                },
+              ]),
           { label: "Movements during the count", count: c.movements, source: "get_cycle_count_history" },
           { label: "Management test counts", count: c.managementTests, source: "get_cycle_count_history" },
           { label: "Auditor test counts", count: c.auditorTests, source: "get_cycle_count_history" },
@@ -2240,7 +2316,10 @@ const INTENTS: readonly Intent[] = [
         assertions: ["EXISTENCE", "COMPLETENESS"],
         managementConclusion:
           "Cycle-count history is a management risk lens. It is not auditor sampling and carries no reliance.",
-        nextAction: "Resolve the open count variances; each is an exception of its own.",
+        nextAction:
+          effective === undefined || openVariances.length > 0
+            ? "Resolve the open count variances; each is an exception of its own."
+            : "No count variance is still open; each was concluded as an exception of its own.",
         citations: [cite("Physical Count", { href: "/physical-count" })],
       };
     },

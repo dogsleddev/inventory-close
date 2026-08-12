@@ -36,10 +36,32 @@ import type { Workspace } from "./workspace.js";
  * function body — but "probably survives a cycle" is not a property to build
  * the permission boundary on. Nothing imports this module from below.
  *
- * Every function delegated here already calls `authorize(ctx.user, …)` and
- * scopes source documents itself. This layer adds no logic of its own: it is
- * a binding, not a service, and a projection that needed a decision made
- * about it would belong in the module that owns the figures.
+ * Every function delegated here calls `authorize(ctx.user, …)`. This layer
+ * adds no logic of its own: it is a binding, not a service, and a projection
+ * that needed a decision made about it would belong in the module that owns
+ * the figures.
+ *
+ * **Source-document scoping is per module, and this comment used to claim
+ * otherwise.** It said every delegate "scopes source documents itself", which
+ * was a claim about ten modules made by a file that calls into them and checks
+ * nothing — and it was false of most of them. `eoMethodology.ts` read a
+ * forecast's own note straight off the fixture, so an auditor whose workpaper
+ * scope hides FC-002 read its note on `/valuation`: the side door around
+ * `listEvidence` that `makeRecordScope` exists to close. It is scoped now.
+ *
+ * Which delegates reach source records at all, and what each does:
+ *
+ * - `procurement`, `ownership`, `costing`, `methodology`, `eoMethodology` —
+ *   reach source documents and call `makeRecordScope`.
+ * - `glAccounts`, `memo` — reach no source record. `glAccounts` reads close
+ *   aggregates and the GL account map; `memo` reads workspace drafts and
+ *   versions, whose own visibility `memo.ts` decides. Neither needs the scope
+ *   and neither silently skips it.
+ *
+ * A delegate added here that reads `ws.dataset.*` and returns any of its text
+ * belongs in the first list, not the second. The claim is only worth making if
+ * it is checked, so `projections.test.ts` asserts the split rather than
+ * trusting this paragraph.
  */
 export function createProjectionService(ws: Workspace) {
   return {

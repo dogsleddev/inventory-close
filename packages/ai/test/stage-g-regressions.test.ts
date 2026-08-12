@@ -853,3 +853,54 @@ describe("suggested wording is guarded where it is emitted", () => {
     expect(withheldNote).toEqual([]);
   });
 });
+
+/**
+ * A figure's label names what was summed, and a prescription branches on the
+ * set it prescribes work over.
+ */
+describe("labels and imperatives track their own populations", () => {
+  it("does not call the whole GL difference 'unreconciled' while nothing is unexplained", () => {
+    const recon = createQueryService(ws).getReconciliation(ctxFor("CONTROLLER"));
+    const answer = answerQuestion(t, "Why doesn't inventory tie?", {}).answer;
+    // The premise: the two figures genuinely differ on this dataset, so the
+    // label is doing work rather than naming the same number twice.
+    expect(recon.differenceCents).not.toBe(recon.unexplainedCents);
+    expect(recon.unexplainedCents).toBe(0);
+
+    // The biconditional: "unreconciled" is used exactly when there is some.
+    const usesUnreconciled = /Unreconciled/.test(answer?.exposure?.label ?? "");
+    expect(usesUnreconciled).toBe(recon.unexplainedCents > 0);
+    expect(answer?.exposure?.valueCents).toBe(
+      recon.unexplainedCents > 0 ? recon.unexplainedCents : recon.differenceCents,
+    );
+    // And the answer's own sentence, three rows up, must not contradict it.
+    expect(answer?.managementConclusion).toMatch(/identified and attributed/);
+  });
+
+  it("counts the count variances that are still open, and branches on that", () => {
+    const effective = createQueryService(ws).getEffectiveExceptions(ctxFor("CONTROLLER"));
+    const openSerials = new Set(
+      effective
+        .filter((e) => e.open)
+        .flatMap((e) => [...(e.exception.finding.subjects.serials ?? [])]),
+    );
+    const detail = createQueryService(ws).getCountDetail(ctxFor("CONTROLLER"));
+    const openVariances = detail.results.filter(
+      (r) => r.variance !== 0 && r.serial !== undefined && openSerials.has(r.serial),
+    ).length;
+    const total = detail.results.filter((r) => r.variance !== 0).length;
+
+    // The premise: the chip asks "still open" and the two counts differ, which
+    // is the whole reason the total was the wrong answer.
+    expect(total).toBeGreaterThan(openVariances);
+
+    const answer = answerQuestion(t, "Which count issues are still open?", {}).answer;
+    const stated = answer?.knownFacts.find((f) => f.label === "Variance rows still open");
+    expect(stated?.source).toBe("get_cycle_count_history");
+    expect(stated?.count).toBe(openVariances);
+    // The imperative is the same claim as the figure, so it branches with it.
+    expect(/Resolve the open count variances/.test(answer?.nextAction ?? "")).toBe(
+      openVariances > 0,
+    );
+  });
+});

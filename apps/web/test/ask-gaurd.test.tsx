@@ -228,3 +228,45 @@ describe("a question cannot change financial state", () => {
     expect(text).not.toMatch(/Resolved —/);
   });
 });
+
+/**
+ * `humanizeCanonical` words canonical tokens for the reader. It must not reach
+ * inside an identifier to do it.
+ *
+ * A hyphen is a word boundary, so `\b[A-Z][A-Z0-9_]+\b` matched `DEMO` inside
+ * `FY2026-DEMO-v1.2.0` — and `DEMO` is an accounting classification the map
+ * words as "Demo". The provenance answer printed the dataset version as
+ * `FY2026-Demo-v1.2.0`: a corrupted identifier, in the one answer whose entire
+ * subject is that every figure is reproducible from a named dataset.
+ *
+ * Both directions, because the obvious fix — narrowing the pattern until
+ * nothing matches — passes the first assertion and silently returns the
+ * product to printing `COMPANY_WAREHOUSE` at readers.
+ */
+describe("the drawer words tokens without rewriting identifiers", () => {
+  const controller = () => userByRole("CONTROLLER");
+  const factsFor = (q: string) =>
+    askGaurdData(controller(), q, {}, "T-HUMANIZE").answer?.knownFacts ?? [];
+  const valueOf = (q: string, label: string) =>
+    factsFor(q).find((f) => f.label === label)?.value;
+
+  it("leaves a hyphenated identifier exactly as the dataset spells it", () => {
+    const version = valueOf("Is this close reproducible?", "Dataset");
+    // The premise: this identifier really does contain a segment the map words.
+    expect(version).toBeDefined();
+    expect(version).toMatch(/-DEMO-/);
+    expect(version).not.toMatch(/-Demo-/);
+    // Its siblings in the same answer, which carry the same shape.
+    expect(valueOf("Is this close reproducible?", "Run")).toMatch(/-BASELINE$/);
+    expect(valueOf("Is this close reproducible?", "Policy")).toMatch(/^CLOSE-POLICY-/);
+  });
+
+  it("still words a standalone canonical token", () => {
+    const health = factsFor("Which sources are not healthy?");
+    const values = health.map((f) => f.value).join(" | ");
+    expect(values).toMatch(/Company warehouse|HEALTHY|STALE|PARTIAL/);
+    const custody = factsFor("Who is holding our inventory?");
+    expect(custody.map((f) => f.label).join(" | ")).toMatch(/Company warehouse/);
+    expect(custody.map((f) => f.label).join(" | ")).not.toMatch(/COMPANY_WAREHOUSE/);
+  });
+});

@@ -4,6 +4,7 @@ import { AuthorizationError, SegregationOfDutiesError } from "@icg/permissions";
 import { InvalidTransitionError } from "@icg/workflows";
 import {
   createCommandService,
+  createProjectionService,
   createQueryService,
   createWorkspace,
   PeriodLockedError,
@@ -276,5 +277,72 @@ describe("8. exception -> rule execution -> evidence -> source traversal", () =>
     const lineage = queries.traceLineage(ctx("CONTROLLER"), "EXC-003");
     const countRow = lineage?.evidence.find((e) => e.item.kind === "COUNT_RESULT");
     expect(countRow?.linkType).toBe("CONFLICTS_WITH");
+  });
+});
+
+/**
+ * Source-document scoping across the projection layer.
+ *
+ * `projections.ts` claimed every function it delegates "scopes source
+ * documents itself" — a claim about ten modules, made by a file that calls
+ * into them and checks nothing. It was false of most of them, and live for one:
+ * `getEoMethodology` read a forecast's own note straight off the fixture, so an
+ * auditor whose workpaper scope hides FC-002 read its note on `/valuation`.
+ * That is the side door around `listEvidence` that `makeRecordScope`'s own
+ * docstring exists to close.
+ *
+ * Asserted here rather than restated in a comment, because a claim about a
+ * boundary is worth exactly what checks it.
+ */
+describe("the projection layer withholds record text an auditor may not read", () => {
+  const ws = createWorkspace();
+  const projections = createProjectionService(ws);
+  const as = (role: Parameters<typeof userByRole>[0]) => ({
+    user: userByRole(role),
+    correlationId: "T-PROJ-SCOPE",
+    sourceInterface: "TEST",
+  });
+
+  it("withholds the forecast note the auditor's scope hides", () => {
+    const controller = projections.getEoMethodology(as("CONTROLLER"));
+    const auditor = projections.getEoMethodology(as("AUDITOR_READ_ONLY"));
+
+    const noted = controller.signals.filter((s) => s.forecastNote !== undefined);
+    // The premise. Without a note that is actually withheld from somebody, the
+    // assertions below describe a case that does not occur.
+    expect(noted.length).toBeGreaterThan(0);
+
+    for (const row of noted) {
+      const seen = auditor.signals.find((s) => s.sku === row.sku);
+      expect(seen?.forecastNote, `${row.sku} note reached the auditor verbatim`).not.toBe(
+        row.forecastNote,
+      );
+      expect(seen?.forecastNote).toMatch(/outside your access scope/);
+    }
+  });
+
+  it("withholds the note without shrinking a single figure", () => {
+    /**
+     * The other side of the boundary, and the one the last remediation got
+     * wrong: a scope-reduced figure printed as a complete one. The auditor
+     * keeps every row and every quantity — only the record's own text is
+     * withheld, and it says so rather than looking like a row that never had a
+     * note.
+     */
+    const controller = projections.getEoMethodology(as("CONTROLLER"));
+    const auditor = projections.getEoMethodology(as("AUDITOR_READ_ONLY"));
+    expect(auditor.signals.map((s) => s.sku)).toEqual(controller.signals.map((s) => s.sku));
+    expect(auditor.onHandUnits).toBe(controller.onHandUnits);
+    expect(auditor.forecastUnitsTotal).toBe(controller.forecastUnitsTotal);
+    expect(auditor.excessOverHorizonUnits).toBe(controller.excessOverHorizonUnits);
+    expect(auditor.condition.unitsWithConditionRecord).toBe(
+      controller.condition.unitsWithConditionRecord,
+    );
+    for (const row of controller.signals) {
+      const seen = auditor.signals.find((s) => s.sku === row.sku);
+      expect(seen?.onHandUnits, row.sku).toBe(row.onHandUnits);
+      expect(seen?.agedUnits, row.sku).toBe(row.agedUnits);
+      expect(seen?.excessOverHorizonUnits, row.sku).toBe(row.excessOverHorizonUnits);
+    }
   });
 });

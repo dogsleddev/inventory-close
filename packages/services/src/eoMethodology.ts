@@ -1,5 +1,6 @@
 import { authorize } from "@icg/permissions";
-import type { ServiceContext } from "./queries.js";
+import type { SourceRecordRef } from "@icg/domain";
+import { makeRecordScope, type ServiceContext } from "./queries.js";
 import type { Workspace } from "./workspace.js";
 
 /**
@@ -187,6 +188,31 @@ export function getEoMethodology(ws: Workspace, ctx: ServiceContext): EoMethodol
   const thresholdDays = ws.close.valuation.slowMovingAgeDays;
 
   const forecastBySku = new Map(ws.dataset.forecasts.map((f) => [f.sku, f]));
+  /**
+   * The forecast's own note is a source-record fact, so it is scoped like one.
+   *
+   * `projections.ts` says every function it delegates "already calls
+   * `authorize` and scopes source documents itself". This one did not: it read
+   * `forecast.note` straight off the fixture, so an auditor whose workpaper
+   * scope hides FC-002 still read its note on `/valuation` — the side door
+   * around `listEvidence` that `makeRecordScope`'s own docstring exists to
+   * close.
+   *
+   * Only the NOTE is withheld. Dropping the signals row, or shrinking the
+   * counts derived from it, would be the defect on the other side of this
+   * boundary: a scope-reduced figure printed as a complete one. The SKU keeps
+   * its row and every quantity, and the reader is told the note is restricted
+   * rather than shown a row that looks like it never had one.
+   */
+  const inScope = makeRecordScope(ws, ctx.user);
+  const noteFor = (
+    forecast: { note?: string | undefined; sourceRef?: SourceRecordRef | undefined } | undefined,
+  ): string | undefined => {
+    if (forecast?.note === undefined) return undefined;
+    return inScope(forecast.sourceRef)
+      ? forecast.note
+      : "Withheld — the forecast record behind this note is outside your access scope.";
+  };
   const skuMeta = new Map(ws.dataset.skus.map((s) => [s.code, s]));
 
   // Which SKUs the close raised a valuation review for, read off the
@@ -263,7 +289,7 @@ export function getEoMethodology(ws: Workspace, ctx: ServiceContext): EoMethodol
         agedCarryingCents: b.agedCents,
         ...(forecastUnits !== undefined ? { forecastUnits } : {}),
         ...(horizonMonths !== undefined ? { horizonMonths } : {}),
-        ...(forecast?.note !== undefined ? { forecastNote: forecast.note } : {}),
+        ...(noteFor(forecast) !== undefined ? { forecastNote: noteFor(forecast)! } : {}),
         ...(monthlyRate !== undefined && monthlyRate > 0
           ? { monthsOfSupply: b.units / monthlyRate }
           : {}),

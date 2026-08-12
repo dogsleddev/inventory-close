@@ -134,7 +134,17 @@ function humanizeCanonical(value: string): string {
     // only safe because an unrecognised token is returned untouched: the
     // acronyms a reader wants verbatim — GL, PBC, GIT, RMA, NRV — are not in
     // the map, or map to themselves.
-    /\b[A-Z][A-Z0-9_]+\b/g,
+    //
+    // A hyphen is a word boundary, so `\b` let this reach INSIDE a hyphenated
+    // identifier: `FY2026-DEMO-v1.2.0` matched on `DEMO`, which the map words
+    // as "Demo" (it is an accounting classification), and the provenance answer
+    // printed the dataset version as `FY2026-Demo-v1.2.0` — a corrupted
+    // identifier, in the one answer whose whole subject is that every figure is
+    // reproducible from a named dataset. Excluding hyphen adjacency on both
+    // sides keeps every standalone token in scope, including one followed by
+    // punctuation ("AccordVault is STALE — …"), while leaving `EXC-002`,
+    // `KE-X1-9025`, `PO-26-1201` and the dataset version alone.
+    /(?<![\w-])[A-Z][A-Z0-9_]+(?![\w-])/g,
     // Location ids are dataset-owned rather than an enum, so they are looked
     // up rather than listed — and looked up in a way that returns nothing for
     // a token that is not a location, so an unrecognised value stays
