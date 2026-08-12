@@ -27,7 +27,7 @@ against the service on the same run, and each mutation-tested against the pre-fi
 Incidentally closed by the same edits: `G39`, `G42` (the compiler change), and `G16`'s
 blockers-branch half.
 
-**Gate after every pass below:** typecheck, lint and build clean, 20 routes. **2,462 tests across
+**Gate after every pass below:** typecheck, lint and build clean, 20 routes. **2,481 tests across
 72 files passing** (was 1,749 at `003525a`). Locked baseline unmoved and re-confirmed in a browser as Controller and
 auditor. `pnpm test` still exits 1 on the known `onTaskUpdate` reporter RPC timeout — read the
 `Tests` line.
@@ -109,6 +109,68 @@ export in one edit. `G27` and `G26` read `get_effective_exceptions`, the live tw
   what the rules derived, so making the caption live without the link would have put "View all 0
   blockers" on a page of seven — the same defect one click along. The caption counts its rows; the
   link counts its destination.
+
+## 0c. Every P0 and every P1 is now fixed
+
+**Seventeen more findings closed across `dee2580`, `9ef075c`, `b1cf8aa`, `bbbcdca`, `9b62dcd`,
+`73a7e3c`, `5cfeb20`.** Nothing the review confirmed at P0 or P1 remains open.
+
+| commit | closes |
+|---|---|
+| `dee2580` | `G67` — the hard-coded plural the previous fix pass carried through its own rewrite |
+| `9ef075c` | `G75`, `G74` — the compiler's remaining allowlist and its self-referential guard |
+| `b1cf8aa` | `G26`, `G27`, `G29`, `G30` (+`G28` falls out) — the baseline-versus-live family |
+| `bbbcdca` | `G22`, `G18`, `G08`, `G44` — a scope leak, a corrupted identifier, two labels |
+| `9b62dcd` | `G06`, `G37`, `G32`, `G34` (+`G38` falls out) — a second scope leak, three silent substitutions |
+| `73a7e3c` | `G04` — a withheld record gets its own channel instead of being filed as missing |
+| `5cfeb20` | `G05`, `G07` — both memo claims read the field that decides them |
+
+**Two of the seventeen were real permission leaks**, and they are the same shape: a role literal
+standing in for a capability. `getEoMethodology` read a forecast note straight off the fixture, so an
+auditor read FC-002's note on `/valuation`; `getMemo` withheld the working draft on
+`roles.includes("AUDITOR_READ_ONLY")` while `canDraft` two fields below already tested
+`hasPermission`, so four roles that may not draft read a document headed "INTERNAL — reserve
+exposure, do not circulate". Both are now derived from the permission, and both are asserted as
+biconditionals over every demo role. **If a third surface withholds by naming a role, it is wrong.**
+
+**Traps this pass hit, all of which cost real time:**
+
+- **A fix that makes a dead branch live has to answer for the branch.** `missing-evidence` returned
+  `undefined` when nothing was outstanding — unreachable while the count was frozen, an instant
+  `OUT_OF_SCOPE` refusal once it was not. A shipped chip would have refused at the moment its answer
+  was best.
+- **A live figure pointing at a baseline destination.** Making the Overview caption live without the
+  link would have put "View all 0 blockers" on a page of seven.
+- **Rewording does not fix a channel.** `G04`'s heading, colour, glyph, screen-reader suffix and
+  live-region count each said "missing" independently of the sentence. Five signals, one array.
+- **A test whose premise does not hold passes for the wrong reason.** The first `G34` test denied
+  `getException` and asserted a denial occurred; that question never calls it. Probe, do not adjust
+  the assertion.
+- **The repo's own guards caught three of my edits** — `no-hardcoded-totals` on a canonical total in
+  a code comment, the routing-identity harness on a figure citing a tool it did not read from, and
+  `procurement.test.tsx` on a note asserted from the wrong tab. Run the whole suite, not the file
+  you touched.
+
+## 0d. What is left, and what to do next
+
+**44 findings still HOLD: 27 P2 and 17 NOTE.** None is a wrong figure reaching a reader on a shipped
+path; they are labels, vocabularies, dead branches, CSV formatting and doc claims. The list, by file,
+is in §5 and §6 below — filter to the ids not named in the table above.
+
+Three clusters are worth doing together rather than one at a time:
+
+- **`export-csv.ts` (`G76`, `G77`, `G78`, `G60`)** — canonical tokens raw, a blank "Adjusted qty" on
+  905 of 906 rows that a spreadsheet reads as zero, and a source literal in a shipped cell.
+- **`ask-view.ts` vocabularies (`G20`, `G21`, `G56`, `G57`)** — single-word canonical values and raw
+  `ROLES` members reaching the drawer; the same map that `CONCLUSION_LABELS` was added to.
+- **The routing tail (`G45`, `G72`, `G73`, `G41`, `G43`)** — a bare `git` phrase, present-tense verbs
+  where only the past is declared, and the reconciliation answer's own words refusing when asked
+  back. Verb tense is not number and is NOT safely automatable; use the stem marker.
+
+**Then the fix-validation fleet, which has never run.** Seven commits since `003525a` have had no
+independent pass, and two of them (`1e06d58`, and `dee2580` fixing it) are proof the question is not
+theoretical: a fleet found `G67` in my own fix by running `git blame` and finding the fix commit
+named as the author of the surviving instance. The method is in §8 step 5.
 
 Per-agent output with full reproductions:
 `.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_8b945fa1-a99/journal.jsonl`
