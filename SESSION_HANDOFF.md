@@ -8,20 +8,36 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 
 ---
 
-## 0a. START HERE — the Stage G review ran and stopped at a usage limit
+## 0a. START HERE — the Stage G review ran, and its first fix pass has landed
 
 > ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST.
 >
 > The fourteen-lens review RAN (2026-08-12). All 14 lenses completed — **96 raw findings, 78 deduped,
 > 48 confirmed, including 4 P0s** — and then the org's monthly spend limit killed the verification
-> fleet with 30 groups unjudged, one of them a P0. Nothing has been fixed. That document holds the
-> tally, the confirmed list, the unjudged list, where the artifacts are, and the resume order. It
-> also records two things you must not skip: **every one of the 90 skeptic verdicts came back
-> CONFIRMED**, which is a prompt-calibration bug rather than a result, and **three confirmed P1s are
-> defects in the `003525a` remediation itself** — the fix for the plan's §0 reopened the very class
-> it closed, on a narrower path.
+> fleet with 30 groups unjudged, one of them a P0. That document holds the tally, the confirmed list,
+> the unjudged list, where the artifacts are, and the resume order.
 >
-> The section below describes the state before that review. It is still accurate about the code.
+> **The first fix pass is committed (`1e06d58`).** Its §8 steps 1 and 2 are done: `G66` verified by
+> hand (it held — the previous fix had narrowed the defect, not removed it), then all four P0s and
+> the three remediation P1s fixed, with `G39`, `G42` and half of `G16` closed incidentally. Each fix
+> carries a regression asserted as a biconditional against the service, and each was mutation-tested
+> against the pre-fix HEAD. **Tests 1,749 → 2,119.** The tail — steps 3 to 6 — is what remains.
+>
+> Three things you must not skip:
+>
+> 1. **Every one of the 90 skeptic verdicts came back CONFIRMED**, which is a prompt-calibration bug
+>    rather than a result. Worse, and found while fixing: **`G46`'s skeptic wrote a refutation in its
+>    own correction field and still voted CONFIRMED.** The verdict was decoupled from the analysis,
+>    so read each group's `correctionToTheClaim`, never its `status`. See §3c.
+> 2. **Three confirmed P1s were defects in the `003525a` remediation itself** — the fix for the
+>    plan's §0 reopened the very class it closed, on a narrower path. `1e06d58` has not been reviewed
+>    either, and it should be.
+> 3. **Run the suite with `npx vitest run --maxWorkers=3`.** At default concurrency vitest now OOMs
+>    on this machine — `AlignedAlloc Allocation failed` about three seconds in, at a 64 MB heap,
+>    which is system memory rather than a heap limit.
+>
+> The section below describes the state before that review. It is still accurate about the code
+> except where `1e06d58` changed it.
 
 ## 0b. Stage G is shipped, and its §0 remediation with it
 
@@ -59,10 +75,15 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 >    showed it returning `false` for every auditor, which the Procurement screen printed as
 >    an unexplained control difference. Nothing else would have surfaced it: it is invisible
 >    as the Controller, and the Controller is who every earlier test was.
-> 5. **Ask Gaurd answers from the BASELINE close, not the live one.** `list_open_exceptions`
->    and `get_blocking_conditions` read `ws.close`, so a conclusion recorded in the session
->    moves every screen and no answer. Pre-existing across all of stage 08 and deliberately
->    NOT changed in Stage G — it is wider than one stage. Decide it before Stage H closes.
+> 5. **Ask Gaurd answered from the BASELINE close, not the live one — now DECIDED, and partly
+>    done.** `list_open_exceptions` and `get_blocking_conditions` read `ws.close`, so a conclusion
+>    recorded in the session moved every screen and no answer. The Stage G review found this as
+>    four P0/P1 findings (`G24`, `G25`, `G26`, `G27`) plus `G28` and `G29`, and `1e06d58` resolved
+>    the decision: **the drawer answers from the live close and names the baseline as the
+>    baseline.** It cost two tools, both one-line delegations to query-service projections the
+>    screens already read — `get_effective_close` and `get_exception_workflow`. `G24` and `G25`
+>    are fixed; **`G26`, `G27`, `G28` and `G29` are the same two tools away** and are the highest-
+>    value items left in the tail.
 
 The original ten stages shipped and deployed. The work in flight is a **product-completion
 and accounting-credibility pass** driven by the owner's brief plus an independent 15-agent
@@ -86,10 +107,12 @@ but the *next task* is here, not in §8.
 | **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents |
 | **Stage G §0 remediation** | ✅ Done — the plan's four verified defects + five found fixing them |
 | **Stage G review** | ⚠ RAN and stopped at a usage limit — 48 confirmed findings, 30 unjudged. See STAGE_G_REVIEW_STATUS.md |
-| **Stage G fix pass** | ⬅ **NEXT.** Verify G66, fix the 4 P0s + 3 remediation P1s, re-verify the tail |
+| **Stage G fix pass 1** | ✅ Done (`1e06d58`) — G66 verified, 4 P0s + G01/G02/G03 fixed, G39/G42 closed with them |
+| **Stage G fix pass 2** | ⬅ **NEXT.** Re-verify the tail (§3a, §3c), judge the 29 remaining unjudged, then the fix-validation fleet over `1e06d58` |
 | H — QA | Not started |
 
-**1,749 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
+**2,119 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
+Run the suite as `npx vitest run --maxWorkers=3` — the default worker count OOMs on this machine.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.

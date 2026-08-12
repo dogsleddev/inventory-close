@@ -1,28 +1,49 @@
-# Stage G review — status at the usage limit
+# Stage G review — status
 
-**Written 2026-08-12, mid-review.** The org hit its monthly spend limit during the verification
-fleet. This document is the complete state: what is committed, what the review established, what it
-did not reach, where every artifact lives, and how to resume without repeating any of it.
+**Written 2026-08-12, mid-review; updated 2026-08-12 after the first fix pass.** The org hit its
+monthly spend limit during the verification fleet. This document is the complete state: what is
+committed, what the review established, what it did not reach, where every artifact lives, and how
+to resume without repeating any of it.
 
 > Read this before `STAGE_G_REVIEW_PLAN.md`. The plan is still the method; this is where the method
 > got to.
 
 ---
 
+## 0. What the first fix pass closed (`1e06d58`)
+
+**Eight findings are fixed and committed**, each with a regression asserted as a biconditional
+against the service on the same run, and each mutation-tested against the pre-fix HEAD:
+
+| id | sev | what changed |
+|---|---|---|
+| `G66` | P0 | **Verified by hand first, and it held.** `get_evidence_timeline` now carries an unscoped `exists` per row and tests it before any other branch, so no row of any state can assert an event the close does not contain. The auditor's KE-X1-9025 drawer went from 4 withheld components to 3; the spurious `Delivery · FP-IN-2291` row is gone. |
+| `G24` | P0 | `get_effective_close` added; `blockers` answers from the live close and branches its status on the count. The baseline is still reported, named as the baseline, and only once it differs. |
+| `G25` | P0 | `get_exception_workflow` added; `answerException` reads the recorded conclusion and the live unmet requirements. Three states, not two — the old sentence asserted both that no conclusion existed and that none could be reached. |
+| `G40` | P0 | Number agreement moved into the compiler (`numberForms`). **This also closes `G39` and `G42`** — same defect, other words. |
+| `G01` `G02` `G03` | P1 | The procurement scope note is derived per tab from that tab's own population, and points below itself. |
+| `G46` | P0→NOTE | The requirements gate is now enforced against the state as well as the write. **Severity corrected — see §3c.** |
+
+Incidentally closed by the same edits: `G39`, `G42` (the compiler change), and `G16`'s
+blockers-branch half.
+
+**Gate after the pass:** typecheck, lint and build clean, 20 routes. **2,119 tests across 72 files
+passing** (was 1,749). Locked baseline unmoved and re-confirmed in a browser as Controller and
+auditor. `pnpm test` still exits 1 on the known `onTaskUpdate` reporter RPC timeout — read the
+`Tests` line.
+
+> **Run the suite with `--maxWorkers=3`.** At default concurrency vitest now OOMs on this machine
+> (`AlignedAlloc Allocation failed`, ~3 s in, at 64 MB heap — system memory, not heap limit).
+> `npx vitest run --maxWorkers=3` completes in ~4 min.
+
+**Everything else below is still outstanding.**
+
+---
+
 ## 1. Where the code stands
 
-**HEAD is `003525a`** — Stage G (`7333663`) plus the remediation of the review plan's own §0.
-The tree is clean and the gate is green:
-
-- `pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` clean, 20 routes.
-- **1,749 tests across 72 files passing.** (`pnpm test` exits 1 while reporting every test passed —
-  a known vitest reporter RPC timeout from `export-affordance.test.tsx`. Read the `Tests` line.)
-- The locked baseline is unmoved and was confirmed in a browser as both Controller and auditor:
-  1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
-  7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
-
-**Nothing from this review has been applied.** No fix has been designed, validated, or committed.
-Every finding below is outstanding.
+**HEAD is `1e06d58`** — Stage G (`7333663`), the remediation of the review plan's own §0
+(`003525a`), the review status record (`e696caf`), and the first fix pass (`1e06d58`).
 
 ---
 
@@ -83,6 +104,27 @@ refutation-seeking skeptic — one whose stated job is to kill the finding, carr
 showing what happens instead. Least likely to be affected: the four P0s, and anything two
 independent lenses reached by different routes (`G40` via L7+L13; `G01`, `G02`, `G03`, `G04` via
 L1+L11+L12). Most in need of re-testing: findings resting on one lens and one confirming pair.
+
+### 3c. It is worse than a bias — a skeptic argued its way to a refutation and still voted CONFIRMED
+
+Found while fixing, and it sharpens §3a rather than repeating it. **`G46`'s consequence-angle
+skeptic wrote, in its own `correctionToTheClaim`: "No reader can see this… There is no false figure,
+no false accounting claim and nothing a reader would act on wrongly. Not P0, and not P1 either —
+nothing misleading reaches a reader on a real path." It then returned `CONFIRMED`.**
+
+The reasoning was right: `reviewEvidence` is exposed by no server action anywhere in `apps/web`, the
+sole API route is GET-only, and `submitEvidence` hard-codes `PENDING` — so no submission in the
+running product can ever reach `RETURNED`, which is the only way `unmetRequirements` can regrow
+after a conclusion. `G46` is a latent invariant hole, not the reader-facing P0 the tally records.
+
+So the verdict field did not merely lean confirming; **it was decoupled from the analysis
+underneath it**. Any re-verification must read `mech.correctionToTheClaim` and
+`cons.correctionToTheClaim` rather than the `status` field — the reasoning in this run is worth
+far more than the vote attached to it. Two of the 48 "confirmed" may be this shape; the corrections
+are the place to look.
+
+It was fixed anyway, because the fix is three lines and `COMPLETION_PLAN.md:168` plans the
+`reviewEvidence` button that would open it. Severity is recorded here as NOTE, not P0.
 
 ### 3b. The 30 unjudged are NOT low-severity leftovers
 
@@ -275,22 +317,39 @@ The two workflow scripts are re-runnable as written:
 ## 8. How to resume
 
 **Do not re-run the lenses.** All 14 completed and their output is in `findings/` — 2.88M tokens
-already spent. In order:
+already spent. Steps 1 and 2 are **done** (`1e06d58`, §0). In order from here:
 
-1. **Verify `G66` by hand** (§4). A P0 against the remediation that needs no fleet: read
-   `get_evidence_timeline` in `packages/ai/src/tools.ts`, then run `KE-X1-9025` as
-   `AUDITOR_READ_ONLY` and read the timeline.
-2. **Fix the four confirmed P0s and the three confirmed remediation P1s** (`G01`, `G02`, `G03`).
-   Highest-confidence items in the set: multi-lens corroboration, reader-facing strings, and
-   reproductions already pasted into their finding files.
-3. **Re-verify the long tail with a refutation-seeking skeptic** before fixing it (§3a). Findings
-   resting on a single lens first.
-4. **Judge the 30 unjudged** (§6) — two skeptics each, with the calibration corrected.
+1. ~~Verify `G66` by hand.~~ **Done** — it held; the fix had narrowed the defect, not removed it.
+2. ~~Fix the four confirmed P0s and the three confirmed remediation P1s.~~ **Done**, plus `G39`,
+   `G42` and half of `G16` closed incidentally by the compiler change.
+3. **Re-verify the long tail with a refutation-seeking skeptic** before fixing it (§3a, §3c).
+   Findings resting on a single lens first. Read each group's `correctionToTheClaim`, not its
+   `status` — §3c is why.
+4. **Judge the 30 unjudged** (§6) — two skeptics each, with the calibration corrected. `G66` is now
+   off that list; 29 remain, including `G63` and `G72` at P1.
 5. **Then the fix-validation fleet the plan requires**: design each fix, then one validator per fix
    asking whether it breaks a locked figure, contradicts a load-bearing decision, trips a
    registration trap, or **creates a new instance of the class it closes**. `G01`–`G03` are proof
-   that last question is not theoretical — it is exactly what the last remediation did.
+   that last question is not theoretical — it is exactly what the last remediation did, and the
+   pass in `1e06d58` should be given the same treatment before the tail is fixed on top of it.
 6. Gate, browser pass, commit — per `SESSION_HANDOFF.md`.
+
+**Three things the fix pass learned that the tail should inherit:**
+
+- **The `answers.ts` cluster has a structural fix, and two of them landed.** §5 asked whether "a
+  sentence that does not branch on the field that would falsify it" could be made unrepresentable.
+  For the baseline-vs-live family (`G24`, `G25`, `G26`, `G27`, `G28`, `G29`) the answer is yes and
+  it is not a rewrite: the projections already existed on the query service and the screens already
+  read them — the tool layer simply did not expose them. `G26`/`G27`/`G28`/`G29` are the same two
+  tools away.
+- **`G40` was not a routing bug, and the tail's routing items are not either.** Ordering never got
+  to arbitrate; the intent simply did not match the plural. Number agreement now compiles, so
+  `G39`/`G42` closed with it. What remains in that family is a different axis: `G72` is verb tense
+  and `G73` is the stem's LEFT boundary — neither is safely automatable, and both want phrases, not
+  a compiler change.
+- **`G42`'s "Which inventory accounts are affected?" is still unrouted** and was left that way
+  deliberately: it is a missing PHRASE (`gl-accounts` declares "which account", not "inventory
+  account"), not a missing inflection, and guessing at it risks a collision the census cannot see.
 
 The 86 could-not-check items include everything that needs a rendered page: lens 11 was told not to
 start a dev server because agents ran concurrently. Those want one browser pass, not a fleet, and are
