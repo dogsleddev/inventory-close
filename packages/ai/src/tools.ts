@@ -122,8 +122,11 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
       // A carrier shipment is not a delivery: the defining fact is the
       // delivery date, and the shipment id is only what NAMES the event.
       { label: "Delivery", ref: r.carrierShipment?.id, at: life.sellSide.deliveredAt, exists: life.sellSide.deliveredAt !== undefined, unscopedRef: life.sellSide.carrierShipment },
-      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, exists: life.sellSide.installedAt !== undefined },
-      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, exists: life.sellSide.firstOnlineAt !== undefined },
+      // These two carried no `unscopedRef`, so a reader whose scope hid the
+      // record lost the row entirely rather than seeing it withheld — and
+      // `withheldCount` then reported that nothing had been withheld.
+      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, exists: life.sellSide.installedAt !== undefined, unscopedRef: life.sellSide.installation },
+      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, exists: life.sellSide.firstOnlineAt !== undefined, unscopedRef: life.sellSide.telemetry },
       { label: "Customer Invoice", ref: r.customerInvoice?.transactionNumber, at: r.customerInvoice?.invoiceDate, exists: life.sellSide.customerInvoice !== undefined, unscopedRef: life.sellSide.customerInvoice },
     ];
 

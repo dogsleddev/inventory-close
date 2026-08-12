@@ -390,3 +390,68 @@ describe("demo reset", () => {
     expect(describeWorkingState(result.cleared)).toContain("2 close-memo versions");
   });
 });
+
+/**
+ * The working draft is withheld by CAPABILITY, not by a role literal.
+ *
+ * `getMemo` tested `roles.includes("AUDITOR_READ_ONLY")` while `canDraft` two
+ * fields below already tested `hasPermission`. Four roles hold neither
+ * `memo.draft` nor `memo.issue` and are not the auditor — WAREHOUSE,
+ * SUPPLY_CHAIN, FPA, LEGAL — so every one of them received `workingDraft` in
+ * full, and `/close-memo` rendered its title, author and timestamp. A denylist
+ * of one role standing in for a capability fails the moment a role is added
+ * that nobody remembers to name.
+ */
+describe("an unissued draft reaches exactly the roles that may write one", () => {
+  it("withholds it from every role without the drafting permission", () => {
+    const ws = createWorkspace();
+    const commands = createCommandService(ws);
+    const controller = DEMO_USERS.find((u) => u.roles.includes("CONTROLLER"))!;
+    commands.saveMemoDraft(
+      { user: controller, correlationId: "T-DRAFT", sourceInterface: "TEST" },
+      { title: "Working draft", body: "INTERNAL — reserve exposure, do not circulate" },
+    );
+
+    let sawVisible = 0;
+    let sawWithheld = 0;
+    for (const user of DEMO_USERS) {
+      const ctx = { user, correlationId: `T-DRAFT-${user.id}`, sourceInterface: "TEST" };
+      let memo;
+      try {
+        memo = getMemo(ws, ctx);
+      } catch {
+        continue; // no close.read at all; a different refusal entirely
+      }
+      // The biconditional: visibility and the capability are the same fact.
+      expect(memo.workingDraft !== null, `${user.id} (${user.roles[0]})`).toBe(memo.canDraft);
+      if (memo.workingDraft !== null) sawVisible += 1;
+      else {
+        sawWithheld += 1;
+        // And the withholding is disclosed, counted from what was withheld.
+        expect(memo.withheldDraftCount, user.id).toBeGreaterThan(0);
+        expect(memo.withheldNote, user.id).toMatch(/withheld from this role/);
+      }
+    }
+    // Name the set both ways: a build where nobody sees it satisfies the
+    // assertion above while proving nothing.
+    expect(sawVisible).toBeGreaterThan(0);
+    expect(sawWithheld).toBeGreaterThan(0);
+  });
+
+  it("announces no withheld draft when there is none", () => {
+    // The sibling defect the fix must not reopen: a count keyed on the role
+    // rather than on what was actually withheld announces a draft that does
+    // not exist.
+    const ws = createWorkspace();
+    for (const user of DEMO_USERS) {
+      const ctx = { user, correlationId: `T-NODRAFT-${user.id}`, sourceInterface: "TEST" };
+      try {
+        const memo = getMemo(ws, ctx);
+        expect(memo.withheldDraftCount, user.id).toBe(0);
+        expect(memo.withheldNote, user.id).toBeNull();
+      } catch {
+        continue;
+      }
+    }
+  });
+});

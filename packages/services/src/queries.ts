@@ -279,6 +279,21 @@ export interface FinancialLifeView {
     readonly installedAt?: string;
     readonly firstOnlineAt?: string;
     readonly customerInvoice?: string;
+    /**
+     * The installation and telemetry records' own identifiers, unfiltered like
+     * everything else on this side.
+     *
+     * Every other component on the timeline could be reported as WITHHELD
+     * because this side names it while `records` does not. These two had the
+     * date here and the id only in `records`, so a reader whose scope hid the
+     * record lost the row entirely — not marked withheld, not counted, while
+     * the payload's own `withheldCount` and `scopeReduced` said nothing had
+     * been withheld. An auditor's chain of custody was silently two events
+     * short, on the sole subject of EXC-008, whose assertion is exactly the one
+     * a customer-site installation record speaks to.
+     */
+    readonly installation?: string;
+    readonly telemetry?: string;
   };
   readonly exceptions: readonly string[];
   /** Canonical steps with no record — visibly missing, never inferred. */
@@ -858,7 +873,9 @@ export function createQueryService(ws: Workspace) {
           ...(shipment ? { carrierShipment: shipment.id } : {}),
           ...(delivered ? { deliveredAt: delivered.occurredAt } : {}),
           ...(installation ? { installedAt: installation.installedAt } : {}),
+          ...(installation ? { installation: installation.id } : {}),
           ...(telemetry ? { firstOnlineAt: telemetry.firstOnlineAt } : {}),
+          ...(telemetry ? { telemetry: telemetry.serial } : {}),
           ...(invoice ? { customerInvoice: invoice.transactionNumber } : {}),
         },
         exceptions: ws.close.exceptions

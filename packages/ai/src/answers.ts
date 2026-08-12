@@ -2648,12 +2648,43 @@ export function answerQuestion(
   const q = normalizeQuestion(question);
 
   /**
-   * The object the question is about: the screen's scope, or an id the
-   * question itself names. Extraction only proposes a candidate — whether it
-   * exists is still established by asking the tools.
+   * The object the question is about.
+   *
+   * The question's OWN id wins over the screen's scope. `??` had it the other
+   * way, and short-circuits, so when a screen supplied a scope the id the
+   * reader typed was never even evaluated: asking "Walk me through
+   * KE-X1-9025's financial life." from KE-E2-1048's page returned
+   * KE-E2-1048's carrying value, location and document chain, under a header
+   * naming KE-E2-1048, with the question the reader typed rendered directly
+   * above it — and no sentence anywhere saying a different unit had been
+   * answered. A reader who names a record is asking about that record; the
+   * screen is where they happen to be standing.
+   *
+   * Extraction still only PROPOSES a candidate. Whether the named object
+   * exists is established by asking the tools, exactly as before — nothing
+   * here asserts it does, which is the substitution that once made the
+   * assistant deny the existence of objects it was looking at.
+   *
+   * `askedAbout` records that the reader named something other than the
+   * screen's subject, so the answer can say which record it answered rather
+   * than leaving the swap silent. Extraction runs on the NORMALIZED question:
+   * the matcher folds typographic dashes and the extractor did not, so
+   * `KE–E2–1048` pasted from a memo refused about a unit the product renders.
    */
-  const scopedException = context.exceptionId ?? extractExceptionId(question);
-  const scopedSerial = context.serial ?? extractSerial(question);
+  const namedException = extractExceptionId(q);
+  const namedSerial = extractSerial(q);
+  const scopedException = namedException ?? context.exceptionId;
+  const scopedSerial = namedSerial ?? context.serial;
+  const displacedScope = [
+    namedException !== undefined &&
+    context.exceptionId !== undefined &&
+    context.exceptionId !== namedException
+      ? context.exceptionId
+      : undefined,
+    namedSerial !== undefined && context.serial !== undefined && context.serial !== namedSerial
+      ? context.serial
+      : undefined,
+  ].filter((id): id is string => id !== undefined);
   const scope: AiQuestionContext = {
     ...(scopedException !== undefined ? { exceptionId: scopedException } : {}),
     ...(scopedSerial !== undefined ? { serial: scopedSerial } : {}),
@@ -2740,6 +2771,54 @@ export function answerQuestion(
         ],
       };
     }
+  }
+
+  /**
+   * The reader named a record other than the one the screen is scoped to, and
+   * the answer is about the one they named. Said out loud, because the swap is
+   * otherwise invisible: the drawer echoes the question above the answer and
+   * prints no subject label of its own, so two records one keystroke apart
+   * look identical.
+   *
+   * Stated as a fact about which SCOPE was set aside — not as a claim that
+   * either record exists. Existence is the tools' answer, and an answer that
+   * reached this line already has one.
+   */
+  /**
+   * A denial is never absorbed into an answer.
+   *
+   * `session.run` returns `undefined` for NOT_FOUND and NOT_AUTHORIZED alike,
+   * and three handlers treat that as permission to skip an existence check:
+   * `if (hits !== undefined && !hits.some(...)) return undefined` passes when
+   * the lookup was REFUSED, and a `.filter(v => v !== undefined)` quietly drops
+   * a denied exception from a list. So a WAREHOUSE or LEGAL reader, denied
+   * `get_exception`, was handed a confident answer with no mention that part of
+   * it had been refused — the "restricted, not empty" rule the tool layer
+   * states in its own header, lost one layer up.
+   *
+   * Disclosed here rather than in each handler, so a handler added later cannot
+   * forget: this runs over whatever the engine actually produced.
+   */
+  if (answer !== undefined && session.anyDenied) {
+    const denied = [
+      ...new Set(
+        session.calls.filter((c) => c.outcome === "NOT_AUTHORIZED").map((c) => c.tool),
+      ),
+    ].sort();
+    answer = {
+      ...answer,
+      missingEvidence: [
+        ...answer.missingEvidence,
+        `${denied.length} of the lookups behind this answer ${plural(denied.length, "was", "were")} refused at your access scope (${denied.join(", ")}). What is reported above is what the permitted lookups returned; it is not a complete answer, and the refusal is a restriction on what you may read rather than a finding about the close.`,
+      ],
+    };
+  }
+
+  if (answer !== undefined && displacedScope.length > 0) {
+    answer = {
+      ...answer,
+      managementConclusion: `${answer.managementConclusion} This answer is about the record your question names, not ${displacedScope.join(" or ")}, which is what this screen is scoped to.`,
+    };
   }
 
   if (answer !== undefined) return { ...base, answer };

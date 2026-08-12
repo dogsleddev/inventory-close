@@ -904,3 +904,151 @@ describe("labels and imperatives track their own populations", () => {
     );
   });
 });
+
+/**
+ * A reader who names a record is asking about that record.
+ *
+ * `context.serial ?? extractSerial(question)` preferred the screen and
+ * short-circuits, so the id the reader typed was never evaluated. Asking about
+ * KE-X1-9025 from KE-E2-1048's page returned KE-E2-1048's carrying value,
+ * location and document chain, under a header naming KE-E2-1048, with the
+ * question the reader typed rendered directly above it — and nothing anywhere
+ * saying a different unit had been answered.
+ */
+describe("the record a question names outranks the screen it was asked from", () => {
+  const EN_DASH = String.fromCharCode(0x2013);
+
+  it("answers the named unit, not the screen's", () => {
+    const answer = answerQuestion(t, "Walk me through KE-X1-9025's financial life.", {
+      serial: "KE-E2-1048",
+    }).answer;
+    expect(answer?.status).toMatch(/KE-X1-9025/);
+    expect(answer?.status).not.toMatch(/KE-E2-1048/);
+    // And says so, because the drawer prints no subject label of its own.
+    expect(answer?.managementConclusion).toMatch(/not KE-E2-1048/);
+  });
+
+  it("answers the named exception, not the screen's", () => {
+    const answer = answerQuestion(t, "Why is EXC-007 still open?", {
+      exceptionId: "EXC-001",
+    }).answer;
+    expect(answer?.knownFacts.some((f) => /EXC-007/.test(f.text ?? ""))).toBe(true);
+    expect(answer?.managementConclusion).toMatch(/not EXC-001/);
+  });
+
+  it("says nothing about a swap when there was none", () => {
+    // The false-positive direction: a note on every scoped answer would satisfy
+    // the two above and add a sentence to every drawer on every unit screen.
+    for (const [q, scope] of [
+      ["Walk me through KE-E2-1048's financial life.", { serial: "KE-E2-1048" }],
+      ["Walk me through this unit's financial life.", { serial: "KE-E2-1048" }],
+    ] as const) {
+      const answer = answerQuestion(t, q, scope).answer;
+      expect(answer?.managementConclusion, q).not.toMatch(/which is what this screen is scoped to/);
+    }
+  });
+
+  it("reads an identifier the matcher would fold", () => {
+    // Extraction ran on the RAW question while matching ran on the normalized
+    // one, so a serial pasted from a memo — or produced by Word autocorrect —
+    // refused about a unit the product renders its own screen for.
+    const q = `Walk me through KE${EN_DASH}E2${EN_DASH}1048's financial life.`;
+    const r = answerQuestion(t, q, {});
+    expect(r.refusal).toBeUndefined();
+    expect(r.answer?.status).toMatch(/KE-E2-1048/);
+  });
+});
+
+/**
+ * A restriction is reported, never absorbed.
+ *
+ * `session.run` returns undefined for NOT_FOUND and NOT_AUTHORIZED alike, and
+ * three handlers read that as permission to skip an existence check. So a
+ * reader denied `get_exception` was handed a confident answer with no mention
+ * that part of it had been refused — the tool layer's own "restricted, never a
+ * silent absence" rule, lost one layer up.
+ */
+describe("a denied lookup is disclosed in the answer that used it", () => {
+  /** A tool context whose named tools throw the service's own denial. */
+  const denying = (deny: ReadonlySet<string>): AiToolContext => {
+    const queries = createQueryService(ws);
+    const proxied = new Proxy(queries, {
+      get(target, prop: string) {
+        const value = (target as unknown as Record<string, unknown>)[prop];
+        if (typeof value !== "function" || !deny.has(prop)) return value;
+        return () => {
+          const error = new Error(`denied ${prop}`);
+          error.name = "AuthorizationError";
+          throw error;
+        };
+      },
+    });
+    return {
+      queries: proxied as typeof queries,
+      projections: createProjectionService(ws),
+      ctx: ctxFor("CONTROLLER"),
+    };
+  };
+
+  it("says so when a lookup behind the answer was refused", () => {
+    // `searchSerial` establishes that the unit EXISTS before anything is said
+    // about it. Denied, `run` returns undefined — the same value NOT_FOUND
+    // returns — and `if (hits !== undefined && !hits.some(...))` reads that as
+    // permission to skip the check and answer anyway.
+    const t2 = denying(new Set(["searchSerial"]));
+    const r = answerQuestion(t2, "Financial life of KE-E2-1048", {});
+    // The premise: an answer really was produced, and a call really was denied.
+    expect(r.answer).toBeDefined();
+    expect(r.toolCalls.some((c) => c.outcome === "NOT_AUTHORIZED")).toBe(true);
+    expect(r.answer?.missingEvidence.join(" ")).toMatch(/refused at your access scope/);
+    expect(r.answer?.missingEvidence.join(" ")).toMatch(/restriction on what you may read/);
+  });
+
+  it("says nothing about a refusal when none happened", () => {
+    // The false-positive direction: a line on every answer would satisfy the
+    // assertion above and put a restriction notice on every clean drawer.
+    const r = answerQuestion(t, "Financial life of KE-E2-1048", {});
+    expect(r.toolCalls.some((c) => c.outcome === "NOT_AUTHORIZED")).toBe(false);
+    expect(r.answer?.missingEvidence.join(" ")).not.toMatch(/refused at your access scope/);
+  });
+});
+
+describe("a withheld timeline component is marked, never dropped", () => {
+  it("keeps every event the close holds, in some state, for every reader", () => {
+    /**
+     * Installation and First online were the only two rows with no unscoped
+     * identifier, so a reader whose scope hid the record lost the row entirely
+     * — while `withheldCount` and `scopeReduced` positively reported that
+     * nothing had been withheld, which suppressed the disclosure the answer
+     * engine is already built to print.
+     */
+    const serials = createQueryService(ws)
+      .listInventoryUnits(ctxFor("CONTROLLER"))
+      .map((u) => u.serial);
+    let sawWithheld = 0;
+    for (const serial of serials) {
+      const asController = runTool(t, "get_evidence_timeline", { serial }).data as {
+        events: { label: string }[];
+      };
+      const asAuditor = runTool(auditor, "get_evidence_timeline", { serial }).data as {
+        events: { label: string; state: string }[];
+        withheldCount: number;
+        scopeReduced: boolean;
+      };
+      // The label SET is scope-independent: what a reader may see changes,
+      // what the close contains does not.
+      expect(
+        [...asAuditor.events.map((e) => e.label)].sort(),
+        `${serial}: the auditor's timeline lost an event the close holds`,
+      ).toEqual([...asController.events.map((e) => e.label)].sort());
+      // And the flag agrees with the rows.
+      const withheld = asAuditor.events.filter((e) => e.state === "WITHHELD").length;
+      expect(asAuditor.withheldCount, serial).toBe(withheld);
+      expect(asAuditor.scopeReduced, serial).toBe(withheld > 0);
+      sawWithheld += withheld;
+    }
+    // Without this the equality above passes on a dataset that withholds
+    // nothing, proving only that two identical lists are identical.
+    expect(sawWithheld).toBeGreaterThan(0);
+  });
+});

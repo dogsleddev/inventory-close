@@ -191,16 +191,36 @@ export function issuedVersionOf(ws: Workspace): MemoVersion | undefined {
 export function getMemo(ws: Workspace, ctx: ServiceContext): MemoOut {
   authorize(ctx.user, "close.read");
 
-  // An auditor reads issued versions only. Drafting and issue are management
-  // acts; an internal draft is not audit support, and the count says so
-  // rather than the file simply being shorter.
-  const auditor = ctx.user.roles.includes("AUDITOR_READ_ONLY");
-  const visible = auditor ? ws.memoVersions.filter((v) => v.sealed) : ws.memoVersions;
+  /**
+   * An unissued draft is internal management working paper, so it is shown to
+   * the roles that may WRITE one — derived from the same permission the
+   * drafting command authorizes against, not from a role literal.
+   *
+   * This tested `roles.includes("AUDITOR_READ_ONLY")` while `canDraft` two
+   * fields below already tested `hasPermission`. Four roles hold neither
+   * `memo.draft` nor `memo.issue` and are not the auditor — WAREHOUSE,
+   * SUPPLY_CHAIN, FPA and LEGAL — so every one of them received
+   * `workingDraft` in full, and `/close-memo` rendered its title, author and
+   * timestamp in Version History. The draft is headed "INTERNAL — reserve
+   * exposure, do not circulate".
+   *
+   * A denylist of one role standing in for a capability: the same shape as an
+   * enumerated allowlist standing in for a category, and it fails the moment a
+   * role is added that nobody remembers to name.
+   */
+  const mayReadDraft = hasPermission(ctx.user, MEMO_DRAFT_PERMISSION);
+  const visible = mayReadDraft ? ws.memoVersions : ws.memoVersions.filter((v) => v.sealed);
+  /**
+   * Counted from what was actually withheld, never from the viewer's role.
+   * Deriving it from the role instead is the sibling defect: at a baseline
+   * with no draft on file, a role-keyed count announces a withheld draft that
+   * does not exist.
+   */
   const withheldDraftCount = ws.memoVersions.length - visible.length;
 
   const position = memoPosition(ws);
   const issued = issuedVersionOf(ws);
-  const draft = auditor ? undefined : workingDraftOf(ws);
+  const draft = mayReadDraft ? workingDraftOf(ws) : undefined;
 
   return {
     versions: [...visible].reverse().map(project),
@@ -218,7 +238,7 @@ export function getMemo(ws: Workspace, ctx: ServiceContext): MemoOut {
     withheldNote:
       withheldDraftCount === 0
         ? null
-        : `${withheldDraftCount} unissued ${withheldDraftCount === 1 ? "draft is" : "drafts are"} withheld from this role. A draft is internal management working paper. Nothing sealed is withheld from you: an issued version is shown with its text in full, and a superseded version with its title and content hash, not its text.`,
+        : `${withheldDraftCount} unissued ${withheldDraftCount === 1 ? "draft is" : "drafts are"} withheld from this role. A draft is internal management working paper, shown to the roles that may write one. Nothing sealed is withheld from you: an issued version is shown with its text in full, and a superseded version with its title and content hash, not its text.`,
     // Permission only: these two say whether the ROLE may act. The period is
     // the commands' second gate and travels separately, because the two
     // refusals have different answers and one must not be read as the other.
