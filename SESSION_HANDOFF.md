@@ -16,6 +16,12 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 > unmoved and confirmed in a browser. **No review has been run over it.** Run one, using
 > the corrected method below, and then review the remediation too.
 >
+> **`STAGE_G_REVIEW_PLAN.md` is the ready-to-run plan** — eleven lenses designed by six independent
+> vantages over the diff, with per-lens false-positive lists, coverage gaps and run order. Its §0
+> carries **four defects already found and verified**, including a P1: Stage G's own scope fix was
+> incomplete, and an auditor is shown a cutoff finding on PO-26-1201 that does not exist. Fix those;
+> use the lenses to find what they did not.
+>
 > **Five things that cost real time and should not be re-derived:**
 >
 > 1. **Measure before scoping.** The stage's real size was not in the plan: routing every
@@ -170,6 +176,53 @@ them inline rather than trusting the tally.
 - `ask-view.ts` words canonical values using a map assembled from the modules that already own
   each vocabulary (`CUSTODY_LABELS`, `METHOD_LABELS`, `COMPONENT_LABELS`, `statusView`,
   `pbcStatusView`, `holderLabel`, `classificationLabel`, …). Nothing is restated there.
+
+**The review brief — what to read, and what it costs.** `git show --stat 7333663` is 31 files,
+3,595 insertions. The weight is in six files:
+
+| File | Lines | What a reviewer needs to know |
+|---|---|---|
+| `packages/ai/src/answers.ts` | 2,319 (+2,132) | The intent table. 33 intents in one ordered array, first match wins. Every authored management-conclusion sentence lives here. |
+| `packages/ai/test/routing-identity.test.ts` | 370 | 409 assertions: whole-word property over every phrase, probe→intent identity, reachability, figure-source, ungrouped-count. |
+| `packages/ai/test/stage-g-regressions.test.ts` | 367 | Draft-prose guards, the measured-boolean biconditionals, the scope-as-finding pins. |
+| `apps/web/test/ask-chips.test.ts` | 265 | Chip population derived from the component tree; the canonical-token universal. |
+| `apps/web/lib/server/ask-view.ts` | +180 | The canonical-label map and `humanizeCanonical`. |
+| `packages/ai/src/matching.ts` | 154 | The phrase compiler. Small, load-bearing, and the thing every intent depends on. |
+
+**Model:** run the fleet on **Opus 5**, not Fable 5. Fable's documented bug-finding gains
+**exclude security-focused analysis** — which is where several of the most productive lenses here
+sit (permission boundaries, auditor scoping, redaction) — it is the more classifier-sensitive of
+the two (a refused agent returns null and its lens silently drops from the tally), it wants *less*
+prescriptive prompts than this method deliberately writes, and it costs 2x. Consider Fable only for
+the synthesis/adjudication agent, where the reasoning is hardest and the agent count is one:
+`agent(prompt, { model: 'fable', effort: 'max' })`. Loosen the brief if you do.
+
+**STOP — Stage G shipped with a P1, and the review plan already names it.** Designing the review
+lenses turned up defects before the review itself ran. Each was verified directly against the
+workspace, not taken from an agent's report. Read `STAGE_G_REVIEW_PLAN.md` §0 before anything else:
+
+- **The stage fixed ONE consumer of the scope-shortened order array and left its siblings.**
+  `inboundAgrees` became `boolean | null`; `ordersCompared` (84 vs 83), `closeReviewRequired`
+  (1 vs 0), `nativeIncomplete` and `divergent` all still render to an auditor as completed
+  measurements. Worse, `receivedInPeriod` reads a scope-filtered receipt, so **PO-26-1201 enters the
+  auditor's invoiced-not-received population as a cutoff finding that does not exist** while
+  PO-26-1187 leaves — the row COUNT stays 4 for both roles and nothing on any surface shows the swap.
+  This is §7's own lesson turned on its author: correcting one sentence leaves the shape that staled it.
+- **Two figures cite a tool they were not read from.** `pbc` and `blockers` source
+  `readiness.aggregates` values to `get_pbc_status` / `get_blocking_conditions`, and Stage G's new
+  figure-source test passes over them because it asserts SET MEMBERSHIP rather than identity — this
+  repository's own "cardinality assertion standing in for an identity one", sitting inside the
+  harness that carries the stage's headline claim.
+- **Four scope distinguishers are computed and never read**: `lineageInScope`, `withheldCount`,
+  `scopeReduced`, `managementLensInScope`. Each exists solely to keep "withheld from you"
+  distinguishable from "there is none".
+- **Draft prose is guarded only in a test.** Nothing in production runs the quantity/identifier check
+  the commit message says governs it.
+
+The eleven lenses, their per-lens false-positive lists, the coverage gaps and the run order are in
+`STAGE_G_REVIEW_PLAN.md`. They were designed by six independent vantages over the diff rather than by
+the stage's author — deliberately, because an author naming their own blind spots is the failure mode
+this repository keeps finding.
 
 **Where to attack it.** These are the places the author knows are soft:
 

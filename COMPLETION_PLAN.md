@@ -787,6 +787,15 @@ vocabulary rather than restating any of it. `ask-chips.test.ts` fails on any
 screaming-snake token still in a rendered answer, which is what keeps the map
 complete rather than merely current.
 
+**The stage fix was incomplete, and the review plan says so.** `inboundAgrees` was one consumer
+of the scope-shortened order array; `ordersCompared`, `closeReviewRequired`, `nativeIncomplete`
+and `divergent` are computed in the same loop and still render to an auditor as completed
+measurements, and `receivedInPeriod` reads a scope-filtered receipt so PO-26-1201 enters the
+auditor's invoiced-not-received population as a cutoff finding that does not exist. Three more
+verified defects (figures citing a tool they were not read from; four unread scope distinguishers;
+Draft prose guarded only in a test) are in `STAGE_G_REVIEW_PLAN.md` §0, alongside the eleven review
+lenses. Nothing is deployed, so none of this is live.
+
 **Tests 1,010 → 1,690.** Typecheck, lint and production build clean; the locked
 baseline is unmoved and was confirmed in a browser, not only in tests.
 
