@@ -89,6 +89,14 @@ export const AI_TOOL_NAMES = [
    */
   "get_effective_close",
   "get_exception_workflow",
+  /**
+   * The live twin of `list_exceptions`. `list_exceptions` reports `open` off
+   * the frozen rule status, so an intent counting resolutions from it counts
+   * what the RULES resolved and words it as what management has — "8 of 15
+   * exceptions carry a recorded resolution", unchanged through seven recorded
+   * resolutions, listing eight items none of which was one of them.
+   */
+  "get_effective_exceptions",
 ] as const;
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
 

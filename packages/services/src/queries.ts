@@ -210,6 +210,21 @@ export interface ExceptionView {
   readonly sourceCoverageWarnings: readonly SourceCoverageWarning[];
 }
 
+/**
+ * One exception as the close reads it now. `open` counts management's
+ * conclusions; `baselineOpen` is the rules' own answer, kept so a surface can
+ * say which of the two it is showing instead of quietly choosing.
+ */
+export interface EffectiveExceptionView {
+  readonly exception: DerivedException;
+  readonly effectiveStatus: string;
+  readonly open: boolean;
+  readonly baselineOpen: boolean;
+  /** Outstanding required records, counting evidence submitted this session. */
+  readonly unmetRequirements: readonly string[];
+  readonly hasConclusion: boolean;
+}
+
 /** Evidence view with restricted content withheld (existence stays visible). */
 export interface EvidenceView {
   readonly id: string;
@@ -1131,11 +1146,26 @@ export function createQueryService(ws: Workspace) {
           versions: visible,
           withheldVersionCount: versions.length - visible.length,
           dependsOn,
-          /** The open exceptions this workpaper is waiting on, if any. */
-          blockedBy: dependsOn.filter((dep) => {
-            const exc = ws.close.exceptions.find((e) => e.id === dep);
-            return exc !== undefined && !isResolvedStatus(exc.status);
-          }),
+          /**
+           * The open exceptions this workpaper is waiting on, if any —
+           * open as the close reads it NOW.
+           *
+           * This tested the frozen rule status, which `concludeException`
+           * never writes, so a workpaper stayed "waiting on" an exception
+           * management had concluded. The Ask Gaurd drawer then prescribed the
+           * act: "Conclude the close items the remaining workpapers depend on",
+           * printed unchanged in a session where there was nothing left to
+           * conclude. Fixing it here rather than in the answer corrects the
+           * drawer, the Audit Package screen and the CSV export together, since
+           * all three read this one field.
+           *
+           * Same set as `getExceptionWorkflow`'s `open`, so a workpaper's idea
+           * of a blocking exception and the exception's own idea of being open
+           * cannot come apart.
+           */
+          blockedBy: dependsOn.filter((dep) =>
+            effectiveOpenExceptionIds(ws).includes(dep),
+          ),
           preparedStateHash,
           currentStateHash,
         };
@@ -1196,6 +1226,39 @@ export function createQueryService(ws: Workspace) {
     getEffectiveClose(ctx: ServiceContext): EffectiveClose {
       authorize(ctx.user, "close.read");
       return effectiveClose(ws);
+    },
+
+    /**
+     * Every exception as the close reads it NOW — the live twin of
+     * `listExceptions`.
+     *
+     * `listExceptions` reports `open` off the frozen rule status, which
+     * `concludeException` never writes, so a surface counting resolutions from
+     * it counts what the RULES resolved and calls it what management has
+     * resolved. Ask Gaurd answered "8 of 15 exceptions carry a recorded
+     * resolution" unchanged through seven recorded resolutions, and listed
+     * eight items none of which was one of them.
+     *
+     * `unmetRequirements` rides along because the same surfaces ask both
+     * questions of the same exception one line apart, and reading "still open"
+     * from here while reading "still missing" from the frozen finding is how
+     * the drawer came to report an accepted submission as "not in evidence".
+     *
+     * Both figures are returned deliberately: `baselineOpen` is the rules'
+     * answer and stays readable, so a surface can name which one it is showing
+     * rather than quietly picking.
+     */
+    getEffectiveExceptions(ctx: ServiceContext): readonly EffectiveExceptionView[] {
+      authorize(ctx.user, "close.read");
+      const openIds = new Set(effectiveOpenExceptionIds(ws));
+      return ws.close.exceptions.map((exception) => ({
+        exception,
+        effectiveStatus: effectiveStatus(ws, exception.id),
+        open: openIds.has(exception.id),
+        baselineOpen: !isResolvedStatus(exception.status),
+        unmetRequirements: unmetRequirements(ws, exception.id),
+        hasConclusion: latestConclusion(ws, exception.id) !== undefined,
+      }));
     },
 
     /**

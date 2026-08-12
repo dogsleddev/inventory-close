@@ -362,7 +362,11 @@ export function OverviewScreen({
                       {data.preventing.remainingNote}
                     </span>
                     <Link href="/exceptions" style={{ fontSize: "12px", fontWeight: 600 }}>
-                      View all {data.preventing.blockerCount} blockers →
+                      {/* Counts the register, not these rows: the Exceptions
+                          page lists the blockers the rules derived, and a link
+                          promising a live count onto a baseline page is this
+                          panel's own defect moved one click along. */}
+                      View all {data.preventing.registerCount} blockers →
                     </Link>
                   </div>
                 </Panel>

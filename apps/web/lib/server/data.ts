@@ -10,6 +10,7 @@ import {
   formatDateShort,
   formatInstant,
   formatScoreHundredths,
+  plural,
   shortHash,
 } from "../format";
 import {
@@ -365,18 +366,34 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   const remaining = blockerViews.slice(5);
   const shownCents = shown.reduce((n, e) => n + e.exception.finding.exposureCents, 0);
 
+  /**
+   * A caption about the table it sits under, counted from that table.
+   *
+   * `blockerViews` is filtered by the LIVE blocker set; these two sentences
+   * counted `blockers`, which is the rules' baseline. So after conclusions the
+   * panel read "All seven blockers shown." under an empty table, and the header
+   * beside it still carried the baseline exposure and count over rows totalling
+   * nothing. Neither branch of the ternary was true — there is no reading of
+   * "all seven shown" that holds above no rows.
+   *
+   * The baseline is not lost: `gate.divergence` names it, and Reset Demo
+   * restores it. It is simply not what a caption about these rows counts.
+   */
+  const liveBlockerCount = blockerViews.length;
   const remainingNote =
-    remaining.length === 0
-      ? `All ${numberWord(blockers.length)} blockers shown.`
-      : (() => {
-          const amounts = remaining.map((e) => e.exception.finding.exposureCents);
-          const allEqual = amounts.every((a) => a === amounts[0]);
-          const ids = remaining.map((e) => e.exception.id).join(" and ");
-          const amountText = allEqual
-            ? `${formatCents(amounts[0] ?? 0)} each`
-            : remaining.map((e) => formatCents(e.exception.finding.exposureCents)).join(", ");
-          return `${ids} (${amountText}) complete the ${numberWord(blockers.length)}.`;
-        })();
+    liveBlockerCount === 0
+      ? "Every blocker the rules raised carries a management conclusion recorded in this session."
+      : remaining.length === 0
+        ? `All ${numberWord(liveBlockerCount)} ${plural(liveBlockerCount, "blocker")} shown.`
+        : (() => {
+            const amounts = remaining.map((e) => e.exception.finding.exposureCents);
+            const allEqual = amounts.every((a) => a === amounts[0]);
+            const ids = remaining.map((e) => e.exception.id).join(" and ");
+            const amountText = allEqual
+              ? `${formatCents(amounts[0] ?? 0)} each`
+              : remaining.map((e) => formatCents(e.exception.finding.exposureCents)).join(", ");
+            return `${ids} (${amountText}) complete the ${numberWord(liveBlockerCount)}.`;
+          })();
 
   const staleCount = health?.sources.filter((s) => s.status === "STALE").length ?? 0;
   const partialCount = health?.sources.filter((s) => s.status === "PARTIAL").length ?? 0;
@@ -525,8 +542,14 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     preventing: {
       rows: shown.map((e) => blockerRow(e, true)),
       shownTotal: formatCents(shownCents),
-      allTotal: formatCents(agg.blockerExposureCents),
-      blockerCount: agg.blockerCount,
+      // From the same live set the rows come from. These read `agg`, the
+      // baseline aggregate, so the header contradicted the `shownTotal`
+      // printed directly above it the moment anything was concluded.
+      allTotal: formatCents(
+        blockerViews.reduce((n, e) => n + e.exception.finding.exposureCents, 0),
+      ),
+      blockerCount: liveBlockerCount,
+      registerCount: agg.blockerCount,
       remainingNote,
     },
     ...(recon !== undefined

@@ -29,6 +29,7 @@ export type {
 } from "./workspace.js";
 export { createQueryService } from "./queries.js";
 export type {
+  EffectiveExceptionView,
   EvidenceView,
   ExceptionView,
   FinancialLifeView,

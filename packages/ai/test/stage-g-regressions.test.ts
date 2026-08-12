@@ -663,6 +663,83 @@ describe("the live close, not the baseline", () => {
     expect(answer?.nextAction).not.toMatch(/^Obtain:/);
   });
 
+  it("counts resolutions the close actually holds, not the ones the rules made", () => {
+    const w = workedClose();
+    const resolvedNow = () =>
+      w.queries.getEffectiveExceptions(w.asController).filter((e) => !e.open).length;
+    const stated = () => {
+      const status = answerQuestion(w.t2, "Which exceptions are resolved?", {}).answer?.status;
+      return Number(/^(\d+) of/.exec(status ?? "")?.[1]);
+    };
+    // Premise: baseline agreement, so the assertion below has something to prove.
+    expect(stated()).toBe(resolvedNow());
+    const before = resolvedNow();
+
+    resolveEveryBlocker(w);
+
+    // `concludeException` writes to ws.conclusions and never to
+    // exception.status, so a count off the frozen status provably cannot move.
+    expect(resolvedNow()).toBeGreaterThan(before);
+    expect(stated()).toBe(resolvedNow());
+  });
+
+  it("reports outstanding evidence against what the workspace still wants", () => {
+    const w = workedClose();
+    const outstanding = () =>
+      w.queries
+        .getEffectiveExceptions(w.asController)
+        .filter((e) => e.open)
+        .reduce((n, e) => n + e.unmetRequirements.length, 0);
+    const stated = () => {
+      const status = answerQuestion(w.t2, "Which evidence is still missing?", {}).answer?.status;
+      return /^No required record/.test(status ?? "") ? 0 : Number(/^(\d+) required/.exec(status ?? "")?.[1]);
+    };
+    expect(outstanding()).toBeGreaterThan(0);
+    expect(stated()).toBe(outstanding());
+
+    resolveEveryBlocker(w);
+
+    expect(outstanding()).toBe(0);
+    expect(stated()).toBe(0);
+  });
+
+  it("answers the evidence chip when nothing is outstanding, rather than refusing", () => {
+    /**
+     * The branch this covers was unreachable while the count came off the
+     * frozen finding, so returning undefined cost nothing. Sourcing it live
+     * makes it reachable — and an intent returning undefined falls through to
+     * OUT_OF_SCOPE, which is a chip the product ships refusing a question the
+     * product suggested, at the moment the answer is best.
+     */
+    const w = workedClose();
+    resolveEveryBlocker(w);
+    const r = answerQuestion(w.t2, "Which evidence is still missing?", {});
+    expect(r.refusal).toBeUndefined();
+    expect(r.answer?.status).toMatch(/No required record is outstanding/);
+    expect(r.answer?.missingEvidence).toEqual([]);
+  });
+
+  it("stops telling a reader to conclude what has been concluded", () => {
+    const w = workedClose();
+    const waiting = () =>
+      w.queries
+        .getPbcPackage(w.asController)
+        .reduce((n, i) => n + i.blockedBy.length, 0);
+    const prescribes = () =>
+      /Conclude the close items/.test(
+        answerQuestion(w.t2, "How ready is the audit package?", {}).answer?.nextAction ?? "",
+      );
+    // The biconditional: the instruction stands exactly while something is
+    // waiting on a close conclusion.
+    expect(waiting()).toBeGreaterThan(0);
+    expect(prescribes()).toBe(true);
+
+    resolveEveryBlocker(w);
+
+    expect(waiting()).toBe(0);
+    expect(prescribes()).toBe(false);
+  });
+
   it("still says nothing has been concluded when nothing has", () => {
     // The false-negative direction: an answer that always claimed a conclusion
     // would satisfy the test above.

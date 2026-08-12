@@ -199,6 +199,16 @@ interface BlockerResult {
   description: string;
   exposureCents: number;
 }
+/** What `get_effective_exceptions` returns — the close's exceptions as they now stand. */
+interface EffectiveExceptionResult {
+  exception: ExceptionResult["exception"];
+  effectiveStatus: string;
+  /** Open once conclusions count; `baselineOpen` is the rules' own answer. */
+  open: boolean;
+  baselineOpen: boolean;
+  unmetRequirements: readonly string[];
+  hasConclusion: boolean;
+}
 /** What `get_exception_workflow` returns — one exception's live working state. */
 interface ExceptionWorkflowResult {
   /** Requirements still outstanding, counting an accepted submission as met. */
@@ -1582,7 +1592,19 @@ const INTENTS: readonly Intent[] = [
         assertions: [],
         managementConclusion:
           "Readiness is a management preparation measure. No state in this system records whether the auditor accepted anything.",
-        nextAction: "Conclude the close items the remaining workpapers depend on.",
+        /**
+         * Branches on the set it prescribes work over.
+         *
+         * `blockedBy` is now the LIVE set (queries.ts), so this sentence had to
+         * stop being a constant with it: it told a reader to "conclude the
+         * close items the remaining workpapers depend on" in a session where
+         * every one of them had been concluded and there was nothing left to
+         * act on. A prescription is a claim about what is outstanding, and it
+         * has to branch on the same field the claim above it does.
+         */
+        nextAction: attention.some((i) => i.blockedBy.length > 0)
+          ? "Conclude the close items the remaining workpapers depend on."
+          : "No workpaper is waiting on a close conclusion; the rest is preparation effort.",
         citations: attention.map((i) => cite(i.id, { href: `/audit-package?pbc=${i.id}` })),
       };
     },
@@ -1675,9 +1697,30 @@ const INTENTS: readonly Intent[] = [
       if (q.exceptionId !== undefined) {
         const view = s.run<ExceptionResult>("get_exception", { exceptionId: q.exceptionId });
         if (view === undefined) return undefined;
-        if (!view.open) return undefined;
+        /**
+         * Both the open gate and the outstanding set come from the workflow
+         * projection, not from the frozen finding.
+         *
+         * `view.open` is the rules' status, which a conclusion never moves, and
+         * `evidenceRequirements[].satisfied` is frozen the same way — so a
+         * record submitted through the product's own Submit Support button, and
+         * accepted by a reviewer, was still reported "not in evidence… it must
+         * be obtained", beside a workspace reporting `canResolve: true`. One
+         * click of a shipped control was enough, and the answer then told the
+         * reader to go and get a document already on file.
+         */
+        const workflow = s.run<ExceptionWorkflowResult>("get_exception_workflow", {
+          exceptionId: view.exception.id,
+        });
+        if (!(workflow?.open ?? view.open)) return undefined;
+        const outstanding = new Set(
+          workflow?.unmetRequirements ??
+            view.exception.finding.evidenceRequirements
+              .filter((r) => r.required && !r.satisfied)
+              .map((r) => r.description),
+        );
         const unmet = view.exception.finding.evidenceRequirements.filter(
-          (r) => r.required && !r.satisfied,
+          (r) => r.required && outstanding.has(r.description),
         );
         if (unmet.length === 0) return undefined;
         return {
@@ -1685,7 +1728,7 @@ const INTENTS: readonly Intent[] = [
           knownFacts: unmet.map((r) => ({
             label: `${view.exception.id} — ${r.description}`,
             text: "Not in evidence",
-            source: "get_exception" as const,
+            source: "get_exception_workflow" as const,
           })),
           conflictingEvidence: [],
           missingEvidence: unmet.map(
@@ -1701,20 +1744,58 @@ const INTENTS: readonly Intent[] = [
           ],
         };
       }
-      const exceptions = s.run<readonly ExceptionResult[]>("list_open_exceptions");
+      // The whole-close branch, from the live view for the same reason: both
+      // which exceptions are still open and what each still needs.
+      const exceptions = s.run<readonly EffectiveExceptionResult[]>("get_effective_exceptions");
       if (exceptions === undefined) return undefined;
-      const gaps = exceptions.flatMap((e) =>
-        e.exception.finding.evidenceRequirements
-          .filter((r) => r.required && !r.satisfied)
-          .map((r) => ({ id: e.exception.id, description: r.description })),
+      const stillOpen = exceptions.filter((e) => e.open);
+      const gaps = stillOpen.flatMap((e) =>
+        e.unmetRequirements.map((description) => ({ id: e.exception.id, description })),
       );
-      if (gaps.length === 0) return undefined;
+      /**
+       * "Nothing is outstanding" is an ANSWER, and this returned undefined.
+       *
+       * The branch was unreachable while the count came off the frozen finding
+       * — gaps could never empty — so returning nothing cost nothing. Sourcing
+       * it from the live view makes it reachable, and an intent that returns
+       * undefined falls through to the OUT_OF_SCOPE refusal: "It cannot answer
+       * this from what the tools return, and it will not guess." That is a
+       * shipped chip (EvidenceScreen.tsx, OverviewScreen.tsx) refusing a
+       * question the product suggested, at the moment the answer is best.
+       *
+       * A fix that makes a dead branch live has to answer for the branch.
+       */
+      if (gaps.length === 0) {
+        return {
+          status: "No required record is outstanding",
+          knownFacts: [
+            { label: "Open exceptions", count: stillOpen.length, source: "get_effective_exceptions" },
+            {
+              label: "Exceptions carrying a management conclusion",
+              count: exceptions.filter((e) => e.hasConclusion).length,
+              source: "get_effective_exceptions",
+            },
+          ],
+          conflictingEvidence: [],
+          missingEvidence: [],
+          assertions: [],
+          managementConclusion:
+            "Every required record the rules asked for is on file, counting evidence submitted and accepted in this session. That is a statement about the evidence file, not an opinion on the close.",
+          nextAction:
+            stillOpen.length > 0
+              ? "Conclude the open items; each has the records its rule asked for."
+              : "Nothing outstanding on evidence.",
+          citations: stillOpen.map((e) =>
+            cite(e.exception.id, { href: `/exceptions/${e.exception.id}` }),
+          ),
+        };
+      }
       return {
         status: `${gaps.length} required ${plural(gaps.length, "item")} of evidence outstanding`,
         knownFacts: gaps.map((g) => ({
           label: `${g.id} — ${g.description}`,
           text: "Not in evidence",
-          source: "list_open_exceptions" as const,
+          source: "get_effective_exceptions" as const,
         })),
         conflictingEvidence: [],
         missingEvidence: gaps.map((g) => `${g.id}: ${g.description} — not in evidence.`),
@@ -1740,25 +1821,43 @@ const INTENTS: readonly Intent[] = [
         ["what", "resolved"],
       ],
     },
+    /**
+     * "Carry a recorded resolution" is a claim about RECORDS, and it was
+     * counted off the frozen rule status — the one field a recorded resolution
+     * provably cannot enter, because `concludeException` writes to
+     * `ws.conclusions` and never to `exception.status`. So the answer sat at "8
+     * of 15" through seven recorded resolutions, listing eight items none of
+     * which was one of them, directly above its own sentence explaining that a
+     * resolution is a recorded event rather than an absence of findings.
+     *
+     * Counted from the live view now, and each row says which of the two closed
+     * it — the rules or a person — because that difference is the whole subject
+     * of the question.
+     */
     answer: (s) => {
-      const all = s.run<readonly ExceptionResult[]>("list_exceptions");
+      const all = s.run<readonly EffectiveExceptionResult[]>("get_effective_exceptions");
       if (all === undefined) return undefined;
       const resolved = all.filter((e) => !e.open);
       if (resolved.length === 0) return undefined;
+      const byConclusion = resolved.filter((e) => e.hasConclusion).length;
       return {
         status: `${resolved.length} of ${all.length} exceptions carry a recorded resolution`,
         knownFacts: resolved.map(
           (e): AiFigure => ({
             label: `${e.exception.id} — ${e.exception.finding.title}`,
-            text: e.exception.status,
-            source: "list_exceptions",
+            text: e.hasConclusion
+              ? `${e.effectiveStatus} · concluded in this session`
+              : e.effectiveStatus,
+            source: "get_effective_exceptions",
           }),
         ),
         conflictingEvidence: [],
         missingEvidence: [],
         assertions: [],
         managementConclusion:
-          "A resolution is a recorded event, not an absence of findings: the exception keeps its history and the evidence that closed it travels with the item.",
+          byConclusion > 0
+            ? `A resolution is a recorded event, not an absence of findings: the exception keeps its history and the evidence that closed it travels with the item. ${count(byConclusion)} of these ${plural(byConclusion, "was", "were")} concluded by a person in this session; the rest are as the rules derived them, and Reset Demo restores that position.`
+            : "A resolution is a recorded event, not an absence of findings: the exception keeps its history and the evidence that closed it travels with the item.",
         nextAction: "Open Exceptions and filter to the resolved lens; each row links to what resolved it.",
         citations: resolved.map((e) => cite(e.exception.id, { href: `/exceptions/${e.exception.id}` })),
       };

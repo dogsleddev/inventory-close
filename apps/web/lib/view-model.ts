@@ -237,7 +237,15 @@ export interface OverviewData {
     readonly rows: readonly BlockerRow[];
     readonly shownTotal: string;
     readonly allTotal: string;
+    /** Live: what the rows are, and what the caption above them counts. */
     readonly blockerCount: number;
+    /**
+     * Baseline: what the Exceptions register still lists. The panel's link
+     * leads there, so it has to promise what that page will show — a link
+     * reading "View all 0 blockers" onto a page of seven is the same defect
+     * this panel just had, moved one click along.
+     */
+    readonly registerCount: number;
     readonly remainingNote: string;
   };
   readonly glPanel?: {

@@ -7,7 +7,7 @@ import { userByRole } from "@icg/data";
 import { OverviewScreen } from "../components/OverviewScreen";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
 import { askGaurdData } from "../lib/server/ask-view";
-import { getQueries, makeContext } from "../lib/server/workspace";
+import { getCommands, getQueries, getWorkspace, makeContext } from "../lib/server/workspace";
 
 /**
  * Ask Gaurd reaches its answer through a server action. Replacing the action
@@ -274,5 +274,86 @@ describe("Overview — Ask Gaurd answers deterministically", () => {
     // No provider ran, and the drawer says so rather than implying one did.
     expect(drawer.getByText(/None — deterministic answer/)).toBeTruthy();
     expect(drawer.getByText(/Chat input is not evidence/)).toBeTruthy();
+  });
+});
+
+/**
+ * The Preventing Sign-Off panel counts the rows it shows.
+ *
+ * `blockerViews` is filtered by the LIVE blocker set; the caption and the
+ * header counted `getBlockers`, the rules' baseline. So after conclusions the
+ * panel read "All seven blockers shown." under an empty table, with a header
+ * saying "of $198,950 across 7 blockers" over rows totalling nothing. Neither
+ * branch of the caption was true — there is no reading of "all seven shown"
+ * that holds above no rows.
+ *
+ * Mutating and resetting, following `close-memo-scope.test.ts`: the workspace
+ * here is a process-global singleton, so a test that concluded without
+ * restoring would move every assertion after it.
+ */
+describe("Overview — the blocker panel counts its own rows", () => {
+  const controller = () => userByRole("CONTROLLER");
+  const manager = () => userByRole("ACCOUNTING_MANAGER");
+
+  afterEach(() => {
+    getCommands().resetDemo(makeContext(controller(), "T-OV-RESET"));
+  });
+
+  const resolveEveryBlocker = () => {
+    const commands = getCommands();
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-WORK");
+    for (const blocker of [...getWorkspace().close.blockers]) {
+      const id = blocker.exceptionId;
+      for (const requirement of queries.getExceptionWorkflow(ctx, id).unmetRequirements) {
+        const submitted = commands.submitEvidence(ctx, {
+          title: `Support for ${requirement}`,
+          kind: "DOCUMENT",
+          content: { note: "Obtained." },
+          relatedObjectRef: id,
+          satisfiesRequirement: { exceptionId: id, requirement },
+        });
+        commands.reviewEvidence(
+          makeContext(manager(), "T-OV-REVIEW"),
+          submitted.id,
+          "ACCEPTED",
+          "Reviewed.",
+        );
+      }
+      commands.concludeException(ctx, {
+        exceptionId: id,
+        conclusion: "RESOLVED_NO_ADJUSTMENT",
+        rationale: "Support obtained and reviewed; no adjustment required.",
+      });
+    }
+  };
+
+  it("captions and totals the live rows, not the baseline", () => {
+    const before = buildOverviewData(controller(), "T-OV-BEFORE");
+    // Premise: the two agree until somebody does something, so the assertion
+    // below has something to prove.
+    expect(before.preventing?.blockerCount).toBe(7);
+    expect(before.preventing?.rows.length).toBe(5);
+
+    resolveEveryBlocker();
+
+    const after = buildOverviewData(controller(), "T-OV-AFTER");
+    expect(after.preventing?.rows.length).toBe(0);
+    expect(after.preventing?.blockerCount).toBe(0);
+    expect(after.preventing?.allTotal).toBe("$0");
+    expect(after.preventing?.remainingNote).not.toMatch(/seven blockers shown/);
+    expect(after.preventing?.shownTotal).toBe("$0");
+  });
+
+  it("links to the register with the register's own count", () => {
+    // The other direction, and the trap in fixing the first: the link leads to
+    // /exceptions, which lists what the RULES derived. A link reading "View all
+    // 0 blockers" onto a page of seven would be this panel's defect moved one
+    // click along, so the link counts its destination while the caption counts
+    // these rows.
+    resolveEveryBlocker();
+    const after = buildOverviewData(controller(), "T-OV-LINK");
+    expect(after.preventing?.blockerCount).toBe(0);
+    expect(after.preventing?.registerCount).toBe(7);
   });
 });
