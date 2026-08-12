@@ -132,6 +132,28 @@ export function pbcStatusView(status: string): StatusView {
   }
 }
 
+/**
+ * Rule result → the words for it (Stage G).
+ *
+ * Nothing owned this vocabulary before: every surface that showed a match
+ * result showed the canonical token. It lives here, with the other display
+ * vocabularies, so the assistant and any screen that adopts it cannot come to
+ * word one result two ways.
+ */
+export const RULE_RESULT_LABELS: Readonly<Record<string, string>> = {
+  PASS: "Pass",
+  FAIL: "Fail",
+  REVIEW_REQUIRED: "Review required",
+  INCOMPLETE: "Incomplete",
+  NOT_APPLICABLE: "Not applicable",
+};
+
+/** Where the aging clock starts, in words (Stage G). */
+export const AGING_BASIS_LABELS: Readonly<Record<string, string>> = {
+  LAST_MOVEMENT: "last movement",
+  ACQUISITION: "acquisition",
+};
+
 /** Source health → chip view (● healthy · ◐ partial · ◔ stale · ✕ failed). */
 export function sourceHealthView(status: string): {
   glyph: string;

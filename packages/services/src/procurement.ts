@@ -116,8 +116,20 @@ export interface GoodsInTransitOut {
   /**
    * Whether the document side and the book side describe the same inbound
    * population. False is a finding a reader must see, not a rounding note.
+   *
+   * **Null when the viewer's scope withheld an order** (Stage G). The
+   * document side is scope-filtered and the book side is not, so for a role
+   * that cannot see every purchase order the two are not comparable — and
+   * the comparison then produced `false` for every auditor, which the screen
+   * printed as "The documents and the book do not agree… must be resolved
+   * before either figure is relied on". A role-scoped omission was being
+   * reported as an unexplained control difference, on the one screen whose
+   * job is to say the two sides are one population.
+   *
+   * This is D8's rule about `positionMoved` applied to a second comparison: a
+   * comparison that could not be made is not a negative result.
    */
-  readonly inboundAgrees: boolean;
+  readonly inboundAgrees: boolean | null;
 }
 
 export interface PriceVarianceRowOut {
@@ -405,7 +417,12 @@ export function getProcurementPopulations(
       outboundCents: cents(outbound),
       documentUnits,
       documentCents,
-      inboundAgrees: documentUnits === inbound.length && documentCents === inboundCents,
+      // Not comparable while the document side is shorter than the orders
+      // that exist: see the field's note.
+      inboundAgrees:
+        withheldOrderCount > 0
+          ? null
+          : documentUnits === inbound.length && documentCents === inboundCents,
     },
     priceVariance: {
       rows: priceVarianceRows,

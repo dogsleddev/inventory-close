@@ -84,6 +84,12 @@ export interface AskAnswerView {
   readonly managementConclusion: string;
   readonly nextAction: string;
   readonly citations: readonly AskCitation[];
+  /**
+   * Suggested wording, when the question asked for a draft. Empty otherwise.
+   * Carries no figure and no record identifier by construction — the memo
+   * screen supplies every number the wording refers to.
+   */
+  readonly draft: readonly { readonly heading: string; readonly body: string }[];
   /** Provider prose, when a provider ran AND its output passed guardrails. */
   readonly narration: string | null;
 }
@@ -656,7 +662,11 @@ export interface ProcurementData {
     readonly stats: readonly ProcurementStat[];
     /** The document side and the book side, stated as one reconciliation. */
     readonly agreement: {
-      readonly agrees: boolean;
+      /**
+       * Null when the viewer's scope withheld an order: the document side is
+       * scoped and the book side is not, so the two were never comparable.
+       */
+      readonly agrees: boolean | null;
       readonly headline: string;
       readonly detail: string;
     };

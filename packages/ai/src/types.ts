@@ -32,6 +32,12 @@ export const AI_TOOL_NAMES = [
   "get_close_readiness",
   "get_blocking_conditions",
   "list_open_exceptions",
+  /**
+   * The whole population, open and resolved (Stage G). `list_open_exceptions`
+   * cannot answer "which exceptions are resolved?" — and an answer built by
+   * subtracting it from a count would be describing a set it never read.
+   */
+  "list_exceptions",
   "get_exception",
   "get_evidence_timeline",
   "get_financial_lifecycle",
@@ -46,6 +52,23 @@ export const AI_TOOL_NAMES = [
   "get_proposed_adjustments",
   /** Establishes whether a serial exists at all, before anything is said about it. */
   "search_serial",
+  /**
+   * Stage G. Every one of these reaches a projection Stages B–F already
+   * shipped and the screens already read — Ask Gaurd gained no new view of
+   * the close here, only the ability to answer from the views that existed.
+   * None of them is a rule, and none derives an exception, a blocker or a
+   * readiness input.
+   */
+  "get_gl_account_reconciliation",
+  "get_procurement_populations",
+  "get_cost_standards",
+  "get_cost_classification",
+  "get_custody_breakdown",
+  "get_consignment_holdings",
+  "get_dispositions",
+  "get_eo_methodology",
+  "get_methodology",
+  "get_memo",
 ] as const;
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
 
@@ -89,6 +112,22 @@ export interface AiFigure {
   readonly source: AiToolName;
 }
 
+/**
+ * One section of suggested wording (Draft mode, Stage G).
+ *
+ * `Draft` has been in the drawer's CAN list since stage 08 with nothing
+ * behind it (COMPLETION_PLAN §3.9). What it may produce is WORDING and
+ * nothing else: `body` may not carry a figure or a record identifier, for the
+ * same reason narration may not — deciding whether a number in prose is the
+ * right number is not reliably decidable, and the close memo screen already
+ * assembles every figure it needs from `memoPosition`. The check is the same
+ * function the guardrails apply to narration, not a second copy of it.
+ */
+export interface AiDraftSection {
+  readonly heading: string;
+  readonly body: string;
+}
+
 /** The material-answer contract (docs/09:7), in its stated order. */
 export interface AiMaterialAnswer {
   readonly status: string;
@@ -100,6 +139,8 @@ export interface AiMaterialAnswer {
   readonly managementConclusion: string;
   readonly nextAction: string;
   readonly citations: readonly AiCitation[];
+  /** Suggested wording, when the question asked for a draft. Never figures. */
+  readonly draft?: readonly AiDraftSection[] | undefined;
 }
 
 /** Why an answer refused, when it did. */
@@ -117,6 +158,17 @@ export type AiRefusalReason =
 export interface AiInteraction {
   readonly question: string;
   readonly mode: AiMode;
+  /**
+   * WHICH handler answered — the intent key, `exception-detail`,
+   * `unit-detail`, or `unrouted` (Stage G).
+   *
+   * Recorded rather than re-derived. The routing harness has to assert that a
+   * shipped chip reaches the handler it was written for, and a test that
+   * re-runs the matcher to predict the route would be asserting a proxy: the
+   * fallbacks in `answerQuestion` mean a question can match one intent and be
+   * answered by another. This is the measurement.
+   */
+  readonly route: string;
   readonly answer?: AiMaterialAnswer | undefined;
   readonly refusal?:
     | { readonly reason: AiRefusalReason; readonly message: string; readonly stillVisible: readonly string[] }
@@ -134,5 +186,11 @@ export interface AiInteraction {
   };
 }
 
-export const TOOLSET_VERSION = "ASK-GAURD-TOOLS-v1.0.0";
-export const ANSWER_ENGINE_VERSION = "ASK-GAURD-ANSWERS-v1.0.0";
+/**
+ * v1.1.0: Stage G added ten tools over the Stage B–F projections, and the
+ * answer engine moved from unanchored regexes to the phrase matcher in
+ * `matching.ts`. Both are recorded on every interaction, so an answer
+ * captured before the change is legible as one.
+ */
+export const TOOLSET_VERSION = "ASK-GAURD-TOOLS-v1.1.0";
+export const ANSWER_ENGINE_VERSION = "ASK-GAURD-ANSWERS-v1.1.0";

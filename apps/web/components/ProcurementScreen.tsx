@@ -448,14 +448,27 @@ export function ProcurementScreen({
                           flexWrap: "wrap",
                         }}
                       >
+                        {/* Three states, not two. A comparison the viewer's
+                            scope prevented is neither a pass nor a failure,
+                            and a ✕ beside it reads as a control difference
+                            the reader is expected to resolve. */}
                         <span
                           aria-hidden
                           style={{
                             fontSize: "13px",
-                            color: data.git.agreement.agrees ? "var(--aurora)" : "var(--ember)",
+                            color:
+                              data.git.agreement.agrees === null
+                                ? "var(--quiet)"
+                                : data.git.agreement.agrees
+                                  ? "var(--aurora)"
+                                  : "var(--ember)",
                           }}
                         >
-                          {data.git.agreement.agrees ? "✓" : "✕"}
+                          {data.git.agreement.agrees === null
+                            ? "○"
+                            : data.git.agreement.agrees
+                              ? "✓"
+                              : "✕"}
                         </span>
                         <span style={{ fontSize: "13px", fontWeight: 600 }}>
                           {data.git.agreement.headline}

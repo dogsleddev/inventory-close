@@ -211,6 +211,29 @@ export function AskGaurd({
                     </div>
                   ) : null}
 
+                  {/* Draft mode. The drawer has advertised this capability
+                      since stage 08 with nothing behind it; what it produces
+                      is wording, and the figures it refers to are on the
+                      Close Memo screen, which seals them with the version. */}
+                  {answer.draft.length > 0 ? (
+                    <div className="icg-ask-sec">
+                      <div className="icg-label">SUGGESTED WORDING</div>
+                      {answer.draft.map((d) => (
+                        <div key={d.heading} style={{ marginTop: "7px" }}>
+                          <div className="icg-ask-status" style={{ fontSize: "11.5px" }}>
+                            {d.heading}
+                          </div>
+                          <p className="icg-ask-body">{d.body}</p>
+                        </div>
+                      ))}
+                      <p className="icg-quiet" style={{ fontSize: "10.5px", lineHeight: 1.5 }}>
+                        Wording only. Every figure a close memo states belongs to the Close
+                        Memo screen, which supplies it from the close and seals it with the
+                        version.
+                      </p>
+                    </div>
+                  ) : null}
+
                   {answer.assertions.length > 0 ? (
                     <div className="icg-ask-sec">
                       <div className="icg-label">ASSERTIONS</div>

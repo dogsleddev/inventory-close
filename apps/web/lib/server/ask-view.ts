@@ -1,15 +1,37 @@
 import type { DemoUser } from "@icg/data";
-import type { ExceptionStatus } from "@icg/domain";
+import {
+  ACCOUNTING_CLASSIFICATIONS,
+  ASSERTIONS,
+  SOURCE_SYSTEM_IDS,
+  type ExceptionStatus,
+} from "@icg/domain";
+import { INTERPRETATION_CONSTANT_NAMES } from "@icg/services";
 import {
   answerQuestion,
   describeAvailability,
   type AiCitation,
   type AiFigure,
 } from "@icg/ai";
-import { formatBpsExact, formatCents } from "../format";
-import { statusView } from "../workflow-view";
+import { formatBpsExact, formatCents, formatCount } from "../format";
+import {
+  AGING_BASIS_LABELS,
+  RULE_RESULT_LABELS,
+  pbcStatusView,
+  statusView,
+} from "../workflow-view";
 import type { AskAnswerView, AskCitation, AskFigure, AskResult } from "../view-model";
-import { getQueries, makeContext } from "./workspace";
+import {
+  assertionLabel,
+  classificationLabel,
+  holderLabel,
+  knownLocationName,
+  sourceName,
+} from "./humanize";
+import { CUSTODY_LABELS } from "./inventory-list-view";
+import { COGS_LABELS, DIMENSION_LABELS } from "./methodology-view";
+import { METHOD_LABELS } from "./custody-view";
+import { BEHAVIOR_LABELS, COGS_PRESENTATION, COMPONENT_LABELS, TREATMENT_LABELS } from "./costing-view";
+import { getProjections, getQueries, makeContext } from "./workspace";
 
 /**
  * Ask Gaurd's server surface (stage 08).
@@ -25,27 +47,6 @@ import { getQueries, makeContext } from "./workspace";
 export interface AskScope {
   readonly exceptionId?: string | undefined;
   readonly serial?: string | undefined;
-}
-
-function renderFigure(f: AiFigure): AskFigure {
-  if (f.valueCents !== undefined) return { label: f.label, value: formatCents(f.valueCents) };
-  if (f.valueBps !== undefined) return { label: f.label, value: formatBpsExact(f.valueBps) };
-  if (f.count !== undefined) return { label: f.label, value: String(f.count) };
-  return { label: f.label, value: f.text ?? "—" };
-}
-
-/**
- * A citation is a link or an honest absence — never a control that does
- * nothing. An evidence-id citation with no href routes to the object whose
- * detail screen owns that record's drawer.
- */
-function renderCitation(c: AiCitation, scope: AskScope): AskCitation {
-  if (c.state === "MISSING") return { label: c.label, href: null, missing: true };
-  if (c.href !== undefined) return { label: c.label, href: c.href, missing: false };
-  if (c.evidenceId !== undefined && scope.exceptionId !== undefined) {
-    return { label: c.label, href: `/exceptions/${scope.exceptionId}`, missing: false };
-  }
-  return { label: c.label, href: null, missing: false };
 }
 
 /**
@@ -65,6 +66,110 @@ const EXCEPTION_STATUSES = new Set<string>([
 const statusLabel = (status: string): string =>
   EXCEPTION_STATUSES.has(status) ? statusView(status as ExceptionStatus).label : status;
 
+/**
+ * Canonical value → the words the SCREENS already use for it (Stage G).
+ *
+ * @icg/ai emits canonical tokens because that is the structured value, the
+ * same way it emits integer cents rather than a formatted amount. Display wording
+ * belongs to apps/web — so this is assembled from the modules that already
+ * own each vocabulary rather than restated here. A second spelling of
+ * "Company warehouse" living in the assistant is exactly how one screen came
+ * to say "Direct labour" while another said "Direct Labor".
+ *
+ * The Stage F browser pass caught a register showing `COMPANY_WAREHOUSE`
+ * beside a tab showing "Company warehouse". Stage G added ten tools whose
+ * results carry custody types, disposition methods, cost behaviours, COGS
+ * states, match results and aging bases; without this every one of them
+ * would have reached the drawer as a token.
+ */
+const CANONICAL_LABELS: ReadonlyMap<string, string> = new Map<string, string>([
+  ...Object.entries(CUSTODY_LABELS),
+  ...Object.entries(METHOD_LABELS),
+  ...Object.entries(COMPONENT_LABELS),
+  ...Object.entries(BEHAVIOR_LABELS),
+  ...Object.entries(TREATMENT_LABELS),
+  ...Object.entries(COGS_PRESENTATION).map(
+    ([key, presentation]): [string, string] => [key, presentation.label],
+  ),
+  ...Object.entries(RULE_RESULT_LABELS),
+  ...Object.entries(AGING_BASIS_LABELS),
+  ...Object.entries(DIMENSION_LABELS),
+  ...Object.entries(COGS_LABELS),
+  ...["COMPANY", "OTHER_PARTY", "NOT_ESTABLISHED"].map(
+    (holder): [string, string] => [holder, holderLabel(holder)],
+  ),
+  ...ACCOUNTING_CLASSIFICATIONS.map(
+    (classification): [string, string] => [classification, classificationLabel(classification)],
+  ),
+  ...SOURCE_SYSTEM_IDS.map((source): [string, string] => [source, sourceName(source)]),
+  ...ASSERTIONS.map((assertion): [string, string] => [assertion, assertionLabel(assertion)]),
+  ...[...EXCEPTION_STATUSES].map(
+    (status): [string, string] => [status, statusView(status as ExceptionStatus).label],
+  ),
+  ...[
+    "PROVIDED",
+    "READY",
+    "PREPARING",
+    "FOLLOW_UP_REQUESTED",
+    "REFRESH_REQUIRED",
+    "NOT_STARTED",
+  ].map((status): [string, string] => [status, pbcStatusView(status).label]),
+]);
+
+/**
+ * Replace canonical tokens wherever they appear in a rendered string.
+ *
+ * Whole-token, bounded — an `EXC-001` or a `KE-E2-1048` is an identifier the
+ * reader wants to see verbatim and carries no underscore, so it cannot be
+ * caught by this. `ask-chips.test.ts` asserts no rendered answer field still
+ * carries a screaming-snake token, which is what keeps this map complete
+ * rather than merely current.
+ */
+function humanizeCanonical(value: string): string {
+  return value.replace(
+    // Any screaming token, replaced ONLY on a hit. Single-word vocabularies
+    // (`CUSTODY`, `PASS`, `READY`) need wording too, and matching them is
+    // only safe because an unrecognised token is returned untouched: the
+    // acronyms a reader wants verbatim — GL, PBC, GIT, RMA, NRV — are not in
+    // the map, or map to themselves.
+    /\b[A-Z][A-Z0-9_]+\b/g,
+    // Location ids are dataset-owned rather than an enum, so they are looked
+    // up rather than listed — and looked up in a way that returns nothing for
+    // a token that is not a location, so an unrecognised value stays
+    // canonical instead of being invented into a label.
+    (token) =>
+      // A code constant is not a label. `heldIn` names the module that holds
+      // a judgement so a reader can go and find it, and the Methodology
+      // screen prints it verbatim for the same reason.
+      INTERPRETATION_CONSTANT_NAMES.includes(token)
+        ? token
+        : (CANONICAL_LABELS.get(token) ?? knownLocationName(token) ?? token),
+  );
+}
+
+function renderFigure(f: AiFigure): AskFigure {
+  const label = humanizeCanonical(f.label);
+  if (f.valueCents !== undefined) return { label, value: formatCents(f.valueCents) };
+  if (f.valueBps !== undefined) return { label, value: formatBpsExact(f.valueBps) };
+  if (f.count !== undefined) return { label, value: formatCount(f.count) };
+  return { label, value: humanizeCanonical(f.text ?? "—") };
+}
+
+/**
+ * A citation is a link or an honest absence — never a control that does
+ * nothing. An evidence-id citation with no href routes to the object whose
+ * detail screen owns that record's drawer.
+ */
+function renderCitation(c: AiCitation, scope: AskScope): AskCitation {
+  const label = humanizeCanonical(c.label);
+  if (c.state === "MISSING") return { label, href: null, missing: true };
+  if (c.href !== undefined) return { label, href: c.href, missing: false };
+  if (c.evidenceId !== undefined && scope.exceptionId !== undefined) {
+    return { label, href: `/exceptions/${scope.exceptionId}`, missing: false };
+  }
+  return { label, href: null, missing: false };
+}
+
 const REFUSAL_TITLES: Readonly<Record<string, string>> = {
   NOT_AUTHORIZED: "Access restricted",
   NO_SUCH_OBJECT: "No such object",
@@ -79,8 +184,9 @@ export function askGaurdData(
   correlationId: string,
 ): AskResult {
   const queries = getQueries();
+  const projections = getProjections();
   const ctx = makeContext(user, correlationId);
-  const interaction = answerQuestion({ queries, ctx }, question, scope);
+  const interaction = answerQuestion({ queries, projections, ctx }, question, scope);
 
   const versions = [
     { k: "Toolset", v: interaction.versions.toolsetVersion },
@@ -110,15 +216,25 @@ export function askGaurdData(
     const answer: AskAnswerView = {
       question: interaction.question,
       mode: interaction.mode,
-      status: statusLabel(a.status),
+      status: humanizeCanonical(statusLabel(a.status)),
       knownFacts: a.knownFacts.map(renderFigure),
-      conflictingEvidence: [...a.conflictingEvidence],
-      missingEvidence: [...a.missingEvidence],
-      assertions: [...a.assertions],
+      // The engine's own sentences quote canonical values too — a chain state
+      // inside a rule's verbatim note, a match result inside a scope
+      // explanation. Every string a reader sees goes through the same map.
+      conflictingEvidence: a.conflictingEvidence.map(humanizeCanonical),
+      missingEvidence: a.missingEvidence.map(humanizeCanonical),
+      // Worded with the same helper the exception screens use. Until Stage G
+      // the drawer rendered these raw, so one screen said "Rights &
+      // Obligations" and the assistant beside it said
+      // "RIGHTS_AND_OBLIGATIONS" about the same assertion.
+      assertions: a.assertions.map(assertionLabel),
       exposure: a.exposure !== undefined ? renderFigure(a.exposure) : null,
-      managementConclusion: a.managementConclusion,
-      nextAction: a.nextAction,
+      managementConclusion: humanizeCanonical(a.managementConclusion),
+      nextAction: humanizeCanonical(a.nextAction),
       citations: a.citations.map((c) => renderCitation(c, scope)),
+      // Passed through unformatted: there is nothing to format. Draft prose
+      // carries no figure, which is the whole reason it is safe to show.
+      draft: (a.draft ?? []).map((d) => ({ heading: d.heading, body: d.body })),
       // Absent unless a provider ran and its prose passed the guardrails.
       narration: interaction.narrationAvailable ? (interaction.narration ?? null) : null,
     };

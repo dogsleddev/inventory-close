@@ -61,18 +61,20 @@ export const COMPONENT_LABELS: Readonly<Record<CostComponentType, string>> = {
   IMPORT_DUTY: "Import duty",
 };
 
-const BEHAVIOR_LABELS: Readonly<Record<string, string>> = {
+/** Exported so Ask Gaurd renders cost behaviour the way this screen does. */
+export const BEHAVIOR_LABELS: Readonly<Record<string, string>> = {
   VARIABLE: "Variable",
   FIXED: "Fixed",
 };
 
-const TREATMENT_LABELS: Readonly<Record<string, string>> = {
+/** Exported for the same reason as BEHAVIOR_LABELS. */
+export const TREATMENT_LABELS: Readonly<Record<string, string>> = {
   EXPENSED_AS_INCURRED: "Expensed as incurred",
   CAPITALIZED_TO_INVENTORY: "Capitalized to inventory",
 };
 
 /** COGS state → how the row presents. Never a control result. */
-const COGS_PRESENTATION: Readonly<
+export const COGS_PRESENTATION: Readonly<
   Record<string, { label: string; glyph: string; variant: "frost" | "aurora" | "quiet" }>
 > = {
   RELIEVED: { label: "Relieved", glyph: "✓", variant: "aurora" },

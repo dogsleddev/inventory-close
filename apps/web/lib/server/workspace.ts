@@ -1,6 +1,12 @@
-import { createCommandService, createQueryService, createWorkspace } from "@icg/services";
+import {
+  createCommandService,
+  createProjectionService,
+  createQueryService,
+  createWorkspace,
+} from "@icg/services";
 import type {
   CommandService,
+  ProjectionService,
   QueryService,
   ServiceContext,
   Workspace,
@@ -61,6 +67,18 @@ export function getQueries(): QueryService {
   // loop is eleven map writes; the flag was never worth its own bug.
   registerLocationNames(getWorkspace().dataset.locations);
   return queries;
+}
+
+/**
+ * The Stage B–F read-only projections, bound to the same workspace (Stage G).
+ *
+ * The screens call those projections directly because a server component
+ * already holds the workspace. Ask Gaurd must not, so it is handed this
+ * instead — the same functions with the workspace closed over, which is what
+ * keeps a tool handler unable to read fixtures.
+ */
+export function getProjections(): ProjectionService {
+  return createProjectionService(getWorkspace());
 }
 
 /**

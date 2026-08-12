@@ -433,12 +433,23 @@ export function buildProcurementData(
       ],
       agreement: {
         agrees: gitAgrees,
-        headline: gitAgrees
-          ? "The documents and the book agree."
-          : "The documents and the book do not agree.",
-        detail: gitAgrees
-          ? `The ${populations.invoicedNotReceived.length} orders billed but not received at Dec. 31 carry ${git.documentUnits} units at ${money(git.documentCents) ?? "an unstated value"}. The book shows ${git.inboundUnits} units classified as goods in transit in the inbound location, at ${money(git.inboundCents) ?? "an unstated value"}. Same population, two sides — so these are one figure, never two to add together.`
-          : `The orders billed but not received carry ${git.documentUnits} units; the book shows ${git.inboundUnits} units inbound. The difference is unexplained on this screen and must be resolved before either figure is relied on.`,
+        headline:
+          gitAgrees === null
+            ? "The two sides cannot be compared at your access scope."
+            : gitAgrees
+              ? "The documents and the book agree."
+              : "The documents and the book do not agree.",
+        // A withheld order shortens the document side and not the book side,
+        // so for a scoped reader the comparison was never between the same
+        // two populations. Printing its result as a finding told every
+        // auditor a control figure was unexplained when the only thing
+        // missing was an order their role may not see.
+        detail:
+          gitAgrees === null
+            ? `${populations.withheldOrderCount} ${populations.withheldOrderCount === 1 ? "order is" : "orders are"} outside your role's scope, so the document side here is shorter than the orders that exist while the book side is not. The difference between ${git.documentUnits} document units and ${git.inboundUnits} book units is your scope, not a finding — and no comparison of the two sides is offered on this run.`
+            : gitAgrees
+              ? `The ${populations.invoicedNotReceived.length} orders billed but not received at Dec. 31 carry ${git.documentUnits} units at ${money(git.documentCents) ?? "an unstated value"}. The book shows ${git.inboundUnits} units classified as goods in transit in the inbound location, at ${money(git.inboundCents) ?? "an unstated value"}. Same population, two sides — so these are one figure, never two to add together.`
+              : `The orders billed but not received carry ${git.documentUnits} units; the book shows ${git.inboundUnits} units inbound. The difference is unexplained on this screen and must be resolved before either figure is relied on.`,
       },
       accountNote: `Account ${git.glAccount} holds goods in transit in both directions: ${git.inboundUnits} units inbound (${money(git.inboundCents) ?? "—"}) and ${git.outboundUnits} outbound (${money(git.outboundCents) ?? "—"}), ${money(git.accountCents) ?? "—"} in total. Only the inbound half is a procurement question; the outbound half belongs to the commercial chain, and both are shown here so this screen and the GL-account view cannot disagree about what 1210 contains.`,
     },
@@ -477,7 +488,10 @@ export function buildProcurementData(
     withheldNote:
       populations.withheldOrderCount === 0
         ? null
-        : `${populations.withheldOrderCount} orders are outside your role's scope in this demo and are not counted in the figures above.`,
+        : // A hard-coded plural, invisible until a role withheld exactly one:
+          // the auditor is that role, and the note read "1 orders" on every
+          // run. Same shape as the reset report's "1 comments" in Stage F.
+          `${populations.withheldOrderCount} ${populations.withheldOrderCount === 1 ? "order is" : "orders are"} outside your role's scope in this demo and ${populations.withheldOrderCount === 1 ? "is" : "are"} not counted in the figures above.`,
     drawers,
   };
 }

@@ -42,7 +42,8 @@ const PROVENANCE_LABELS: Readonly<Record<string, string>> = {
   AUTHORED: "Authored",
 };
 
-const DIMENSION_LABELS: Readonly<Record<string, string>> = {
+/** Exported so Ask Gaurd names a dimension the way this screen does. */
+export const DIMENSION_LABELS: Readonly<Record<string, string>> = {
   GL_ACCOUNT: "GL account",
   CUSTODY: "Custody",
   OWNERSHIP: "Ownership",
@@ -54,7 +55,8 @@ const DIMENSION_LABELS: Readonly<Record<string, string>> = {
   READINESS: "Readiness",
 };
 
-const COGS_LABELS: Readonly<Record<string, string>> = {
+/** Exported so Ask Gaurd words a relief expectation the way this screen does. */
+export const COGS_LABELS: Readonly<Record<string, string>> = {
   NOT_EXPECTED: "Not expected",
   IN_QUESTION: "In question",
 };

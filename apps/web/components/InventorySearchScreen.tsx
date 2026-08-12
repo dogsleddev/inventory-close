@@ -52,9 +52,17 @@ export function InventorySearchScreen({
       section="Inventory"
       setRoleAction={setRoleAction}
       drawerOpen={false}
+      /**
+       * "Where was this serial last seen?" shipped here until Stage G and
+       * could never be answered: this screen searches serials, so nothing
+       * scopes the drawer to one and the question names none. A chip whose
+       * own screen cannot supply its subject is a refusal with a button on
+       * it. Asked from a unit's page, where a serial IS in scope, the same
+       * question now answers.
+       */
       askSuggestions={[
         "Which serials have open exceptions?",
-        "Where was this serial last seen?",
+        "Where is our inventory physically held?",
       ]}
       askContext="FY2026 Inventory Close · Serial search"
     >

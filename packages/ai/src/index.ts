@@ -25,12 +25,23 @@ export interface AiProviderAdapter {
 export * from "./types.js";
 export { createToolSession, runTool } from "./tools.js";
 export type { AiToolContext, AiToolResult, AiToolSession } from "./tools.js";
-export { answerQuestion } from "./answers.js";
+export { answerQuestion, INTENT_KEYS, INTENT_MATCHES, routeQuestion } from "./answers.js";
 export type { AiQuestionContext } from "./answers.js";
+export {
+  extractExceptionId,
+  extractSerial,
+  intentPhrases,
+  matchesQuestion,
+  normalizeQuestion,
+  phrasePattern,
+} from "./matching.js";
+export type { IntentMatch } from "./matching.js";
 export {
   checkNarration,
   describeAvailability,
   fenceUntrusted,
+  namesRecordIdentifier,
+  statesQuantity,
   withNarration,
 } from "./guardrails.js";
 export type {

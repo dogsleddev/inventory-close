@@ -149,6 +149,8 @@ export {
   memoPosition,
 } from "./memo.js";
 export type { MemoOut, MemoPositionOut, MemoVersionOut } from "./memo.js";
+export { createProjectionService } from "./projections.js";
+export type { ProjectionService } from "./projections.js";
 export { getProcurementPopulations } from "./procurement.js";
 export type {
   GoodsInTransitOut,

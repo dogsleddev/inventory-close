@@ -41,7 +41,8 @@ import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
  * that happens to be true today.
  */
 
-const METHOD_LABELS: Readonly<Record<string, string>> = {
+/** Exported so Ask Gaurd renders a disposition the way this screen does. */
+export const METHOD_LABELS: Readonly<Record<string, string>> = {
   SCRAPPED: "Scrapped",
   RETURNED_TO_VENDOR: "Returned to vendor",
   SALVAGE_SALE: "Salvage sale",

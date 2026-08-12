@@ -1,7 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { userByRole, type DemoUser } from "@icg/data";
 import type { Role } from "@icg/domain";
-import { createQueryService, createWorkspace, type QueryService } from "@icg/services";
+import {
+  createProjectionService,
+  createQueryService,
+  createWorkspace,
+  type ProjectionService,
+  type QueryService,
+} from "@icg/services";
 import {
   answerQuestion,
   checkNarration,
@@ -11,13 +17,17 @@ import {
 } from "../src/index.js";
 
 let queries: QueryService;
+let projections: ProjectionService;
 beforeAll(() => {
-  queries = createQueryService(createWorkspace());
+  const ws = createWorkspace();
+  queries = createQueryService(ws);
+  projections = createProjectionService(ws);
 });
 
 /** The tool context for a given demo user — the caller's own, as in production. */
 const makeToolContext = (user: DemoUser): AiToolContext => ({
   queries,
+  projections,
   ctx: { user, correlationId: `T-FTR-${user.id}`, sourceInterface: "ASK_GAURD" },
 });
 

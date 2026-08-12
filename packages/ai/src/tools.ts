@@ -1,4 +1,4 @@
-import type { QueryService, ServiceContext } from "@icg/services";
+import type { ProjectionService, QueryService, ServiceContext } from "@icg/services";
 import type { AiToolCall, AiToolName } from "./types.js";
 
 /**
@@ -25,6 +25,12 @@ export interface AiToolResult {
 
 export interface AiToolContext {
   readonly queries: QueryService;
+  /**
+   * The Stage B–F read-only projections (Stage G). A second service object
+   * rather than a workspace, so rule 1 above stays a property of the types:
+   * a handler is never handed anything it could read fixtures out of.
+   */
+  readonly projections: ProjectionService;
   readonly ctx: ServiceContext;
 }
 
@@ -57,6 +63,7 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   get_blocking_conditions: ({ queries, ctx }) => queries.getBlockers(ctx),
   list_open_exceptions: ({ queries, ctx }) =>
     queries.listExceptions(ctx).filter((e) => e.open),
+  list_exceptions: ({ queries, ctx }) => queries.listExceptions(ctx),
   get_exception: ({ queries, ctx }, args) => {
     const id = args["exceptionId"] ?? "";
     const view = queries.getException(ctx, id);
@@ -178,6 +185,28 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   search_serial: ({ queries, ctx }, args) => queries.searchSerial(ctx, args["serial"] ?? ""),
   get_valuation_status: ({ queries, ctx }) => queries.getValuation(ctx),
   get_proposed_adjustments: ({ queries, ctx }) => queries.getAdjustmentRegister(ctx),
+
+  /* ---------------------------------------------------------------- */
+  /* Stage G. Each is a one-line delegation on purpose: the figures are */
+  /* already derived, already authorized and already scoped inside      */
+  /* @icg/services, and a handler that reshaped one here would be a     */
+  /* second derivation of a number the screens show.                    */
+  /* ---------------------------------------------------------------- */
+
+  get_gl_account_reconciliation: ({ projections, ctx }) =>
+    projections.getGlAccountReconciliation(ctx),
+  get_procurement_populations: ({ projections, ctx }) =>
+    projections.getProcurementPopulations(ctx),
+  get_cost_standards: ({ projections, ctx }) => projections.getCostStandards(ctx),
+  get_cost_classification: ({ projections, ctx }) =>
+    projections.getCostClassification(ctx),
+  get_custody_breakdown: ({ projections, ctx }) => projections.getCustodyBreakdown(ctx),
+  get_consignment_holdings: ({ projections, ctx }) =>
+    projections.getConsignmentHoldings(ctx),
+  get_dispositions: ({ projections, ctx }) => projections.getDispositions(ctx),
+  get_eo_methodology: ({ projections, ctx }) => projections.getEoMethodology(ctx),
+  get_methodology: ({ projections, ctx }) => projections.getMethodology(ctx),
+  get_memo: ({ projections, ctx }) => projections.getMemo(ctx),
 };
 
 /** Run one approved tool. Never throws for authorization; reports instead. */

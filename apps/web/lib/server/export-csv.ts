@@ -515,9 +515,11 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         formatCents(git.inboundCents),
         // The two sides are one population; the file says so, because a
         // spreadsheet with both rows and no note invites a sum.
-        git.inboundAgrees
-          ? "The same units as the row above, not an addition to them"
-          : "DOES NOT AGREE with the document side above",
+        git.inboundAgrees === null
+          ? "NOT COMPARABLE at your access scope — the document side above is shorter than the orders that exist, and the book side is not scoped"
+          : git.inboundAgrees
+            ? "The same units as the row above, not an addition to them"
+            : "DOES NOT AGREE with the document side above",
       ]),
     );
     lines.push(

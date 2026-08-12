@@ -39,6 +39,20 @@ export function locationLabel(value: string): string {
 }
 
 /**
+ * The dataset's name for a location, or undefined when it does not name one.
+ *
+ * `locationLabel` title-cases what it does not know, which is right where the
+ * caller already knows the value IS a location and wrong for a caller asking
+ * whether it is one. Ask Gaurd's renderer walks arbitrary tokens looking for
+ * anything it can word, and a title-casing fallback there would invent a
+ * label for every unrecognised value it met — the same mechanism that turned
+ * "RMA / Repair" into "Rma Repair".
+ */
+export function knownLocationName(value: string): string | undefined {
+  return LOCATION_NAMES.get(value);
+}
+
+/**
  * Accounting classification → display copy. CANONICAL_SPEC §5 names the
  * classes ("GIT", "RMA" stay acronyms); title-casing would render the
  * nonsense labels "Git" and "Rma".

@@ -1,7 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { userByRole } from "@icg/data";
 import type { Role } from "@icg/domain";
-import { createQueryService, createWorkspace, type ServiceContext } from "@icg/services";
+import {
+  createProjectionService,
+  createQueryService,
+  createWorkspace,
+  type ServiceContext,
+} from "@icg/services";
 import { answerQuestion, checkNarration, runTool, type AiToolContext } from "../src/index.js";
 
 /**
@@ -23,9 +28,11 @@ const ctxFor = (role: Role): ServiceContext => ({
 });
 
 beforeAll(() => {
-  const queries = createQueryService(createWorkspace());
-  t = { queries, ctx: ctxFor("CONTROLLER") };
-  auditor = { queries, ctx: ctxFor("AUDITOR_READ_ONLY") };
+  const ws = createWorkspace();
+  const queries = createQueryService(ws);
+  const projections = createProjectionService(ws);
+  t = { queries, projections, ctx: ctxFor("CONTROLLER") };
+  auditor = { queries, projections, ctx: ctxFor("AUDITOR_READ_ONLY") };
 });
 
 describe("scope is never rendered as absence", () => {

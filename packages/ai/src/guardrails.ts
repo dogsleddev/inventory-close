@@ -127,6 +127,28 @@ const ZERO_COUNT_CLAIM =
 const ID_SHAPES = /\b[A-Z]{2,}[A-Z0-9]*-[A-Z0-9]+(?:-[A-Z0-9]+)*\b/;
 
 /**
+ * Does this prose state a quantity? Exported (Stage G) because Draft mode
+ * produces prose under the same rule, and the alternative was a second copy
+ * of these five patterns living in `answers.ts` — the shape that let one
+ * screen say "Direct labour" while another said "Direct Labor", applied to a
+ * P0 guardrail. A test comparing two copies catches drift after somebody
+ * writes it; one definition cannot drift.
+ */
+export function statesQuantity(text: string): boolean {
+  return (
+    DIGIT_ANYWHERE.test(text) ||
+    NUMBER_WORDS.test(text) ||
+    QUANTITY_MARKERS.test(text) ||
+    ZERO_COUNT_CLAIM.test(text)
+  );
+}
+
+/** Does this prose name a record identifier? Same rule, same reason. */
+export function namesRecordIdentifier(text: string): boolean {
+  return ID_SHAPES.test(text);
+}
+
+/**
  * Validate a provider's narration against the deterministic answer beside it.
  * Returns the violations rather than a boolean so a caller can log which
  * P0 category fired.
@@ -183,18 +205,13 @@ export function checkNarration(
    * results exactly" is then satisfied by construction rather than by
    * pattern-matching, and no wording, script or spelling can defeat it.
    */
-  if (
-    DIGIT_ANYWHERE.test(narration) ||
-    NUMBER_WORDS.test(narration) ||
-    QUANTITY_MARKERS.test(narration) ||
-    ZERO_COUNT_CLAIM.test(narration)
-  ) {
+  if (statesQuantity(narration)) {
     violations.push("NUMERIC_DRIFT");
     detail.push(
       "Narration states a quantity. Figures belong to the structured answer, which is the only place they are guaranteed to match the tools.",
     );
   }
-  if (ID_SHAPES.test(narration)) {
+  if (namesRecordIdentifier(narration)) {
     violations.push("UNRESOLVED_CITATION");
     detail.push(
       "Narration cites an identifier. Citations belong to the structured answer, where each one resolves to a record a tool returned.",

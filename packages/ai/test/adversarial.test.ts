@@ -1,7 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { userByRole } from "@icg/data";
 import type { Role } from "@icg/domain";
-import { createQueryService, createWorkspace, type ServiceContext } from "@icg/services";
+import {
+  createProjectionService,
+  createQueryService,
+  createWorkspace,
+  type ServiceContext,
+} from "@icg/services";
 import {
   answerQuestion,
   checkNarration,
@@ -27,7 +32,12 @@ const ctxFor = (role: Role): ServiceContext => ({
 });
 
 beforeAll(() => {
-  t = { queries: createQueryService(createWorkspace()), ctx: ctxFor("CONTROLLER") };
+  const ws = createWorkspace();
+  t = {
+    queries: createQueryService(ws),
+    projections: createProjectionService(ws),
+    ctx: ctxFor("CONTROLLER"),
+  };
 });
 
 /** A narration a hostile or careless provider might return. */

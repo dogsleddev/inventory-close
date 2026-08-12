@@ -266,3 +266,53 @@ describe("Procurement — price variance", () => {
     ).toBeTruthy();
   });
 });
+
+describe("Procurement — a scoped reader is not shown their own scope as a finding", () => {
+  /**
+   * Found while wiring Stage G's invoiced-not-received intent, which reads
+   * the same projection.
+   *
+   * The document side of goods in transit is scope-filtered; the book side is
+   * not. One purchase order is outside the auditor's scope, so the two
+   * populations differed by that order and `inboundAgrees` came back FALSE —
+   * and this screen printed "The documents and the book do not agree… must be
+   * resolved before either figure is relied on" to every auditor who opened
+   * the tab. An omission the reader is not allowed to see was being reported
+   * to them as an unexplained control difference, on the one tab whose whole
+   * job is to say the two sides are the same population.
+   */
+  it("withholds an order from the auditor and not from the book", () => {
+    // The premise. Without it the assertions below describe a case that does
+    // not occur and would pass on any implementation.
+    const user = userByRole("AUDITOR_READ_ONLY");
+    const seen = getProcurementPopulations(getWorkspace(), makeContext(user, "T-PROC-AUD"));
+    expect(seen.withheldOrderCount).toBeGreaterThan(0);
+    expect(seen.goodsInTransit.documentUnits).not.toBe(seen.goodsInTransit.inboundUnits);
+  });
+
+  it("says the comparison could not be made, rather than that it failed", async () => {
+    renderProcurement("AUDITOR_READ_ONLY");
+    await openTab(/Goods in Transit/);
+    expect(screen.getByText(/cannot be compared at your access scope/)).toBeTruthy();
+    expect(screen.queryByText("The documents and the book do not agree.")).toBeNull();
+    expect(screen.getByText(/is your scope, not a finding/)).toBeTruthy();
+  });
+
+  it("still states the agreement for a reader who can see every order", async () => {
+    // The other direction: a fix that simply stopped comparing would satisfy
+    // the assertion above and delete this tab's load-bearing sentence.
+    renderProcurement("CONTROLLER");
+    await openTab(/Goods in Transit/);
+    expect(screen.getByText("The documents and the book agree.")).toBeTruthy();
+  });
+
+  it("counts the withheld orders in words that fit the count", async () => {
+    // "1 orders are outside your role's scope" — a hard-coded plural,
+    // invisible until a role withheld exactly one. The auditor is that role.
+    renderProcurement("AUDITOR_READ_ONLY");
+    await openTab(/Goods in Transit/);
+    const note = screen.getByText(/outside your role's scope in this demo/);
+    expect(note.textContent).not.toMatch(/\b1 orders\b/);
+    expect(note.textContent).toMatch(/\b1 order is\b/);
+  });
+});

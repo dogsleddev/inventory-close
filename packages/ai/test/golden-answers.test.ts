@@ -1,7 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { userByRole } from "@icg/data";
 import type { Role } from "@icg/domain";
-import { createQueryService, createWorkspace, type ServiceContext } from "@icg/services";
+import {
+  createProjectionService,
+  createQueryService,
+  createWorkspace,
+  type ServiceContext,
+} from "@icg/services";
 import { answerQuestion, type AiToolContext } from "../src/index.js";
 
 /**
@@ -28,7 +33,11 @@ const ctxFor = (role: Role): ServiceContext => ({
 
 beforeAll(() => {
   const ws = createWorkspace();
-  t = { queries: createQueryService(ws), ctx: ctxFor("CONTROLLER") };
+  t = {
+    queries: createQueryService(ws),
+    projections: createProjectionService(ws),
+    ctx: ctxFor("CONTROLLER"),
+  };
 });
 
 /** Every figure the answer carries, flattened for assertion. */
@@ -148,8 +157,10 @@ describe("every answer is derived, never authored", () => {
   });
 
   it("is reproducible: the same question over a fresh workspace answers identically", () => {
+    const freshWs = createWorkspace();
     const fresh: AiToolContext = {
-      queries: createQueryService(createWorkspace()),
+      queries: createQueryService(freshWs),
+      projections: createProjectionService(freshWs),
       ctx: ctxFor("CONTROLLER"),
     };
     const a = answerQuestion(t, "What prevents Controller sign-off?");
