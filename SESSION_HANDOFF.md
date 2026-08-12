@@ -10,24 +10,35 @@ re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
 
 ## 0a. START HERE — Stage G (Ask Gaurd tools) is the next task
 
-> **Stage F's review landed at `b1ccdc4`.** 26 confirmed defects fixed, tests 971 → 1004,
-> typecheck/lint/build clean, locked baseline unmoved, verified in a browser. Two things it
-> established that the next review should inherit:
+> **Stage F is reviewed, remediated, and the remediation is reviewed too.** Nothing is owed on
+> it. Three commits: `b1ccdc4` (26 defects from the stage review), `406baaf` (11 more from
+> reviewing that remediation — **two of them regressions the remediation itself introduced**).
+> Tests 971 → **1,010**; typecheck, lint and build clean; locked baseline unmoved and confirmed
+> in a browser.
 >
-> 1. **The confirmed/contested tally is not a signal.** Two skeptics with opposite burdens of
->    proof (one told to default to refuted, one told to report only what it reproduced) produced
->    6 confirmed / 26 contested / **0 refuted**. Expect to adjudicate the whole contested bucket,
->    or give both skeptics the same burden.
-> 2. **Run a second fleet over the proposed FIXES before touching code.** 27 validators
->    re-derived each item at HEAD and stress-tested its fix; **every one came back
->    ADOPT_WITH_CHANGES**. The P1's own fix would have left a bare column header over zero rows —
->    the same over-claim, one row smaller — and the matrix rewording would have hard-coded
->    dataset facts into `packages/domain`, with the count wrong.
+> **Four things that cost real time and should not be re-derived:**
 >
-> The root cause it measured: where Stage F **derived** a claim it survived nine lenses; where it
-> **authored** one beside a measurement, nothing constrained it and several had drifted off the
-> data they describe. A sentence naming a population must be derived from it or asserted
-> against it.
+> 1. **Review what you WROTE, not just what you fixed.** `b1ccdc4` was 1,290 lines, 80% of them
+>    tests, and nobody had looked at it. The pass over it found a P1: the new unsaved-edits guard
+>    compared raw editor state against the draft of record, which `saveMemoDraft` stores
+>    **trimmed** — so the screen's own "Start from the close position → Save draft" path
+>    permanently disabled *Issue this version* behind a remedy saving could not satisfy, while the
+>    service would have accepted the command. It was the exact mirror of the defect it closed.
+> 2. **Give both skeptics the SAME burden of proof.** The first fleet used one verifier told to
+>    default to refuted and one told to report only what it reproduced: opposite calibrations, so
+>    26 of 32 findings landed in "contested" as a pure artifact and the tally carried no signal.
+>    The second used one burden, two *angles* (mechanism vs. consequence) and a three-valued
+>    verdict including **UNCERTAIN** — and returned 11 confirmed, 2 refuted, **0 contested**.
+>    Use that shape.
+> 3. **Run a fleet over the proposed FIXES before editing.** 27 validators re-derived each item
+>    at HEAD and stress-tested its fix; **every one came back ADOPT_WITH_CHANGES**. The P1's own
+>    fix would have left a bare column header over zero rows — the same over-claim, one row
+>    smaller — and the matrix rewording would have hard-coded dataset facts into
+>    `packages/domain`, with the count wrong.
+> 4. **The root cause, and it is measurable:** where Stage F **derived** a claim it survived nine
+>    lenses untouched; where it **authored** one beside a measurement, nothing constrained it and
+>    several had drifted off the data they describe. A sentence naming a population must be
+>    derived from it or asserted against it.
 
 
 
@@ -48,11 +59,12 @@ but the *next task* is here, not in §8.
 | **D — Costing** | ✅ Done — `/costing`, four tabs, eleventh export table, no dataset work |
 | **E — Ownership & valuation lifecycle** | ✅ Done — `/custody` (3 tabs) + E&O methodology on `/valuation`, twelfth export table |
 | **F — Management outputs** | ✅ Done (`f900e79`, `8f0a827`) — `/methodology` (4 tabs) + `/close-memo` (2 tabs), the accounting matrix, two more export tables |
-| **Stage F review** | ✅ Done (`b1ccdc4`) — 26 confirmed defects fixed; tests 971 → 1004 |
+| **Stage F review** | ✅ Done (`b1ccdc4`) — 9 lenses, 26 confirmed defects fixed |
+| **Remediation review** | ✅ Done (`406baaf`) — 4 lenses over `b1ccdc4`; 11 more fixed, 2 refuted |
 | **G — Ask Gaurd tools** | ⬅ **NEXT.** See "Stage G" below; gated on hardening the intent matcher |
 | H — QA | Not started |
 
-**1,004 tests across 69 files passing**; typecheck, lint and production build clean, 20 routes.
+**1,010 tests across 69 files passing**; typecheck, lint and production build clean, 20 routes.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
@@ -63,75 +75,66 @@ the next request 500s on a missing vendor chunk.
 
 ---
 
-### The review — what to point it at
+### How to run a fleet review here — the corrected method
 
-**Stage F is committed, so the tree is safe to review.** Reviews are long-running background
-work and three host exits during stage 06 would each have stranded an uncommitted tree; that is
-why the stage lands first and the remediation is its own commit.
+Both Stage F reviews are done; this is the distilled shape for Stage G's, and it differs from
+what §6 describes, because the first run's verifier design was wrong.
 
-**Review BOTH Stage F commits** — `f900e79` (the stage) and `8f0a827`. The second carries three
-owner-directed changes made after it, and the middle one is the largest structural change of the
-two commits:
+**Commit the stage first.** Reviews are long-running background work, and three host exits during
+stage 06 each stranded an uncommitted tree. The stage lands, then the remediation is its own
+commit — and then **the remediation gets reviewed too**. That last step is not optional: the pass
+over `b1ccdc4` found a P1 in it, in code written by the session that had just fixed 26 defects.
 
-1. **D12 superseded.** The Methodology page's "Assumptions" tab became **Judgements** and its
-   `docs/04` principles panel was deleted — the dead `/assumptions` page's framing outliving its
-   content. The register itself (58 rows) is unchanged.
-2. **`WORKING_STATE_COLLECTIONS`.** Four hand-written enumerations of the workspace's
-   working-state collections collapsed into one typed list with a compile-time exhaustiveness
-   guard. It changed `resetWorkspace`, `resetDemo`'s `cleared`, the `DEMO_RESET` audit detail,
-   the on-screen reset report and `REPLAY_EXCLUSIONS`. **Point a lens at this specifically** —
-   it touches the reset path, which is what guarantees the demo baseline is restorable, and it
-   was written at the end of a long session.
-3. The reset report's counted nouns now agree with their counts.
+**The shape:** finder lenses in parallel → dedupe → **two skeptics per finding** → apply →
+re-run the gate → browser pass → commit.
 
-**Method (§6 has the full version, and it has confirmed real defects every single time):** finder
-lenses in parallel → dedupe → **two skeptics per finding with different jobs** (one told to
-refute and to default to refuted when uncertain, one told to *reproduce* the failure by running
-code) → confirm only when both fail to refute, adjudicate a split inline as **contested** rather
-than dropping it → fix with regressions → re-run the gate → commit.
+**Both skeptics carry the SAME burden of proof**, and may answer **CONFIRMED / REFUTED /
+UNCERTAIN**. They differ in ANGLE, never in standard: one works from the mechanism (does the code
+actually do this?), one from the consequence (does it reach anyone, and is it worth an edit?).
+The first run instead told one to default to refuted and the other to report only what it
+reproduced — opposite calibrations, so 26 of 32 findings piled into "contested" as a pure
+artifact of the prompts and the tally carried no signal at all. With one burden and an UNCERTAIN
+option, the second run returned 11 confirmed, 2 refuted, **0 contested**.
+
+**Then run a second fleet over the proposed FIXES before editing anything.** One validator per
+item: re-derive the fact at HEAD, then stress-test the fix — does it break a locked figure,
+contradict a load-bearing decision, trip a registration trap, or **create a new instance of the
+defect class it closes**? All 27 came back needing changes, and five original fixes were rejected
+outright for that last reason.
 
 **Ban writes explicitly in every agent prompt** — no file creation anywhere, no `>` / `>>` /
-`tee`, use inline `node -e` printing to stdout. Spelling it out worked: stage 08's 65 agents left
-nothing, while the stage-07 review left a stray `x.html` in the repo root. Check
-`git status --porcelain` after the review and before staging; never `git add -A`.
+`tee`, no state-changing git, use inline `node -e` printing to stdout. Spelling it out works: 135
+agents across three runs left nothing behind, while the stage-07 review left a stray `x.html` in
+the repo root. Check `git status --porcelain` after a review and before staging; never
+`git add -A`.
 
-**Eight lenses worth running, and why each one has something to bite on here:**
+**Agents need this to run repository TypeScript.** `tsx` is not on the path and plain `node`
+cannot resolve the workspace packages (extensionless `.js` specifiers against `.ts` sources).
+Dynamic imports only — a static `import x from` fails under `-e` — run from a package directory
+that resolves what you import (`packages/services` sees @icg/services, @icg/rules, @icg/domain,
+@icg/data, @icg/permissions; `apps/web` sees the web modules; the repo root sees only
+@icg/domain, @icg/data, @icg/rules):
 
-1. **The readiness explanation.** `deriveScores` is now read by two exported functions and one of
-   them feeds a screen. Does every term's `observed` string actually describe what its
-   `penaltyPercent` was computed from? Is any term's prose true only at this baseline?
-2. **The accounting matrix as an authored artifact.** Eight rows × five columns of accounting
-   judgement, written in one sitting. Is any `ownershipAssertion` wrong? Is `GIT → IN_QUESTION`
-   the only classification whose cost relief is live? Is `CONSIGNMENT_IN → COMPANY` right?
-   Point a lens at the CONTENT, not the plumbing — this is the stage's biggest authored surface
-   and the one least protected by tests.
-3. **The memo's sealing model.** Two hashes, one editable object, supersede-never-edit. Can a
-   sequence of commands produce two editable objects, a version 2 without a version 1, or a
-   sealed version whose `closeStateHash` does not match what `memoPosition` returns at that
-   moment? Try to reach it by running code.
-4. **D8 as a negative claim.** The memo must move no figure the close derives. The tests capture
-   readiness, blockers, PBC counts and `outputHash` — is there a path they miss? Replay,
-   `pbcPreparedState`, the audit log's effect on anything derived?
-5. **Permissions and scope.** `memo.draft` / `memo.issue` are the first new permission keys since
-   stage 04. Does every role's grant match what the demo intends? Does the auditor scope on the
-   memo leak an unissued draft through any path — the CSV, the position panel, `positionMoved`?
-6. **Claim vs enforcement, over the new prose.** The standing rule this pass keeps re-learning.
-   Two screens' worth of new sentences; find the ones more precise than what they enforce.
-7. **The new tests themselves.** Stage E's review found **14 of its 23 confirmed defects in the
-   new tests**, and Stage F's own review of its first refusal test found an assertion on a branch
-   that does not exist. Assume there are more.
-8. **A red team told to BREAK it**, reporting only attacks it observed succeeding. Stage 08's
-   found five guardrail bypasses a code-reading lens called defensible.
+```bash
+cd "C:/dev/Inventory Close/packages/services" && node "C:/dev/Inventory Close/node_modules/.pnpm/tsx@4.23.11/node_modules/tsx/dist/cli.mjs" -e "(async()=>{const s=await import('@icg/services');const ws=s.createWorkspace();console.log(JSON.stringify(Object.keys(ws)))})()"
+```
 
-**Spend one lens on Stage F's authored interpretations, named explicitly**, with the agent told
-its job is to find where the author was wrong: the eight matrix rows, `GIT → IN_QUESTION`,
-`CONSIGNMENT_IN → COMPANY`, the memo's two-hash model, `positionMoved` being null before issue,
-and the decision that the register covers AUTHORED dimensions only. Stages 07 and 08 both cleared
-theirs, which is a result worth having before it reaches a reviewer who assumes otherwise.
+**Spend one lens on the stage's own authored interpretations**, named explicitly, told its job is
+to find where the author was wrong. Stage F's found both P1s — each was authored prose
+contradicting the data underneath it.
+
+**Add a lens that tries to BREAK the stage**, reporting only attacks it observed succeeding.
+Stage 08's found five guardrail bypasses a code-reading lens had called defensible.
+
+**Verifying a role- or export-scoped fix does not need the browser pane.** The pane may fail to
+composite frames, which kills screenshots and coordinate clicks. `curl -H "Cookie: icg-role=U-009"`
+against the dev server exercises the real exporter as the real role, and driving React through
+its native value setter in `javascript_tool` exercises the real component. Both were how the
+close-memo P1 and the unsaved-edits P1 were confirmed live.
 
 **The synthesis agent only sees findings that SURVIVED**, so its "coverage gaps" will list areas
 other lenses examined and cleared. Read the per-lens raw output in the run's `journal.jsonl`
-before believing a gap. Old journals live under
+before believing a gap is real. Journals live under
 `C:\Users\dough\.claude\projects\C--dev-Inventory-Close\<sessionId>\subagents\workflows\*\journal.jsonl`;
 a journal only gains a `{"type":"result"}` line when an agent **finishes**, so a run whose host
 died mid-flight leaves nothing recoverable and must be relaunched.
@@ -141,7 +144,7 @@ them inline rather than trusting the tally.
 
 ---
 
-### Stage G — what to build, once the review has landed
+### Stage G — what to build. This is the next task.
 
 Scope from `COMPLETION_PLAN.md` §10 and §6: **anchor the Ask Gaurd intent regexes, order
 specific-before-general, add a routing-identity regression harness, then add roughly ten
@@ -249,6 +252,34 @@ catch these:
 - **A comparison that has not happened is not a negative result.** `positionMoved` is `null`
   before anything is issued, never `false`: "the position has not moved" is a claim about a
   comparison against a sealed hash, and there is no hash yet.
+
+**Five more from reviewing the remediation (`406baaf`) — all found in tests written the same
+session that fixed 26 defects, which is why that review existed:**
+
+- **A guard must compare on the normalisation the writer applies.** The unsaved-edits check
+  compared raw editor state against a draft the command stores `.trim()`ed, so whitespace became
+  an edit that saving could not clear — refusing a control the service would have accepted. When
+  a UI compares against stored state, match the store's normalisation exactly.
+- **`useState` seeds once, and props arrive later.** The memo editor was seeded at mount, but an
+  auditor is not shown the working draft and a role switch is a props update, not a remount — so
+  the editor held its placeholder while `data.draft` held the real thing. Re-seed on an identity
+  change, guarded so text the reader touched is never discarded.
+- **An offer must carry EVERY gate the command carries.** `issueMemoVersion` authorizes before it
+  checks the period; gating the prose on the period alone still prescribed the act to roles the
+  first gate refuses.
+- **An existential standing in for the universal the test's own NAME claims.** "emits every
+  section heading as a boundary" enforced by `toBeGreaterThan(0)`: rename one heading so the
+  splitter stops seeing it and the count stays plausible. Name the set; a count is satisfied by
+  the wrong set of the right size, and only a named list catches a heading deleted outright.
+- **A conditional branch whose only live assertion tests wording the commit already changed.**
+  The completeness check was gated on "does the file carry every sealed body" — false on every
+  run — so its one assertion was a regex for a sentence that no longer existed. Derive the
+  assertion from the population, not from a phrase.
+
+Two smaller ones worth keeping: a regex over source text is an **allowlist of syntax** and can
+never be complete, so pair it with a guard that makes an unread form loud (`count of /^export /`
+must equal what the scan parsed); and `process.cwd()` in a test breaks running vitest from a
+package directory — use `__dirname`.
 
 **Reusable pieces in `apps/web/components/kit.tsx`:** `StatStrip` (Stage E), and `ClaimPanel` +
 `FactRows` (Stage F) — each moved there when it was about to be copied a third time. `ClaimPanel`
@@ -394,7 +425,7 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
   **https://github.com/dogsleddev/inventory-close** (public; `origin` tracks `master`,
   which is the default branch; `v1.0.0-demo` tagged and pushed).
 - Node v24.14.1, pnpm 11.5.3, Windows/PowerShell.
-- **1,004 tests across 69 files passing** (was 628/47 at the original release; the completion
+- **1,010 tests across 69 files passing** (was 628/47 at the original release; the completion
   pass added the rest); typecheck, lint, and production build all green — **20 routes**, with
   `/api/export/[table]` serving fourteen tables.
   `pnpm typecheck` now also runs `tsc --noEmit -p test/tsconfig.json` for the repo-wide QA
@@ -431,12 +462,25 @@ expand it; `prompts/code/00`–`10` and `prompts/design/00`–`07` are the stage
 | Push public | **Done** — https://github.com/dogsleddev/inventory-close (public, `master` default, `v1.0.0-demo` tagged) |
 | Deploy | **Done** — live at **https://inventory.dogsled.dev** (Vercel `dogsled/inventory-close`, git-connected to `master`) |
 | Remaining (original release) | The two open P3 items in the `QA_RELEASE_GATE.md` register, plus the deferred P2s. |
-| **Completion pass A/B/W/C/D/E/F + export affordance** | **Done** — see §0a and `COMPLETION_PLAN.md`. NOT yet pushed or deployed. |
+| **Completion pass A/B/W/C/D/E/F + export affordance** | **Done**, and Stage F is reviewed AND its remediation reviewed (`b1ccdc4`, `406baaf`) — see §0a. NOT yet pushed or deployed. |
 | **Completion pass G–H** | **Not started.** Stage G (Ask Gaurd tools) is next; it needs no fixtures and is a `packages/ai` stage gated on hardening the intent matcher. |
 
 ### Commit history (newest first)
 
 ```
+406baaf Review the remediation itself: 11 defects fixed, two of them mine
+6228a4c Record the Stage F review outcome and hand off to Stage G
+b1ccdc4 Stage F review remediation: 26 confirmed defects fixed
+8151439 Name both Stage F commits in the review handoff
+8f0a827 Drop the assumptions framing, and make the exclusions sentence derive itself
+f900e79 Stage F: how each figure is arrived at, and who decided it
+9c6b8c6 Stage E review: the coverage flag that could not go false, and 22 more
+d1c2fa5 Stage E: who is holding it, who owns it, and what left
+2d819f9 Stage D: what a unit costs, and which costs never belonged in inventory
+546e388 Close the last export gaps, and stop three files claiming more than they carry
+32f6856 Make the way out of the product reachable, and honest about what leaves
+2cfb216 Stage C: the procurement section, and the one dataset bump C/D/E all needed
+1ed65af Hand off mid-completion-pass: Stage C is next
 546fe3a Record Stages B and W as complete
 de41445 Stage B + W: the master population, and a close loop that actually closes
 3a359e7 Stage B (part 1): per-account GL reconciliation, real JE detail, and a way out
@@ -452,43 +496,6 @@ ee5dc83 Accept the EXC-001 count-row tension as a documented decision
 fb496a0 Pass 1 data remediation: 10 fleet-confirmed fixture defects fixed
 fa3526b Hand off: two final data passes are the next task
 868b072 Add the MIT license and wire it into the README and package.json
-cebb269 Record the stage-10 verification outcome and refresh the handoff
-1c85866 Stage 10 verification remediation: 27 defects fixed
-e3c952e Code stage 10: public README, User Guide, deployment config
-64d0819 Record the full-tree review outcome and the invariants it established
-30494c0 Full-tree review remediation: 9 defects fixed
-f3f6f98 Refresh SESSION_HANDOFF.md for code stage 10
-38a115c Code stage 09: demo reset, replay, deep routes, and the QA release gate
-3aab9a1 Make the documented gate reliable, and refresh the handoff for stage 09
-4552c9b Stage 08 fleet remediation: 18 confirmed defects fixed
-e343f2e Stage 08 UI: the Ask Gaurd drawer over the deterministic engine
-2eaab1e Stage 08 core: Ask Gaurd tools, deterministic answers, and guardrails
-65716d0 Record the stage-07 fleet outcome and the invariants it established
-36dafe5 Stage 07 fleet remediation: 9 defects fixed
-d8d69ec Refresh SESSION_HANDOFF.md for code stage 08
-04fe79b Code stage 07: reconciliation bridge, adjustments, valuation, audit package
-ae9f4bd Record stage-06 fleet outcome and the invariants it established
-e18d94e Stage 06 fleet remediation: 16 confirmed defects fixed
-1ab0a0d Refresh SESSION_HANDOFF.md for code stage 07
-ffbb2a8 Code stage 06: Financial Life, Physical Count, and NetSuite chains
-a856e9f Refresh SESSION_HANDOFF.md for code stage 06 and ignore local Claude settings
-3a4dc6b Code stage 05: core UI (Overview, Exceptions, EXC-001) + fleet remediation
-3096d0e Refresh SESSION_HANDOFF.md for a new session at 75dc3b2
-75dc3b2 Record two mockup copy defects found by independent screen review
-28ff2d9 Handoff-doc corrections from verification fleet + close a silent test-skip trap
-24b8309 Design 07 complete: approved handoff exports plus IMPLEMENTATION_HANDOFF.md
-e0a603b Stage 04 fleet remediation: 10 confirmed defect clusters fixed
-5e6a461 Stage 04 follow-up: lineage redaction and PBC version/dependency model
-a02bf35 Stage 04: application services, evidence graph, workflows, security, audit
-cad38bb Stage 03 fleet remediation: 7 confirmed defect clusters fixed
-e8b7d12 Stage 03: deterministic rule engine, scenario replay, and golden tests
-548afd3 Close out stage 01 review findings recovered from prior-session journal
-ff89a3b Stage 02 review remediation: timeline coherence and deterministic cycle stories
-31f2765 Stage 02: deterministic FY2026 dataset generator and NetSuite fixtures
-17ffb31 Complete stage 01 review remediation: full AuditEvent shape per docs/15
-9f286d5 Design stages 00-04 outputs and code stage 01 foundation
-cfbd22d Correct docs/13 build-order mnemonic to match CANONICAL_SPEC section 16
-46c6122 Pristine Inventory Close Gaurd specification kickoff package
 ```
 
 ---
@@ -855,14 +862,18 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## 8. What to do next
 
-> **Superseded for the active work — see §0a.** The next task is **Stage F's adversarial fleet
-> review**; Stages A–F of the product-completion pass are done and committed. The rest of this
-> section records the original ten-stage release, which is finished and deployed.
+> **Superseded for the active work — see §0a.** The next task is **Stage G (Ask Gaurd tools)**;
+> Stages A–F of the product-completion pass are done and committed, Stage F is reviewed, and its
+> remediation is reviewed. The rest of this section records the original ten-stage release, which
+> is finished and deployed.
 >
 > **Before starting:** run `pnpm typecheck && pnpm lint && pnpm test && pnpm build` (expect
-> **1,004 tests across 69 files**; `pnpm test` exits 1 on a reporter timeout — read the `Tests`
-> line), and note that a push to `master` redeploys the live site — **the completion work has
-> NOT been pushed or deployed**, so the review is reviewing local commits.
+> **1,010 tests across 69 files**; `pnpm test` may exit 1 on a reporter timeout — read the
+> `Tests` line, not the exit code), and **stop any `pnpm dev` server first**.
+>
+> **A push to `master` redeploys the live site, and the whole completion pass — Stages A through
+> F and both review remediations — has NOT been pushed or deployed.** Everything since `9b07e96`
+> is local. Do not push without the owner asking for it.
 
 **Both final data passes are complete** — full records, fix lists, refuted-finding
 register and the owner-decision register live in `QA_RELEASE_GATE.md` ("Final data

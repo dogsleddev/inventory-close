@@ -262,8 +262,8 @@ prior one is green.
 | **C — Procurement** ✅ **DONE** | Procurement section: 3WM re-host, GRNI, INR, GIT, PPV. **Carried the single D5 regeneration for C/D/E.** | D5, D9 |
 | **D — Costing** ✅ **DONE** | Standard cost stack; fixed/variable/period classification; R&D; COGS state. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
 | **E — Ownership & valuation lifecycle** ✅ **DONE** | Custody model; consignment-in; E&O methodology; scrap & disposition. **Fixtures already shipped in C — no further dataset bump.** | D5 ✅ |
-| **F — Management outputs** ✅ **DONE** | Methodology & Calculations; Accounting Matrix; Close Memo with draft/issue workflow; guided-demo polish. **First stage since W to add working state.** | D8 ✅ |
-| **G — Ask Gaurd** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
+| **F — Management outputs** ✅ **DONE + REVIEWED** (`b1ccdc4`, `406baaf`) | Methodology & Calculations; Accounting Matrix; Close Memo with draft/issue workflow; guided-demo polish. **First stage since W to add working state.** | D8 ✅ |
+| **G — Ask Gaurd** ⬅ **NEXT** | Matcher hardening + routing harness, then ~10 grounded tools; memo drafting (prose-only). | — |
 | **H — QA** | Baseline regression, accounting-language review, AI-off test, placeholder scan, 60-second demo test, full-tree adversarial pass. | — |
 
 Nav grows with the stages: Stage A ships the grouped rail linking only to pages that exist; every
@@ -698,6 +698,42 @@ comment is not one.
 **Reusable pieces Stage F left behind:** `ClaimPanel` and `FactRows` moved into
 `apps/web/components/kit.tsx` — each was about to be copied a third time, the same threshold that
 moved `StatStrip` there in Stage E.
+
+### Stage F review outcome (2026-08-11) — `b1ccdc4`, then `406baaf`
+
+**Two reviews, because the first one's output needed reviewing.**
+
+The stage review ran nine finder lenses over `f900e79` + `8f0a827`, deduped, and put each finding
+to two skeptics: **26 confirmed defects, all fixed** in `b1ccdc4`. Tests 971 → 1,004. The two P1s
+were both authored prose contradicting the data beneath it — the auditor's close-memo CSV stating
+"the memo has not been drafted" one row below disclosing a withheld draft (the guard read the
+role-scoped list, so "nothing you may see" printed as "nothing exists"), and the `GIT` matrix row
+claiming stock "has been fulfilled but is still carried on the book" for a population of **zero**,
+while the only two such units — `KE-E2-1048` / `KE-E2-1051`, i.e. EXC-001 — sit under
+`FINISHED_HARDWARE`, whose row said "no relief would be expected against either".
+
+A second fleet then re-derived every item at HEAD and stress-tested its proposed fix before any
+code was written. **All 27 came back needing changes**, and five original fixes were rejected for
+creating a new instance of the defect class they closed.
+
+**Then the remediation itself was reviewed** (`406baaf`, four lenses over `b1ccdc4`) — 1,290
+lines, 80% of them tests, that nobody had looked at. **11 more confirmed, 2 refuted, and two of
+the eleven were product regressions the remediation introduced.** The worst was the exact mirror
+of the defect it closed: the new unsaved-edits guard compared raw editor state against a draft the
+command stores `.trim()`ed, so the screen's own "Start from the close position → Save draft" path
+permanently disabled *Issue this version* behind a remedy saving could not satisfy — while the
+service would have accepted the command. Tests 1,004 → 1,010.
+
+**The measurable root cause:** where Stage F **derived** a claim it survived nine lenses
+untouched; where it **authored** one beside a measurement, nothing constrained it and several had
+drifted off the data they describe. Any sentence naming a population must be derived from it or
+asserted against it.
+
+**A method correction worth keeping.** The first fleet gave its two skeptics opposite burdens of
+proof — one told to default to refuted, one told to report only what it reproduced — and 26 of 32
+findings landed in "contested" as a pure artifact, making the tally useless. Giving both the same
+burden and a three-valued verdict (CONFIRMED / REFUTED / **UNCERTAIN**), differing only in angle,
+produced 11 / 2 / **0 contested**. `SESSION_HANDOFF.md` §0a carries the full shape.
 
 ## 11. Acceptance criteria (the twenty questions)
 
