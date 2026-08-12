@@ -40,6 +40,63 @@ auditor. `pnpm test` still exits 1 on the known `onTaskUpdate` reporter RPC time
 
 ---
 
+## 0b. The re-verification pass (§8 step 3+4, done)
+
+**All 68 remaining findings were re-judged at HEAD** by 12 agents, one per themed cluster —
+1.62M tokens, 12 of 12 returned, **no dead clusters and no unreturned ids**. Verdicts:
+
+```
+HOLDS 64   REFUTED 3   ALREADY_FIXED 1   UNCERTAIN 0
+HOLDS by severity at HEAD:   P1 15    P2 29    NOTE 20
+Severity moved:  1 raised, 10 lowered
+```
+
+**The calibration correction worked.** Three real refutations against zero last time, and severity
+moved *down* ten times to one up — the opposite direction from the previous run, which raised nine.
+The refutations are substantive, not procedural: `G64` was killed by measuring the actual painted
+layout (chip text ends at x=1228 inside a container ending at 1236; every scroll container reports
+`scrollWidth === clientWidth`), `G55` and `G54` by showing no shipped path can reach the code.
+
+What made the difference, for the next run: the burden was stated **once, symmetrically**, with no
+warning against either pole — warning against one installs the other. `ALREADY_FIXED` was offered as
+a first-class verdict, and the prompt quoted §3c's failure verbatim and required the verdict field
+to match the reasoning.
+
+**The pass found a defect in the fix pass — `G67`, and it was mine.** `1e06d58` rewrote the
+procurement scope note, branched two phrases by hand, and carried a third hard-coded `orders`
+through its own closing sentence. The agent proved it with `git blame`, which named the fix commit
+as the author of the surviving instance. Fixed in `dee2580`; the regression drives the note builder
+across counts rather than reading the page, because the shipped population is 84 orders and the
+defect only shows at one — which is exactly how it survived a rewrite whose author was looking
+straight at it.
+
+**Two findings bear directly on the compiler change and should be fixed together with it:**
+
+- `G75` — the `[\s-]+` word join is one-directional. `phrasePattern` splits on `/\s+/`, so an
+  authored *space* matches a hyphen but an authored *hyphen* does not match a space: `sub-ledger`
+  compiles to `(?:sub-ledgers|sub-ledger)` and "What is in the sub ledger?" refuses. Seven other
+  hyphenated phrases are covered only because an author hand-listed the spaced twin — **a
+  hand-maintained allowlist standing in for a compiler property, which is the same shape number
+  agreement just removed one axis over.** Fix: split on `/[\s-]+/`, and inflect the last *segment*.
+- `G74` — `phrasePattern` folds curly punctuation on the question side and never on the phrase side,
+  so a Windows re-encoding of `answers.ts` silently kills the table's only apostrophe phrase
+  (`hasn't moved`). Every assertion in the phrase-property suite is self-referential — it tests the
+  pattern against the phrase that produced it — so all of them pass on a phrase that matches no real
+  question. Fix: fold the phrase through `normalizeQuestion` inside `phrasePattern`, and assert each
+  phrase equals its own normalized form.
+
+**The largest remaining cluster is still the baseline-versus-live family**, and it is confirmed to be
+the same two tools away: `G26`'s agent observed that `1e06d58` "added exactly the tool that would
+close this… `answerException` was rewritten to use it. The `missing-evidence` intent was not." The
+repository now holds, side by side, one handler reporting the live working state and another
+reporting the frozen one for the same exception — and both shipped evidence chips route to the
+second. `G26`, `G27`, `G29`, `G30` are P1 at HEAD; `G28` was lowered to P2.
+
+Per-agent output with full reproductions:
+`.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_8b945fa1-a99/journal.jsonl`
+
+---
+
 ## 1. Where the code stands
 
 **HEAD is `1e06d58`** — Stage G (`7333663`), the remediation of the review plan's own §0
