@@ -309,11 +309,68 @@ describe("Procurement — a scoped reader is not shown their own scope as a find
   it("counts the withheld orders in words that fit the count", async () => {
     // "1 orders are outside your role's scope" — a hard-coded plural,
     // invisible until a role withheld exactly one. The auditor is that role.
+    //
+    // Read on Three-Way Match, which is the tab the claim is about. This
+    // assertion used to be made on Goods in Transit, and passed there only
+    // because one note was rendered above all five tables — see below.
     renderProcurement("AUDITOR_READ_ONLY");
-    await openTab(/Goods in Transit/);
     const note = screen.getByText(/outside your role's scope in this demo/);
     expect(note.textContent).not.toMatch(/\b1 orders\b/);
     expect(note.textContent).toMatch(/\b1 order is\b/);
+  });
+
+  /**
+   * The scope note belongs to a table, not to the screen.
+   *
+   * It was one string built from the close-wide withheld counts and rendered
+   * as the first child of the tabpanel, so an auditor read "1 order … has no
+   * row in the table above" over all five tables. Three of them — Received Not
+   * Invoiced, Goods in Transit and Price Variance — are byte-identical to a
+   * Controller's, so a complete population was being announced to the reader
+   * as shortened by their own access. That is the scope-as-a-finding trap, and
+   * the assertion above sat on one of the three tabs where the sentence was
+   * false without noticing, because it only ever read the wording.
+   *
+   * Asserted as a biconditional against the service, so it cannot be satisfied
+   * by a note that is simply never rendered: a tab carries the note exactly
+   * when that tab's own population is short at this reader's scope.
+   */
+  it("shows the scope note only on the tabs whose table is actually short", async () => {
+    const user = userByRole("AUDITOR_READ_ONLY");
+    const seen = getProcurementPopulations(getWorkspace(), makeContext(user, "T-PROC-TABS"));
+    // The premise: exactly one order is withheld, and it is an
+    // invoiced-not-received order, so GRNI and price variance are complete.
+    expect(seen.withheldOrderCount).toBe(1);
+    expect(seen.withheldFrom.grni).toBe(0);
+    expect(seen.withheldFrom.priceVariance).toBe(0);
+    expect(seen.withheldFrom.invoicedNotReceived).toBe(1);
+
+    const shortened: Record<string, boolean> = {
+      "Three-Way Match": true,
+      "Received Not Invoiced": false,
+      "Invoiced Not Received": true,
+      "Goods in Transit": false,
+      "Price Variance": false,
+    };
+    renderProcurement("AUDITOR_READ_ONLY");
+    for (const [label, isShort] of Object.entries(shortened)) {
+      await openTab(new RegExp(label));
+      const note = screen.queryByText(/outside your role's scope in this demo/);
+      expect(note !== null, `${label}: note rendered=${note !== null}, table short=${isShort}`).toBe(
+        isShort,
+      );
+    }
+  });
+
+  it("points at the table it describes, which is below it on every tab", async () => {
+    // The half that was wrong for every reader on every tab, including the one
+    // the claim was true of: the note is the first child of the tabpanel and
+    // the tabpanel holds the only table in the document, so there has never
+    // been anything above the sentence but the tab bar.
+    renderProcurement("AUDITOR_READ_ONLY");
+    const note = screen.getByText(/outside your role's scope in this demo/);
+    expect(note.textContent).toMatch(/table below/);
+    expect(note.textContent).not.toMatch(/table above/);
   });
 
   /**

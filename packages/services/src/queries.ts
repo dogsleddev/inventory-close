@@ -45,6 +45,7 @@ import { authorize, canReadContent, hasPermission } from "@icg/permissions";
 import { DEMO_RESET_PERMISSION } from "./commands.js";
 import {
   effectiveClose,
+  effectiveOpenExceptionIds,
   effectiveStatus,
   latestConclusion,
   unmetRequirements,
@@ -1224,6 +1225,20 @@ export function createQueryService(ws: Workspace) {
             submittedAt: e.submittedAt,
           })),
         effectiveStatus: effectiveStatus(ws, exceptionId),
+        /**
+         * Open as the close reads it NOW.
+         *
+         * Returned rather than left to the caller because `ExceptionView.open`
+         * is the same word computed from the FROZEN status, and a caller
+         * holding both would have to know which one it had — Ask Gaurd held
+         * only the frozen one and told readers "No conclusion has been
+         * recorded" beside their own recorded conclusion.
+         *
+         * Read off `effectiveOpenExceptionIds`, which is the set the blocker
+         * overlay and the readiness rescore are both built from, so "open" here
+         * cannot come to mean something different from "open" there.
+         */
+        open: effectiveOpenExceptionIds(ws).includes(exceptionId),
       };
     },
 

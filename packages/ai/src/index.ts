@@ -33,6 +33,7 @@ export {
   intentPhrases,
   matchesQuestion,
   normalizeQuestion,
+  numberForms,
   phrasePattern,
 } from "./matching.js";
 export type { IntentMatch } from "./matching.js";

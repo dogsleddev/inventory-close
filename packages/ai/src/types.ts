@@ -69,6 +69,26 @@ export const AI_TOOL_NAMES = [
   "get_eo_methodology",
   "get_methodology",
   "get_memo",
+  /**
+   * The close as it stands NOW, and one exception's working state.
+   *
+   * Every tool above reads `ws.close` — the baseline the rules derived and
+   * froze. That is the reproducible artifact and it must stay readable, but it
+   * was the ONLY thing Ask Gaurd could read, so the drawer answered from a
+   * snapshot while the screens beside it answered from the session. A
+   * Controller who had concluded all seven blockers was told "Sign-off is
+   * blocked", "Open blockers = 7" and "$198,950" on the same screen whose gate
+   * read "Every blocker has a management conclusion", and `answerException`
+   * reported "No conclusion has been recorded" beside the conclusion they had
+   * just recorded — because `get_exception` carries no conclusion field, so
+   * the handler could not have looked.
+   *
+   * Both projections already existed on the query service and both are what
+   * the screens read. Adding them here gave Ask Gaurd no new view of the
+   * close; it gave it the view the rest of the product already had.
+   */
+  "get_effective_close",
+  "get_exception_workflow",
 ] as const;
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
 

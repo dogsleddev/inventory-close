@@ -5,6 +5,7 @@ import type {
   CostStandardsOut,
   CustodyBreakdownOut,
   DispositionsOut,
+  EffectiveClose,
   EoMethodologyOut,
   GlAccountReconciliationOut,
   MemoOut,
@@ -118,35 +119,50 @@ const NOTHING_IS_POSTED =
   "Nothing here has been posted. Approval is a human act recorded outside this product, and posting happens in NetSuite.";
 
 /**
- * What the reader's scope removed from the procurement populations, in one
- * sentence, or null when it removed nothing.
+ * What the reader's scope removed FROM THE POPULATION THIS ANSWER DISPLAYS,
+ * in one sentence, or null when it removed nothing from it.
  *
- * Written once and used by every procurement intent because each one reports a
- * population that scope can shorten, and a shortened population presented as a
- * completed measurement is this repository's recurring defect. The
- * invoiced-not-received intent had the only such sentence; its neighbours
- * printed "3 of 83 compared orders" and a two-row accrual population with
- * `missingEvidence: []` and nothing saying either was short.
+ * Both counts are per-population. Neither is a close-wide total, and that is
+ * the whole correction: the first version took the entire
+ * `ProcurementPopulationsOut` and reported `withheldOrderCount` and
+ * `withheldDocumentCount` — facts about the CLOSE — in a sentence whose
+ * subject is "the rows above", which is a fact about this answer.
  *
- * Two omissions, never merged: an order withheld whole has no row at all,
- * while an order that keeps its row can still be missing a document.
+ * At FY2026-DEMO-v1.2.0 that told an auditor the GRNI and price-variance
+ * tables were short when both are byte-identical to a Controller's (same POs,
+ * same 42 units, same $18,600), and promised "a source document withheld on
+ * an order that does appear above" when the order carrying it, PO-26-1201,
+ * appears in none of the three displayed populations. The single withheld
+ * order is INVOICED_NOT_RECEIVED and could never have been a GRNI row.
+ *
+ * It is worth naming what that was, because it is this file's own recurring
+ * trap arriving from the other side. The sentence was added to stop scope
+ * being rendered as an ABSENCE, and it rendered scope as a FINDING instead —
+ * a complete population announced to the reader as shortened by their own
+ * access, under the heading MISSING EVIDENCE. A sentence about the rows above
+ * can only be built from the rows above, so that is all this function is
+ * given: no argument here can express a claim about a population the caller
+ * is not displaying.
  */
 const procurementScopeNote = (p: {
-  withheldOrderCount: number;
-  withheldDocumentCount: number;
-  summary: { orders: number };
+  /** Orders absent from THIS population because the reader may not see them. */
+  missingRows: number;
+  /** Rows THIS population displays that name a document the reader may not read. */
+  rowsMissingADocument: number;
+  /** The close's own order count, so the reader can size the omission. */
+  totalOrders: number;
 }): string | null => {
   const parts: string[] = [];
-  if (p.withheldOrderCount > 0) {
+  if (p.missingRows > 0) {
     // The population noun takes the POPULATION's number and the verb takes the
-    // withheld count's: "1 of the close's 84 orders is", never "84 order is".
+    // missing count's: "1 of the close's 84 orders is", never "84 order is".
     parts.push(
-      `${p.withheldOrderCount} of the close's ${p.summary.orders} ${plural(p.summary.orders, "order")} ${plural(p.withheldOrderCount, "is", "are")} outside your access scope, so ${plural(p.withheldOrderCount, "it does", "they do")} not appear in the rows above`,
+      `${p.missingRows} of the close's ${p.totalOrders} ${plural(p.totalOrders, "order")} ${plural(p.missingRows, "is", "are")} outside your access scope, so ${plural(p.missingRows, "it does", "they do")} not appear in the rows above`,
     );
   }
-  if (p.withheldDocumentCount > 0) {
+  if (p.rowsMissingADocument > 0) {
     parts.push(
-      `${p.withheldDocumentCount} source ${plural(p.withheldDocumentCount, "document is", "documents are")} withheld on ${plural(p.withheldDocumentCount, "an order that does appear", "orders that do appear")}`,
+      `${p.rowsMissingADocument} ${plural(p.rowsMissingADocument, "row")} above ${plural(p.rowsMissingADocument, "names a source document", "name source documents")} you may not read, and ${plural(p.rowsMissingADocument, "that cell reads", "those cells read")} "Withheld" rather than blank`,
     );
   }
   if (parts.length === 0) return null;
@@ -182,6 +198,20 @@ interface BlockerResult {
   exceptionId: string;
   description: string;
   exposureCents: number;
+}
+/** What `get_exception_workflow` returns — one exception's live working state. */
+interface ExceptionWorkflowResult {
+  /** Requirements still outstanding, counting an accepted submission as met. */
+  unmetRequirements: readonly string[];
+  canResolve: boolean;
+  conclusion: {
+    conclusion: string;
+    rationale: string;
+    at: string;
+  } | null;
+  effectiveStatus: string;
+  /** Open once conclusions are taken into account, not as the rules froze it. */
+  open: boolean;
 }
 interface ExceptionResult {
   open: boolean;
@@ -591,7 +621,13 @@ const INTENTS: readonly Intent[] = [
           ),
         ],
         conflictingEvidence: [],
-        missingEvidence: [procurementScopeNote(p)].filter((n): n is string => n !== null),
+        missingEvidence: [
+          procurementScopeNote({
+            missingRows: p.withheldFrom.grni,
+            rowsMissingADocument: p.grni.filter((r) => r.withheldDocuments.length > 0).length,
+            totalOrders: p.summary.orders,
+          }),
+        ].filter((n): n is string => n !== null),
         assertions: ["COMPLETENESS", "CUTOFF"],
         managementConclusion:
           "Goods received without a bill are an accrued liability at the balance-sheet date. This product identifies the population; the accrual is management's entry and is not proposed here.",
@@ -666,12 +702,24 @@ const INTENTS: readonly Intent[] = [
           git.inboundAgrees === null
             ? `The two sides cannot be compared at your access scope: ${p.withheldOrderCount} ${plural(p.withheldOrderCount, "order is", "orders are")} withheld from the document side while the book side is not scoped.`
             : null,
-          // A separate omission from a withheld ORDER, and the one this
-          // population is most exposed to: the row stays, so the reader has no
-          // way to know the receipt behind its cutoff is unreadable.
-          p.withheldDocumentCount > 0
-            ? `${p.withheldDocumentCount} source ${plural(p.withheldDocumentCount, "document is", "documents are")} withheld on ${plural(p.withheldDocumentCount, "an order that does appear above", "orders that do appear above")}. Each such row names the withholding rather than leaving the cell blank, and no order's period-end position was derived from it.`
-            : null,
+          /**
+           * The rows this answer displays, and only those.
+           *
+           * This clause used to be written out by hand from the close-wide
+           * `withheldDocumentCount`, and promised "an order that does appear
+           * above" whose row set never contained it — the withheld document
+           * sits on PO-26-1201 while the auditor's rows are PO-26-1241/1242/
+           * 1243. The promise was the damaging half: it is an instruction to
+           * go looking for a cell that is not on the page, and it pointed away
+           * from the Three-Way Match tab where the disclosure is true.
+           */
+          procurementScopeNote({
+            missingRows: p.withheldFrom.invoicedNotReceived,
+            rowsMissingADocument: p.invoicedNotReceived.filter(
+              (r) => r.withheldDocuments.length > 0,
+            ).length,
+            totalOrders: p.summary.orders,
+          }),
         ].filter((n): n is string => n !== null),
         assertions: ["EXISTENCE", "CUTOFF"],
         managementConclusion:
@@ -728,7 +776,17 @@ const INTENTS: readonly Intent[] = [
             : []),
         ],
         conflictingEvidence: [],
-        missingEvidence: [procurementScopeNote(p)].filter((n): n is string => n !== null),
+        missingEvidence: [
+          procurementScopeNote({
+            missingRows: p.withheldFrom.priceVariance,
+            // A price-variance row is a line comparison, and it names no
+            // document the row itself could withhold: an order whose bill this
+            // reader may not see produces no row at all. That omission is the
+            // shortened DENOMINATOR, disclosed as the two figures above.
+            rowsMissingADocument: 0,
+            totalOrders: p.summary.orders,
+          }),
+        ].filter((n): n is string => n !== null),
         assertions: ["VALUATION"],
         managementConclusion:
           "Variance here is billed against ORDERED price, extended. It is a purchasing signal reported beside the close; no rule reads it and nothing is proposed from it.",
@@ -1940,40 +1998,85 @@ const INTENTS: readonly Intent[] = [
         ["holding up", "close"],
       ],
     },
+    /**
+     * Answered from the LIVE close, not the frozen baseline.
+     *
+     * Every figure here used to come from `get_close_readiness` and
+     * `get_blocking_conditions`, both of which read `ws.close` — the position
+     * the rules derived, before anyone did anything. So a Controller who had
+     * recorded a conclusion on all seven blockers was told "Sign-off is
+     * blocked", "Open blockers = 7", "$198,950" and "81.42%", from a shipped
+     * chip on five screens, at the moment the Overview's own gate beside it
+     * read "Every blocker has a management conclusion. Signing off locks the
+     * period." Not a stale count: a present-tense PROHIBITION, false against
+     * the product's own published gate.
+     *
+     * The baseline is still reported — it is the reproducible artifact and
+     * losing it would tell a reader their work had no effect — but it is
+     * reported AS the baseline, beside the position it has been superseded by.
+     * `effectiveClose` returns both for exactly this reason.
+     */
     answer: (s) => {
-      const readiness = s.run<ReadinessResult>("get_close_readiness");
-      const blockers = s.run<readonly BlockerResult[]>("get_blocking_conditions");
-      if (readiness === undefined || blockers === undefined) return undefined;
-      const a = readiness.aggregates;
+      // `get_close_readiness` is deliberately NOT called: it contributes no
+      // figure now, and a recorded tool call that reached no rendered value
+      // makes the interaction record claim a provenance the answer does not
+      // have.
+      const live = s.run<EffectiveClose>("get_effective_close");
+      if (live === undefined) return undefined;
+      const open = live.blockerCount > 0;
       return {
-        status: "Sign-off is blocked",
+        // Branches on the count. The old sentence was a constant, so it was
+        // "true today" rather than measured — and today it is false.
+        status: open
+          ? `Sign-off is blocked by ${count(live.blockerCount)} ${plural(live.blockerCount, "item")}`
+          : "No blocker is open. Sign-off is available.",
         knownFacts: [
-          // `a` is `readiness.aggregates`: this count came from
-          // `get_close_readiness`, not from the blocker list beside it.
-          { label: "Open blockers", count: a.blockerCount, source: "get_close_readiness" },
-          { label: "Close readiness", valueBps: a.closeReadinessBps, source: "get_close_readiness" },
-          ...blockers.map(
+          { label: "Open blockers", count: live.blockerCount, source: "get_effective_close" },
+          { label: "Close readiness", valueBps: live.readinessBps, source: "get_effective_close" },
+          ...live.blockers.map(
             (b): AiFigure => ({
               label: `${b.exceptionId} — ${b.description}`,
               valueCents: b.exposureCents,
-              source: "get_blocking_conditions",
+              source: "get_effective_close",
             }),
           ),
+          // The rules' own position, named as such. Shown only once it differs
+          // from the live one, so a reader who has changed nothing is not
+          // offered two numbers to reconcile.
+          ...(live.diverged
+            ? [
+                {
+                  label: "Blockers the rules derived, before this session",
+                  count: live.baselineBlockerCount,
+                  source: "get_effective_close" as const,
+                },
+                {
+                  label: "Close readiness as the rules derived it",
+                  valueBps: live.baselineReadinessBps,
+                  source: "get_effective_close" as const,
+                },
+              ]
+            : []),
         ],
         conflictingEvidence: [],
         missingEvidence: [],
         assertions: [],
         exposure: {
           label: "Blocker exposure",
-          valueCents: a.blockerExposureCents,
-          // Also `readiness.aggregates`, and the exposure slot is the figure a
-          // reader is most likely to carry off this answer.
-          source: "get_close_readiness",
+          valueCents: live.blockerExposureCents,
+          // The exposure slot is the figure a reader is most likely to carry
+          // off this answer, so it is the one that must not be a snapshot.
+          source: "get_effective_close",
         },
-        managementConclusion:
-          "The period cannot be signed off while these items are open. Each carries its own conclusion and owner.",
-        nextAction: "Work the blockers in exposure order; each links to its evidence and next action.",
-        citations: blockers.map((b) => cite(b.exceptionId, { href: `/exceptions/${b.exceptionId}` })),
+        managementConclusion: open
+          ? "The period cannot be signed off while these items are open. Each carries its own conclusion and owner."
+          : `Every blocker the rules raised carries a management conclusion recorded in this session. The close as the rules derived it had ${count(live.baselineBlockerCount)} ${plural(live.baselineBlockerCount, "blocker")}; Reset Demo restores that position.`,
+        nextAction: open
+          ? "Work the blockers in exposure order; each links to its evidence and next action."
+          : "Record management sign-off on the Overview, which locks the period.",
+        citations: live.blockers.map((b) =>
+          cite(b.exceptionId, { href: `/exceptions/${b.exceptionId}` }),
+        ),
       };
     },
   },
@@ -2162,28 +2265,73 @@ const MEMO_DRAFT_SECTIONS: readonly AiDraftSection[] = [
 function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswer | undefined {
   const view = s.run<ExceptionResult>("get_exception", { exceptionId });
   if (view === undefined) return undefined;
+  /**
+   * The exception's WORKING state — what a person has concluded and what they
+   * have submitted since the rules ran.
+   *
+   * `get_exception` returns the frozen finding and nothing else: no conclusion
+   * field, no accepted submissions, no effective status. So "No conclusion has
+   * been recorded" was not a wrong lookup, it was a comparison that never
+   * happened reported as a negative result, and the handler printed it beside
+   * a conclusion the reader had recorded one click earlier — on the product's
+   * trust screen, in the sentence the sign-off gate turns on. For U-007 and
+   * U-009 it is worse than a contradiction: the ConclusionPanel early-returns
+   * for roles with no action rights, so an external auditor is told no
+   * conclusion exists with nothing on the page to correct it.
+   *
+   * `evidenceRequirements[].satisfied` is frozen in the same way, which is the
+   * second half and reachable one action earlier: evidence submitted AND
+   * accepted against every requirement still read "not in evidence… it must be
+   * obtained" while the workspace reported `canResolve: true, unmet: []`.
+   */
+  const workflow = s.run<ExceptionWorkflowResult>("get_exception_workflow", { exceptionId });
   const f = view.exception.finding;
   const met = f.evidenceRequirements.filter((r) => r.satisfied);
   const serial = f.subjects.serials?.[0];
+  const conclusion = workflow?.conclusion ?? null;
+  // Open as the close reads it NOW. The rule that a recorded conclusion
+  // supersedes the derived status — except REMAINS_OPEN, which records that a
+  // person looked and decided it stays open — lives in `effectiveStatus`, and
+  // the projection returns the answer rather than the inputs so this file
+  // cannot hold a second copy of it.
+  const open = workflow?.open ?? view.open;
+  const status = workflow?.effectiveStatus ?? view.exception.status;
   /**
    * Unmet requirements are only OUTSTANDING while the exception is open.
    * A resolved exception was concluded by a scenario event that addressed
    * exactly these requirements, so demanding them again contradicts the
    * recorded resolution — the engine was reporting "Resolved" and
    * "Obtain: …" in the same answer for eight of the fifteen exceptions.
+   *
+   * Taken from the workflow projection, which counts an accepted submission
+   * as satisfying, rather than from the finding's frozen flags.
    */
-  const unmet = view.open
-    ? f.evidenceRequirements.filter((r) => r.required && !r.satisfied)
-    : [];
-  const unmetWhileResolved = view.open
-    ? []
-    : f.evidenceRequirements.filter((r) => r.required && !r.satisfied);
+  const outstanding = new Set(
+    workflow?.unmetRequirements ?? f.evidenceRequirements.filter((r) => r.required && !r.satisfied).map((r) => r.description),
+  );
+  const stillRequired = f.evidenceRequirements.filter(
+    (r) => r.required && outstanding.has(r.description),
+  );
+  const unmet = open ? stillRequired : [];
+  const unmetWhileResolved = open ? [] : stillRequired;
 
   return {
-    status: view.exception.status,
+    status,
     knownFacts: [
       { label: "Exception", text: `${view.exception.id} — ${f.title}`, source: "get_exception" },
       { label: "Exposure", valueCents: f.exposureCents, source: "get_exception" },
+      // The conclusion itself, from the projection that holds it. Rendered as
+      // a fact rather than folded into prose so the reader can see WHO
+      // concluded and WHEN, which is the part an auditor relies on.
+      ...(conclusion === null
+        ? []
+        : [
+            {
+              label: "Management conclusion",
+              text: `${conclusion.conclusion} · recorded ${conclusion.at} · ${conclusion.rationale}`,
+              source: "get_exception_workflow" as const,
+            },
+          ]),
       ...met.map(
         (r): AiFigure => ({
           label: r.description,
@@ -2210,7 +2358,7 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
             },
           ]),
     ],
-    conflictingEvidence: view.open ? [f.whyFlagged] : [],
+    conflictingEvidence: open ? [f.whyFlagged] : [],
     // Stated as missing, never inferred. This is the refusal — and it is
     // phrased from the requirement, not from EXC-001's contract language,
     // which was previously emitted verbatim for recounts and damage
@@ -2221,18 +2369,31 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
     ),
     assertions: [...f.assertions],
     exposure: { label: "Exposure", valueCents: f.exposureCents, source: "get_exception" },
-    managementConclusion: view.open
-      ? "Open. No conclusion has been recorded, and none can be reached on the evidence held."
-      : unmetWhileResolved.length > 0
+    /**
+     * Three states, not two. The old sentence had one branch for "open" and
+     * asserted BOTH that no conclusion exists and that none could be reached —
+     * the first a record claim the handler had no way to check, the second the
+     * product judging rather than reporting, since `concludeException` itself
+     * permits REMAINS_OPEN on absent evidence.
+     */
+    managementConclusion: !open
+      ? unmetWhileResolved.length > 0
         ? `Resolved. The conclusion was reached without ${unmetWhileResolved
             .map((r) => r.description.toLowerCase())
             .join("; ")} — the resolving event addressed the question instead.`
-        : "Resolved. The recorded conclusion stands on the evidence held.",
-    nextAction: !view.open
+        : "Resolved. The recorded conclusion stands on the evidence held."
+      : conclusion !== null
+        ? `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}: a person looked and decided the item stays open. It does not change the rule's status.`
+        : unmet.length > 0
+          ? "Open. No conclusion has been recorded. Management may conclude on the evidence held, or obtain what is outstanding first."
+          : "Open. No conclusion has been recorded; every required record is now in evidence.",
+    nextAction: !open
       ? "None — resolved; the history travels with the item."
-      : unmet.length > 0
-        ? `Obtain: ${unmet.map((r) => r.description).join("; ")}`
-        : "Record a management conclusion.",
+      : conclusion !== null
+        ? "None outstanding on this item — the conclusion recorded against it keeps it open by choice."
+        : unmet.length > 0
+          ? `Obtain: ${unmet.map((r) => r.description).join("; ")}`
+          : "Record a management conclusion.",
     citations: [
       cite(view.exception.id, { href: `/exceptions/${view.exception.id}` }),
       ...(serial !== undefined ? [cite(serial, { href: `/inventory/${serial}` })] : []),

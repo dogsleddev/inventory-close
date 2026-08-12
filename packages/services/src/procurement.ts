@@ -223,6 +223,28 @@ export interface ProcurementPopulationsOut {
    * discloses the wrong omission.
    */
   readonly withheldDocumentCount: number;
+  /**
+   * WHICH displayed populations the withheld orders are actually missing
+   * from, derived from the documents' own dates exactly as a visible order's
+   * `position` is.
+   *
+   * `withheldOrderCount` says only that something was removed from the close.
+   * A disclosure built on it alone can do nothing but warn about every
+   * population at once, and that is a scope restriction reported as a finding
+   * — the trap this file's own comments describe, arriving from the other
+   * direction. At FY2026-DEMO-v1.2.0 the single withheld order is
+   * INVOICED_NOT_RECEIVED, so the GRNI and price-variance tables an auditor
+   * reads are complete and were being announced as short.
+   *
+   * Counted per population rather than as a position, because the populations
+   * are what a reader is looking at and membership is not one-to-one with
+   * position: a price variance also needs a line that actually varied.
+   */
+  readonly withheldFrom: {
+    readonly grni: number;
+    readonly invoicedNotReceived: number;
+    readonly priceVariance: number;
+  };
 }
 
 /** Sum of line amounts, or undefined when any line has no amount. */
@@ -285,6 +307,44 @@ export function getProcurementPopulations(
     };
   };
 
+  /**
+   * The price-variance rows one order/bill pair produces.
+   *
+   * Extracted so the withheld-order disclosure can ask whether an order this
+   * reader may NOT see would have varied, without a second copy of the
+   * comparison rule. Two derivations of "is this a price variance" would
+   * agree today and disagree the first time either moved, and the one that
+   * moved would be the one nobody reads.
+   */
+  const priceVarianceLinesFor = (
+    po: (typeof d.purchaseOrders)[number],
+    bill: (typeof d.vendorBills)[number],
+  ): PriceVarianceRowOut[] => {
+    const rows: PriceVarianceRowOut[] = [];
+    for (const orderLine of po.lines) {
+      const billLine = bill.lines.find((l) => l.lineId === orderLine.lineId);
+      if (billLine === undefined) continue;
+      if (orderLine.amountCents === undefined || billLine.amountCents === undefined) continue;
+      if (orderLine.quantity !== billLine.quantity) continue; // a quantity difference, not a price one
+      if (orderLine.amountCents === billLine.amountCents) continue;
+      const varianceCents = billLine.amountCents - orderLine.amountCents;
+      rows.push({
+        purchaseOrderNumber: po.transactionNumber,
+        vendor: po.vendor,
+        vendorBillNumber: bill.transactionNumber,
+        billDate: bill.billDate,
+        sku: orderLine.sku,
+        quantity: orderLine.quantity,
+        standardUnitCents: skuStandard.get(orderLine.sku),
+        orderedUnitCents: orderLine.amountCents / orderLine.quantity,
+        billedUnitCents: billLine.amountCents / billLine.quantity,
+        varianceCents,
+        direction: varianceCents > 0 ? "UNFAVORABLE" : "FAVORABLE",
+      });
+    }
+    return rows;
+  };
+
   const orders: ProcurementOrderOut[] = [];
   const grni: GrniRowOut[] = [];
   const invoicedNotReceived: InvoicedNotReceivedRowOut[] = [];
@@ -293,6 +353,7 @@ export function getProcurementPopulations(
   let withheldDocumentCount = 0;
   let ordersCompared = 0;
   let ordersNotComparedAtScope = 0;
+  const withheldFrom = { grni: 0, invoicedNotReceived: 0, priceVariance: 0 };
 
   for (const match of ws.close.procurementMatches) {
     const po = d.purchaseOrders.find(
@@ -307,6 +368,29 @@ export function getProcurementPopulations(
       // A comparison that scope prevented is not a comparison that found
       // nothing: the price-variance denominator has to be able to say so.
       if (billByPo.has(match.purchaseOrderNumber)) ordersNotComparedAtScope += 1;
+      /**
+       * Where the missing row would have been.
+       *
+       * The period-end position is a CUTOFF fact derived from the documents'
+       * own dates, so it is just as derivable for an order this reader may
+       * not see as for one they may — the same rule, twenty lines below.
+       * Recording it here is what lets a disclosure name the population that
+       * is actually short instead of warning about all of them, which is how
+       * two complete tables came to be reported to an auditor as shortened.
+       */
+      const hiddenReceipt = receiptByPo.get(match.purchaseOrderNumber);
+      const hiddenBill = billByPo.get(match.purchaseOrderNumber);
+      const hiddenReceived = hiddenReceipt !== undefined && hiddenReceipt.receiptDate <= asOf;
+      const hiddenBilled = hiddenBill !== undefined && hiddenBill.billDate <= asOf;
+      if (hiddenReceived && !hiddenBilled) withheldFrom.grni += 1;
+      if (!hiddenReceived && hiddenBilled) withheldFrom.invoicedNotReceived += 1;
+      if (
+        po !== undefined &&
+        hiddenBill !== undefined &&
+        priceVarianceLinesFor(po, hiddenBill).length > 0
+      ) {
+        withheldFrom.priceVariance += 1;
+      }
       continue;
     }
     const receipt = receiptByPo.get(po.transactionNumber);
@@ -433,29 +517,7 @@ export function getProcurementPopulations(
       continue;
     }
     ordersCompared += 1;
-    for (const orderLine of po.lines) {
-      const billLine = bill.lines.find((l) => l.lineId === orderLine.lineId);
-      if (billLine === undefined) continue;
-      if (orderLine.amountCents === undefined || billLine.amountCents === undefined) continue;
-      if (orderLine.quantity !== billLine.quantity) continue; // a quantity difference, not a price one
-      if (orderLine.amountCents === billLine.amountCents) continue;
-      const orderedUnitCents = orderLine.amountCents / orderLine.quantity;
-      const billedUnitCents = billLine.amountCents / billLine.quantity;
-      const varianceCents = billLine.amountCents - orderLine.amountCents;
-      priceVarianceRows.push({
-        purchaseOrderNumber: po.transactionNumber,
-        vendor: po.vendor,
-        vendorBillNumber: bill.transactionNumber,
-        billDate: bill.billDate,
-        sku: orderLine.sku,
-        quantity: orderLine.quantity,
-        standardUnitCents: skuStandard.get(orderLine.sku),
-        orderedUnitCents,
-        billedUnitCents,
-        varianceCents,
-        direction: varianceCents > 0 ? "UNFAVORABLE" : "FAVORABLE",
-      });
-    }
+    priceVarianceRows.push(...priceVarianceLinesFor(po, bill));
   }
 
   const byPo = (a: { purchaseOrderNumber: string }, b: { purchaseOrderNumber: string }) =>
@@ -545,5 +607,6 @@ export function getProcurementPopulations(
     },
     withheldOrderCount,
     withheldDocumentCount,
+    withheldFrom,
   };
 }

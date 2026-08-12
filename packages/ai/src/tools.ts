@@ -94,70 +94,79 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
     const life = queries.getFinancialLife(ctx, serial);
     const r = life.records;
 
-    // ref, at, and the fact that defines the event — all from one scope.
+    /**
+     * One candidate row, with the reader's view and the world's kept apart.
+     *
+     * `ref`/`at` are what the READER may see — both from `records`, which is
+     * scope-filtered. `exists` and `unscopedRef` are facts about the CLOSE,
+     * read from `buySide`/`sellSide`, which are not filtered. Keeping the two
+     * sides in separate fields is the whole point: `exists` decides whether
+     * the event happened, `ref` decides whether the reader may see it, and
+     * only both together tell "restricted" apart from "has not happened".
+     *
+     * `exists` is never read off a scoped record. Doing that is what makes a
+     * restriction and an absence the same value.
+     */
     const spec: {
       label: string;
       ref?: string | undefined;
       at?: string | undefined;
-      present: boolean;
+      exists: boolean;
+      unscopedRef?: string | undefined;
     }[] = [
-      { label: "Purchase Order", ref: r.purchaseOrder?.transactionNumber, at: r.purchaseOrder?.orderDate, present: r.purchaseOrder !== undefined },
-      { label: "Item Receipt", ref: r.itemReceipt?.transactionNumber, at: r.itemReceipt?.receiptDate, present: r.itemReceipt !== undefined },
-      { label: "Vendor Bill", ref: r.vendorBill?.transactionNumber, at: r.vendorBill?.billDate, present: r.vendorBill !== undefined },
-      { label: "Sales Order", ref: r.salesOrder?.transactionNumber, at: r.salesOrder?.orderDate, present: r.salesOrder !== undefined },
-      { label: "Item Fulfillment", ref: r.itemFulfillment?.transactionNumber, at: r.itemFulfillment?.shipDate, present: r.itemFulfillment !== undefined },
-      // Delivery exists only where a delivery event does.
-      { label: "Delivery", ref: r.carrierShipment?.id, at: life.sellSide.deliveredAt, present: life.sellSide.deliveredAt !== undefined },
-      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, present: life.sellSide.installedAt !== undefined },
-      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, present: life.sellSide.firstOnlineAt !== undefined },
-      { label: "Customer Invoice", ref: r.customerInvoice?.transactionNumber, at: r.customerInvoice?.invoiceDate, present: r.customerInvoice !== undefined },
+      { label: "Purchase Order", ref: r.purchaseOrder?.transactionNumber, at: r.purchaseOrder?.orderDate, exists: life.buySide.purchaseOrder !== undefined, unscopedRef: life.buySide.purchaseOrder },
+      { label: "Item Receipt", ref: r.itemReceipt?.transactionNumber, at: r.itemReceipt?.receiptDate, exists: life.buySide.itemReceipt !== undefined, unscopedRef: life.buySide.itemReceipt },
+      { label: "Vendor Bill", ref: r.vendorBill?.transactionNumber, at: r.vendorBill?.billDate, exists: life.buySide.vendorBill !== undefined, unscopedRef: life.buySide.vendorBill },
+      { label: "Sales Order", ref: r.salesOrder?.transactionNumber, at: r.salesOrder?.orderDate, exists: life.sellSide.salesOrder !== undefined, unscopedRef: life.sellSide.salesOrder },
+      { label: "Item Fulfillment", ref: r.itemFulfillment?.transactionNumber, at: r.itemFulfillment?.shipDate, exists: life.sellSide.itemFulfillment !== undefined, unscopedRef: life.sellSide.itemFulfillment },
+      // A carrier shipment is not a delivery: the defining fact is the
+      // delivery date, and the shipment id is only what NAMES the event.
+      { label: "Delivery", ref: r.carrierShipment?.id, at: life.sellSide.deliveredAt, exists: life.sellSide.deliveredAt !== undefined, unscopedRef: life.sellSide.carrierShipment },
+      { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, exists: life.sellSide.installedAt !== undefined },
+      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, exists: life.sellSide.firstOnlineAt !== undefined },
+      { label: "Customer Invoice", ref: r.customerInvoice?.transactionNumber, at: r.customerInvoice?.invoiceDate, exists: life.sellSide.customerInvoice !== undefined, unscopedRef: life.sellSide.customerInvoice },
     ];
-
-    // A component the viewer's scope withheld: the unfiltered side still
-    // names it, the scoped side does not. That is a restriction, and it is
-    // reported as one rather than dropped or dated.
-    const unscopedRefs: Readonly<Record<string, string | undefined>> = {
-      "Purchase Order": life.buySide.purchaseOrder,
-      "Item Receipt": life.buySide.itemReceipt,
-      "Vendor Bill": life.buySide.vendorBill,
-      "Sales Order": life.sellSide.salesOrder,
-      "Item Fulfillment": life.sellSide.itemFulfillment,
-      Delivery: life.sellSide.carrierShipment,
-      "Customer Invoice": life.sellSide.customerInvoice,
-    };
 
     const dated: { label: string; ref: string; at: string; state: "DATED" }[] = [];
     const withheld: { label: string; ref: string; state: "WITHHELD" }[] = [];
     const undated: { label: string; ref: string; state: "UNDATED" }[] = [];
 
     for (const e of spec) {
-      if (e.present && e.ref !== undefined && e.at !== undefined) {
+      // An event that did not happen is not on the timeline in any state.
+      // This is the handler's second rule, and it is tested FIRST so that no
+      // later branch can assert an event the close does not contain;
+      // `life.missing` is where a genuine absence is reported.
+      if (!e.exists) continue;
+      if (e.ref !== undefined && e.at !== undefined) {
         dated.push({ label: e.label, ref: e.ref, at: e.at, state: "DATED" });
         continue;
       }
-      if (e.present && e.ref !== undefined) {
+      if (e.ref !== undefined) {
         undated.push({ label: e.label, ref: e.ref, state: "UNDATED" });
         continue;
       }
       /**
-       * Withheld means the unscoped side names a record and the reader's own
-       * side does not. Testing only the unscoped side made "the event has not
-       * happened" indistinguishable from "the record is restricted", and in
-       * the wrong direction: an inbound unit with a carrier shipment and no
-       * delivery yet has `ref` (the shipment is visible) and `present` false
-       * (there is no delivery date), so it fell through to here and every
-       * reader — including a CONTROLLER, whose scope withholds nothing — was
-       * told "FP-IN-2288 · withheld by your access scope" about a delivery
-       * that simply has not occurred. Forty of the fifteen hundred serials.
+       * Withheld means the event HAPPENED and the reader may not see the
+       * record naming it. Both halves are load-bearing, and each was got
+       * wrong in turn:
        *
-       * When the reader CAN see the reference and the defining fact does not
-       * exist, the event is not on the timeline at all — that is this
-       * handler's second rule, and `life.missing` is where a genuine absence
-       * is reported.
+       * Testing only the unscoped side made "has not happened" and "is
+       * restricted" the same value, so a CONTROLLER — whose scope withholds
+       * nothing — was told "FP-IN-2288 · withheld by your access scope"
+       * about a delivery that had not occurred, on forty of the fifteen
+       * hundred serials.
+       *
+       * Testing `ref === undefined` instead fixed that reader and kept the
+       * defect for every reader whose scope actually filters something: on
+       * KE-X1-9025 an AUDITOR_READ_ONLY still read "Delivery · FP-IN-2291 ·
+       * withheld by your access scope" over a delivery that has not
+       * happened, because the shipment record was out of scope and nothing
+       * consulted `deliveredAt`. Guarding the term the reader can see, and
+       * never the fact that defines the event, narrows a defect of this
+       * shape rather than removing it.
        */
-      const unscoped = unscopedRefs[e.label];
-      if (e.ref === undefined && unscoped !== undefined) {
-        withheld.push({ label: e.label, ref: unscoped, state: "WITHHELD" });
+      if (e.unscopedRef !== undefined) {
+        withheld.push({ label: e.label, ref: e.unscopedRef, state: "WITHHELD" });
       }
     }
 
@@ -223,6 +232,17 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   get_eo_methodology: ({ projections, ctx }) => projections.getEoMethodology(ctx),
   get_methodology: ({ projections, ctx }) => projections.getMethodology(ctx),
   get_memo: ({ projections, ctx }) => projections.getMemo(ctx),
+
+  /* ---------------------------------------------------------------- */
+  /* The live close. Everything above reads the frozen baseline; these  */
+  /* two read what people have done to it in this session, which is     */
+  /* what every screen already shows. Both are one-line delegations to  */
+  /* query-service projections that predate Stage G.                    */
+  /* ---------------------------------------------------------------- */
+
+  get_effective_close: ({ queries, ctx }) => queries.getEffectiveClose(ctx),
+  get_exception_workflow: ({ queries, ctx }, args) =>
+    queries.getExceptionWorkflow(ctx, args["exceptionId"] ?? ""),
 };
 
 /** Run one approved tool. Never throws for authorization; reports instead. */

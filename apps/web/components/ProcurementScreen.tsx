@@ -107,11 +107,17 @@ export function ProcurementScreen({
             </Panel>
 
             <div id="icg-proc-panel" role="tabpanel" aria-labelledby={`icg-proc-panel-tab-${tab}`}>
-              {data.withheldNote !== null ? (
+              {/*
+                The disclosure for THIS tab. One note for the screen said the
+                table was short on three tabs where it is complete; the note is
+                now built per tab and read per tab, so a table and the sentence
+                about it move together.
+              */}
+              {data.withheldNote[tab] != null ? (
                 <Panel>
                   <div className="icg-panel-foot">
                     <span className="icg-soft" style={{ fontSize: "11px" }}>
-                      {data.withheldNote}
+                      {data.withheldNote[tab]}
                     </span>
                   </div>
                 </Panel>

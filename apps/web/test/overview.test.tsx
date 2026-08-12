@@ -266,7 +266,7 @@ describe("Overview — Ask Gaurd answers deterministically", () => {
     await user.click(screen.getByRole("button", { name: "What prevents Controller sign-off?" }));
 
     const drawer = within(await screen.findByLabelText("Ask Gaurd", { selector: "aside" }));
-    expect(await drawer.findByText("Sign-off is blocked")).toBeTruthy();
+    expect(await drawer.findByText(/^Sign-off is blocked/)).toBeTruthy();
     expect(drawer.getByText(String(blockers.length))).toBeTruthy();
     for (const b of blockers) {
       expect(drawer.getAllByText(new RegExp(b.exceptionId)).length).toBeGreaterThan(0);

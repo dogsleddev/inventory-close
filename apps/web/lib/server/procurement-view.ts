@@ -72,6 +72,62 @@ function closeCapsule(
  */
 const withheldCell = (label: string): string => `Withheld — ${label}`;
 
+/**
+ * The scope disclosure for one tab, or null when that tab's table is complete
+ * at this reader's scope.
+ *
+ * Two things this must not do, both of which the single screen-wide note did.
+ *
+ * It must not describe a population it is not rendered over. The note was
+ * emitted once from `withheldOrderCount` and shown above all five tables, so
+ * an auditor read "1 order … has no row in the table above" on Received Not
+ * Invoiced, Goods in Transit and Price Variance, whose tables are identical to
+ * a Controller's — three complete populations reported as shortened by the
+ * reader's own access.
+ *
+ * And it must not say "above". The note is the first child of the tabpanel and
+ * the tabpanel holds the only table in the document, so on every tab there is
+ * nothing above the sentence but the tab bar. That half was wrong for every
+ * reader on every tab, including the one tab the claim was true of.
+ */
+const tabWithheldNote = (p: {
+  missingRows: number;
+  rowsMissingADocument: number;
+  totalOrders: number;
+}): string | null => {
+  const parts: string[] = [];
+  if (p.missingRows > 0) {
+    // A hard-coded plural is invisible until a role withholds exactly one, and
+    // the auditor is that role: the previous note read "1 orders" on every run.
+    parts.push(
+      `${p.missingRows} ${p.missingRows === 1 ? "order is" : "orders are"} outside your role's scope in this demo, so ${p.missingRows === 1 ? "it has" : "they have"} no row in the table below.`,
+    );
+  }
+  if (p.rowsMissingADocument > 0) {
+    parts.push(
+      `${p.rowsMissingADocument} ${p.rowsMissingADocument === 1 ? "row keeps its place in the table below but names a source document" : "rows keep their place in the table below but name source documents"} outside your scope; ${p.rowsMissingADocument === 1 ? "that cell reads" : "those cells read"} "Withheld", never blank.`,
+    );
+  }
+  if (parts.length === 0) return null;
+  return `${parts.join(" ")} The match figures count the close's own population of ${p.totalOrders} orders either way, and a period-end position is a cutoff fact derived from the documents' own dates, so it does not move with your scope.`;
+};
+
+/** The disclosure for every tab, each built only from that tab's own table. */
+const tabWithheldNotes = (p: {
+  totalOrders: number;
+  match: { missingRows: number; rowsMissingADocument: number };
+  grni: { missingRows: number; rowsMissingADocument: number };
+  inr: { missingRows: number; rowsMissingADocument: number };
+  git: { missingRows: number; rowsMissingADocument: number };
+  ppv: { missingRows: number; rowsMissingADocument: number };
+}): Readonly<Record<string, string | null>> =>
+  Object.fromEntries(
+    (["match", "grni", "inr", "git", "ppv"] as const).map((tab) => [
+      tab,
+      tabWithheldNote({ ...p[tab], totalOrders: p.totalOrders }),
+    ]),
+  );
+
 /** How an order stood at the balance-sheet date, in a reader's words. */
 const POSITION_LABELS: Readonly<Record<ProcurementOrderOut["position"], string>> = {
   MATCHED_IN_PERIOD: "Matched in period",
@@ -101,7 +157,7 @@ export function buildProcurementData(
       inr: null,
       git: null,
       ppv: null,
-      withheldNote: null,
+      withheldNote: {},
       drawers: {},
     };
   }
@@ -550,30 +606,42 @@ export function buildProcurementData(
         "Inventory is carried at standard cost, so a price variance is expensed in the period rather than capitalized. That is why no figure on this tab appears in the inventory subledger, in the inventory accounts, or in the inventory-to-GL reconciliation.",
       note: "A price difference is not a quantity difference: the native three-way match still passes on every order in this table, and no exception is raised. These are reported as an attribute of the match so a reviewer can see them, not as a control failure.",
     },
-    // Two omissions, and the note used to claim the wrong one. It said the
-    // withheld orders were "not counted in the figures above" — which was true
-    // of the summary only because the summary was being counted over the rows
-    // this reader can see, and that is what told an auditor zero orders
-    // required close review while the close held one. The summary now counts
-    // the close's own population, so what is missing is ROWS, plus any
-    // document withheld on a row that stayed.
-    //
-    // A hard-coded plural, invisible until a role withheld exactly one: the
-    // auditor is that role, and the note read "1 orders" on every run. Same
-    // shape as the reset report's "1 comments" in Stage F.
-    withheldNote:
-      populations.withheldOrderCount === 0 && populations.withheldDocumentCount === 0
-        ? null
-        : [
-            populations.withheldOrderCount === 0
-              ? null
-              : `${populations.withheldOrderCount} ${populations.withheldOrderCount === 1 ? "order is" : "orders are"} outside your role's scope in this demo, so ${populations.withheldOrderCount === 1 ? "it has" : "they have"} no row in the table above. The match figures count the close's own population of ${s.orders} orders either way.`,
-            populations.withheldDocumentCount === 0
-              ? null
-              : `${populations.withheldDocumentCount} source ${populations.withheldDocumentCount === 1 ? "document is" : "documents are"} outside your scope on ${populations.withheldDocumentCount === 1 ? "an order that keeps its row" : "orders that keep their rows"}; ${populations.withheldDocumentCount === 1 ? "that cell reads" : "those cells read"} "Withheld", never blank. A period-end position is a cutoff fact and is derived from the documents' own dates, so it does not move with your scope.`,
-          ]
-            .filter((s): s is string => s !== null)
-            .join(" "),
+    withheldNote: tabWithheldNotes({
+      totalOrders: s.orders,
+      // Three-Way Match lists every order, so it is the one table that loses a
+      // row for every withheld order and the only one whose rows can carry a
+      // withheld document cell.
+      match: {
+        missingRows: populations.withheldOrderCount,
+        rowsMissingADocument: populations.orders.filter(
+          (o) => o.withheldDocuments.length > 0,
+        ).length,
+      },
+      grni: {
+        missingRows: populations.withheldFrom.grni,
+        rowsMissingADocument: populations.grni.filter(
+          (r) => r.withheldDocuments.length > 0,
+        ).length,
+      },
+      inr: {
+        missingRows: populations.withheldFrom.invoicedNotReceived,
+        rowsMissingADocument: populations.invoicedNotReceived.filter(
+          (r) => r.withheldDocuments.length > 0,
+        ).length,
+      },
+      // Goods in Transit shows no order table at all — it compares a book side
+      // against a document side, and the agreement panel below it already
+      // states, from `inboundAgrees`, that the two cannot be compared at this
+      // scope. A row claim here would be about a table that is not on screen.
+      git: { missingRows: 0, rowsMissingADocument: 0 },
+      ppv: {
+        missingRows: populations.withheldFrom.priceVariance,
+        // A price-variance row is a line comparison and carries no document
+        // cell of its own; a bill this reader may not see yields no row, and
+        // that is disclosed by the tab's own compared-orders stat.
+        rowsMissingADocument: 0,
+      },
+    }),
     drawers,
   };
 }

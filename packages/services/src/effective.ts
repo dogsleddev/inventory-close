@@ -60,6 +60,31 @@ export function effectiveStatus(ws: Workspace, exceptionId: string): string {
   const derived = exception?.status ?? "";
   const conclusion = latestConclusion(ws, exceptionId);
   if (conclusion === undefined || conclusion.conclusion === "REMAINS_OPEN") return derived;
+  /**
+   * The requirements gate, enforced against the STATE and not only against
+   * the write.
+   *
+   * `concludeException` refuses to record a resolving conclusion while a
+   * required record is missing, and calls that the one rule it will not bend.
+   * It checked once, at the moment of writing, and nothing re-derived it
+   * afterwards — so a conclusion outlived the record that justified it. A
+   * reviewer returning a submission regrows `unmetRequirements`, and the
+   * resolution went on standing: the exception dropped out of the blocker
+   * set, readiness rescored, and the Overview offered sign-off with "Every
+   * blocker has a management conclusion" beside "0 blockers · $0" — an act
+   * the close's own rules forbid, recorded and locked.
+   *
+   * No shipped surface can reach that today: `reviewEvidence` is exposed by
+   * no server action, so nothing in the running product can move a submission
+   * to RETURNED. That makes this a latent hole rather than a live defect, and
+   * COMPLETION_PLAN §168 plans the button that would open it. Enforcing the
+   * invariant here means wiring that button cannot re-open it.
+   *
+   * A conclusion is not deleted when this fires — it stays in the trail, and
+   * `latestConclusion` still returns it. What it loses is the power to
+   * supersede the rule, which is the only thing the gate was ever about.
+   */
+  if (unmetRequirements(ws, exceptionId).length > 0) return derived;
   return conclusion.conclusion;
 }
 

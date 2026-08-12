@@ -14,6 +14,7 @@ import {
   answerQuestion,
   intentPhrases,
   normalizeQuestion,
+  numberForms,
   phrasePattern,
   routeQuestion,
   runTool,
@@ -193,6 +194,120 @@ describe("every phrase is a whole word, by construction", () => {
     for (const { key, phrase } of phrases) {
       expect(phrase, `${key} phrase is not lower case`).toBe(phrase.toLowerCase());
     }
+  });
+});
+
+/**
+ * Number agreement, which was the second `\b`.
+ *
+ * §3.9's defect was a boundary an author had to remember to type. This is the
+ * same shape one property over: a phrase held for the number it was written in
+ * and refused the other, and whether it held was invisible in a diff. A census
+ * over the shipped table found 36 phrases declared in both numbers and 198 in
+ * one — so the table's own coverage of English was a hand-maintained
+ * allowlist, and an allowlist standing in for a category is exactly what §3.9
+ * closed on the boundary axis.
+ *
+ * The three assertions below are deliberately different in kind. The first
+ * pins the inflection rule against hand-written English, so it cannot drift
+ * into agreeing with whatever the implementation happens to do. The second
+ * checks the compiler actually APPLIES that rule, over every phrase in the
+ * table including ones added after this file was last read. The third is
+ * reader-facing identity: the questions the Stage G review found refusing or
+ * answering from the wrong handler.
+ */
+describe("number agreement is compiled, not declared", () => {
+  it("inflects regular nouns the way English does", () => {
+    // Hand-written, and NOT derived from the implementation: a test that
+    // recomputed the rule would agree with a broken rule.
+    const expected: Record<string, readonly string[]> = {
+      account: ["accounts", "account"],
+      accounts: ["accounts", "account"],
+      variance: ["variances", "variance"],
+      variances: ["variances", "variance"],
+      liability: ["liabilities", "liability"],
+      liabilities: ["liabilities", "liability"],
+      confirmation: ["confirmations", "confirmation"],
+      disposal: ["disposals", "disposal"],
+      weightings: ["weightings", "weighting"],
+      match: ["matches", "match"],
+      matches: ["matches", "match"],
+    };
+    for (const [word, forms] of Object.entries(expected)) {
+      expect([...numberForms(word)].sort(), word).toEqual([...forms].sort());
+    }
+  });
+
+  const closedPhrases = INTENT_MATCHES.flatMap((i) =>
+    intentPhrases(i.match)
+      .filter((phrase) => !phrase.endsWith("*"))
+      .map((phrase) => ({ key: i.key, phrase })),
+  );
+
+  it.each(closedPhrases)("$key: '$phrase' matches in both numbers", ({ phrase }) => {
+    const pattern = phrasePattern(phrase);
+    const words = phrase.split(/\s+/);
+    const head = words[words.length - 1]!;
+    for (const form of numberForms(head)) {
+      const written = [...words.slice(0, -1), form].join(" ");
+      expect(pattern.test(written), `${phrase} does not match "${written}"`).toBe(true);
+    }
+  });
+
+  /**
+   * One entry per finding. `want` is the intent whose handler is written for
+   * the question, and the other number of every one of these already reached
+   * it — which is what makes each a defect rather than an unsupported topic.
+   */
+  const READER_QUESTIONS: readonly { q: string; want: string; finding: string }[] = [
+    { q: "What purchase price variances did we have this year?", want: "price-variance", finding: "G40" },
+    { q: "Which price variances are largest?", want: "price-variance", finding: "G40" },
+    { q: "Are all third-party confirmations in?", want: "third-party", finding: "G39" },
+    { q: "Which custodian confirmations are outstanding?", want: "third-party", finding: "G39" },
+    { q: "Which accounts are out?", want: "gl-accounts", finding: "G42" },
+    { q: "What accruals are needed at year-end?", want: "grni", finding: "G42" },
+    { q: "What accrued liabilities are we carrying at year-end?", want: "grni", finding: "G42" },
+    { q: "What are the standard costs?", want: "cost-stack", finding: "G42" },
+    { q: "Which disposals happened this year?", want: "disposition", finding: "G42" },
+    { q: "What consignments are on our floor?", want: "consignment", finding: "G42" },
+    { q: "Which serials have an exception?", want: "serials-with-exceptions", finding: "G42" },
+    { q: "Which purchase orders are missing required components?", want: "procurement-chain", finding: "G42" },
+    { q: "What weighting does evidence carry?", want: "readiness-explained", finding: "G42" },
+    { q: "What write-downs were taken?", want: "valuation", finding: "G42" },
+  ];
+
+  it.each(READER_QUESTIONS)("$finding: '$q' reaches $want", ({ q, want }) => {
+    expect(routeQuestion(q)?.key).toBe(want);
+  });
+
+  /**
+   * The other direction. Every one of these answered before number agreement
+   * was compiled in, and a change that widened the table until an earlier
+   * intent swallowed them would satisfy the block above and break the product.
+   *
+   * The last three matter most: `counts` legitimately owns the bare plural
+   * "variances" — its own §3.9 regression probe is "What caused the first-pass
+   * variances?" — so the price-variance repair had to work by making
+   * price-variance MATCH, not by taking a word away from counts.
+   */
+  const UNMOVED: readonly { q: string; want: string }[] = [
+    { q: "Which GL account is out?", want: "gl-accounts" },
+    { q: "Is the third-party confirmation in?", want: "third-party" },
+    { q: "Which accrual have we recorded?", want: "grni" },
+    { q: "What makes up the standard cost of a unit?", want: "cost-stack" },
+    { q: "Which disposal happened this year?", want: "disposition" },
+    { q: "What consignment stock is on our floor?", want: "consignment" },
+    { q: "Which serials have open exceptions?", want: "serials-with-exceptions" },
+    { q: "Which purchase order is missing a required component?", want: "procurement-chain" },
+    { q: "What are the weightings?", want: "readiness-explained" },
+    { q: "Has a reserve been concluded?", want: "valuation" },
+    { q: "What caused the first-pass variances?", want: "counts" },
+    { q: "Which count issues are still open?", want: "counts" },
+    { q: "Is there any purchase price variance this year?", want: "price-variance" },
+  ];
+
+  it.each(UNMOVED)("'$q' still reaches $want", ({ q, want }) => {
+    expect(routeQuestion(q)?.key).toBe(want);
   });
 });
 

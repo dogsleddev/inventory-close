@@ -46,6 +46,51 @@ const escapeLiteral = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
+ * The singular and plural of one word.
+ *
+ * Number agreement was the second `\b`: a property every phrase needed, that
+ * only held where an author remembered to type it, and whose absence was
+ * invisible in a diff. A census over the shipped table found **36 phrases
+ * declared in both numbers and 198 in one** — so "Which account is out?"
+ * answered and "Which accounts are out?" refused, "Is the third-party
+ * confirmation in?" reached the handler that names the $92,400 outstanding
+ * confirmation while "Are all third-party confirmations in?" was claimed by
+ * the custody handler and reported `missingEvidence: []`, and — the P0 —
+ * "price variance" reached the price-variance intent while "price variances"
+ * fell through to the physical-count handler, which answered a purchasing
+ * question with "1,061 of 1,065 units matched on the first pass".
+ *
+ * That last one is worth naming precisely, because it looks like the defect
+ * class §3.9 closed and is not. The ordering invariant held: price-variance
+ * is intent #8 and counts is #32, so "price variance" does beat "variance".
+ * Ordering never got to arbitrate, because the price-variance spec did not
+ * match the plural at all. An enumerated allowlist standing in for a
+ * category, which is the same shape as an enumerated denylist.
+ *
+ * So the author declares the noun and the compiler declares its number, the
+ * way the author declares the phrase and the compiler declares the
+ * boundaries. Both forms are generated from either input, because the table
+ * contains phrases written in the plural too (`weightings`, `dispositions`)
+ * and a reader may ask those in the singular.
+ *
+ * Only regular inflection is generated. An irregular noun still needs its
+ * second form written out, and a verb tense is not number and is not touched
+ * here — those stay the author's job, and a stem marker exists for them.
+ */
+export function numberForms(word: string): readonly string[] {
+  const forms = new Set<string>([word]);
+  if (/[^aeiou]ies$/.test(word)) forms.add(`${word.slice(0, -3)}y`);
+  else if (/(?:[sxz]|ch|sh)es$/.test(word)) forms.add(word.slice(0, -2));
+  else if (/[^su]s$/.test(word)) forms.add(word.slice(0, -1));
+  else if (/(?:s|x|z|ch|sh)$/.test(word)) forms.add(`${word}es`);
+  else if (/[^aeiou]y$/.test(word)) forms.add(`${word.slice(0, -1)}ies`);
+  else forms.add(`${word}s`);
+  // Longest first: the alternation is ordered, and preferring the longer form
+  // saves the engine a backtrack against the `\b` that follows it.
+  return [...forms].sort((a, b) => b.length - a.length);
+}
+
+/**
  * Normalise a question before matching.
  *
  * Curly punctuation is folded because the phrases are written with typewriter
@@ -82,7 +127,22 @@ export function phrasePattern(phrase: string): RegExp {
   if (words.length === 0) {
     throw new Error("An intent phrase must contain at least one word");
   }
-  const body = words.map(escapeLiteral).join("[\\s-]+");
+  /**
+   * Only the LAST word takes both numbers. It is the head noun in every
+   * phrase this table declares ("price variance", "which account", "accrued
+   * liability", "required component"), and inflecting the modifiers as well
+   * would widen each phrase by a factor per word for no reader.
+   *
+   * A stem already matches its own inflections, so it is left alone: adding
+   * number forms under `[a-z]*` would be a second spelling of the same rule.
+   */
+  const body = words
+    .map((word, i) =>
+      i === words.length - 1 && !stem
+        ? `(?:${numberForms(word).map(escapeLiteral).join("|")})`
+        : escapeLiteral(word),
+    )
+    .join("[\\s-]+");
   const first = literal[0] ?? "";
   const last = literal[literal.length - 1] ?? "";
   // `\b` is only a boundary next to a word character. A phrase ending in

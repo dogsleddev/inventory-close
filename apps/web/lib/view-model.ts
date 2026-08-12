@@ -678,7 +678,25 @@ export interface ProcurementData {
     readonly treatment: string;
     readonly note: string;
   } | null;
-  readonly withheldNote: string | null;
+  /**
+   * The scope disclosure FOR EACH TAB, keyed by tab id — never one sentence
+   * for the screen.
+   *
+   * It was one string, emitted once from the close-wide withheld counts and
+   * rendered as the first child of the tabpanel, which is to say above all
+   * five tables. It claimed "1 order … has no row in the table above" on
+   * every one of them; that is true of Three-Way Match and Invoiced Not
+   * Received, whose populations really are shorter for an auditor, and false
+   * on Received Not Invoiced, Goods in Transit and Price Variance, whose
+   * tables are identical to a Controller's. A table that is complete,
+   * announced to the reader as shortened by their own access, is a scope
+   * restriction rendered as a finding.
+   *
+   * Keyed rather than branched at the call site so the note and the table it
+   * describes cannot come apart again: there is no way to write a sentence
+   * here without saying which tab it belongs to.
+   */
+  readonly withheldNote: Readonly<Record<string, string | null>>;
   readonly drawers: Readonly<Record<string, ExceptionDrawerData>>;
 }
 

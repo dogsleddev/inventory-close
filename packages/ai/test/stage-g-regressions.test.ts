@@ -2,9 +2,11 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { DEMO_USERS, userByRole } from "@icg/data";
 import type { Role } from "@icg/domain";
 import {
+  createCommandService,
   createProjectionService,
   createQueryService,
   createWorkspace,
+  type FinancialLifeView,
   type ProcurementPopulationsOut,
   type ServiceContext,
   type Workspace,
@@ -13,6 +15,7 @@ import {
   answerQuestion,
   checkDraft,
   namesRecordIdentifier,
+  runTool,
   statesQuantity,
   type AiToolContext,
 } from "../src/index.js";
@@ -463,6 +466,211 @@ describe("a restriction reaches the reader, and only a real one", () => {
     expect(life.records.carrierShipment).toBeDefined();
     expect(life.sellSide.deliveredAt).toBeUndefined();
     expect(facts.some((f) => f.label === "Delivery")).toBe(false);
+  });
+
+  /**
+   * The same rule, as a category over every role — and the reason the two
+   * assertions above were not enough.
+   *
+   * Both of them test a CONTROLLER, whose scope withholds nothing. The
+   * remediation they were written for guarded on whether the reader could
+   * read the REFERENCE (`e.ref === undefined`), which is true for a
+   * CONTROLLER exactly when the record does not exist, so a controller-only
+   * assertion cannot tell that guard apart from a correct one. Every reader
+   * whose scope actually filters something kept the defect: an
+   * AUDITOR_READ_ONLY read "Delivery · FP-IN-2291 · withheld by your access
+   * scope" on KE-X1-9025, KE-X1-9880 and KE-X1-9866, over a delivery that
+   * has not happened at any scope.
+   *
+   * So the property is stated where it is true — for every role, every
+   * serial and every state — and the defining fact is read from the SERVICE
+   * VIEW rather than re-derived from the handler's own inputs. A test that
+   * recomputed `exists` the way `get_evidence_timeline` does would agree
+   * with it about a shared mistake.
+   */
+  it("never puts a row of any state on a timeline for an event the close does not contain", () => {
+    const definingFact: Record<string, (life: FinancialLifeView) => boolean> = {
+      "Purchase Order": (l) => l.buySide.purchaseOrder !== undefined,
+      "Item Receipt": (l) => l.buySide.itemReceipt !== undefined,
+      "Vendor Bill": (l) => l.buySide.vendorBill !== undefined,
+      "Sales Order": (l) => l.sellSide.salesOrder !== undefined,
+      "Item Fulfillment": (l) => l.sellSide.itemFulfillment !== undefined,
+      // The delivery DATE, never the carrier shipment that names it.
+      Delivery: (l) => l.sellSide.deliveredAt !== undefined,
+      Installation: (l) => l.sellSide.installedAt !== undefined,
+      "First online": (l) => l.sellSide.firstOnlineAt !== undefined,
+      "Customer Invoice": (l) => l.sellSide.customerInvoice !== undefined,
+    };
+    const serials = ws.dataset.inventoryUnits.map((u) => u.serial);
+    let withheldSeen = 0;
+    let datedSeen = 0;
+    for (const role of DEMO_USERS.flatMap((u) => u.roles)) {
+      const c = contextFor(role);
+      for (const serial of serials) {
+        const payload = runTool(c, "get_evidence_timeline", { serial }).data as
+          | { events: readonly { label: string; state: string; ref: string }[] }
+          | undefined;
+        if (payload === undefined) continue;
+        const life = c.queries.getFinancialLife(c.ctx, serial);
+        for (const event of payload.events) {
+          if (event.state === "WITHHELD") withheldSeen += 1;
+          if (event.state === "DATED") datedSeen += 1;
+          expect(
+            definingFact[event.label]?.(life),
+            `${role} ${serial}: ${event.label} ${event.state} (${event.ref}) is on the timeline, but the close holds no such event`,
+          ).toBe(true);
+        }
+      }
+    }
+    // Both directions, so this cannot pass on a handler that emits nothing:
+    // some withholding is real, and the ordinary rows still arrive.
+    expect(withheldSeen).toBeGreaterThan(0);
+    expect(datedSeen).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The drawer answers from the close as it stands, not from the frozen
+ * baseline.
+ *
+ * Every tool Ask Gaurd had read `ws.close` — the position the rules derived,
+ * before anyone did anything — while every screen beside it read the session.
+ * So a Controller who had concluded all seven blockers was told "Sign-off is
+ * blocked", "Open blockers = 7", "$198,950" and "81.42%" from a shipped chip
+ * on five screens, at the moment the Overview's own gate read "Every blocker
+ * has a management conclusion. Signing off locks the period." The drawer
+ * published no divergence disclosure of any kind, so the two closes appeared
+ * unlabelled one click apart.
+ *
+ * Asserted as a BICONDITIONAL against `getEffectiveClose` on the same run
+ * rather than against the figures above. Pinning "0 blockers" would pass
+ * forever once the data moved underneath it, which is exactly how the Stage F
+ * review found authored prose describing a population of zero — and pinning
+ * "7" is what shipped this defect.
+ */
+describe("the live close, not the baseline", () => {
+  /** A workspace of its own: these tests record conclusions. */
+  const workedClose = () => {
+    const fresh = createWorkspace();
+    const queries = createQueryService(fresh);
+    const commands = createCommandService(fresh);
+    const asController = ctxFor("CONTROLLER");
+    // A second person reviews: submitting and accepting your own evidence is
+    // self-approval, which the service refuses.
+    const asManager = ctxFor("ACCOUNTING_MANAGER");
+    const t2: AiToolContext = {
+      queries,
+      projections: createProjectionService(fresh),
+      ctx: asController,
+    };
+    return { fresh, queries, commands, asController, asManager, t2 };
+  };
+
+  const resolveEveryBlocker = (w: ReturnType<typeof workedClose>) => {
+    for (const blocker of [...w.fresh.close.blockers]) {
+      const id = blocker.exceptionId;
+      for (const requirement of w.queries.getExceptionWorkflow(w.asController, id)
+        .unmetRequirements) {
+        const submitted = w.commands.submitEvidence(w.asController, {
+          title: `Support for ${requirement}`,
+          kind: "DOCUMENT",
+          content: { note: "Obtained." },
+          relatedObjectRef: id,
+          satisfiesRequirement: { exceptionId: id, requirement },
+        });
+        w.commands.reviewEvidence(w.asManager, submitted.id, "ACCEPTED", "Reviewed.");
+      }
+      w.commands.concludeException(w.asController, {
+        exceptionId: id,
+        conclusion: "RESOLVED_NO_ADJUSTMENT",
+        rationale: "Support obtained and reviewed; no adjustment required.",
+      });
+    }
+  };
+
+  it("reports the blocker position the close actually holds", () => {
+    const w = workedClose();
+    const ask = () => answerQuestion(w.t2, "What prevents sign-off?", {}).answer;
+    const figure = (label: string) =>
+      ask()?.knownFacts.find((f) => f.label === label);
+
+    // Before: the baseline and the live position agree, so nothing can be
+    // proved yet — this is the premise, not the assertion.
+    const before = w.queries.getEffectiveClose(w.asController);
+    expect(before.diverged).toBe(false);
+    expect(figure("Open blockers")?.count).toBe(before.blockerCount);
+
+    resolveEveryBlocker(w);
+
+    const live = w.queries.getEffectiveClose(w.asController);
+    // The premise of everything below: the two positions now differ.
+    expect(live.diverged).toBe(true);
+    expect(live.blockerCount).not.toBe(live.baselineBlockerCount);
+    expect(live.readinessBps).not.toBe(live.baselineReadinessBps);
+
+    const answer = ask();
+    expect(figure("Open blockers")?.count).toBe(live.blockerCount);
+    expect(figure("Close readiness")?.valueBps).toBe(live.readinessBps);
+    expect(answer?.exposure?.valueCents).toBe(live.blockerExposureCents);
+    // And the prohibition itself, which is the half that made this a P0: it
+    // was a constant, so it was "true today" rather than measured.
+    expect(answer?.status).not.toMatch(/^Sign-off is blocked/);
+  });
+
+  it("names the baseline as the baseline rather than dropping it", () => {
+    // The other direction. An answer that simply switched to live figures
+    // would satisfy the test above and lose the reproducible position, which
+    // is the artifact the whole product is built to defend.
+    const w = workedClose();
+    resolveEveryBlocker(w);
+    const live = w.queries.getEffectiveClose(w.asController);
+    const answer = answerQuestion(w.t2, "What prevents sign-off?", {}).answer;
+    const baseline = answer?.knownFacts.find((f) =>
+      /rules derived/.test(f.label) && f.count !== undefined,
+    );
+    expect(baseline?.count).toBe(live.baselineBlockerCount);
+    expect(answer?.managementConclusion).toMatch(/Reset Demo/);
+  });
+
+  it("reports a recorded conclusion instead of denying one", () => {
+    const w = workedClose();
+    const id = w.fresh.close.blockers[0]!.exceptionId;
+    const ask = () =>
+      answerQuestion(w.t2, `Why is ${id} still open?`, { exceptionId: id }).answer;
+
+    // The premise: the shipped seed records no conclusion, so on first load
+    // the sentence the fix removes is TRUE. Without this the assertion below
+    // would pass on an engine that never says it.
+    expect(ask()?.managementConclusion).toMatch(/No conclusion has been recorded/);
+
+    w.commands.concludeException(w.asController, {
+      exceptionId: id,
+      conclusion: "REMAINS_OPEN",
+      rationale: "Reviewed; stays open pending the contract.",
+    });
+
+    const workflow = w.queries.getExceptionWorkflow(w.asController, id);
+    expect(workflow.conclusion).not.toBeNull();
+    const answer = ask();
+    // `get_exception` carries no conclusion field, so the old sentence was not
+    // a wrong lookup — it was a comparison that never happened, reported as a
+    // negative result, on the product's trust screen.
+    expect(answer?.managementConclusion).not.toMatch(/No conclusion has been recorded/);
+    expect(answer?.knownFacts.some((f) => f.label === "Management conclusion")).toBe(true);
+    // REMAINS_OPEN records that a person looked and decided it stays open, so
+    // the item is still open and the answer must not read as resolved.
+    expect(workflow.open).toBe(true);
+    expect(answer?.nextAction).not.toMatch(/^Obtain:/);
+  });
+
+  it("still says nothing has been concluded when nothing has", () => {
+    // The false-negative direction: an answer that always claimed a conclusion
+    // would satisfy the test above.
+    const w = workedClose();
+    const id = w.fresh.close.blockers[0]!.exceptionId;
+    const answer = answerQuestion(w.t2, `Why is ${id} still open?`, { exceptionId: id }).answer;
+    expect(answer?.managementConclusion).toMatch(/No conclusion has been recorded/);
+    expect(answer?.knownFacts.some((f) => f.label === "Management conclusion")).toBe(false);
   });
 });
 

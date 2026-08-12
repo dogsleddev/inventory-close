@@ -6,6 +6,9 @@ import {
   createQueryService,
   createWorkspace,
   effectiveClose,
+  effectiveOpenExceptionIds,
+  effectiveStatus,
+  latestConclusion,
   unmetRequirements,
 } from "../src/index.js";
 import { AuthorizationError } from "@icg/permissions";
@@ -127,6 +130,93 @@ describe("a conclusion cannot outrun the evidence", () => {
     t.commands.reviewEvidence(t.ctx("CONTROLLER"), item.id, "RETURNED", "Wrong agreement.");
     // Sent back means it never answered the question.
     expect(unmetRequirements(t.ws, "EXC-001")).toContain(requirement);
+  });
+});
+
+/**
+ * The same rule, enforced against the STATE rather than only against the write.
+ *
+ * `concludeException` calls D6 the one rule it will not bend, and checked it
+ * once — at the moment of writing. Nothing re-derived it afterwards, so a
+ * conclusion outlived the record that justified it: returning the submission
+ * that satisfied the requirement regrew `unmetRequirements`, and the
+ * resolution went on standing. The exception left the blocker set, readiness
+ * rescored to 96.8%, and the Overview offered "Every blocker has a management
+ * conclusion. Signing off locks the period." beside "0 blockers · $0" — an act
+ * the close's own rules forbid, recorded and locked.
+ *
+ * No shipped surface reaches this today: `reviewEvidence` is exposed by no
+ * server action, so nothing in the running product can move a submission to
+ * RETURNED. It is a latent hole, and COMPLETION_PLAN §168 plans the button
+ * that would open it — which is exactly why the invariant is asserted here
+ * rather than left for that button to rediscover.
+ */
+describe("a conclusion cannot outlive the evidence either", () => {
+  it("stops superseding the rule when the record behind it is returned", () => {
+    const t = setup();
+    const submissions = unmetRequirements(t.ws, "EXC-001").map((requirement) =>
+      t.commands.submitEvidence(t.ctx("CONTROLLER"), {
+        title: `Support for ${requirement}`,
+        kind: "MANAGEMENT_SUPPORT",
+        content: { requirement },
+        relatedObjectRef: "EXC-001",
+        satisfiesRequirement: { exceptionId: "EXC-001", requirement },
+      }),
+    );
+    expect(submissions.length).toBeGreaterThan(0);
+    t.commands.concludeException(t.ctx("CONTROLLER"), {
+      exceptionId: "EXC-001",
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Support obtained; no adjustment required.",
+    });
+
+    // The premise: the conclusion really does supersede the rule right now.
+    expect(effectiveStatus(t.ws, "EXC-001")).toBe("RESOLVED_NO_ADJUSTMENT");
+    expect(effectiveOpenExceptionIds(t.ws)).not.toContain("EXC-001");
+    const resolved = effectiveClose(t.ws);
+
+    // A reviewer sends the supporting record back. Reviewing is a different
+    // person's act: the service refuses self-approval.
+    for (const submission of submissions) {
+      t.commands.reviewEvidence(
+        t.ctx("ACCOUNTING_MANAGER"),
+        submission.id,
+        "RETURNED",
+        "Not sufficient.",
+      );
+    }
+
+    expect(unmetRequirements(t.ws, "EXC-001").length).toBeGreaterThan(0);
+    expect(effectiveStatus(t.ws, "EXC-001")).not.toBe("RESOLVED_NO_ADJUSTMENT");
+    expect(effectiveOpenExceptionIds(t.ws)).toContain("EXC-001");
+    // And every figure computed from that set follows it back.
+    const after = effectiveClose(t.ws);
+    expect(after.blockerCount).toBeGreaterThan(resolved.blockerCount);
+    expect(after.readinessBps).toBeLessThan(resolved.readinessBps);
+  });
+
+  it("keeps the conclusion in the trail rather than deleting it", () => {
+    // What it loses is the power to supersede the rule, which is all the gate
+    // was ever about. An audit trail that erased the act would be worse than
+    // one that recorded an act later withdrawn.
+    const t = setup();
+    const submission = t.commands.submitEvidence(t.ctx("CONTROLLER"), {
+      title: "Support",
+      kind: "MANAGEMENT_SUPPORT",
+      content: { requirement: unmetRequirements(t.ws, "EXC-001")[0] },
+      relatedObjectRef: "EXC-001",
+      satisfiesRequirement: {
+        exceptionId: "EXC-001",
+        requirement: unmetRequirements(t.ws, "EXC-001")[0]!,
+      },
+    });
+    t.commands.concludeException(t.ctx("CONTROLLER"), {
+      exceptionId: "EXC-001",
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Support obtained.",
+    });
+    t.commands.reviewEvidence(t.ctx("ACCOUNTING_MANAGER"), submission.id, "RETURNED", "No.");
+    expect(latestConclusion(t.ws, "EXC-001")?.conclusion).toBe("RESOLVED_NO_ADJUSTMENT");
   });
 });
 

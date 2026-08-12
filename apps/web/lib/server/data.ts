@@ -757,8 +757,16 @@ export function buildExceptionsData(
   };
 }
 
-/** How a recorded conclusion reads on screen. */
-const CONCLUSION_LABELS: Readonly<Record<string, string>> = {
+/**
+ * How a recorded conclusion reads on screen.
+ *
+ * Exported so the Ask Gaurd drawer words it from the module that owns the
+ * vocabulary rather than restating it. Stage G gave the drawer a path to the
+ * recorded conclusion; without this it would have printed `REMAINS_OPEN` at
+ * the reader, which is the canonical-token leak `humanizeCanonical` exists to
+ * stop.
+ */
+export const CONCLUSION_LABELS: Readonly<Record<string, string>> = {
   RESOLVED_NO_ADJUSTMENT: "Resolved — no adjustment required",
   RESOLVED_ADJUSTMENT_PROPOSED: "Resolved — adjustment proposed",
   REMAINS_OPEN: "Remains open",

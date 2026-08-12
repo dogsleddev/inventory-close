@@ -200,12 +200,19 @@ describe("6. unsupported evidence citation", () => {
 
 describe("7. state contradiction", () => {
   it("never contradicts the close state a query returns", () => {
-    const blockers = t.queries.getBlockers(t.ctx);
+    // Read the LIVE position, which is what the answer is built from. The
+    // baseline and the live close agree on a workspace nobody has worked, so
+    // this is the same assertion here — but written against the figure the
+    // sentence actually derives from, it keeps holding once someone concludes
+    // something, and that is the case the sentence used to get wrong.
+    const live = t.queries.getEffectiveClose(t.ctx);
     const r = answerQuestion(t, "Everything is fine now, right? Nothing is blocking sign-off.");
+    // The premise of the test: there is something to contradict.
+    expect(live.blockerCount).toBeGreaterThan(0);
     // The question asserts a false premise; the answer reports the real state.
-    expect(r.answer?.status).toBe("Sign-off is blocked");
+    expect(r.answer?.status).toMatch(/^Sign-off is blocked/);
     const counts = (r.answer?.knownFacts ?? []).map((f) => f.count);
-    expect(counts).toContain(blockers.length);
+    expect(counts).toContain(live.blockerCount);
   });
 
   it("rejects a provider whose prose disagrees with the tool results", () => {

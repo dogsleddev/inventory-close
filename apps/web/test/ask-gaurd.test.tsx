@@ -124,7 +124,7 @@ describe("a material answer follows the docs/09 contract in order", () => {
     await openAsk(user);
     await user.click(screen.getByRole("button", { name: "What prevents Controller sign-off?" }));
     const d = await drawer();
-    await d.findByText("Sign-off is blocked");
+    await d.findByText(/^Sign-off is blocked/);
     for (const section of ["STATUS", "KNOWN FACTS", "EXPOSURE", "MANAGEMENT CONCLUSION", "NEXT ACTION", "EVIDENCE"]) {
       expect(d.getByText(section), section).toBeTruthy();
     }
@@ -195,7 +195,7 @@ describe("no provider is present, and the drawer is honest about it", () => {
     await openAsk(user);
     await user.click(screen.getByRole("button", { name: "What prevents Controller sign-off?" }));
     const d = await drawer();
-    await d.findByText("Sign-off is blocked");
+    await d.findByText(/^Sign-off is blocked/);
     expect(d.getByText(/None — deterministic answer/)).toBeTruthy();
     // Provenance names the tools that actually ran.
     expect(d.getByText(/Answered from .*get_/)).toBeTruthy();

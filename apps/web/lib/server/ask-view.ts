@@ -27,6 +27,7 @@ import {
   knownLocationName,
   sourceName,
 } from "./humanize";
+import { CONCLUSION_LABELS } from "./data";
 import { CUSTODY_LABELS } from "./inventory-list-view";
 import { COGS_LABELS, DIMENSION_LABELS } from "./methodology-view";
 import { METHOD_LABELS } from "./custody-view";
@@ -92,6 +93,7 @@ const CANONICAL_LABELS: ReadonlyMap<string, string> = new Map<string, string>([
     ([key, presentation]): [string, string] => [key, presentation.label],
   ),
   ...Object.entries(RULE_RESULT_LABELS),
+  ...Object.entries(CONCLUSION_LABELS),
   ...Object.entries(AGING_BASIS_LABELS),
   ...Object.entries(DIMENSION_LABELS),
   ...Object.entries(COGS_LABELS),
