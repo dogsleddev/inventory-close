@@ -70,20 +70,26 @@ across counts rather than reading the page, because the shipped population is 84
 defect only shows at one — which is exactly how it survived a rewrite whose author was looking
 straight at it.
 
-**Two findings bear directly on the compiler change and should be fixed together with it:**
+**Two findings bore directly on the compiler change. Both are now FIXED (`9ef075c`):**
 
-- `G75` — the `[\s-]+` word join is one-directional. `phrasePattern` splits on `/\s+/`, so an
-  authored *space* matches a hyphen but an authored *hyphen* does not match a space: `sub-ledger`
-  compiles to `(?:sub-ledgers|sub-ledger)` and "What is in the sub ledger?" refuses. Seven other
-  hyphenated phrases are covered only because an author hand-listed the spaced twin — **a
-  hand-maintained allowlist standing in for a compiler property, which is the same shape number
-  agreement just removed one axis over.** Fix: split on `/[\s-]+/`, and inflect the last *segment*.
-- `G74` — `phrasePattern` folds curly punctuation on the question side and never on the phrase side,
-  so a Windows re-encoding of `answers.ts` silently kills the table's only apostrophe phrase
-  (`hasn't moved`). Every assertion in the phrase-property suite is self-referential — it tests the
-  pattern against the phrase that produced it — so all of them pass on a phrase that matches no real
-  question. Fix: fold the phrase through `normalizeQuestion` inside `phrasePattern`, and assert each
-  phrase equals its own normalized form.
+- `G75` — the `[\s-]+` word join was one-directional. `phrasePattern` split on `/\s+/`, so an
+  authored *space* matched a hyphen but an authored *hyphen* did not match a space: `sub-ledger`
+  compiled to `(?:sub-ledgers|sub-ledger)` and "What is in the sub ledger?" refused. Seven other
+  hyphenated phrases were covered only because an author hand-listed the spaced twin — **the
+  allowlist standing in for a compiler property, the same shape number agreement had just been moved
+  off, one axis over.** Now splits on `/[\s-]+/`; inflection still lands on the head noun because
+  the last segment is the last element either way. **One routing change across a corpus of 1,375**
+  (every phrase in both spellings, plus every shipped chip): `sub ledger`, UNROUTED → reconciliation.
+- `G74` — `phrasePattern` folded curly punctuation on the question side and never on the phrase side.
+  Now folds the phrase through `normalizeQuestion` — the same function, not a second spelling of it.
+  **Folding cannot undo mojibake**, though: a Get-Content round trip turns the apostrophe into three
+  characters the fold set has never heard of, so `phrase === normalizeQuestion(phrase)` would still
+  pass on it. The guard that works is **ASCII**, asserted over every declared phrase.
+
+  Worth keeping: three OTHER tests also failed on a corrupted phrase, because they built their probes
+  from the raw phrase — so an encoding fault reported itself as a boundary fault and as a number
+  fault. Each now segments the way the compiler segments, and a corrupted phrase fails exactly one
+  test, which names the cause.
 
 **The largest remaining cluster is still the baseline-versus-live family**, and it is confirmed to be
 the same two tools away: `G26`'s agent observed that `1e06d58` "added exactly the tool that would

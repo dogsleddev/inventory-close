@@ -108,10 +108,11 @@ but the *next task* is here, not in §8.
 | **Stage G §0 remediation** | ✅ Done — the plan's four verified defects + five found fixing them |
 | **Stage G review** | ⚠ RAN and stopped at a usage limit — 48 confirmed findings, 30 unjudged. See STAGE_G_REVIEW_STATUS.md |
 | **Stage G fix pass 1** | ✅ Done (`1e06d58`) — G66 verified, 4 P0s + G01/G02/G03 fixed, G39/G42 closed with them |
-| **Stage G fix pass 2** | ⬅ **NEXT.** Re-verify the tail (§3a, §3c), judge the 29 remaining unjudged, then the fix-validation fleet over `1e06d58` |
+| **Stage G fix pass 2** | ✅ Re-verification done (12 agents, 68 findings) — G67, G74, G75 fixed. See STAGE_G_REVIEW_STATUS.md §0b |
+| **Stage G fix pass 3** | ⬅ **NEXT.** The baseline-vs-live family G26/G27/G29/G30, then the remaining P1 tail |
 | H — QA | Not started |
 
-**2,119 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
+**2,455 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
 Run the suite as `npx vitest run --maxWorkers=3` — the default worker count OOMs on this machine.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
