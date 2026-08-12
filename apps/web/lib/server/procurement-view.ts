@@ -5,7 +5,7 @@ import type {
   ProcurementDetail,
   ProcurementOrderOut,
 } from "@icg/services";
-import { formatCents, formatDate, formatDateShort } from "../format";
+import { formatCents, formatDate, formatDateShort, plural } from "../format";
 import type {
   ExceptionDrawerData,
   GrniRowView,
@@ -90,26 +90,38 @@ const withheldCell = (label: string): string => `Withheld — ${label}`;
  * nothing above the sentence but the tab bar. That half was wrong for every
  * reader on every tab, including the one tab the claim was true of.
  */
-const tabWithheldNote = (p: {
+export const tabWithheldNote = (p: {
   missingRows: number;
   rowsMissingADocument: number;
   totalOrders: number;
 }): string | null => {
+  /**
+   * Every noun here goes through `plural`, including the ones in sentences
+   * that only ever render one way today.
+   *
+   * A hard-coded plural is invisible until a population reaches exactly one,
+   * and the auditor is that reader: the note read "1 orders" for as long as it
+   * existed. The rewrite that removed that instance branched these two phrases
+   * by hand and then carried a THIRD hard-coded "orders" through, in the
+   * closing sentence, forty lines from a tile that got the same count right.
+   * Branching each phrase by hand is the defect; the wording was only where it
+   * showed.
+   */
   const parts: string[] = [];
   if (p.missingRows > 0) {
-    // A hard-coded plural is invisible until a role withholds exactly one, and
-    // the auditor is that role: the previous note read "1 orders" on every run.
+    const n = p.missingRows;
     parts.push(
-      `${p.missingRows} ${p.missingRows === 1 ? "order is" : "orders are"} outside your role's scope in this demo, so ${p.missingRows === 1 ? "it has" : "they have"} no row in the table below.`,
+      `${n} ${plural(n, "order is", "orders are")} outside your role's scope in this demo, so ${plural(n, "it has", "they have")} no row in the table below.`,
     );
   }
   if (p.rowsMissingADocument > 0) {
+    const n = p.rowsMissingADocument;
     parts.push(
-      `${p.rowsMissingADocument} ${p.rowsMissingADocument === 1 ? "row keeps its place in the table below but names a source document" : "rows keep their place in the table below but name source documents"} outside your scope; ${p.rowsMissingADocument === 1 ? "that cell reads" : "those cells read"} "Withheld", never blank.`,
+      `${n} ${plural(n, "row keeps its place in the table below but names a source document", "rows keep their place in the table below but name source documents")} outside your scope; ${plural(n, "that cell reads", "those cells read")} "Withheld", never blank.`,
     );
   }
   if (parts.length === 0) return null;
-  return `${parts.join(" ")} The match figures count the close's own population of ${p.totalOrders} orders either way, and a period-end position is a cutoff fact derived from the documents' own dates, so it does not move with your scope.`;
+  return `${parts.join(" ")} The match figures count the close's own population of ${p.totalOrders} ${plural(p.totalOrders, "order")} either way, and a period-end position is a cutoff fact derived from the documents' own dates, so it does not move with your scope.`;
 };
 
 /** The disclosure for every tab, each built only from that tab's own table. */

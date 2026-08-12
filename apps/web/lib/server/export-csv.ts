@@ -11,7 +11,7 @@ import {
   getMethodology,
   getProcurementPopulations,
 } from "@icg/services";
-import { formatBpsExact, formatCents } from "../format";
+import { formatBpsExact, formatCents, plural } from "../format";
 import { attempt } from "./data";
 import { holderLabel } from "./humanize";
 import { getQueries, getWorkspace, makeContext, roleLabel, userById } from "./workspace";
@@ -409,7 +409,7 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
         lines.push(
           row([
             "Withheld",
-            `${p.withheldOrderCount} ${p.withheldOrderCount === 1 ? "order is" : "orders are"} outside this role's scope and ${p.withheldOrderCount === 1 ? "is" : "are"} not in this file. The three-way match summary on the Procurement screen still counts the close's whole population of ${p.summary.orders} orders.`,
+            `${p.withheldOrderCount} ${plural(p.withheldOrderCount, "order is", "orders are")} outside this role's scope and ${plural(p.withheldOrderCount, "is", "are")} not in this file. The three-way match summary on the Procurement screen still counts the close's whole population of ${p.summary.orders} ${plural(p.summary.orders, "order")}.`,
           ]),
         );
       }

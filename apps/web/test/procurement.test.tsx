@@ -6,7 +6,7 @@ import { userByRole } from "@icg/data";
 import { getProcurementPopulations } from "@icg/services";
 import { ProcurementScreen } from "../components/ProcurementScreen";
 import { buildShellData } from "../lib/server/data";
-import { buildProcurementData } from "../lib/server/procurement-view";
+import { buildProcurementData, tabWithheldNote } from "../lib/server/procurement-view";
 import { getQueries, getWorkspace, makeContext } from "../lib/server/workspace";
 
 /**
@@ -360,6 +360,51 @@ describe("Procurement — a scoped reader is not shown their own scope as a find
         isShort,
       );
     }
+  });
+
+  /**
+   * The plural class, asserted over the sentence rather than over its three
+   * known instances.
+   *
+   * "1 orders" survived one fix and was reintroduced by the next: the rewrite
+   * that removed it branched two phrases by hand and carried a third
+   * hard-coded "orders" through its own closing sentence. Listing the three
+   * would have caught none of them, because each was written by someone who
+   * had just read the other two.
+   *
+   * So this reads the rendered note and requires that no "1" is ever followed
+   * by a word ending in "s" — which is the property the sentence has to have
+   * and the one a hand-branched phrase loses.
+   */
+  it("never prints a plural noun after a count of one", () => {
+    // Driven through the note builder rather than through the screen, because
+    // the shipped dataset has 84 orders and the defect only shows at one. A
+    // test that could only read the rendered page would pass on the broken
+    // template — which is exactly why this instance survived a fix pass whose
+    // author was looking straight at it.
+    const singular = /\b1 (?!of\b)([a-z]+s)\b/;
+    for (const totalOrders of [1, 2, 84]) {
+      for (const missingRows of [0, 1, 2]) {
+        for (const rowsMissingADocument of [0, 1, 2]) {
+          const note = tabWithheldNote({ missingRows, rowsMissingADocument, totalOrders });
+          if (note === null) continue;
+          const hit = singular.exec(note);
+          expect(
+            hit === null,
+            `"1 ${hit?.[1]}" at totalOrders=${totalOrders} missing=${missingRows} docs=${rowsMissingADocument}: ${note}`,
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("still says the plural where the count is plural", () => {
+    // The other direction: a builder that emitted the singular everywhere
+    // would satisfy the assertion above.
+    const note = tabWithheldNote({ missingRows: 3, rowsMissingADocument: 2, totalOrders: 84 });
+    expect(note).toMatch(/3 orders are/);
+    expect(note).toMatch(/2 rows keep/);
+    expect(note).toMatch(/84 orders/);
   });
 
   it("points at the table it describes, which is below it on every tab", async () => {

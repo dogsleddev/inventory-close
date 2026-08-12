@@ -61,6 +61,25 @@ export function formatCount(value: number): string {
   return value.toLocaleString("en-US");
 }
 
+/**
+ * The noun that fits the count.
+ *
+ * A hard-coded plural is invisible until a population reaches exactly one, and
+ * every population here can: the auditor's withheld-order count is 1, and the
+ * screen read "1 orders" for as long as the sentence existed. The fix that
+ * removed that instance carried a second one through its own rewrite —
+ * "population of 1 orders", forty lines from a tile that got it right — so the
+ * lesson is that branching each phrase by hand is the defect, not the wording.
+ *
+ * `packages/ai/src/answers.ts` holds a twin of this for answer prose. The two
+ * are deliberately not shared: @icg/ai may not depend on the web app, and a
+ * formatting helper does not belong in the answer engine. They are three lines
+ * and pure; a package boundary is the right price.
+ */
+export function plural(count: number, one: string, many = `${one}s`): string {
+  return count === 1 ? one : many;
+}
+
 /** Basis points at overview scale, one decimal (the documented rounding rule). */
 export function formatBpsOverview(bps: number): string {
   return `${(bps / 100).toFixed(1)}%`;
