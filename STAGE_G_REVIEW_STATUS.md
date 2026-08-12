@@ -27,8 +27,8 @@ against the service on the same run, and each mutation-tested against the pre-fi
 Incidentally closed by the same edits: `G39`, `G42` (the compiler change), and `G16`'s
 blockers-branch half.
 
-**Gate after the pass:** typecheck, lint and build clean, 20 routes. **2,119 tests across 72 files
-passing** (was 1,749). Locked baseline unmoved and re-confirmed in a browser as Controller and
+**Gate after every pass below:** typecheck, lint and build clean, 20 routes. **2,462 tests across
+72 files passing** (was 1,749 at `003525a`). Locked baseline unmoved and re-confirmed in a browser as Controller and
 auditor. `pnpm test` still exits 1 on the known `onTaskUpdate` reporter RPC timeout — read the
 `Tests` line.
 
@@ -91,12 +91,24 @@ straight at it.
   fault. Each now segments the way the compiler segments, and a corrupted phrase fails exactly one
   test, which names the cause.
 
-**The largest remaining cluster is still the baseline-versus-live family**, and it is confirmed to be
-the same two tools away: `G26`'s agent observed that `1e06d58` "added exactly the tool that would
-close this… `answerException` was rewritten to use it. The `missing-evidence` intent was not." The
-repository now holds, side by side, one handler reporting the live working state and another
-reporting the frozen one for the same exception — and both shipped evidence chips route to the
-second. `G26`, `G27`, `G29`, `G30` are P1 at HEAD; `G28` was lowered to P2.
+**The baseline-versus-live family is now CLOSED (`b1cf8aa`).** `G26`, `G27`, `G29` and `G30` are
+fixed; `G28` needed no divergence channel — it was the absence of a label on answers that are now
+correct, and fixing the other three removed every unlabelled one. `G30` was fixed at the source
+(`blockedBy` in `queries.ts`), which corrected the drawer, the Audit Package screen and the CSV
+export in one edit. `G27` and `G26` read `get_effective_exceptions`, the live twin of
+`list_exceptions`.
+
+**Two traps the fix pass hit, both worth carrying forward:**
+
+- **Making a count live makes its empty branch reachable, and that branch may not answer.**
+  `missing-evidence` returned `undefined` when nothing was outstanding — unreachable while the count
+  came off the frozen finding, and an instant `OUT_OF_SCOPE` refusal once it did not. A shipped chip
+  would have refused at the moment the answer was best. **A fix that makes a dead branch live has to
+  answer for the branch.**
+- **A live figure and a baseline destination.** The panel's link leads to `/exceptions`, which lists
+  what the rules derived, so making the caption live without the link would have put "View all 0
+  blockers" on a page of seven — the same defect one click along. The caption counts its rows; the
+  link counts its destination.
 
 Per-agent output with full reproductions:
 `.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_8b945fa1-a99/journal.jsonl`
@@ -105,7 +117,7 @@ Per-agent output with full reproductions:
 
 ## 1. Where the code stands
 
-**HEAD is `1e06d58`** — Stage G (`7333663`), the remediation of the review plan's own §0
+**HEAD is `b1cf8aa`** — Stage G (`7333663`), the remediation of the review plan's own §0
 (`003525a`), the review status record (`e696caf`), and the first fix pass (`1e06d58`).
 
 ---
