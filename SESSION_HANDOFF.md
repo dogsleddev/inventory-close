@@ -27,6 +27,34 @@ review, its re-verification, nine fix commits and a fix-validation fleet over th
 > **And three things no plan in this repo covers, found by an independent assessment on 2026-08-12
 > and each verified by execution — read these before planning anything:**
 >
+> **STATUS 2026-08-12 evening: two of these are fixed (`fbcc2a6`, `212d219`), and the fix pass had
+> to be fixed.** A validation fleet over `fbcc2a6` found it reopened its own class one click from
+> where it closed it — the queue ROW went live and `assembleDrawer`, twelve lines below in the same
+> loop, stayed frozen, so one call returned a row reading "Resolved" and a drawer reading "Recount
+> Required · Open · Obtain: …". `212d219` fixes it at the root: the live position now lives on
+> `ExceptionContext` with one `livePosition()` helper every consumer reads. **Third measured instance
+> of this repo's one-in-three rate.** See [[fix-passes-reopen-classes]].
+>
+> **FOUR MORE OF THE SAME FAMILY ARE OPEN**, each verified by execution by that fleet and none yet
+> fixed — they are the rest of blocker 1, and the `livePosition()` helper now exists to fix them
+> with:
+>
+> - **`data.ts:287-290` (`attentionItems`) and `:492-493`.** Conclude all seven blockers: the gate
+>   offers sign-off ("Every blocker has a management conclusion") while the panel beside the button
+>   still lists five records to obtain. Highest-consequence item the fleet found.
+> - **`data.ts:179-180` (`categoryNote`) and `:536-537` (`categories`, `stats`).** The Overview
+>   contradicts itself on one screen — 6 in the gate, "7 open blockers" in the Close-areas panel, and
+>   bars weighting to 81.42% under an 83.1% headline.
+> - **`financial-life-view.ts:1286`.** `/inventory/[serial]` reports a concluded exception as Recount
+>   Required, `blocker: true`, and demands the conclusion the workspace already holds.
+> - **`export-csv.ts:270` and `:274`.** The CSVs emit the frozen baseline with nothing in the file
+>   saying so. An export outlives the tab it came from, so this one matters more than its severity.
+>
+> Also open, lower: `/evidence` lists a submitted-and-accepted record under "Required, with no record
+> behind it"; `/adjustments` denies a conclusion the product holds one page over; the blockers-filter
+> `emptyNote` claims every blocker was concluded from the moment the page loads; and `gate.divergence`
+> announces a moved position after a REMAINS_OPEN conclusion that moved nothing.
+>
 > 1. **The record-a-conclusion loop contradicts itself on the exception detail page.** Conclude
 >    EXC-003 `RESOLVED_NO_ADJUSTMENT` with its evidence obtained, and the Overview correctly reads
 >    "6 blockers · $189,750" while `/exceptions/EXC-003` renders header status "Recount Required",
