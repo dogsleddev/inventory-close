@@ -718,12 +718,17 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
       // the page where that is the right answer. The weighted score is the
       // readiness policy's own output over the rules' own population; making
       // it live would be a second definition of readiness. What was wrong was
-      // shipping it unlabelled: "Weighted result 81.42% · 8142 bps" sat on the
-      // same screen as a live gate reading 83.1%, and a reader had no way to
-      // know they were answers to different questions. One unlabelled number
-      // that disagrees with the gate is the defect; two labelled numbers are
-      // the product's whole argument. The divergence note at data.ts:385 says
-      // the same thing at the gate.
+      // shipping it unlabelled: the bare "Weighted result …" sentence sat on
+      // the same screen as a live gate showing a different percentage, and a
+      // reader had no way to know they were answers to different questions.
+      // One unlabelled number that disagrees with the gate is the defect; two
+      // labelled numbers are the product's whole argument. The divergence note
+      // at data.ts:385 says the same thing at the gate.
+      //
+      // No figure is written here, deliberately: `no-hardcoded-totals.test.ts`
+      // scans this tree for the canonical strings and does not strip comments,
+      // which is the right conservatism — a figure transcribed into a comment
+      // is a figure that can go stale beside the code it describes.
       weightedResult: `Weighted result ${formatBpsExact(readiness.totalBasisPoints)} · ${readiness.totalBasisPoints} bps — the rules' baseline, before this session's conclusions`,
     },
     ...(health !== undefined
