@@ -81,6 +81,14 @@ export function buildShellData(user: DemoUser, correlationId: string): ShellData
   const ctx = makeContext(user, correlationId);
 
   const readiness = attempt(() => queries.getCloseReadiness(ctx));
+  // Live, like the gate at data.ts:601-618 and for the same reason. The shell
+  // is on all twenty routes: reading the rules' baseline here put "7 blockers"
+  // in the header directly above an Overview gate reading 6, above a
+  // /close-memo tile whose own BLOCKERS OPEN figure was already live and read
+  // 6, and put a 7 on the nav rail beside a /exceptions?filter=blockers list
+  // of six rows. The header is the one component that cannot be argued to be
+  // reporting the rules' own answer — it carries no label saying so.
+  const live = attempt(() => queries.getEffectiveClose(ctx));
   const blockers = attempt(() => queries.getBlockers(ctx));
   const period = attempt(() => queries.getPeriod(ctx));
   // Read from the service, which gates on the same permission key the reset
@@ -101,11 +109,11 @@ export function buildShellData(user: DemoUser, correlationId: string): ShellData
     headerKpis:
       readiness !== undefined
         ? {
-            ready: `${formatBpsOverview(readiness.totalBasisPoints)} ready`,
-            blockers: `${readiness.aggregates.blockerCount} blockers`,
+            ready: `${formatBpsOverview(live?.readinessBps ?? readiness.totalBasisPoints)} ready`,
+            blockers: `${live?.blockerCount ?? readiness.aggregates.blockerCount} blockers`,
           }
         : null,
-    navOpenBlockers: readiness?.aggregates.blockerCount ?? null,
+    navOpenBlockers: live?.blockerCount ?? readiness?.aggregates.blockerCount ?? null,
     dataHealthPct:
       readiness !== undefined ? formatBpsExact(readiness.aggregates.sourceHealthBps) : null,
     askFallback:

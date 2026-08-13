@@ -1,4 +1,5 @@
 import type { DemoUser } from "@icg/data";
+import { isResolvedStatus } from "@icg/domain";
 import type { ExceptionView, QueryService, ServiceContext } from "@icg/services";
 import {
   formatCents,
@@ -591,7 +592,20 @@ export function assembleEvidenceRecord(
   };
 }
 
-/** Compact drawer summary used by the Overview and queue row drawers. */
+/**
+ * Compact drawer summary used by the Overview and queue row drawers.
+ *
+ * `isBlocker` is the CALLER'S BASELINE HINT, and the live status can only ever
+ * narrow it, never widen it: an item management has concluded is not blocking
+ * anything, whichever set the caller had in hand. Eight call sites build this
+ * drawer and seven of them passed the rules' frozen blocker set, so concluding
+ * EXC-015 produced `{status: 'Resolved — No Adjustment', blocker: true}` on
+ * /reconciliation, /adjustments, /count, /valuation, /costing, /procurement and
+ * the Audit Package — the green resolved capsule and the red BLOCKER badge
+ * rendered 6px apart by `ExceptionDrawer.tsx:52-66`. Commit 212d219 went after
+ * that contradiction by correcting the caller, and reached one of the eight.
+ * Narrowing here is what makes the other seven unable to reintroduce it.
+ */
 export function assembleDrawer(
   context: ExceptionContext,
   isBlocker: boolean,
@@ -676,7 +690,10 @@ export function assembleDrawer(
       : {}),
     status: statusView(status),
     risk: riskView(finding.risk),
-    blocker: isBlocker,
+    // Narrowed by the LIVE status, from the same `livePosition` call that
+    // produced the capsule two lines up. Without this the two disagree on the
+    // same 200px of drawer.
+    blocker: isBlocker && !isResolvedStatus(status),
     exposure: formatCents(finding.exposureCents),
     layers: {
       netsuite,

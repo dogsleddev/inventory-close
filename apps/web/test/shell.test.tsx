@@ -6,9 +6,10 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { userByRole } from "@icg/data";
 import { AppShell } from "../components/AppShell";
-import { buildShellData } from "../lib/server/data";
+import { buildOverviewData, buildShellData } from "../lib/server/data";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_BOOTSTRAP, THEME_KEY } from "../lib/theme";
+import { concludeException, controller, resetDemo } from "./support/live-close";
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -175,5 +176,69 @@ describe("App shell — Ask Gaurd rail persistence", () => {
     renderShell();
     // Persisted open state is restored on mount.
     expect(await screen.findByText("SUGGESTED")).toBeTruthy();
+  });
+});
+
+/**
+ * The shell is on all twenty routes, so whatever it reads it says everywhere.
+ *
+ * It read `getCloseReadiness` — the rules' frozen artifact — and printed the
+ * result in two strings inside `.icg-header-kpis` and one badge on the nav
+ * rail. Conclude one blocker and the Overview gate four inches below the
+ * header read 6 while the header read "7 blockers"; /close-memo's own BLOCKERS
+ * OPEN tile, already live, read 6 under a header reading 7; and the rail badge
+ * read 7 beside a /exceptions?filter=blockers list of six rows.
+ *
+ * These tests must live below the ones above them: the workspace is a
+ * process-global singleton and this file's earlier assertions are written
+ * against the untouched baseline.
+ */
+describe("App shell — the header and the rail read the close as it is NOW", () => {
+  afterEach(resetDemo);
+
+  /**
+   * The locked baseline, asserted at a fresh load. Nothing in this pass may
+   * move any of these: live == baseline until somebody acts, and that
+   * invariant is what makes every "after" assertion below mean something.
+   */
+  it("reports the rules' own figures before anyone has acted", () => {
+    const shell = buildShellData(controller(), "T-SHELL-BASE");
+    expect(shell.headerKpis?.blockers).toBe("7 blockers");
+    expect(shell.headerKpis?.ready).toBe("81.4% ready");
+    expect(shell.navOpenBlockers).toBe(7);
+
+    const gate = buildOverviewData(controller(), "T-SHELL-BASE-OV").gate;
+    expect(gate?.bps).toBe(8142);
+    expect(gate?.blockerCount).toBe(7);
+    expect(gate?.blockerExposure).toBe("$198,950 exposure");
+  });
+
+  it("drops with the close, and agrees with the gate it sits above", () => {
+    // The premise. Without it the assertion below cannot tell a fix from a
+    // fixture that never had seven in it.
+    const before = buildShellData(controller(), "T-SHELL-BEFORE");
+    expect(before.headerKpis?.blockers).toBe("7 blockers");
+    expect(before.navOpenBlockers).toBe(7);
+
+    concludeException("EXC-003");
+
+    const after = buildShellData(controller(), "T-SHELL-AFTER");
+    expect(after.headerKpis?.blockers).toBe("6 blockers");
+    expect(after.navOpenBlockers).toBe(6);
+
+    // The contradiction itself, in one process: the header and the figure
+    // rendered directly beneath it.
+    const gate = buildOverviewData(controller(), "T-SHELL-AFTER-OV").gate;
+    expect(gate?.blockerCount).toBe(6);
+    expect(after.headerKpis?.blockers).toBe(`${gate?.blockerCount} blockers`);
+    expect(after.headerKpis?.ready).toBe(`${gate?.readinessOverview} ready`);
+  });
+
+  it("puts the live count on the rendered rail badge", () => {
+    concludeException("EXC-003");
+    renderShell();
+    const exceptions = screen.getByRole("link", { name: /Exceptions/ });
+    expect(exceptions.textContent).toContain("6");
+    expect(exceptions.textContent).not.toContain("7");
   });
 });
