@@ -334,6 +334,178 @@ interface TimelineResult {
   missing: readonly string[];
 }
 
+/** The count-facing slice of `get_financial_lifecycle`, for one serial. */
+interface SerialCountLife {
+  serial: string;
+  unit?: { sku: string; location: string } | undefined;
+  inventoryLife: {
+    countRows: readonly {
+      countPlanId: string;
+      sku: string;
+      location: string;
+      bin?: string | undefined;
+      snapshotQuantity: number;
+      countQuantity: number;
+      variance: number;
+      externalCountDetailId?: string | undefined;
+    }[];
+    countTests: readonly {
+      id: string;
+      countPlanId: string;
+      selectionSource: string;
+      direction: string;
+      recordedAt: string;
+      selectedBy: string;
+    }[];
+    movements: readonly { id: string }[];
+  };
+}
+
+/** The plans slice of `get_cycle_count_history` — where the instants live. */
+interface CountPlansResult {
+  plans: readonly { id: string; countType: string; snapshotAt: string }[];
+}
+
+/** Plan ids read as vocabulary, so a status line never says "YEAR_END". */
+const COUNT_TYPE_WORDS: Readonly<Record<string, string>> = {
+  YEAR_END: "year-end",
+  CYCLE: "cycle",
+  SPOT: "spot",
+};
+const countTypeWord = (countType: string | undefined): string =>
+  countType === undefined ? "unnamed" : (COUNT_TYPE_WORDS[countType] ?? countType.toLowerCase());
+
+/**
+ * "When was this serial last counted?", answered about THAT serial.
+ *
+ * Every figure is per-unit and named for the unit. The one thing this must
+ * never do is report a population: the whole defect was that a per-unit
+ * question about a specific serial was answered with the close's count
+ * totals, so falling back to them on an absence would be the same answer
+ * arriving by a longer route. An absence is therefore reported in its own
+ * words, and never as a zero.
+ */
+function serialCountAnswer(
+  serial: string,
+  life: SerialCountLife,
+  plans: CountPlansResult["plans"],
+): AiMaterialAnswer {
+  const planFor = (id: string) => plans.find((p) => p.id === id);
+  const counted = life.inventoryLife.countRows
+    .map((row) => ({ row, plan: planFor(row.countPlanId) }))
+    // Most recent first. A row whose plan cannot be resolved sorts last
+    // rather than being dropped: it is still a count line naming this unit.
+    .sort((a, b) => (b.plan?.snapshotAt ?? "").localeCompare(a.plan?.snapshotAt ?? ""));
+  const tests = life.inventoryLife.countTests;
+  const testFacts: readonly AiFigure[] = tests.map((t) => ({
+    label: `Test count ${t.id} — ${t.selectionSource.toLowerCase()}, ${t.direction.toLowerCase().replace(/_/g, " ")}`,
+    text: `recorded ${t.recordedAt} by ${t.selectedBy}`,
+    source: "get_financial_lifecycle" as const,
+  }));
+
+  const latest = counted[0];
+  if (latest === undefined) {
+    /**
+     * No count LINE names this unit. That is a real and demo-relevant state —
+     * KE-X1-8842 is off-book by design and is reached only through a test
+     * count — and it is the state where reporting "1,061 of 1,065" was most
+     * misleading, because the unit contributed to neither number.
+     */
+    return {
+      status: `No count line names ${serial} in any plan on file`,
+      knownFacts: [
+        {
+          label: `Count lines naming ${serial}`,
+          count: 0,
+          source: "get_financial_lifecycle",
+        },
+        ...testFacts,
+      ],
+      conflictingEvidence: [],
+      missingEvidence: [
+        `No count row for ${serial} in the year-end plan, so the close holds no counted quantity for this unit.`,
+        ...(tests.length > 0
+          ? [
+              `${serial} appears only in ${count(tests.length)} test ${plural(tests.length, "count")}, which is an observation and not a population row.`,
+            ]
+          : []),
+      ],
+      assertions: ["EXISTENCE"],
+      managementConclusion:
+        "A unit with no count line was not counted. That is an absence in the count, not a quantity of zero, and the two must not be reported the same way.",
+      nextAction: `Establish why ${serial} carries no count line before relying on the year-end population.`,
+      citations: [cite(serial, { href: `/inventory/${serial}` })],
+    };
+  }
+
+  const word = countTypeWord(latest.plan?.countType);
+  const when = latest.plan?.snapshotAt;
+  return {
+    status:
+      when !== undefined
+        ? `${serial} was last counted ${when} in the ${word} plan ${latest.row.countPlanId}`
+        : `${serial} was counted in the ${word} plan ${latest.row.countPlanId}, which carries no snapshot instant`,
+    knownFacts: [
+      {
+        label: `${serial} — counted in plan`,
+        text:
+          when !== undefined
+            ? `${latest.row.countPlanId} · ${word} · snapshot ${when}`
+            : `${latest.row.countPlanId} · ${word} · no snapshot instant on file`,
+        source: "get_cycle_count_history",
+      },
+      {
+        label: `${serial} — on the book at snapshot`,
+        count: latest.row.snapshotQuantity,
+        source: "get_financial_lifecycle",
+      },
+      {
+        label: `${serial} — counted on the floor`,
+        count: latest.row.countQuantity,
+        source: "get_financial_lifecycle",
+      },
+      {
+        label: `${serial} — variance`,
+        count: latest.row.variance,
+        source: "get_financial_lifecycle",
+      },
+      {
+        label: `${serial} — location counted`,
+        text: `${latest.row.location}${latest.row.bin !== undefined ? ` · bin ${latest.row.bin}` : ""}`,
+        source: "get_financial_lifecycle",
+      },
+      // Every earlier plan that also counted it, so "last" is a claim the
+      // reader can check rather than one they have to take.
+      ...counted.slice(1).map(
+        (c): AiFigure => ({
+          label: `${serial} — earlier count`,
+          text: `${c.row.countPlanId} · ${countTypeWord(c.plan?.countType)}${c.plan !== undefined ? ` · snapshot ${c.plan.snapshotAt}` : ""} · variance ${c.row.variance}`,
+          source: "get_cycle_count_history",
+        }),
+      ),
+      ...testFacts,
+    ],
+    conflictingEvidence: [],
+    missingEvidence:
+      tests.length === 0
+        ? [`No test count touches ${serial}; the count line above is the only observation of it.`]
+        : [],
+    assertions: ["EXISTENCE", "COMPLETENESS"],
+    managementConclusion:
+      latest.row.variance === 0
+        ? "The floor agreed with the book for this unit at the snapshot instant. That is a count outcome for one unit and concludes nothing about the population."
+        : "The floor did not agree with the book for this unit. The variance is reported as counted; what it means is a management conclusion recorded against the exception that names it.",
+    nextAction: `Open ${serial}'s Financial Life for the four-phase chain of custody behind this count.`,
+    citations: [
+      cite(serial, { href: `/inventory/${serial}` }),
+      cite("Physical Count", { href: "/count" }),
+      ...(latest.row.externalCountDetailId !== undefined
+        ? [cite(latest.row.externalCountDetailId)]
+        : []),
+    ],
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /* Intents.                                                             */
 /*                                                                      */
@@ -1586,8 +1758,15 @@ const INTENTS: readonly Intent[] = [
           })),
         ],
         conflictingEvidence: [],
+        // `plural`, like the status line directly above it. Rendered, this
+        // produced eleven missingEvidence lines, seven of them reading "is
+        // missing 1 required component(s)." while the same answer's status one
+        // line up said "1 procurement match and 11 commercial chains"
+        // correctly. Reachable with no typing from three shipped chips:
+        // ProcurementScreen.tsx:67 and ReconciliationScreen.tsx:91.
         missingEvidence: incompleteChains.map(
-          (c) => `${c.subjectRef} is missing ${c.requiredMissingCount} required component(s).`,
+          (c) =>
+            `${c.subjectRef} is missing ${c.requiredMissingCount} required ${plural(c.requiredMissingCount, "component")}.`,
         ),
         assertions: ["EXISTENCE", "CUTOFF"],
         managementConclusion:
@@ -1620,6 +1799,34 @@ const INTENTS: readonly Intent[] = [
     answer: (s) => {
       const recon = s.run<ReconResult>("get_reconciliation_status");
       if (recon === undefined) return undefined;
+      /**
+       * The exceptions this answer CITES, resolved to their findings once and
+       * used for both the assertion list and the citations, so the two cannot
+       * drift apart.
+       *
+       * `assertions` was the hand-written literal ["EXISTENCE",
+       * "COMPLETENESS"]. The citations on this dataset are EXC-009, EXC-014
+       * and EXC-015, whose findings assert ACCURACY, ACCURACY+CUTOFF and
+       * ACCURACY (rma.ts:33, glReconciliation.ts:24 and :66). The two lists
+       * were DISJOINT: the rendered answer's ASSERTIONS row read "Existence ·
+       * Completeness", neither Accuracy nor Cutoff appeared anywhere in it,
+       * and neither Existence nor Completeness was asserted by any cited
+       * record. `answerException` renders `[...f.assertions]` from the
+       * finding, so EXC-015's own drawer — ONE CLICK away, through that very
+       * citation — read "Accuracy". This is the Overview's suggested chip #2,
+       * "Why doesn't inventory tie?" (OverviewScreen.tsx:54).
+       *
+       * A cited exception that cannot be resolved to a finding is omitted
+       * rather than guessed at, which is the same rule the rest of this file
+       * follows (answers.ts:56-63): a conclusion that names a population is
+       * built from that population.
+       */
+      const citedViews = recon.items
+        .map((i) => s.run<ExceptionResult>("get_exception", { exceptionId: i.relatedExceptionId }))
+        .filter((v): v is ExceptionResult => v !== undefined);
+      const citedAssertions = [
+        ...new Set(citedViews.flatMap((v) => v.exception.finding.assertions)),
+      ].sort();
       return {
         status: "No — the subledger and the general ledger do not agree",
         knownFacts: [
@@ -1636,7 +1843,7 @@ const INTENTS: readonly Intent[] = [
         ],
         conflictingEvidence: [],
         missingEvidence: [],
-        assertions: ["EXISTENCE", "COMPLETENESS"],
+        assertions: citedAssertions,
         /**
          * Named for what was summed, and named the way the screen names it.
          *
@@ -2413,7 +2620,36 @@ const INTENTS: readonly Intent[] = [
         "test counts",
       ],
     },
-    answer: (s) => {
+    answer: (s, q) => {
+      /**
+       * Scoped to the serial when the question carries one.
+       *
+       * `routeQuestion("When was this serial last counted?")` resolves here,
+       * and this function never read `q.serial`. Rendered with the real chip
+       * scope {serial:"KE-E2-1048"} it returned "1,061 of 1,065 units matched
+       * on the first pass", seven population facts, NO DATE, and never named
+       * the serial — naming it in the question did not help either. That chip
+       * is the FLAGSHIP unit page's suggested chip #2
+       * (FinancialLifeScreen.tsx:53-58): one click on /inventory/KE-E2-1048.
+       *
+       * The per-serial data exists (queries.ts:431 `countedAt`, :863-865
+       * countRows/countTests/movements per serial), so answering with close
+       * totals was not a limit of the data.
+       *
+       * This is the shape of the serial-scoped branch of the `conflicts`
+       * intent above: guard on `search_serial` first, so a serial no source
+       * mentions falls through to `answerQuestion`'s unknown-serial answer
+       * rather than producing a report whose every line reads "none".
+       */
+      const serial = q.serial;
+      if (serial !== undefined) {
+        const hits = s.run<readonly { serial: string }[]>("search_serial", { serial });
+        if (hits !== undefined && !hits.some((h) => h.serial === serial)) return undefined;
+        const life = s.run<SerialCountLife>("get_financial_lifecycle", { serial });
+        const history = s.run<CountPlansResult>("get_cycle_count_history");
+        if (life === undefined || history === undefined) return undefined;
+        return serialCountAnswer(serial, life, history.plans);
+      }
       /**
        * `managementLensInScope` is deliberately NOT declared here.
        *

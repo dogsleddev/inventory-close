@@ -198,6 +198,10 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
     const detail = queries.getCountDetail(ctx);
     return {
       summary: queries.getCountSummary(ctx),
+      // The plans carry `snapshotAt` — WHEN the floor was observed. A count
+      // result row carries no instant of its own, so without the plans this
+      // tool could report that a unit was counted and never when.
+      plans: detail.plans,
       results: detail.results,
       tests: detail.tests,
       movements: detail.movements,
