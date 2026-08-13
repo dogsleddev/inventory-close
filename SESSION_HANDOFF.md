@@ -1482,10 +1482,9 @@ something a viewer could reach.
   around a negation or a past tense can still route to a handler that answers a different question.
 - **CSV canonical-token and blank-cell defects: G76, G77, G78, G60.** Untouched. Only the exports
   a task named were in scope, and none of these was named.
-- **The close-summary CSV is still entirely baseline and unlabelled** while the Overview above it
-  is live. Export it after concluding anything and it disagrees with the screen it was exported
-  from, with nothing on the file saying which position it holds. This is the same class this pass
-  closed on the screens, left open on the file a user hands to an auditor.
+- ~~**The close-summary CSV is still entirely baseline and unlabelled.**~~ **CLOSED** in a
+  follow-up pass — see the section below. Left in this list struck through rather than deleted,
+  because a deferred list that quietly loses entries cannot be audited.
 - **The `/inventory` search list and its structurally-frozen facet counts.** The facets are derived
   from the baseline population and do not move with the close.
 - **G53: Ask Gaurd prescribes actions a locked period refuses.** After sign-off locks the period,
@@ -1499,3 +1498,56 @@ something a viewer could reach.
   weighted output and were explicitly out of scope; the divergence banner names them.
 - **The wider `"(s)"`-parenthetical class in `packages/ai/src/answers.ts`.** One instance was
   fixed. The class was not swept.
+
+### Follow-up pass (same session): three items off the deferred list, and one class enforced
+
+- **The rows the drawer opens from.** Narrowing `assembleDrawer` by the live status fixed all
+  eight callers' drawers and none of their rows. `procurement-view` and `audit-package-view` still
+  bound `queries.listExceptions` and render `statusView(...)` and `view.open` directly, so
+  concluding EXC-002 left the three-way-match card reading "Accounting Review" in frost beside a
+  drawer, opened from that same card, reading "Resolved — No Adjustment". Both rebound.
+  Probing that fix then found a **third** defect nobody had predicted: `buildCard` took its ember
+  tone as a literal from a loop keyed on `closeMatchStatus`, a rules artifact that never moves, so
+  the card kept the alarm treatment while its own footnote — twelve lines below, already branching
+  on `view.open` — had turned aurora. Narrowed inside `buildCard` so all three call sites inherit
+  it. `costing-view` was rebound too but is **not** claimed as a fix: it uses the list only to find
+  the view it hands to `gatherExceptionContext`, which fetches its own live position, so nothing it
+  renders moves. Predicting otherwise from a grep was wrong, and checking first is why the claim
+  is not made.
+- **`apps/web/test/count-agreement-sweep.test.ts`** — the count-of-one firewall. It drives the
+  workspace to exactly one blocker, then to zero, and scans every payload 21 view builders and all
+  14 CSV exports produce for `1 <plural noun>`. It exists because the three `"1 blockers"`
+  instances fixed earlier in this session were found *by hand, in a browser*, and were invisible to
+  a 2,534-test suite for a structural reason: on a fresh workspace every population here is plural,
+  so a hard-coded plural is correct by construction and the defect only exists at a count no test
+  had ever built. **It found one on its first run** — `blockerPosition: "Exception 1 of 1 blockers"`
+  on the exception detail page, exactly where a Controller working the queue down ends up. Two
+  things the scan had to learn from real output: the lookbehind is load-bearing (`/valuation`
+  renders "19.1 months", which a naive `\b1 [a-z]+s\b` matches), and the pattern cannot tell a
+  plural noun from a third-person-singular verb — "1 remains open" and "1 of those blocks sign-off"
+  are correct, and are prose this session deliberately wrote. Those are allowlisted, in two
+  documented groups. **The allowlist is the one way this file can be defeated**; an entry that is
+  neither a singular noun nor a verb is a defect in itself, and a growing list is a signal.
+- **The close-summary CSV.** Now carries both positions, reusing the vocabulary already in that
+  file (`exceptions` pairs "Status" with "Status the rules derived"; `close-memo`'s Basis cell
+  names the baseline in prose when the live figure has moved). Sign-off figures, Open and Resolved
+  are live with a Basis naming the baseline; the blocker list shows what is still open with a note
+  saying how many the rules raised; the weighted close-area scores are **labelled, not made live**,
+  the same call as the Overview's own weighted-result line.
+
+**A test-quality lesson worth more than any of the three.** The first version of the close-summary
+tests asserted `body).toContain('"1"')` — satisfied by every weight column — and
+`toContain("The rules on their own derived 7;")`, which two rows *below* the one under test also
+emit. Reverting the fix left both green. They now parse the row by label and assert per cell, which
+in turn exposed a bug in the test itself: splitting on `,` cut `"$198,950"` into `"$198"` and
+shifted every column after it. **A file-wide substring assertion on a wide file proves almost
+nothing** — and this is the second time in one session that an assertion had to be moved before its
+mutation would go red.
+
+Gate after the follow-up: typecheck clean, lint clean, `@icg/web` build compiled,
+**Test Files 79 passed (79), Tests 2544 passed (2544)**.
+
+Still deferred and unchanged: the Ask Gaurd routing/matching gaps (G41, G72, G73, G45), the CSV
+canonical-token and blank-cell defects (G76, G77, G78, G60), the `/inventory` search facet counts,
+G53, the valuation damaged-row note, the EXCEPTIONS bar score, and the wider `"(s)"` class in
+`answers.ts`.
