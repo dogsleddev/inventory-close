@@ -1,40 +1,62 @@
 # Inventory Close Gaurd — Session Handoff
 
 **Purpose:** everything a fresh Claude Code session needs to continue this build without
-re-deriving decisions or breaking locked facts. Last refreshed 2026-08-11, mid
-**product-completion pass**, with Stage G shipped and its review as the next task.
+re-deriving decisions or breaking locked facts. Last refreshed 2026-08-12, after Stage G's
+review, its re-verification, nine fix commits and a fix-validation fleet over those commits.
 
 > The product name is deliberately spelled **Gaurd**, never "Guard". Do not "fix" it.
 
 ---
 
-## 0a. START HERE — the Stage G review ran, and its first fix pass has landed
+## 0a. START HERE — every P0 and P1 is closed, and the fix pass has been validated
 
-> ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST.
+> ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST. Its §0c is the newest and most important part.
 >
-> The fourteen-lens review RAN (2026-08-12). All 14 lenses completed — **96 raw findings, 78 deduped,
-> 48 confirmed, including 4 P0s** — and then the org's monthly spend limit killed the verification
-> fleet with 30 groups unjudged, one of them a P0. That document holds the tally, the confirmed list,
-> the unjudged list, where the artifacts are, and the resume order.
+> **HEAD is `0b05ba7`.** The Stage G review, its re-verification, nine fix commits and a
+> fix-validation fleet are all done and committed. **Nothing the review confirmed at P0 or P1 remains
+> open.** Gate: typecheck, lint and production build clean, 20 routes, **2,493 tests across 73 files
+> passing**. Locked baseline unmoved and re-confirmed in a browser.
 >
-> **The first fix pass is committed (`1e06d58`).** Its §8 steps 1 and 2 are done: `G66` verified by
-> hand (it held — the previous fix had narrowed the defect, not removed it), then all four P0s and
-> the three remediation P1s fixed, with `G39`, `G42` and half of `G16` closed incidentally. Each fix
-> carries a regression asserted as a biconditional against the service, and each was mutation-tested
-> against the pre-fix HEAD. **Tests 1,749 → 2,119.** The tail — steps 3 to 6 — is what remains.
+> **What remains is a 48-item tail** — 26 P2, 19 NOTE, and 3 P1-titled entries the tally filter
+> matched loosely (check those first; at least two are already fixed). Every record carries the
+> command that was run and its real output:
+> `.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_e6105877-98d/journal.jsonl`
 >
-> Three things you must not skip:
+> ---
 >
-> 1. **Every one of the 90 skeptic verdicts came back CONFIRMED**, which is a prompt-calibration bug
->    rather than a result. Worse, and found while fixing: **`G46`'s skeptic wrote a refutation in its
->    own correction field and still voted CONFIRMED.** The verdict was decoupled from the analysis,
->    so read each group's `correctionToTheClaim`, never its `status`. See §3c.
-> 2. **Three confirmed P1s were defects in the `003525a` remediation itself** — the fix for the
->    plan's §0 reopened the very class it closed, on a narrower path. `1e06d58` has not been reviewed
->    either, and it should be.
-> 3. **Run the suite with `npx vitest run --maxWorkers=3`.** At default concurrency vitest now OOMs
->    on this machine — `AlignedAlloc Allocation failed` about three seconds in, at a 64 MB heap,
->    which is system memory rather than a heap limit.
+> ### The four things that cost the most to learn, and must not be re-derived
+>
+> **1. A fix pass reopens defect classes at roughly the rate the original code created them.**
+> Measured, not suspected: the fix-validation fleet returned **64 findings over the eight fix
+> commits, 21 of them CLASS_REOPENED**. The author is looking straight at the class and ships a fresh
+> instance of it anyway — twice with `git blame` naming the fix commit as the author of the surviving
+> defect. **Budget a validation pass after every remediation.** It is not overhead; it is where a
+> third of the defects are.
+>
+> **2. A regression written by the fix's author inherits the fix's blind spot.** Three tests written
+> alongside these fixes later failed *because they had encoded the defective behaviour* — one
+> asserted that recording a conclusion suppresses the outstanding-record instruction, which was the
+> defect. Write the assertion as a biconditional against the service on the same run, and have
+> someone else's pass check it.
+>
+> **3. A property test over one workspace state is a property test over one workspace state.** The
+> scope-channel guard advertised itself as "over every intent and every role"; it ran only against an
+> untouched workspace, so a leak needing a saved draft passed it. The defects in this product live in
+> the DIVERGED state — after a conclusion, a draft, a submission — and a check that reads only the
+> baseline reports the product clean. Drive every such guard over a worked state too.
+>
+> **4. A verdict must be forced to match its reasoning.** The first verification pass returned 90 of
+> 90 CONFIRMED, including a skeptic that wrote a refutation in its correction field and voted
+> CONFIRMED anyway. Stating the burden once and symmetrically — with no warning against either pole,
+> because warning against one installs the other — and offering `ALREADY_FIXED` as a first-class
+> verdict produced 3 real refutations and ten severity reductions on the next run.
+>
+> ---
+>
+> **Operational, and it will bite immediately:** run the suite as `npx vitest run --maxWorkers=3`.
+> At default concurrency vitest OOMs on this machine — `AlignedAlloc Allocation failed`, ~3 s in, at
+> a 64 MB heap, which is system memory rather than a heap limit. `pnpm test` also exits 1 on a known
+> `onTaskUpdate` reporter RPC timeout; read the `Tests` line, not the exit code.
 >
 > The section below describes the state before that review. It is still accurate about the code
 > except where `1e06d58` changed it.
@@ -106,21 +128,24 @@ but the *next task* is here, not in §8.
 | **Remediation review** | ✅ Done (`406baaf`) — 4 lenses over `b1ccdc4`; 11 more fixed, 2 refuted |
 | **G — Ask Gaurd tools** | ✅ Done (`7333663`) — matcher, harness, 11 tools, 21 intents |
 | **Stage G §0 remediation** | ✅ Done — the plan's four verified defects + five found fixing them |
-| **Stage G review** | ⚠ RAN and stopped at a usage limit — 48 confirmed findings, 30 unjudged. See STAGE_G_REVIEW_STATUS.md |
+| **Stage G review** | ✅ Done — 14 lenses, 96 raw → 78 groups. Stopped at a spend limit with 30 unjudged; all 68 later re-judged at HEAD |
 | **Stage G fix pass 1** | ✅ Done (`1e06d58`) — G66 verified, 4 P0s + G01/G02/G03 fixed, G39/G42 closed with them |
 | **Stage G fix pass 2** | ✅ Re-verification done (12 agents, 68 findings) — G67, G74, G75 fixed. See STAGE_G_REVIEW_STATUS.md §0b |
 | **Stage G fix pass 3** | ✅ Done (`b1cf8aa`) — the baseline-vs-live family closed; G28 fell out with it |
 | **Stage G fix pass 4** | ✅ Done (`bbbcdca`, `9b62dcd`, `73a7e3c`, `5cfeb20`) — **every P0 and P1 closed** |
-| **Stage G tail** | ⬅ **NEXT.** 27 P2 + 17 NOTE, then the fix-validation fleet over the seven commits since `003525a` |
+| **Fix-validation fleet** | ✅ Done — 11 agents over the eight fix commits: 64 findings, **21 CLASS_REOPENED**, 132 cleared |
+| **Fix pass 5** | ✅ Done (`8881db5`, `ed76212`, `bcb11f6`) — 17 of the 64 fixed, including a comment citing a test file that did not exist |
+| **The 48-item tail** | ⬅ **NEXT.** 26 P2 + 19 NOTE + 3 loosely-matched P1s, in `wf_e6105877-98d/journal.jsonl` |
 | H — QA | Not started |
 
-**2,481 tests across 72 files passing**; typecheck, lint and production build clean, 20 routes.
+**2,493 tests across 73 files passing**; typecheck, lint and production build clean, 20 routes.
 Run the suite as `npx vitest run --maxWorkers=3` — the default worker count OOMs on this machine.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
 7 blockers · $198,950 exposure · 81.42% readiness · 17/21 PBC · 91.67% source health.
 
-Before touching anything: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`, and
+Before touching anything: `pnpm typecheck && pnpm lint && npx vitest run --maxWorkers=3 && pnpm build`
+— **`pnpm test` at default concurrency OOMs on this machine** — and
 **stop any `pnpm dev` server first** — running a build alongside one corrupts its cache and
 the next request 500s on a missing vendor chunk.
 
@@ -128,16 +153,36 @@ the next request 500s on a missing vendor chunk.
 
 ### How to run a fleet review here — the corrected method
 
-Both Stage F reviews are done; this is the distilled shape for Stage G's, and it differs from
-what §6 describes, because the first run's verifier design was wrong.
+Distilled from five fleets now — two Stage F reviews, Stage G's fourteen-lens review, its
+re-verification, and the fix-validation pass over the fix commits. Where this contradicts §6, §6 is
+the older design and was wrong.
+
+**Run the loop three times, not once: find → fix → VALIDATE THE FIX.** The third pass is the one
+that keeps getting skipped and it is the one with the best yield. Eleven agents over eight fix
+commits returned **64 findings, 21 of them a defect class the fix itself reopened.** Two were caught
+by `git blame` naming the fix commit as the author of the surviving instance — so tell the validators
+to use blame explicitly. A fix pass is new code written fast by an author who has just convinced
+themselves they understand the problem; review it like any other new code.
 
 **Commit the stage first.** Reviews are long-running background work, and three host exits during
 stage 06 each stranded an uncommitted tree. The stage lands, then the remediation is its own
 commit — and then **the remediation gets reviewed too**. That last step is not optional: the pass
 over `b1ccdc4` found a P1 in it, in code written by the session that had just fixed 26 defects.
 
-**The shape:** finder lenses in parallel → dedupe → **two skeptics per finding** → apply →
-re-run the gate → browser pass → commit.
+**The shape:** finder lenses in parallel → dedupe → **skeptics per finding** → apply →
+**validate the fixes with a fresh fleet** → re-run the gate → browser pass → commit.
+
+**Give a verdict enum every outcome the run can actually produce**, or agents will force a real
+result into the wrong bucket. `HOLDS / REFUTED / ALREADY_FIXED / UNCERTAIN` worked; without
+`ALREADY_FIXED`, a finding the fix commit had already closed would have come back HOLDS or REFUTED
+and both would have been wrong. Bucket dead agents separately too — `uncertain: 30` once hid a P0
+behind a word that means "we looked and could not tell", when nothing had looked.
+
+**State the burden ONCE and symmetrically, and force the verdict to match the reasoning.** The first
+run returned 90 of 90 CONFIRMED — including a skeptic that argued for refutation in its correction
+field and voted CONFIRMED anyway. The fix is to name that failure in the prompt, quote it, and
+require the verdict field to follow the analysis. That single change produced 3 real refutations and
+ten severity reductions on the next run.
 
 **Both skeptics carry the SAME burden of proof**, and may answer **CONFIRMED / REFUTED /
 UNCERTAIN**. They differ in ANGLE, never in standard: one works from the mechanism (does the code
@@ -510,8 +555,8 @@ Before anything else:
    **`design/IMPLEMENTATION_HANDOFF.md`** (component/reuse map, geometry, interaction rules,
    accessibility, demo states, and the mockup defects in §9a you must correct rather than
    replicate).
-2. Verify nothing drifted: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — expect
-   **833 tests across 59 files passing**. **Stop any `pnpm dev` server first** (see §7).
+2. Verify nothing drifted: `pnpm typecheck && pnpm lint && npx vitest run --maxWorkers=3 && pnpm build`
+   — expect **2,493 tests across 73 files passing** (833/59 was the stage-09 figure). **Stop any `pnpm dev` server first** (see §7).
 
 **All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
