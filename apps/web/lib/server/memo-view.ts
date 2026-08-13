@@ -1,6 +1,13 @@
 import type { DemoUser } from "@icg/data";
 import { getMemo, type MemoPositionOut, type MemoVersionOut } from "@icg/services";
-import { formatBpsExact, formatCents, formatDate, formatInstant, shortHash } from "../format";
+import {
+  formatBpsExact,
+  formatCents,
+  formatDate,
+  formatInstant,
+  plural,
+  shortHash,
+} from "../format";
 import type { CloseMemoData, MemoVersionRowView, ProcurementStat } from "../view-model";
 import { attempt } from "./data";
 import { getWorkspace, makeContext, roleLabel, userById } from "./workspace";
@@ -61,7 +68,13 @@ function suggestedBody(p: MemoPositionOut): string {
   const lines = [
     `As at ${formatDate(p.asOf)}, the inventory subledger carries ${p.bookUnits.toLocaleString("en-US")} units at ${formatCents(p.subledgerCents)}. The general ledger carries ${formatCents(p.grossGlCents)} across the gross inventory accounts, a difference of ${formatCents(p.differenceCents)}.`,
     `${p.reconcilingItemCount} reconciling ${p.reconcilingItemCount === 1 ? "item has" : "items have"} been identified against that difference, leaving ${formatCents(p.unexplainedCents)} unexplained.`,
-    `The close raised ${p.exceptionCount} exceptions, of which ${p.openExceptionCount} remain open. ${p.blockerCount} of those ${p.blockerCount === 1 ? "blocks" : "block"} sign-off, with ${formatCents(p.blockerExposureCents)} of exposure attached.`,
+    // Three counts, three agreements. This read "of which 1 remain open. 1 of
+    // those blocks sign-off" — a plural verb and a singular verb about the
+    // same item inside one sentence — because the noun was conditioned on the
+    // count and the verb beside it was a bare literal. This is the prose the
+    // product offers management to adopt VERBATIM into a signed memo, reached
+    // by the "Start from the close position" link on /close-memo.
+    `The close raised ${p.exceptionCount} ${plural(p.exceptionCount, "exception")}, of which ${p.openExceptionCount} ${plural(p.openExceptionCount, "remains", "remain")} open. ${p.blockerCount} of those ${plural(p.blockerCount, "blocks", "block")} sign-off, with ${formatCents(p.blockerExposureCents)} of exposure attached.`,
     `Audit requests stand at ${p.pbcReady} of ${p.pbcTotal} ready. Close readiness is ${formatBpsExact(p.readinessBps)}, which measures how much of the close's own work is complete and is not a statement about whether the balance is fairly stated.`,
     "",
     "Management's assessment:",

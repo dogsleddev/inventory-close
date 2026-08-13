@@ -6,6 +6,12 @@ import { EvidenceScreen } from "../components/EvidenceScreen";
 import { buildShellData } from "../lib/server/data";
 import { buildEvidenceData } from "../lib/server/evidence-view";
 import { getQueries, makeContext } from "../lib/server/workspace";
+import {
+  concludeException,
+  controller,
+  resetDemo,
+  satisfyRequirements,
+} from "./support/live-close";
 
 /**
  * Evidence Center (completion Stage A). This screen replaced a "not designed
@@ -107,5 +113,54 @@ describe("Evidence Center — scope is stated, never implied", () => {
   it("renders the gap rows as missing and required for assistive tech", () => {
     renderFor("CONTROLLER");
     expect(screen.getAllByText(/— missing, required/).length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * "Required, with no record behind it" — after the record arrives.
+ *
+ * The panel built this list from `listExceptions().filter(view => view.open)`
+ * and `finding.evidenceRequirements.filter(r => r.required && !r.satisfied)`.
+ * BOTH are frozen: `open` never moves, and `satisfied` is a literal baked by
+ * the rules engine (packages/rules/src/rules/counts.ts:62 `satisfied: false`).
+ * So the Controller could submit EXC-003's one required record, the Accounting
+ * Manager could accept it, and the row stayed — and after the conclusion it
+ * stayed again, under this panel's own subtitle promising "Open exceptions
+ * only — a resolved item's requirement is answered by management's
+ * conclusion".
+ *
+ * Two states are asserted separately because they fail through different
+ * halves of the read: acceptance kills the requirement, the conclusion kills
+ * the exception.
+ */
+describe("Evidence Center — the missing list stops demanding what arrived", () => {
+  afterEach(resetDemo);
+
+  const data = (correlationId: string) => buildEvidenceData(controller(), correlationId);
+  const rowsFor = (correlationId: string, id: string) =>
+    data(correlationId).links.filter((l) => l.exceptionId === id);
+
+  it("drops the requirement once the record is submitted and accepted", () => {
+    const before = data("T-EV-BEFORE");
+    const beforeRows = before.links.filter((l) => l.exceptionId === "EXC-003");
+    expect(beforeRows.map((r) => r.description)).toEqual([
+      "Supervised recount locating the unit",
+    ]);
+    const missingBefore = before.counts.missing;
+    expect(missingBefore).toBeGreaterThan(0);
+
+    satisfyRequirements("EXC-003");
+
+    const after = data("T-EV-ACCEPTED");
+    expect(after.links.filter((l) => l.exceptionId === "EXC-003")).toEqual([]);
+    expect(after.counts.missing).toBe(missingBefore - 1);
+  });
+
+  it("drops the exception entirely once management concludes", () => {
+    expect(rowsFor("T-EV-C-BEFORE", "EXC-003").length).toBe(1);
+
+    concludeException("EXC-003");
+
+    expect(rowsFor("T-EV-C-AFTER", "EXC-003")).toEqual([]);
   });
 });

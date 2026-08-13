@@ -116,17 +116,42 @@ export function buildEvidenceData(
   // not an outstanding gap: management concluded on the evidence it had, and
   // that conclusion is the record. Listing those here would have shown more
   // outstanding gaps than the close actually has.
-  const missing = exceptions
-    .filter((view) => view.open)
-    .flatMap((view) =>
-      view.exception.finding.evidenceRequirements
-        .filter((r) => r.required && !r.satisfied)
-        .map((r) => ({
-          exceptionId: view.exception.id,
-          description: r.description,
-          ruleId: view.exception.finding.ruleId,
-        })),
-    );
+  //
+  // BOTH halves are live. `view.open` from `listExceptions` never moves, and
+  // `satisfied` is a literal baked by the rules engine (counts.ts:62
+  // `satisfied: false`) that never moves either — so for EXC-003 a Controller
+  // could submit the one required record, have the Accounting Manager accept
+  // it, and this panel still returned {exceptionId:'EXC-003', description:
+  // 'Supervised recount locating the unit'} with counts.missing stuck at 8.
+  // Then record the conclusion and the row STILL appeared, under the panel's
+  // own subtitle at EvidenceScreen.tsx:211 promising "Open exceptions only —
+  // a resolved item's requirement is answered by management's conclusion".
+  // There is a warning comment against exactly this read at
+  // packages/services/src/queries.ts:1265-1278, and 295a8c4 fixed the sibling
+  // in export-csv.ts:315 without carrying the overlay here.
+  const live = attempt(() => queries.getEffectiveExceptions(ctx));
+  const missing =
+    live !== undefined
+      ? live
+          .filter((view) => view.open)
+          .flatMap((view) =>
+            view.unmetRequirements.map((description) => ({
+              exceptionId: view.exception.id,
+              description,
+              ruleId: view.exception.finding.ruleId,
+            })),
+          )
+      : exceptions
+          .filter((view) => view.open)
+          .flatMap((view) =>
+            view.exception.finding.evidenceRequirements
+              .filter((r) => r.required && !r.satisfied)
+              .map((r) => ({
+                exceptionId: view.exception.id,
+                description: r.description,
+                ruleId: view.exception.finding.ruleId,
+              })),
+          );
 
   const sources = (health?.sources ?? []).map((s) => {
     const view = sourceHealthView(String(s.status));

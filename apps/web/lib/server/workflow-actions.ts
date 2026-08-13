@@ -1,6 +1,6 @@
 import type { DemoUser } from "@icg/data";
 import { EvidenceIncompleteError, effectiveClose, memoPosition } from "@icg/services";
-import { formatBpsExact } from "../format";
+import { formatBpsExact, plural } from "../format";
 import type { WorkflowActionResult } from "../view-model";
 import { getCommands, getQueries, getWorkspace, makeContext } from "./workspace";
 
@@ -61,7 +61,13 @@ export function runRecordConclusion(
       message:
         record.conclusion === "REMAINS_OPEN"
           ? `Recorded: ${input.exceptionId} remains open. It still counts against sign-off.`
-          : `Recorded: ${input.exceptionId} concluded. ${close.blockerCount} blocker${close.blockerCount === 1 ? "" : "s"} remain.`,
+          : // The VERB agrees too. Conditioning the noun on the count and
+            // leaving the verb a bare literal read "1 blocker remain." — and
+            // this line renders in the ConclusionPanel (ConclusionPanel.tsx:
+            // 307) in aurora green on the demo's climax click, when the sixth
+            // of seven blockers is concluded. `plural` is used the same way at
+            // procurement-view.ts:132 ("order is"/"orders are").
+            `Recorded: ${input.exceptionId} concluded. ${close.blockerCount} ${plural(close.blockerCount, "blocker")} ${plural(close.blockerCount, "remains", "remain")}.`,
       unmet: [],
     };
   } catch (error) {
@@ -176,7 +182,7 @@ export function runSignOff(user: DemoUser, correlationId: string): WorkflowActio
   if (close.blockerCount > 0) {
     return {
       ok: false,
-      message: `Sign-off is unavailable while ${close.blockerCount} blocker${close.blockerCount === 1 ? "" : "s"} remain open.`,
+      message: `Sign-off is unavailable while ${close.blockerCount} ${plural(close.blockerCount, "blocker")} ${plural(close.blockerCount, "remains", "remain")} open.`,
       unmet: [],
     };
   }
