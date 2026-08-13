@@ -18,9 +18,30 @@ review, its re-verification, nine fix commits and a fix-validation fleet over th
 > routes, **2,488 tests across 73 files passing**. Locked baseline unmoved and re-confirmed in a
 > browser as the Controller and as U-009, in the diverged state.
 >
-> **What remains is the review's OWN 44-item tail** — 27 P2 and 17 NOTE from `G01…G96`, listed by
-> file in `STAGE_G_REVIEW_STATUS.md` §0d/§5/§6. That is a different list from the fix-validation one,
-> which is now closed. Then Stage H (QA).
+> **What remains is the review's OWN ~44-item tail** from `G01…G96`, listed by file in
+> `STAGE_G_REVIEW_STATUS.md` §0d/§5/§6 — a different list from the fix-validation one, which is
+> closed. **Five of them are open P1s: `G11`, `G14`, `G15`, `G19`, `G63`.** Both this document and
+> §0d previously said no P1 remained; that was a hand-written count taken before §3b raised nine
+> findings to P1. See the correction in §0z. Then Stage H (QA).
+>
+> **And three things no plan in this repo covers, found by an independent assessment on 2026-08-12
+> and each verified by execution — read these before planning anything:**
+>
+> 1. **The record-a-conclusion loop contradicts itself on the exception detail page.** Conclude
+>    EXC-003 `RESOLVED_NO_ADJUSTMENT` with its evidence obtained, and the Overview correctly reads
+>    "6 blockers · $189,750" while `/exceptions/EXC-003` renders header status "Recount Required",
+>    conclusion "Open", `blocker: true`, "Exception 3 of 7 blockers" and "Obtain: Supervised recount
+>    locating the unit" — above a panel reading "Resolved — no adjustment required" with
+>    `unmetRequirements: []`. `getEffectiveClose` is called ONCE in `data.ts` (line 356, the
+>    Overview); `getBlockers` is called at 84, 179, 347, 708, 721 and 903. `b1cf8aa` closed this
+>    family on the surfaces it touched and left the rest.
+> 2. **An auditor is told evidence does not exist where it exists and is withheld.**
+>    `traceLineage` returns nothing for U-009 on EXC-002 (5 rows for a Controller) and EXC-015 (1
+>    row), and `exception-view.ts:566-569` falls back to "No operational events in evidence for this
+>    item" with no scope qualifier. The correct pattern already ships as `ScopeNotice`.
+> 3. **The deployed product is not this product.** `master` is **47 commits ahead of origin**, so
+>    inventory.dogsled.dev still serves the pre-Stage-A build. `QA_RELEASE_GATE.md` still describes
+>    it: 628 tests / 47 files / 14 routes, and claims `/evidence` is unbuilt.
 >
 > Every fix-validation record carries the command that was run and its real output:
 > `.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_e6105877-98d/journal.jsonl`

@@ -27,9 +27,20 @@ made two `answerQuestion` calls and passed against a deliberately reintroduced d
 call builds its own session: the premise did not hold, so it could not fail. Every guard covering a
 fix in that commit was mutation-tested against the defect it closes before being trusted.
 
-**What is now left of the Stage G review: the 44-item G-tail in §0d below** — 27 P2 and 17 NOTE from
-the review's own findings (`G01…G96`), a different list from the fix-validation one. Nothing at P0 or
-P1 is open on either.
+**What is now left of the Stage G review: the G-tail in §0d below** — a different list from the
+fix-validation one.
+
+> **CORRECTION (same day, after an independent assessment).** The sentence that stood here said
+> "nothing at P0 or P1 is open on either", and **§0d's "27 P2 and 17 NOTE" is wrong the same way**:
+> both were written from §0d's prose rather than from §5's table. Re-tallying the table by parsing it
+> — every `| Gnn | SEV |` row, minus every id named as closed above — gives **0 P0 and five P1s still
+> open: `G11`, `G14`, `G15`, `G19`, `G63`.** Two were spot-checked and reproduce at HEAD:
+> `G11` — "Why doesn't inventory tie?" asserts `["EXISTENCE","COMPLETENESS"]` while all three
+> exceptions it cites assert ACCURACY (EXC-009 `["ACCURACY"]`, EXC-014 `["ACCURACY","CUTOFF"]`,
+> EXC-015 `["ACCURACY"]`); `G14` — the unit-conflicts status still reads "7 open items carry evidence
+> that conflicts". Nine findings were **raised** to P1 during re-verification (§3b, line 311) and the
+> summary was never re-derived after that. **Do the five P1s before any of the P2/NOTE clusters.**
+> The tally script is trivial to re-run; do not trust a hand-written count in this file again.
 
 **Two claims in this repo that are now stale and were not changed here:**
 
@@ -185,9 +196,16 @@ biconditionals over every demo role. **If a third surface withholds by naming a 
 
 ## 0d. What is left, and what to do next
 
-**44 findings still HOLD: 27 P2 and 17 NOTE.** None is a wrong figure reaching a reader on a shipped
-path; they are labels, vocabularies, dead branches, CSV formatting and doc claims. The list, by file,
-is in §5 and §6 below — filter to the ids not named in the table above.
+> **This section's own tally was wrong — see the correction in §0z.** It reads "27 P2 and 17 NOTE",
+> which omits **five open P1s (`G11`, `G14`, `G15`, `G19`, `G63`)**, because it was written before
+> §3b raised nine findings to P1 and was never re-derived. **Those five come first.** The counts
+> below are otherwise the right order of magnitude; re-derive from §5's table rather than trusting
+> any prose count here.
+
+**~44 findings still HOLD.** Most are labels, vocabularies, dead branches, CSV formatting and doc
+claims — but the five P1s are not, and `G11` alone has an answer asserting the opposite of what its
+own citations assert. The list, by file, is in §5 and §6 below — filter to the ids not named in the
+table above.
 
 Three clusters are worth doing together rather than one at a time:
 
