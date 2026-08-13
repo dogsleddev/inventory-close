@@ -223,6 +223,15 @@ export interface EffectiveExceptionView {
   /** Outstanding required records, counting evidence submitted this session. */
   readonly unmetRequirements: readonly string[];
   readonly hasConclusion: boolean;
+  /**
+   * Whether a person's conclusion is what resolved it.
+   *
+   * `hasConclusion` is true of REMAINS_OPEN too, and a rules-resolved exception
+   * can carry one — so a surface reading `!open && hasConclusion` as "a person
+   * resolved this" credits them with an act they did not perform, on an item
+   * they explicitly recorded as remaining open.
+   */
+  readonly resolvedByConclusion: boolean;
 }
 
 /** Evidence view with restricted content withheld (existence stays visible). */
@@ -1275,6 +1284,11 @@ export function createQueryService(ws: Workspace) {
         baselineOpen: !isResolvedStatus(exception.status),
         unmetRequirements: unmetRequirements(ws, exception.id),
         hasConclusion: latestConclusion(ws, exception.id) !== undefined,
+        resolvedByConclusion:
+          !openIds.has(exception.id) &&
+          latestConclusion(ws, exception.id)?.conclusion !== undefined &&
+          latestConclusion(ws, exception.id)?.conclusion !== "REMAINS_OPEN" &&
+          isResolvedStatus(effectiveStatus(ws, exception.id) as never),
       }));
     },
 

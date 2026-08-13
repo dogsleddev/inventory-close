@@ -214,6 +214,8 @@ interface EffectiveExceptionResult {
   baselineOpen: boolean;
   unmetRequirements: readonly string[];
   hasConclusion: boolean;
+  /** A person's conclusion is what resolved it — not merely that one exists. */
+  resolvedByConclusion: boolean;
 }
 /** What `get_exception_workflow` returns — one exception's live working state. */
 interface ExceptionWorkflowResult {
@@ -1961,13 +1963,16 @@ const INTENTS: readonly Intent[] = [
       if (all === undefined) return undefined;
       const resolved = all.filter((e) => !e.open);
       if (resolved.length === 0) return undefined;
-      const byConclusion = resolved.filter((e) => e.hasConclusion).length;
+      // `hasConclusion` is true of REMAINS_OPEN as well, and a rules-resolved
+      // exception can carry one — counting it here credited a person with
+      // resolving an item they had recorded as remaining open.
+      const byConclusion = resolved.filter((e) => e.resolvedByConclusion).length;
       return {
         status: `${resolved.length} of ${all.length} exceptions carry a recorded resolution`,
         knownFacts: resolved.map(
           (e): AiFigure => ({
             label: `${e.exception.id} — ${e.exception.finding.title}`,
-            text: e.hasConclusion
+            text: e.resolvedByConclusion
               ? `${e.effectiveStatus} · concluded in this session`
               : e.effectiveStatus,
             source: "get_effective_exceptions",
