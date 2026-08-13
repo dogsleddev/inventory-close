@@ -138,20 +138,61 @@ describe("Exceptions queue — a scoped reader is told what is withheld", () => 
     );
   };
 
-  it("names the withholding where the Controller sees records", async () => {
-    // The premise, both halves: the Controller really does get records here,
-    // so the auditor's empty list is a scope result and not an empty close.
-    const asController = buildExceptionsData(userByRole("CONTROLLER"), "T-Q-CTL");
-    expect(asController.drawers["EXC-002"]?.sourceRecords.length).toBeGreaterThan(0);
-    expect(asController.drawers["EXC-002"]?.scopeNotice).toBeNull();
+  /**
+   * Over EVERY exception, in both directions, comparing the two readers.
+   *
+   * The first version asserted one id, and its false-positive half was
+   * vacuous: the render guard's first conjunct is `sourceRecords.length === 0`
+   * and every Controller drawer has at least one record, so the "no notice for
+   * a Controller" assertion held no matter what `scopeNotice` contained.
+   *
+   * The sweep is also what catches the mirror defect, which the first fix
+   * shipped: the withholding sentence claimed OPERATIONAL records exist and
+   * are withheld, on eleven of the fifteen exceptions where the full-access
+   * Controller sees none either. A restriction sentence may say only what the
+   * flag behind it supports.
+   */
+  it("distinguishes withheld from absent, on every exception and both readers", () => {
+    const ctl = buildExceptionsData(userByRole("CONTROLLER"), "T-Q-CTL");
+    const aud = buildExceptionsData(userByRole("AUDITOR_READ_ONLY"), "T-Q-AUD");
+    const ids = Object.keys(ctl.drawers);
+    expect(ids.length).toBe(15);
 
-    const asAuditor = buildExceptionsData(userByRole("AUDITOR_READ_ONLY"), "T-Q-AUD");
-    expect(asAuditor.drawers["EXC-002"]?.sourceRecords.length).toBe(0);
-    expect(asAuditor.drawers["EXC-002"]?.scopeNotice).not.toBeNull();
-    // And the layer sentence stops asserting the records do not exist.
-    expect(asAuditor.drawers["EXC-002"]?.layers.physical).toMatch(/outside your access scope/);
-    expect(asAuditor.drawers["EXC-002"]?.layers.physical).not.toMatch(/No operational events/);
+    let withheldFromAuditor = 0;
+    for (const id of ids) {
+      const c = ctl.drawers[id]!;
+      const a = aud.drawers[id];
+      // The Controller is never told anything is withheld from them.
+      expect(c.sourceRecords.length, `${id}: Controller has no source records`).toBeGreaterThan(0);
+      expect(c.scopeNotice, `${id}: Controller got a scope notice`).toBeNull();
+      expect(c.layers.physical, `${id}: Controller told of a restriction`).not.toMatch(
+        /access scope/,
+      );
+      if (a === undefined) continue;
 
+      // The notice appears exactly when the reader's scope emptied the list.
+      expect(a.scopeNotice === null, `${id}: notice disagrees with the record count`).toBe(
+        a.sourceRecords.length > 0,
+      );
+      if (a.sourceRecords.length === 0) {
+        withheldFromAuditor += 1;
+        // And the sentence may not assert records the close does not hold.
+        // Where the Controller sees no operational events either, a sentence
+        // claiming operational evidence is withheld would be false.
+        if (/No operational events/.test(c.layers.physical)) {
+          expect(
+            a.layers.physical,
+            `${id}: claims withheld operational records the close does not hold`,
+          ).not.toMatch(/Operational evidence for this item is outside/);
+        }
+        expect(a.layers.physical).toMatch(/outside your access scope/);
+      }
+    }
+    // Anti-vacuity: the sweep must actually have exercised the withheld case.
+    expect(withheldFromAuditor, "nothing is withheld from the auditor").toBeGreaterThan(0);
+  });
+
+  it("renders the withholding to the reader it applies to", async () => {
     const user = userEvent.setup();
     renderAs("AUDITOR_READ_ONLY");
     await user.click(screen.getByRole("button", { name: "Open EXC-002 summary" }));

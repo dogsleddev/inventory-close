@@ -868,8 +868,18 @@ function controlState(
   coverage: string | undefined,
   warnings: ExceptionView["sourceCoverageWarnings"],
   recordedConclusion: string | null,
+  /**
+   * Outstanding NOW, passed in rather than re-derived. This computed its own
+   * set off the frozen finding, so "Accounting evidence · Incomplete · Still
+   * required: …" named a record the page's own header had already stopped
+   * asking for.
+   */
+  liveUnmet: readonly string[],
 ): NonNullable<ExceptionDetailData["whyFlagged"]>["state"] {
-  const unmet = finding.evidenceRequirements.filter((r) => r.required && !r.satisfied);
+  const outstanding = new Set(liveUnmet);
+  const unmet = finding.evidenceRequirements.filter(
+    (r) => r.required && outstanding.has(r.description),
+  );
   const evaluated = coverage === "COMPLETE";
   const warned = warnings
     .map((w) => `${sourceName(w.sourceSystem)} ${w.status.toLowerCase()}`)
@@ -1140,6 +1150,7 @@ export function buildExceptionDetailData(
         execution?.coverage,
         view.sourceCoverageWarnings,
         conclusionRecord?.conclusion ?? null,
+        unmet,
       ),
       audit: [
         { k: "Object ID", v: exceptionId },

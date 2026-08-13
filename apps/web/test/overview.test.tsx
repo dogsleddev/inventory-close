@@ -490,6 +490,30 @@ describe("Overview — the blocker panel counts its own rows", () => {
         "Reviewed.",
       );
     }
+
+    /**
+     * The middle state, which is what actually pins the `unmet` fix.
+     *
+     * Evidence submitted and accepted, NO conclusion recorded. Asserting only
+     * the post-conclusion state cannot see it, because `nextActionText`
+     * short-circuits on a resolved status without consulting `unmet` at all —
+     * so "does not say Obtain" holds after a conclusion whether the live set
+     * is read or not. Here the status has not moved, so every one of these
+     * surfaces is answering purely on whether it read the live requirements.
+     */
+    expect(queries.getExceptionWorkflow(ctx, "EXC-003").unmetRequirements).toEqual([]);
+    const mid = buildExceptionDetailData(controller(), "EXC-003", "T-OV-MID");
+    expect(mid.header?.status.label).toBe("Recount Required");
+    expect(mid.header?.nextAction).not.toMatch(/Obtain/);
+    expect(mid.whyFlagged?.state?.accountingEvidence.label).toBe("Complete");
+    expect(mid.whyFlagged?.state?.accountingEvidence.note).toMatch(/Every required record/);
+    // The lens that says "Until it exists, the item stays open" must be gone.
+    expect(mid.lenses?.panels.map((l) => l.key)).not.toContain("needed");
+    // And the drawer over the same item agrees with the page.
+    const midQueue = buildExceptionsData(controller(), "T-OV-MID");
+    expect(midQueue.drawers["EXC-003"]?.layers.accountingMissing).toBe(false);
+    expect(midQueue.drawers["EXC-003"]?.nextAction).not.toMatch(/Obtain/);
+
     commands.concludeException(ctx, {
       exceptionId: "EXC-003",
       conclusion: "RESOLVED_NO_ADJUSTMENT",
@@ -510,6 +534,29 @@ describe("Overview — the blocker panel counts its own rows", () => {
     // no explanation is the same defect one step quieter.
     expect(queue.filter?.basis).toMatch(/rules raised 7/);
 
+    /**
+     * 2b. The UNFILTERED queue row, and the drawer it opens.
+     *
+     * The blockers filter removes the concluded row entirely, so asserting
+     * only there cannot see what the row SAYS — `statusOf`/`openOf` were
+     * pinned by nothing. And the drawer is assembled in the same loop as the
+     * row: the first version of this fix made the row live and left the drawer
+     * frozen, so one call returned a row reading "Resolved — No Adjustment"
+     * and a drawer reading "Recount Required · Open · Obtain: …", with the
+     * requirement painted in the ember alarm treatment. Both are asserted.
+     */
+    const full = buildExceptionsData(controller(), "T-OV-LOOP");
+    const row = full.rows.find((r) => r.id === "EXC-003");
+    expect(row?.status.label).toMatch(/Resolved/);
+    expect(row?.open).toBe(false);
+    expect(row?.blocker).toBe(false);
+    const rowDrawer = full.drawers["EXC-003"];
+    expect(rowDrawer?.status.label).toBe(row?.status.label);
+    expect(rowDrawer?.conclusion).toMatch(/Resolved/);
+    expect(rowDrawer?.blocker).toBe(false);
+    expect(rowDrawer?.nextAction).not.toMatch(/Obtain/);
+    expect(rowDrawer?.layers.accountingMissing).toBe(false);
+
     // 3. The item's own page agrees with the panel on it, in every field that
     //    carries the claim.
     const detail = buildExceptionDetailData(controller(), "EXC-003", "T-OV-LOOP");
@@ -519,6 +566,10 @@ describe("Overview — the blocker panel counts its own rows", () => {
     expect(detail.header?.positionLabel).toBe("Resolved exception");
     expect(detail.header?.nextAction).not.toMatch(/Obtain/);
     expect(detail.workflow?.unmetRequirements).toEqual([]);
+    // Every other consumer on the same page, which the first fix left frozen.
+    expect(detail.whyFlagged?.state?.accountingEvidence.label).toBe("Complete");
+    expect(detail.lenses?.panels.map((l) => l.key)).not.toContain("needed");
+    expect(detail.evidenceState?.missing ?? []).toEqual([]);
     // And the rules' own position stays readable, because it is the
     // reproducible artifact — superseded, not erased.
     expect(detail.header?.conclusionNote).toMatch(/rules derived this as "Recount Required"/);
@@ -541,7 +592,38 @@ describe("Overview — the blocker panel counts its own rows", () => {
    */
   it("keeps an item blocking when the conclusion recorded is that it remains open", () => {
     const commands = getCommands();
-    commands.concludeException(makeContext(controller(), "T-OV-REMAIN"), {
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-REMAIN");
+
+    /**
+     * The evidence is obtained FIRST, and that is the whole point.
+     *
+     * The first version of this test concluded REMAINS_OPEN on an exception
+     * with an outstanding requirement — so `effectiveStatus`'s requirements
+     * gate returned the derived status before the REMAINS_OPEN branch was ever
+     * reached, and every assertion below was satisfied by the wrong rule.
+     * Deleting the branch this test is named for could not have failed it.
+     * With nothing outstanding, the gate passes and REMAINS_OPEN is the only
+     * thing keeping the item open.
+     */
+    for (const requirement of queries.getExceptionWorkflow(ctx, "EXC-003").unmetRequirements) {
+      const submitted = commands.submitEvidence(ctx, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: "EXC-003",
+        satisfiesRequirement: { exceptionId: "EXC-003", requirement },
+      });
+      commands.reviewEvidence(
+        makeContext(manager(), "T-OV-REMAIN-REVIEW"),
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+    expect(queries.getExceptionWorkflow(ctx, "EXC-003").unmetRequirements).toEqual([]);
+
+    commands.concludeException(ctx, {
       exceptionId: "EXC-003",
       conclusion: "REMAINS_OPEN",
       rationale: "Recount not yet performed.",
@@ -560,6 +642,12 @@ describe("Overview — the blocker panel counts its own rows", () => {
     expect(detail.header?.conclusionNote).not.toMatch(/rules derived this as/);
     // But the review IS recorded, and the panel below says so.
     expect(detail.workflow?.conclusionLabel).toBe("Remains open");
+    // The drawer over the same item does not overshoot either — the surface
+    // the previous fix left behind is asserted in this direction too.
+    const drawer = buildExceptionsData(controller(), "T-OV-REMAIN").drawers["EXC-003"];
+    expect(drawer?.status.label).toBe("Recount Required");
+    expect(drawer?.conclusion).toBe("Open");
+    expect(drawer?.blocker).toBe(true);
   });
 
   it("links to the register with the register's own count", () => {

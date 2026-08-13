@@ -60,6 +60,27 @@ export interface ExceptionContext {
    * rendered as an empty section.
    */
   readonly evidenceOutOfScope: boolean;
+  /**
+   * The item's position NOW — the rules' status as this session has moved it,
+   * and what is still outstanding counting what has been submitted.
+   *
+   * It lives here rather than on each consumer because "what is outstanding"
+   * is asked by six surfaces built from this one context, and the previous
+   * attempt at this fix answered it live in ONE of them. The result was a
+   * queue row reading "Resolved — No Adjustment" whose own drawer, assembled
+   * twelve lines later in the same loop, read "Recount Required · Open ·
+   * Obtain: Supervised recount locating the unit" — the exact contradiction
+   * the fix was written to remove, re-created one click away from where it
+   * was removed. One lookup, on the object every consumer already receives.
+   *
+   * `null` only when the projection is unavailable to this caller, in which
+   * case every consumer falls back to the rules' frozen position.
+   */
+  readonly live: {
+    readonly effectiveStatus: string;
+    readonly unmet: readonly string[];
+    readonly hasConclusion: boolean;
+  } | null;
 }
 
 function str(v: unknown): string | undefined {
@@ -120,7 +141,44 @@ export function gatherExceptionContext(
   } catch {
     bookUnits = [];
   }
-  return { view, evidence, bookUnits, evidenceOutOfScope: evidence.length === 0 };
+  // The live position, fetched once for every surface built from this context.
+  let live: ExceptionContext["live"] = null;
+  try {
+    const wf = queries.getExceptionWorkflow(ctx, view.exception.id);
+    live = {
+      effectiveStatus: wf.effectiveStatus,
+      unmet: wf.unmetRequirements,
+      hasConclusion: wf.conclusion !== null,
+    };
+  } catch {
+    live = null;
+  }
+
+  return { view, evidence, bookUnits, evidenceOutOfScope: evidence.length === 0, live };
+}
+
+/**
+ * What this item's status is NOW, and what it still needs.
+ *
+ * Every surface built from an `ExceptionContext` asks these two questions, and
+ * they must all get the same answer on the same run — that is the whole point
+ * of putting the lookup on the context. The frozen finding remains the
+ * fallback, and remains the right answer where a surface explicitly reports
+ * the rules' own position.
+ */
+export function livePosition(context: ExceptionContext): {
+  status: ExceptionView["exception"]["status"];
+  unmet: readonly string[];
+  moved: boolean;
+} {
+  const frozen = context.view.exception.status;
+  const status = (context.live?.effectiveStatus as typeof frozen | undefined) ?? frozen;
+  const unmet =
+    context.live?.unmet ??
+    context.view.exception.finding.evidenceRequirements
+      .filter((r) => r.required && !r.satisfied)
+      .map((r) => r.description);
+  return { status, unmet, moved: status !== frozen };
 }
 
 /** Said out loud wherever a viewer's scope, not the data, empties a section. */
@@ -284,9 +342,13 @@ export function assembleEvidenceState(context: ExceptionContext): {
     });
   }
 
+  // Outstanding NOW. Read from the frozen finding, this listed a record the
+  // product itself had accepted a submission against — under a heading saying
+  // the close does not hold it.
+  const stillUnmet = new Set(livePosition(context).unmet);
   const missing: { title: string; detail: string; evidenceId: string | null }[] = [];
   for (const req of finding.evidenceRequirements) {
-    if (!req.required || req.satisfied) continue;
+    if (!req.required || !stillUnmet.has(req.description)) continue;
     const requiredFor = evidence.find((e) => e.linkType === "REQUIRED_FOR");
     const stale = view.sourceCoverageWarnings
       .map(
@@ -367,8 +429,11 @@ export function assembleTimeline(context: ExceptionContext): {
     else entries.splice(idx, 0, conflictEntry);
   }
 
+  // Same live set. "No date, because no event exists" is a flat non-existence
+  // claim, and it was being made about a record the workspace holds.
+  const outstanding = new Set(livePosition(context).unmet);
   const missingBlocks = finding.evidenceRequirements
-    .filter((r) => r.required && !r.satisfied)
+    .filter((r) => r.required && outstanding.has(r.description))
     .map((r) => ({
       label: `${r.description} — Missing`,
       detail:
@@ -533,10 +598,13 @@ export function assembleDrawer(
 ): ExceptionDrawerData {
   const { view, evidence, bookUnits } = context;
   const finding = view.exception.finding;
-  const status = view.exception.status;
-  const unmet = finding.evidenceRequirements
-    .filter((r) => r.required && !r.satisfied)
-    .map((r) => r.description);
+  // Live, like the row this drawer opens from. These two read the frozen
+  // close while the row beside them read the live one, so one call to
+  // `buildExceptionsData` returned a row saying "Resolved — No Adjustment"
+  // and a drawer saying "Recount Required · Open · Obtain: …", with
+  // `accountingMissing` painting a satisfied requirement in the ember alarm
+  // treatment.
+  const { status, unmet } = livePosition(context);
 
   const loc = bookUnits[0] ? locationLabel(bookUnits[0].location) : undefined;
   const netsuite =
@@ -580,7 +648,16 @@ export function assembleDrawer(
     physicalBits.length > 0
       ? physicalBits.join(" · ")
       : context.evidenceOutOfScope
-        ? "Operational evidence for this item is outside your access scope — this is a restriction on what you may read, not an absence of records."
+        ? // Says only what `evidenceOutOfScope` supports. The first version of
+          // this sentence claimed OPERATIONAL records exist and are withheld —
+          // but the flag means "this reader saw no evidence rows of any kind",
+          // and on eleven of the fifteen exceptions the full-access Controller
+          // sees no operational events either. So it asserted the existence of
+          // records that do not exist, to the one role least able to check:
+          // the standing rule broken in the mirror of the direction it was
+          // written to fix. What is true is that the reader's scope emptied the
+          // evidence, so no operational position can be formed here at all.
+          "Evidence records for this item are outside your access scope, so no operational position can be shown here."
         : "No operational events in evidence for this item";
 
   const accounting =

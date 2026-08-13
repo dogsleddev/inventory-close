@@ -3,7 +3,7 @@ import { formatCents, formatDate, formatDateShort } from "../format";
 import { conclusionLabel } from "../workflow-view";
 import type { LensView } from "../view-model";
 import type { ExceptionContext } from "./exception-view";
-import { carrierFact, carrierPhrase } from "./exception-view";
+import { carrierFact, carrierPhrase, livePosition } from "./exception-view";
 import { capitalize, kindLabel, locationLabel, sourceLabel, sourceName } from "./humanize";
 
 /**
@@ -81,13 +81,32 @@ function lens(partial: Partial<LensView> & Pick<LensView, "key" | "label" | "hea
   };
 }
 
-/** The first required requirement with no record behind it. */
-function firstUnmet(finding: Finding) {
-  return finding.evidenceRequirements.find((r) => r.required && !r.satisfied);
+/**
+ * The requirements with no record behind them, as of NOW.
+ *
+ * These read the frozen finding, so a lens went on saying "Required for the
+ * CNT-EX-001 conclusion. Until it exists, the item stays open." about a record
+ * the product had already accepted a submission against — an enforcement claim
+ * that was false, on the page whose own header had just stopped making it.
+ * `LensInput` already carries the context that knows the live answer.
+ */
+function outstandingSet(input: LensInput): ReadonlySet<string> {
+  return new Set(livePosition(input.context).unmet);
 }
 
-function unmetAll(finding: Finding) {
-  return finding.evidenceRequirements.filter((r) => r.required && !r.satisfied);
+/** The first required requirement with no record behind it. */
+function firstUnmet(input: LensInput) {
+  const outstanding = outstandingSet(input);
+  return input.finding.evidenceRequirements.find(
+    (r) => r.required && outstanding.has(r.description),
+  );
+}
+
+function unmetAll(input: LensInput) {
+  const outstanding = outstandingSet(input);
+  return input.finding.evidenceRequirements.filter(
+    (r) => r.required && outstanding.has(r.description),
+  );
 }
 
 function missingChipFor(
@@ -173,7 +192,7 @@ function countExistenceLenses(input: LensInput): LensView[] {
     );
   }
 
-  const unmet = firstUnmet(finding);
+  const unmet = firstUnmet(input);
   if (unmet !== undefined) {
     out.push(
       lens({
@@ -235,7 +254,7 @@ function countCompletenessLenses(input: LensInput): LensView[] {
     }),
   );
 
-  const unmet = firstUnmet(finding);
+  const unmet = firstUnmet(input);
   if (unmet !== undefined) {
     out.push(
       lens({
@@ -313,7 +332,7 @@ function valuationEoLenses(input: LensInput): LensView[] {
   }
 
   const reserve = str(finding.attributes?.["reserve"]);
-  const unmet = firstUnmet(finding);
+  const unmet = firstUnmet(input);
   out.push(
     lens({
       key: "valuation-conclusion",
@@ -342,7 +361,7 @@ function manualGlLenses(input: LensInput): LensView[] {
   const enteredBy = str(c?.["enteredBy"]);
   const amount = num(c?.["amountCents"]);
   const txn = str(c?.["transactionNumber"]) ?? finding.subjects.transactionNumbers?.[0];
-  const unmet = unmetAll(finding);
+  const unmet = unmetAll(input);
   const out: LensView[] = [];
 
   out.push(
@@ -451,7 +470,7 @@ function threeLayerLenses(input: LensInput): LensView[] {
         ? `${capitalize(carrierPhrase(carrierPosition.label.replace(/ /g, "_")))} — no delivery recorded`
         : "Operational evidence on file";
 
-  const missingReq = firstUnmet(finding);
+  const missingReq = firstUnmet(input);
   const requiredForEvidence = context.evidence.find((e) => e.linkType === "REQUIRED_FOR");
   const provisionGap = requiredForEvidence?.kind === "CONTRACT";
 
