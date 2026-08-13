@@ -125,8 +125,44 @@ function categoryNote(
   queries: QueryService,
   ctx: ServiceContext,
 ): { note: string; warn: boolean } {
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
-  const open = exceptions.filter((e) => e.open);
+  /**
+   * The live open set, shared by every case below.
+   *
+   * This was `listExceptions(...).filter((e) => e.open)` — the rules' frozen
+   * answer — and it fed PHYSICAL_COUNT, CUTOFF, OWNERSHIP, THIRD_PARTY and
+   * VALUATION. Only the EXCEPTIONS case was made live, and its own comment
+   * said why. So concluding all seven blockers produced a panel whose gate
+   * offered "Every blocker has a management conclusion. Signing off locks the
+   * period." beside PHYSICAL_COUNT "2 open count issues", CUTOFF "Inbound and
+   * outbound both open", OWNERSHIP "Contract support missing on 1 item",
+   * THIRD_PARTY "$92.4K awaiting support" and VALUATION "Reserve
+   * undetermined", every one of them warn:true. The commit that fixed the
+   * EXCEPTIONS case wrote that "a close-control product that offers to lock
+   * the period beside a list of outstanding work has failed at its own claim",
+   * and reproduced it one row over. Deriving all six from one binding is what
+   * makes them move together.
+   *
+   * `unmet` travels with each row because OWNERSHIP asks what is still
+   * MISSING, and the frozen `satisfied` flag is a literal baked by the rules
+   * engine that never moves.
+   */
+  const effective = attempt(() => queries.getEffectiveExceptions(ctx));
+  const open: readonly {
+    exception: ExceptionView["exception"];
+    unmet: readonly string[];
+  }[] =
+    effective !== undefined
+      ? effective
+          .filter((e) => e.open)
+          .map((e) => ({ exception: e.exception, unmet: e.unmetRequirements }))
+      : (attempt(() => queries.listExceptions(ctx)) ?? [])
+          .filter((e) => e.open)
+          .map((e) => ({
+            exception: e.exception,
+            unmet: e.exception.finding.evidenceRequirements
+              .filter((r) => r.required && !r.satisfied)
+              .map((r) => r.description),
+          }));
   const openByPrefix = (p: string) =>
     open.filter((e) => e.exception.finding.ruleId.startsWith(p));
   switch (key) {
@@ -152,10 +188,11 @@ function categoryNote(
       return { note: "No open cutoff items", warn: false };
     }
     case "OWNERSHIP": {
+      // Counted from what is STILL unmet, not from the rules' baked
+      // `satisfied` literal — otherwise this says support is missing on an
+      // item whose contract the Accounting Manager accepted an hour ago.
       const missing = open.filter((e) =>
-        e.exception.finding.evidenceRequirements.some(
-          (r) => r.required && !r.satisfied && /contract|provision|agreement/i.test(r.description),
-        ),
+        e.unmet.some((description) => /contract|provision|agreement/i.test(description)),
       ).length;
       return missing > 0
         ? { note: `Contract support missing on ${missing} item${missing === 1 ? "" : "s"}`, warn: true }
@@ -179,6 +216,11 @@ function categoryNote(
       // Live, like the gate figure four inches above it. Read from
       // `getBlockers` this panel said "7 open blockers" on a screen whose gate
       // read 6 — one screen, one fact, two numbers.
+      //
+      // It keeps its own lookup rather than counting `open` above: a BLOCKER
+      // is not an open exception. The two happen to be equal on this dataset
+      // (seven and seven), which is exactly the kind of coincidence that makes
+      // a wrong count invisible until the data changes.
       const live = attempt(() => queries.getEffectiveClose(ctx));
       const count = live?.blockerCount ?? (attempt(() => queries.getBlockers(ctx)) ?? []).length;
       return {
@@ -632,7 +674,12 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
         blockerViews.reduce((n, e) => n + e.exception.finding.exposureCents, 0),
       ),
       blockerCount: liveBlockerCount,
-      registerCount: agg.blockerCount,
+      // Live, like `blockerCount` on the line above and like the destination
+      // it links to. Read from the baseline aggregate, OverviewScreen.tsx:390
+      // rendered "View all 7 in the exception register →" beside a caption
+      // reading "complete the six still open", pointing at an /exceptions
+      // header reading "6 blockers".
+      registerCount: live?.blockerCount ?? agg.blockerCount,
       remainingNote,
     },
     ...(recon !== undefined
@@ -667,7 +714,17 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     activity,
     closeAreas: {
       categories,
-      weightedResult: `Weighted result ${formatBpsExact(readiness.totalBasisPoints)} · ${readiness.totalBasisPoints} bps`,
+      // LABELLED, not made live — deliberately, and this is the one figure on
+      // the page where that is the right answer. The weighted score is the
+      // readiness policy's own output over the rules' own population; making
+      // it live would be a second definition of readiness. What was wrong was
+      // shipping it unlabelled: "Weighted result 81.42% · 8142 bps" sat on the
+      // same screen as a live gate reading 83.1%, and a reader had no way to
+      // know they were answers to different questions. One unlabelled number
+      // that disagrees with the gate is the defect; two labelled numbers are
+      // the product's whole argument. The divergence note at data.ts:385 says
+      // the same thing at the gate.
+      weightedResult: `Weighted result ${formatBpsExact(readiness.totalBasisPoints)} · ${readiness.totalBasisPoints} bps — the rules' baseline, before this session's conclusions`,
     },
     ...(health !== undefined
       ? {

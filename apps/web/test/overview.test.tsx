@@ -15,6 +15,7 @@ import { askGaurdData } from "../lib/server/ask-view";
 import { buildFinancialLifeData } from "../lib/server/financial-life-view";
 import { buildCsv } from "../lib/server/export-csv";
 import { getCommands, getQueries, getWorkspace, makeContext } from "../lib/server/workspace";
+import { satisfyRequirements } from "./support/live-close";
 
 /**
  * Ask Gaurd reaches its answer through a server action. Replacing the action
@@ -794,15 +795,168 @@ describe("Overview — the blocker panel counts its own rows", () => {
     expect(ov.gate?.divergence).toBeNull();
   });
 
-  it("links to the register with the register's own count", () => {
-    // The other direction, and the trap in fixing the first: the link leads to
-    // /exceptions, which lists what the RULES derived. A link reading "View all
-    // 0 blockers" onto a page of seven would be this panel's defect moved one
-    // click along, so the link counts its destination while the caption counts
-    // these rows.
+  /**
+   * The Overview offering to lock the period beside six areas of open work.
+   *
+   * `categoryNote` derived its open set from `listExceptions` — frozen — and
+   * fed it to PHYSICAL_COUNT, CUTOFF, OWNERSHIP, THIRD_PARTY and VALUATION.
+   * Only the EXCEPTIONS case was live. So with every blocker concluded the
+   * gate read "Every blocker has a management conclusion. Signing off locks
+   * the period." while the panel beside it read, all warn:true: "2 open count
+   * issues", "Inbound and outbound both open", "Contract support missing on 1
+   * item", "$92.4K awaiting support", "Reserve undetermined".
+   */
+  it("moves every close-area note with the close, not just the exceptions one", () => {
+    const before = buildOverviewData(controller(), "T-OV-CAT-BEFORE");
+    const notesBefore = before.gate?.categories ?? [];
+    // Premise: these notes exist, warn, and say the things below.
+    expect(notesBefore.filter((c) => c.noteWarn).length).toBeGreaterThan(1);
+    expect(notesBefore.some((c) => /open count issue/.test(c.note))).toBe(true);
+    expect(notesBefore.some((c) => /Inbound and outbound both open/.test(c.note))).toBe(true);
+    expect(notesBefore.some((c) => /Contract support missing/.test(c.note))).toBe(true);
+    expect(notesBefore.some((c) => /awaiting support/.test(c.note))).toBe(true);
+    expect(notesBefore.some((c) => /Reserve undetermined/.test(c.note))).toBe(true);
+
     resolveEveryBlocker();
+
+    const after = buildOverviewData(controller(), "T-OV-CAT-AFTER");
+    // The gate now offers to lock the period.
+    expect(after.gate?.signOff.reason).toMatch(/Signing off locks the period/);
+
+    /**
+     * So none of the five derived from the exception set may still report
+     * outstanding work. Pinned to the exact cleared strings rather than to a
+     * /open|missing|awaiting/ scan, because every cleared string CONTAINS one
+     * of those words — "No open count issues" matches /open/ — and a scan
+     * that cannot tell "2 open count issues" from "No open count issues"
+     * fails on a correct fix and passes on nothing useful.
+     */
+    const noteFor = (key: string) => after.gate?.categories.find((c) => c.key === key);
+    expect(noteFor("PHYSICAL_COUNT")?.note).toBe("No open count issues");
+    expect(noteFor("CUTOFF")?.note).toBe("No open cutoff items");
+    expect(noteFor("OWNERSHIP")?.note).toBe("Ownership support on file");
+    expect(noteFor("THIRD_PARTY")?.note).toBe("All custodians confirmed");
+    expect(noteFor("VALUATION")?.note).toBe("No open valuation items");
+    for (const key of ["PHYSICAL_COUNT", "CUTOFF", "OWNERSHIP", "THIRD_PARTY", "VALUATION"]) {
+      expect(noteFor(key)?.noteWarn, key).toBe(false);
+    }
+
+    /**
+     * POPULATION_GL and ADJUSTMENTS are deliberately NOT asserted clean, and
+     * both still warn: "$12,450 current difference" and "2 of 3 drafted, none
+     * posted". Neither is derived from the exception set, and both remain
+     * literally true after every conclusion — the GL still differs from the
+     * subledger and one identified item still has no drafted entry. Asserting
+     * them away would be asserting that a conclusion drafts journal entries.
+     */
+    expect(noteFor("POPULATION_GL")?.noteWarn).toBe(true);
+    expect(noteFor("ADJUSTMENTS")?.note).toBe("2 of 3 drafted, none posted");
+  });
+
+  /**
+   * OWNERSHIP, at the state where its own half of the fix is live.
+   *
+   * The case counts items whose CONTRACT support is still missing, and it
+   * counted them from `finding.evidenceRequirements.filter(required &&
+   * !satisfied)` — a literal baked by the rules engine that never moves. Once
+   * everything is concluded the open set is empty and the case returns clean
+   * whichever list it reads, so the test above cannot see this. The state
+   * where it can is the one in between: the contract has been submitted and
+   * accepted, and nobody has concluded yet.
+   *
+   * The subject is discovered from the workspace rather than named, so this
+   * survives a dataset change instead of pinning EXC-007 by hand.
+   */
+  it("stops reporting contract support as missing once it is on file", () => {
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-OWN");
+    const subject = queries
+      .getEffectiveExceptions(ctx)
+      .find(
+        (e) =>
+          e.open && e.unmetRequirements.some((r) => /contract|provision|agreement/i.test(r)),
+      );
+    expect(subject, "no open exception has an outstanding contract requirement").toBeDefined();
+
+    const noteOf = (correlationId: string) =>
+      buildOverviewData(controller(), correlationId).gate?.categories.find(
+        (c) => c.key === "OWNERSHIP",
+      );
+    expect(noteOf("T-OV-OWN-BEFORE")?.note).toMatch(/Contract support missing on 1 item/);
+    expect(noteOf("T-OV-OWN-BEFORE")?.noteWarn).toBe(true);
+
+    // Submit and accept, WITHOUT concluding.
+    satisfyRequirements(subject?.exception.id ?? "");
+
+    // Still open — the item has not been concluded and nothing here claims it has.
+    const after = queries
+      .getEffectiveExceptions(ctx)
+      .find((e) => e.exception.id === subject?.exception.id);
+    expect(after?.open).toBe(true);
+
+    expect(noteOf("T-OV-OWN-AFTER")?.note).toBe("Ownership support on file");
+    expect(noteOf("T-OV-OWN-AFTER")?.noteWarn).toBe(false);
+  });
+
+  /**
+   * CHANGED ASSERTION. This read `expect(after.preventing?.registerCount)
+   * .toBe(7)`, on the stated rationale that "the link leads to /exceptions,
+   * which lists what the RULES derived", so a link counting the live set would
+   * be the panel's defect moved one click along.
+   *
+   * That rationale is false about the destination. `buildExceptionsData`'s
+   * blocker filter is live: resolve six and /exceptions?filter=blockers
+   * returns one row, `openBlockerCount` 1, under its own basis line "The rules
+   * raised 7; 6 have been concluded in this session and are no longer listed."
+   * So the old assertion pinned "View all 7 in the exception register →" onto
+   * a page showing one — the same defect it was written to prevent, pointing
+   * the other way, beside a caption that already said "complete the one still
+   * open".
+   *
+   * The replacement asserts the link against the DESTINATION rather than
+   * against a literal, so the two cannot drift apart again in either
+   * direction, and it drives to one rather than zero: 0 === 0 would pass on an
+   * implementation that always returned zero.
+   */
+  it("links to the register with the count the register actually shows", () => {
+    resolveAllBut(1);
     const after = buildOverviewData(controller(), "T-OV-LINK");
-    expect(after.preventing?.blockerCount).toBe(0);
-    expect(after.preventing?.registerCount).toBe(7);
+    const destination = buildExceptionsData(
+      controller(),
+      "T-OV-LINK-DEST",
+      undefined,
+      "blockers",
+    );
+
+    expect(after.preventing?.blockerCount).toBe(1);
+    expect(destination.openBlockerCount).toBe(1);
+    expect(destination.rows.length).toBe(1);
+    expect(after.preventing?.registerCount).toBe(destination.openBlockerCount);
+  });
+
+  /**
+   * Item 7(b). The weighted score is the readiness POLICY's own output over
+   * the rules' own population, so unlike everything else on this screen it
+   * must NOT be made live — that would be a second definition of readiness.
+   * What was wrong was shipping it unlabelled beside a live gate: "Weighted
+   * result 81.42% · 8142 bps" on the same page as "83.1%", with nothing to
+   * tell a reader they answer different questions.
+   */
+  it("labels the close-areas percentage as the rules' baseline", () => {
+    const before = buildOverviewData(controller(), "T-OV-WR-BEFORE");
+    expect(before.closeAreas?.weightedResult).toMatch(/8142 bps/);
+    expect(before.gate?.readinessOverview).toBe("81.4%");
+
+    resolveAllBut(1);
+
+    const after = buildOverviewData(controller(), "T-OV-WR-AFTER");
+    // Still the rules' figure, unmoved — that is the point of it.
+    expect(after.closeAreas?.weightedResult).toMatch(/8142 bps/);
+    // And no longer bare: it now says which of the two numbers it is.
+    expect(after.closeAreas?.weightedResult).toMatch(
+      /the rules' baseline, before this session's conclusions/,
+    );
+    // The gate beside it has moved, which is what made the label necessary.
+    expect(after.gate?.readinessOverview).not.toBe("81.4%");
   });
 });
