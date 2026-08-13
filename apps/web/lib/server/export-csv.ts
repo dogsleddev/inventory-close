@@ -1915,10 +1915,18 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
       lines.push(row([b.exceptionId, b.description, formatCents(b.exposureCents)]));
     }
     if (live?.diverged === true) {
+      // Branched on whether ANY blocker is still listed above. "Blockers still
+      // open." is a heading, and printing it over an empty list at a live
+      // count of zero asserts that some are — the same sentence being true at
+      // six and false at none. Caught in the browser pass at exactly the count
+      // it is wrong at, which is the count the demo ends on.
+      const stillOpen = live.blockerCount;
       lines.push(
         row([
           "Note",
-          `Blockers still open. The rules raised ${agg.blockerCount}; those carrying a management conclusion recorded in this session are not listed here and are exported in full by the exceptions table.`,
+          stillOpen > 0
+            ? `${stillOpen} ${plural(stillOpen, "blocker")} still open. The rules raised ${agg.blockerCount}; those carrying a management conclusion recorded in this session are not listed here and are exported in full by the exceptions table.`
+            : `No blocker is still open. The rules raised ${agg.blockerCount}, and every one of them carries a management conclusion recorded in this session; they are exported in full by the exceptions table.`,
         ]),
       );
     }

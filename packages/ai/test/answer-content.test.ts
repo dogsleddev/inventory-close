@@ -156,6 +156,23 @@ describe("the counts answer answers about the serial it was asked about", () => 
     expect(JSON.stringify(r.answer)).not.toMatch(/1,061 of 1,065/);
     // The distinction the sentence exists to draw.
     expect(r.answer?.managementConclusion).toMatch(/not a quantity of zero/);
+
+    /**
+     * EXACTLY ONE missing record, because exactly one is missing. The drawer
+     * renders `missingEvidence.length` as "N required items of evidence
+     * reported missing", so a fact filed there is a gap the product claims and
+     * does not have. The sentence about where the unit DOES appear — in a test
+     * count — was filed there and made the banner read 2. A test count is a
+     * selection and is never required of any particular unit.
+     *
+     * This product may not overstate, and that includes overstating a gap.
+     */
+    expect(r.answer?.missingEvidence).toHaveLength(1);
+    expect(r.answer?.missingEvidence.join(" ")).not.toMatch(/appears only in/);
+    // The observation survives, as a fact.
+    expect(
+      (r.answer?.knownFacts ?? []).some((f) => /test count, which is an observation/.test(f.text ?? "")),
+    ).toBe(true);
   });
 
   it("leaves the unscoped population answer alone", () => {

@@ -420,15 +420,28 @@ function serialCountAnswer(
           source: "get_financial_lifecycle",
         },
         ...testFacts,
-      ],
-      conflictingEvidence: [],
-      missingEvidence: [
-        `No count row for ${serial} in the year-end plan, so the close holds no counted quantity for this unit.`,
+        // A FACT about where the unit DOES appear, not a second missing
+        // record. It sat in `missingEvidence` and the drawer therefore
+        // announced "2 required items of evidence reported missing" about a
+        // unit with exactly one missing record — the same overstatement
+        // already removed from the counted branch of this answer, left behind
+        // on this one. A test count is a selection, never required of any
+        // particular unit, so its presence cannot be a gap.
         ...(tests.length > 0
           ? [
-              `${serial} appears only in ${count(tests.length)} test ${plural(tests.length, "count")}, which is an observation and not a population row.`,
+              {
+                label: `${serial} — where it does appear`,
+                text: `${count(tests.length)} test ${plural(tests.length, "count")}, which is an observation and not a population row`,
+                source: "get_financial_lifecycle" as const,
+              },
             ]
           : []),
+      ],
+      conflictingEvidence: [],
+      // Exactly one, and it is genuinely required: the year-end count
+      // population should have covered this unit and does not.
+      missingEvidence: [
+        `No count row for ${serial} in the year-end plan, so the close holds no counted quantity for this unit.`,
       ],
       assertions: ["EXISTENCE"],
       managementConclusion:

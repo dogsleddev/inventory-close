@@ -230,8 +230,32 @@ describe("CSV export — the close summary says which position it holds", () => 
     const listed = ["EXC-001", "EXC-002", "EXC-003", "EXC-004", "EXC-007", "EXC-011", "EXC-015"]
       .filter((id) => body.includes(`"${id}"`));
     expect(listed).toHaveLength(1);
-    expect(cells(body, "Note")[1]).toContain("Blockers still open.");
+    // The note carries its own count, so it reads naturally at one as well as
+    // at six — "Blocker still open." was grammatical and stilted.
+    expect(cells(body, "Note")[1]).toContain("1 blocker still open.");
     expect(cells(body, "Note")[1]).toContain("The rules raised 7;");
+  });
+
+  /**
+   * The state the demo ends on, and the one where a heading can lie.
+   *
+   * "Blockers still open." is a HEADING over the blocker list. At six it is
+   * true; at zero it sits above an empty list and asserts that some are. The
+   * note branches on the live count for that reason.
+   */
+  it("does not head an empty blocker list with 'Blockers still open'", () => {
+    resolveAllBut(0);
+    const body = summary();
+
+    expect(cells(body, "Sign-off blockers")[1]).toBe("0");
+    // Nothing left to list.
+    expect(body.split("\n").filter((l) => /^"EXC-\d+"/.test(l))).toEqual([]);
+
+    const note = cells(body, "Note")[1] ?? "";
+    expect(note).not.toMatch(/\d+ blockers? still open/);
+    expect(note).toMatch(/No blocker is still open\./);
+    // And the rules' own count is still named, so the empty list is legible.
+    expect(note).toMatch(/The rules raised 7/);
   });
 
   it("labels the weighted close-area scores as the rules' own, never as live", () => {
