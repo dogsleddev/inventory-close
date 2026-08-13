@@ -12,6 +12,8 @@ import {
   buildShellData,
 } from "../lib/server/data";
 import { askGaurdData } from "../lib/server/ask-view";
+import { buildFinancialLifeData } from "../lib/server/financial-life-view";
+import { buildCsv } from "../lib/server/export-csv";
 import { getCommands, getQueries, getWorkspace, makeContext } from "../lib/server/workspace";
 
 /**
@@ -648,6 +650,148 @@ describe("Overview — the blocker panel counts its own rows", () => {
     expect(drawer?.status.label).toBe("Recount Required");
     expect(drawer?.conclusion).toBe("Open");
     expect(drawer?.blocker).toBe(true);
+  });
+
+  /**
+   * The four surfaces the first two fix passes did not reach.
+   *
+   * Each was verified by execution before being fixed, and each is the same
+   * class: a screen reading the rules' frozen close beside one reading the
+   * live one. The all-concluded state is what exposes the worst of them —
+   * the gate offering sign-off while the work queue beside the button still
+   * prescribed five records to obtain.
+   */
+  it("moves every Overview figure and queue together, not just the gate", () => {
+    resolveEveryBlocker();
+    const ov = buildOverviewData(controller(), "T-OV-ALL");
+
+    expect(ov.gate?.signOff.available).toBe(true);
+    // The management work queue prescribed work on items it had concluded.
+    expect(ov.attention?.items ?? []).toEqual([]);
+    // The KPI tiles link to /exceptions?filter=blockers, which is live — a
+    // tile reading 7 over a destination listing 0 is the same defect one
+    // click along.
+    expect(ov.gate?.stats.find((s) => s.label === "ACTIVE BLOCKERS")?.value).toBe("0");
+    expect(ov.gate?.stats.find((s) => s.label === "BLOCKER EXPOSURE")?.value).toBe("$0");
+    // And the Close-areas panel, which read "7 open blockers" beside a gate
+    // reading 6, on one screen.
+    expect(ov.gate?.categories.find((c) => c.key === "EXCEPTIONS")?.note).toBe("0 open blockers");
+    // The rules' own position stays named, including that the weighted bars
+    // below are still the derived scores.
+    expect(ov.gate?.divergence).toMatch(/7 blockers/);
+    expect(ov.gate?.divergence).toMatch(/weighted areas below are still those derived scores/);
+  });
+
+  /**
+   * The state that pins the per-item lookup rather than the open filter.
+   *
+   * An item that is STILL OPEN but whose requirement has been submitted and
+   * accepted stays in the work queue — correctly — and must stop prescribing
+   * a record the product is holding. Nothing else reaches this: once an item
+   * is concluded it leaves the queue entirely, so an assertion on the
+   * all-concluded state alone is satisfied by the filter and never reads the
+   * status or the requirements at all.
+   */
+  it("stops prescribing a record on an item that is still open but no longer waiting", () => {
+    const commands = getCommands();
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-SUBMITTED");
+    const before = buildOverviewData(controller(), "T-OV-SUBMITTED");
+    const labelFor = (data: ReturnType<typeof buildOverviewData>, id: string) =>
+      data.attention?.items.find((i) => i.ref === id)?.label ?? "";
+    // Premise: it is prescribed, and prescribed as an obtain.
+    expect(labelFor(before, "EXC-001")).toMatch(/Obtain/);
+
+    for (const requirement of queries.getExceptionWorkflow(ctx, "EXC-001").unmetRequirements) {
+      const submitted = commands.submitEvidence(ctx, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: "EXC-001",
+        satisfiesRequirement: { exceptionId: "EXC-001", requirement },
+      });
+      commands.reviewEvidence(
+        makeContext(manager(), "T-OV-SUBMITTED-R"),
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+
+    const after = buildOverviewData(controller(), "T-OV-SUBMITTED");
+    // Still open, still blocking, still in the queue — nothing has been
+    // concluded, and the product must not pretend otherwise.
+    expect(after.gate?.blockerCount).toBe(7);
+    expect(after.attention?.items.some((i) => i.ref === "EXC-001")).toBe(true);
+    // But it no longer asks for what it has.
+    expect(labelFor(after, "EXC-001")).not.toMatch(/Obtain/);
+    // And the blocker row beside it agrees.
+    const row = after.preventing?.rows.find((r) => r.id === "EXC-001");
+    expect(row?.nextAction).not.toMatch(/Obtain/);
+  });
+
+  it("carries the conclusion to the unit page and the export", () => {
+    const commands = getCommands();
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-CARRY");
+    for (const requirement of queries.getExceptionWorkflow(ctx, "EXC-003").unmetRequirements) {
+      const submitted = commands.submitEvidence(ctx, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: "EXC-003",
+        satisfiesRequirement: { exceptionId: "EXC-003", requirement },
+      });
+      commands.reviewEvidence(
+        makeContext(manager(), "T-OV-CARRY-R"),
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+    commands.concludeException(ctx, {
+      exceptionId: "EXC-003",
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Recount completed.",
+    });
+
+    // The flagship screen, which reported the item as Recount Required,
+    // blocker true, and demanded a conclusion the workspace was holding.
+    const life = buildFinancialLifeData(controller(), "KE-X1-3498", "T-OV-CARRY");
+    expect(life.header?.close?.status?.label).toMatch(/Resolved/);
+    expect(life.header?.close?.blocker).toBe(false);
+    expect(life.header?.close?.body).not.toMatch(/Obtain/);
+
+    /**
+     * And the export, which carries BOTH positions in named columns. A CSV
+     * outlives the tab it came from, so "which run is this?" cannot be left
+     * to the reader — it emitted the frozen close with nothing saying so.
+     */
+    const body = buildCsv(controller(), "exceptions", "T-OV-CARRY").body;
+    const header = body.split("\n").find((l) => l.includes("Blocks sign-off"));
+    expect(header).toMatch(/"Status","Status the rules derived"/);
+    const row = body.split("\n").find((l) => l.startsWith('"EXC-003"'));
+    expect(row).toMatch(/"RESOLVED_NO_ADJUSTMENT","RECOUNT_REQUIRED","RESOLVED"/);
+    // The rules' position is retained, not overwritten — it is the
+    // reproducible artifact and an export is where it matters most.
+    expect(row).toMatch(/RECOUNT_REQUIRED/);
+  });
+
+  it("moves none of them when the conclusion recorded moves nothing", () => {
+    // The false-positive direction for all four at once. REMAINS_OPEN sets
+    // `diverged` without moving a figure, and the divergence banner used to
+    // announce a moved position on the strength of that flag alone.
+    getCommands().concludeException(makeContext(controller(), "T-OV-NOMOVE"), {
+      exceptionId: "EXC-003",
+      conclusion: "REMAINS_OPEN",
+      rationale: "Not yet recounted.",
+    });
+    const ov = buildOverviewData(controller(), "T-OV-NOMOVE");
+    expect(ov.gate?.blockerCount).toBe(7);
+    expect(ov.gate?.stats.find((s) => s.label === "ACTIVE BLOCKERS")?.value).toBe("7");
+    expect(ov.gate?.categories.find((c) => c.key === "EXCEPTIONS")?.note).toBe("7 open blockers");
+    expect(ov.attention?.items.length ?? 0).toBeGreaterThan(0);
+    expect(ov.gate?.divergence).toBeNull();
   });
 
   it("links to the register with the register's own count", () => {

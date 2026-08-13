@@ -176,8 +176,15 @@ function categoryNote(
         : { note: "No open valuation items", warn: false };
     }
     case "EXCEPTIONS": {
-      const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
-      return { note: `${blockers.length} open blockers`, warn: blockers.length > 0 };
+      // Live, like the gate figure four inches above it. Read from
+      // `getBlockers` this panel said "7 open blockers" on a screen whose gate
+      // read 6 — one screen, one fact, two numbers.
+      const live = attempt(() => queries.getEffectiveClose(ctx));
+      const count = live?.blockerCount ?? (attempt(() => queries.getBlockers(ctx)) ?? []).length;
+      return {
+        note: `${count} open ${count === 1 ? "blocker" : "blockers"}`,
+        warn: count > 0,
+      };
     }
     case "ADJUSTMENTS": {
       // The register's own vocabulary: identified (a reconciling item),
@@ -230,12 +237,36 @@ export function defaultExceptionOrder(
   return a.id < b.id ? -1 : 1;
 }
 
-function blockerRow(view: ExceptionView, blocker: boolean): BlockerRow {
-  const finding = view.exception.finding;
-  const status = view.exception.status;
-  const unmet = finding.evidenceRequirements
+/**
+ * An item's position NOW, looked up rather than re-derived per consumer.
+ *
+ * The Overview asks "what is this item's status and what does it still need?"
+ * in three places — the blocker rows, the management work queue and the
+ * control-area notes — and all three read the frozen finding. So with every
+ * blocker concluded the gate offered sign-off ("Every blocker has a management
+ * conclusion") beside five untouched "Obtain: …" lines, and the work queue
+ * prescribed records the product had accepted.
+ */
+type LivePositionOf = (view: ExceptionView) => {
+  status: ExceptionView["exception"]["status"];
+  unmet: readonly string[];
+};
+
+/** The rules' own position, for a caller with no live projection. */
+const frozenPositionOf: LivePositionOf = (view) => ({
+  status: view.exception.status,
+  unmet: view.exception.finding.evidenceRequirements
     .filter((r) => r.required && !r.satisfied)
-    .map((r) => r.description);
+    .map((r) => r.description),
+});
+
+function blockerRow(
+  view: ExceptionView,
+  blocker: boolean,
+  liveOf: LivePositionOf = frozenPositionOf,
+): BlockerRow {
+  const finding = view.exception.finding;
+  const { status, unmet } = liveOf(view);
   return {
     id: view.exception.id,
     title: finding.title,
@@ -260,6 +291,7 @@ const MANAGEMENT_PARTIES: Readonly<Record<string, readonly string[]>> = {
 function attentionItems(
   user: DemoUser,
   open: readonly ExceptionView[],
+  liveOf: LivePositionOf = frozenPositionOf,
 ): { items: AttentionItem[]; auditorNote: string | null } {
   const role = user.roles[0] ?? "";
   if (role === "AUDITOR_READ_ONLY") {
@@ -272,7 +304,7 @@ function attentionItems(
   const parties = MANAGEMENT_PARTIES[role];
   if (parties === undefined) return { items: [], auditorNote: null };
   const mine = open
-    .filter((e) => parties.includes(ownerForStatus(e.exception.status).actionParty))
+    .filter((e) => parties.includes(ownerForStatus(liveOf(e).status).actionParty))
     .sort((a, b) => {
       const sev = (r: string) => ({ CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 })[r] ?? 4;
       const fa = a.exception.finding;
@@ -284,10 +316,7 @@ function attentionItems(
   return {
     items: mine.map((e) => {
       const f = e.exception.finding;
-      const status = e.exception.status;
-      const unmet = f.evidenceRequirements
-        .filter((r) => r.required && !r.satisfied)
-        .map((r) => r.description);
+      const { status, unmet } = liveOf(e);
       const sv = statusView(status);
       return {
         label: nextActionText(status, unmet),
@@ -326,14 +355,34 @@ const EVENT_GLYPHS: Readonly<Record<string, { glyph: string; tone: ActivityItem[
  * is a demo that cannot be trusted the next time it says a number. The
  * baseline stays quotable, and Reset Demo restores it exactly.
  */
+/**
+ * Named only once the position has actually MOVED.
+ *
+ * `diverged` is `conclusions.length > 0 || submittedEvidence.length > 0` —
+ * somebody acted, not the figures changed — and both reachable first acts
+ * leave these numbers untouched: REMAINS_OPEN is documented as never moving
+ * status, and Submit Support moves neither. So this announced "Showing this
+ * session's position" beside figures identical to the ones it contrasted them
+ * with. Gated on the comparison the sentence makes.
+ *
+ * It also says the readiness BARS are the rules' own. There is no live
+ * per-category breakdown — `getEffectiveClose` returns one aggregate — so the
+ * eight weighted areas below still render the derived scores while the
+ * headline above them is live. Saying so is the honest option; inventing a
+ * live per-area score is not.
+ */
 function buildDivergenceNote(
-  live: { diverged: boolean; concludedCount: number } | undefined,
+  live:
+    | { diverged: boolean; concludedCount: number; blockerCount: number; readinessBps: number }
+    | undefined,
   baselineBps: number,
   baselineBlockers: number,
 ): string | null {
   if (live === undefined || !live.diverged) return null;
+  const moved = live.blockerCount !== baselineBlockers || live.readinessBps !== baselineBps;
+  if (!moved) return null;
   const items = `${live.concludedCount} item${live.concludedCount === 1 ? "" : "s"}`;
-  return `Showing this session's position: ${items} concluded since the run. The close as the rules derived it was ${formatBpsOverview(baselineBps)} ready with ${baselineBlockers} blockers — Reset Demo restores it.`;
+  return `Showing this session's position: ${items} concluded since the run. The close as the rules derived it was ${formatBpsOverview(baselineBps)} ready with ${baselineBlockers} ${baselineBlockers === 1 ? "blocker" : "blockers"}, and the eight weighted areas below are still those derived scores — Reset Demo restores it.`;
 }
 
 export function buildOverviewData(user: DemoUser, correlationId: string): OverviewData {
@@ -354,6 +403,20 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   const pbc = attempt(() => queries.getPbcStatus(ctx));
   // Live position: the rules' close plus this session's conclusions.
   const live = attempt(() => queries.getEffectiveClose(ctx));
+  /**
+   * Per-item live position, for every consumer on this screen that asks what
+   * an exception's status is and what it still needs.
+   */
+  const effective = attempt(() => queries.getEffectiveExceptions(ctx));
+  const effectiveById = new Map((effective ?? []).map((e) => [e.exception.id, e]));
+  const liveOf: LivePositionOf = (view) => {
+    const row = effectiveById.get(view.exception.id);
+    if (row === undefined) return frozenPositionOf(view);
+    return {
+      status: row.effectiveStatus as ExceptionView["exception"]["status"],
+      unmet: row.unmetRequirements,
+    };
+  };
   const capabilities = attempt(() => queries.getDemoCapabilities(ctx));
   const period = attempt(() => queries.getPeriod(ctx));
 
@@ -423,8 +486,11 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
   // reader cannot open is a figure they are asked to take on trust.
   const stats: KpiTile[] = [
     {
+      // Live, because the page this tile LINKS to is live. A tile reading 7
+      // over a destination listing 6 is this panel's own defect moved one
+      // click along — the trap the blocker caption below it already records.
       label: "ACTIVE BLOCKERS",
-      value: String(agg.blockerCount),
+      value: String(live?.blockerCount ?? agg.blockerCount),
       note: `of ${agg.exceptionCount} designed exceptions`,
       tone: "ember",
       href: "/exceptions?filter=blockers",
@@ -432,7 +498,7 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
     },
     {
       label: "BLOCKER EXPOSURE",
-      value: formatCents(agg.blockerExposureCents),
+      value: formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents),
       note: "open blockers only",
       href: "/exceptions?filter=blockers",
       hrefLabel: "the blocking items by exposure",
@@ -489,8 +555,10 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
         }))
       : undefined;
 
-  const open = exceptions.filter((e) => e.open);
-  const attention = attentionItems(user, open);
+  // Open NOW. Filtered on `listExceptions`'s frozen `open`, the work queue
+  // went on prescribing items this session had concluded.
+  const open = exceptions.filter((e) => effectiveById.get(e.exception.id)?.open ?? e.open);
+  const attention = attentionItems(user, open, liveOf);
 
   const activity: ActivityItem[] = [...events]
     .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))
@@ -555,7 +623,7 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
       divergence: buildDivergenceNote(live, readiness.totalBasisPoints, agg.blockerCount),
     },
     preventing: {
-      rows: shown.map((e) => blockerRow(e, true)),
+      rows: shown.map((e) => blockerRow(e, true, liveOf)),
       shownTotal: formatCents(shownCents),
       // From the same live set the rows come from. These read `agg`, the
       // baseline aggregate, so the header contradicted the `shownTotal`

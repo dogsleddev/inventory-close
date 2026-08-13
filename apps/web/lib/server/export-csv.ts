@@ -267,12 +267,38 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     // are different facts that happen to coincide on this baseline — all 7
     // open exceptions are blockers — and a file carrying only "OPEN" invites
     // a reader to treat the coincidence as the definition.
-    const blocking = new Set(queries.getBlockers(ctx).map((b) => b.exceptionId));
+    /**
+     * BOTH positions, each in its own named column.
+     *
+     * Every figure here came from the frozen close while the screen the export
+     * link sits on reads the live one, so a reader who concluded an item and
+     * exported the queue got a file that disagreed with the page they were
+     * looking at — and nothing in the file said which position it held. A CSV
+     * outlives the tab it came from, so "which run is this?" cannot be left to
+     * the reader.
+     *
+     * The rules' status stays, because it is the reproducible artifact and an
+     * export is exactly where it matters; it is simply no longer the only one.
+     */
+    const live = attempt(() => queries.getEffectiveClose(ctx));
+    const blocking = new Set(
+      (live?.blockers ?? queries.getBlockers(ctx)).map((b) => b.exceptionId),
+    );
+    const effectiveById = new Map(
+      (attempt(() => queries.getEffectiveExceptions(ctx)) ?? []).map((e) => [e.exception.id, e]),
+    );
     lines.push(
-      row(["ID", "Title", "Rule", "Rule version", "Risk", "Status", "Open", "Blocks sign-off", "Exposure", "Unmet requirements"]),
+      row([
+        "ID", "Title", "Rule", "Rule version", "Risk",
+        "Status", "Status the rules derived", "Open", "Blocks sign-off",
+        "Exposure", "Unmet requirements",
+      ]),
     );
     for (const view of queries.listExceptions(ctx)) {
       const f = view.exception.finding;
+      const eff = effectiveById.get(view.exception.id);
+      const status = eff?.effectiveStatus ?? view.exception.status;
+      const open = eff?.open ?? view.open;
       lines.push(
         row([
           view.exception.id,
@@ -280,14 +306,17 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           f.ruleId,
           f.ruleVersion,
           f.risk,
+          status,
           view.exception.status,
-          view.open ? "OPEN" : "RESOLVED",
+          open ? "OPEN" : "RESOLVED",
           blocking.has(view.exception.id) ? "BLOCKER" : "",
           formatCents(f.exposureCents),
-          f.evidenceRequirements
-            .filter((r) => r.required && !r.satisfied)
-            .map((r) => r.description)
-            .join("; "),
+          (
+            eff?.unmetRequirements ??
+            f.evidenceRequirements
+              .filter((r) => r.required && !r.satisfied)
+              .map((r) => r.description)
+          ).join("; "),
         ]),
       );
     }

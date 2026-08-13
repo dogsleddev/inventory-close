@@ -1108,8 +1108,18 @@ export function buildFinancialLifeData(
   const exceptions = (attempt(() => queries.listExceptions(ctx)) ?? []).filter((e) =>
     view.exceptions.includes(e.exception.id),
   );
-  const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
+  /**
+   * Live, like every other surface that names an exception's state. Read from
+   * `getBlockers` and the frozen finding, this screen reported a concluded
+   * exception as "Recount Required", `blocker: true`, and demanded the
+   * conclusion the workspace was already holding — on the flagship screen, one
+   * click from the exception page that had just stopped saying it.
+   */
+  const liveClose = attempt(() => queries.getEffectiveClose(ctx));
+  const blockers = liveClose?.blockers ?? attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
+  const effectiveExceptions = attempt(() => queries.getEffectiveExceptions(ctx));
+  const effectiveById = new Map((effectiveExceptions ?? []).map((e) => [e.exception.id, e]));
   const readiness = attempt(() => queries.getCloseReadiness(ctx));
   const recon = attempt(() => queries.getReconciliation(ctx));
   const manifest = attempt(() => queries.getRunManifest(ctx));
@@ -1282,16 +1292,22 @@ export function buildFinancialLifeData(
         : null,
     close:
       primary !== undefined
-        ? {
-            status: statusView(primary.exception.status),
-            blocker: blockerIds.has(primary.exception.id),
-            body: `Conclusion ${conclusionLabel(primary.exception.status)} — ${nextActionText(
-              primary.exception.status,
+        ? (() => {
+            const row = effectiveById.get(primary.exception.id);
+            const status =
+              (row?.effectiveStatus as typeof primary.exception.status | undefined) ??
+              primary.exception.status;
+            const unmet =
+              row?.unmetRequirements ??
               primary.exception.finding.evidenceRequirements
                 .filter((req) => req.required && !req.satisfied)
-                .map((req) => req.description),
-            )}`,
-          }
+                .map((req) => req.description);
+            return {
+              status: statusView(status),
+              blocker: blockerIds.has(primary.exception.id),
+              body: `Conclusion ${conclusionLabel(status)} — ${nextActionText(status, unmet)}`,
+            };
+          })()
         : {
             status: null,
             blocker: false,
