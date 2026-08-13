@@ -35,25 +35,27 @@ review, its re-verification, nine fix commits and a fix-validation fleet over th
 > `ExceptionContext` with one `livePosition()` helper every consumer reads. **Third measured instance
 > of this repo's one-in-three rate.** See [[fix-passes-reopen-classes]].
 >
-> **FOUR MORE OF THE SAME FAMILY ARE OPEN**, each verified by execution by that fleet and none yet
-> fixed — they are the rest of blocker 1, and the `livePosition()` helper now exists to fix them
-> with:
+> **THE FAMILY IS NOW CLOSED (`295a8c4`).** All four remaining surfaces read the live close and name
+> the baseline: the Overview's work queue, KPI tiles and Close-areas note; `/inventory/[serial]`; and
+> the exceptions CSV, which now carries BOTH positions in named columns (`Status` and `Status the
+> rules derived`) because an export outlives the tab it came from. `gate.divergence` also stopped
+> announcing a moved position after a REMAINS_OPEN conclusion that moved nothing. Five mutations,
+> five caught. Verified in a browser: after one conclusion the gate, the ACTIVE BLOCKERS tile, the
+> BLOCKER EXPOSURE tile, the Close-areas note and the panel header all read 6 / $189,750 together.
 >
-> - **`data.ts:287-290` (`attentionItems`) and `:492-493`.** Conclude all seven blockers: the gate
->   offers sign-off ("Every blocker has a management conclusion") while the panel beside the button
->   still lists five records to obtain. Highest-consequence item the fleet found.
-> - **`data.ts:179-180` (`categoryNote`) and `:536-537` (`categories`, `stats`).** The Overview
->   contradicts itself on one screen — 6 in the gate, "7 open blockers" in the Close-areas panel, and
->   bars weighting to 81.42% under an 83.1% headline.
-> - **`financial-life-view.ts:1286`.** `/inventory/[serial]` reports a concluded exception as Recount
->   Required, `blocker: true`, and demands the conclusion the workspace already holds.
-> - **`export-csv.ts:270` and `:274`.** The CSVs emit the frozen baseline with nothing in the file
->   saying so. An export outlives the tab it came from, so this one matters more than its severity.
+> **What the mutation testing changed, and is the reusable part:** the all-concluded assertion turned
+> out to be pinned by the `open` filter alone and never read the per-item lookup, because a concluded
+> item leaves the queue entirely. The state that reaches it is an item **still open** whose
+> requirement has been submitted and accepted — it must stay in the queue and stop asking for what it
+> has. Assert the state where the mechanism is still live, not the state where the filter has already
+> removed the subject.
 >
-> Also open, lower: `/evidence` lists a submitted-and-accepted record under "Required, with no record
-> behind it"; `/adjustments` denies a conclusion the product holds one page over; the blockers-filter
-> `emptyNote` claims every blocker was concluded from the moment the page loads; and `gate.divergence`
-> announces a moved position after a REMAINS_OPEN conclusion that moved nothing.
+> **Still open, lower severity, from the same fleet:** `/evidence` lists a submitted-and-accepted
+> record under "Required, with no record behind it"; `/adjustments` denies a conclusion the product
+> holds one page over; the blockers-filter `emptyNote` claims every blocker was concluded from the
+> moment the page loads; `evidenceOutOfScope` is a boolean on total emptiness, so a future partial
+> redaction would be silent; and a resolving conclusion whose evidence is later RETURNED gets no
+> sentence naming the withdrawal (enforcement is correct — only the prose is missing).
 >
 > 1. **The record-a-conclusion loop contradicts itself on the exception detail page.** Conclude
 >    EXC-003 `RESOLVED_NO_ADJUSTMENT` with its evidence obtained, and the Overview correctly reads
