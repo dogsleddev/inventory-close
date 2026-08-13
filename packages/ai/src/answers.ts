@@ -199,6 +199,12 @@ interface BlockerResult {
   description: string;
   exposureCents: number;
 }
+/** What `get_demo_capabilities` returns — the acts this reader may perform. */
+interface DemoCapabilitiesResult {
+  canResetDemo: boolean;
+  canConclude: boolean;
+  canSignOff: boolean;
+}
 /** What `get_effective_exceptions` returns — the close's exceptions as they now stand. */
 interface EffectiveExceptionResult {
   exception: ExceptionResult["exception"];
@@ -391,9 +397,19 @@ const INTENTS: readonly Intent[] = [
           { label: "Close readiness", valueBps: p.readinessBps, source: "get_memo" },
         ],
         conflictingEvidence: [],
-        // Scope, said as scope. An auditor sees issued versions only, and a
-        // shorter history must never read as a shorter history of work.
-        missingEvidence:
+        missingEvidence: [],
+        /**
+         * Scope, said as scope, and carried in the channel that says so.
+         *
+         * This sentence was the reason `scopeNotes` was built, and it is the
+         * one call site the move missed — so the auditor's drawer went on
+         * announcing "1 required item of evidence reported missing" about a
+         * draft the close holds and they may not read, while four other sites
+         * had been moved. The commit that edited the status line two lines
+         * above even quoted this reader's experience in its own message and
+         * left the note where it was.
+         */
+        scopeNotes:
           memo.withheldDraftCount > 0 && memo.withheldNote !== null
             ? [memo.withheldNote]
             : [],
@@ -1831,8 +1847,30 @@ const INTENTS: readonly Intent[] = [
        * A fix that makes a dead branch live has to answer for the branch.
        */
       if (gaps.length === 0) {
+        /**
+         * Bounded to the population it measured.
+         *
+         * `gaps` is built from `stillOpen`, so it can only ever see the open
+         * set — and the first version of this branch put a UNIVERSAL claim on
+         * top of that narrow measurement: "Every required record the rules
+         * asked for is on file", while nine required records on the
+         * rules-resolved exceptions have no evidence at all and the product's
+         * own exception pages said so in the same session. The old code
+         * measured just as narrowly but only printed a count, so the widening
+         * arrived with the sentence.
+         *
+         * It also said the records were "accepted". A PENDING submission
+         * satisfies `unmetRequirements` — only RETURNED unsatisfies — so that
+         * was a claim about review state from a field that does not carry it.
+         */
+        const resolvedWithGaps = exceptions.filter(
+          (e) => !e.open && e.unmetRequirements.length > 0,
+        );
         return {
-          status: "No required record is outstanding",
+          status:
+            stillOpen.length === 0
+              ? "No exception is open"
+              : "No required record is outstanding on the open items",
           knownFacts: [
             { label: "Open exceptions", count: stillOpen.length, source: "get_effective_exceptions" },
             {
@@ -1845,7 +1883,9 @@ const INTENTS: readonly Intent[] = [
           missingEvidence: [],
           assertions: [],
           managementConclusion:
-            "Every required record the rules asked for is on file, counting evidence submitted and accepted in this session. That is a statement about the evidence file, not an opinion on the close.",
+            resolvedWithGaps.length > 0
+              ? `Every open item holds the records its rule asked for, counting evidence submitted in this session. ${count(resolvedWithGaps.length)} resolved ${plural(resolvedWithGaps.length, "exception")} still ${plural(resolvedWithGaps.length, "carries", "carry")} a required record that was never filed — the resolving event addressed the question instead, and that is visible on each item.`
+              : "Every required record the rules asked for is on file. That is a statement about the evidence file, not an opinion on the close.",
           nextAction:
             stillOpen.length > 0
               ? "Conclude the open items; each has the records its rule asked for."
@@ -2187,6 +2227,10 @@ const INTENTS: readonly Intent[] = [
       // have.
       const live = s.run<EffectiveClose>("get_effective_close");
       if (live === undefined) return undefined;
+      // What THIS reader may do, from the same permission keys the commands
+      // authorize against — so the answer never prescribes a control the
+      // service would refuse them.
+      const caps = s.run<DemoCapabilitiesResult>("get_demo_capabilities");
       const open = live.blockerCount > 0;
       return {
         // Branches on the count. The old sentence was a constant, so it was
@@ -2232,12 +2276,28 @@ const INTENTS: readonly Intent[] = [
           // off this answer, so it is the one that must not be a snapshot.
           source: "get_effective_close",
         },
+        /**
+         * The zero-blocker branch names two controls — sign-off and Reset Demo
+         * — and eight of the ten demo roles may operate neither. An auditor was
+         * told to "Record management sign-off on the Overview" while the
+         * Overview beside the drawer said, in words, "Your demo role cannot
+         * record sign-off."
+         *
+         * That is the same shape this commit called the damaging half of the
+         * procurement note it was fixing: an instruction to go looking for a
+         * control that is not on the reader's page. The file's own precedent is
+         * twelve hundred lines up, where the memo intent branches on
+         * `memo.canDraft`; `getDemoCapabilities` computes these two from the
+         * same permission keys the commands authorize against.
+         */
         managementConclusion: open
           ? "The period cannot be signed off while these items are open. Each carries its own conclusion and owner."
-          : `Every blocker the rules raised carries a management conclusion recorded in this session. The close as the rules derived it had ${count(live.baselineBlockerCount)} ${plural(live.baselineBlockerCount, "blocker")}; Reset Demo restores that position.`,
+          : `Every blocker the rules raised carries a management conclusion recorded in this session. The close as the rules derived it had ${count(live.baselineBlockerCount)} ${plural(live.baselineBlockerCount, "blocker")}.${caps?.canResetDemo === false ? "" : " Reset Demo restores that position."}`,
         nextAction: open
           ? "Work the blockers in exposure order; each links to its evidence and next action."
-          : "Record management sign-off on the Overview, which locks the period.",
+          : caps?.canSignOff === false
+            ? "Nothing is outstanding to work. Your role may read the close but not record sign-off; a role that may can lock the period from the Overview."
+            : "Record management sign-off on the Overview, which locks the period.",
         citations: live.blockers.map((b) =>
           cite(b.exceptionId, { href: `/exceptions/${b.exceptionId}` }),
         ),
@@ -2598,16 +2658,39 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
             .join("; ")} — the resolving event addressed the question instead.`
         : "Resolved. The recorded conclusion stands on the evidence held."
       : conclusion !== null
-        ? `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}: a person looked and decided the item stays open. It does not change the rule's status.`
+        ? conclusion.conclusion === "REMAINS_OPEN"
+          ? `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}: a person looked and decided the item stays open. It does not change the rule's status.`
+          : // A resolving conclusion that is NOT superseding the rule means the
+            // record behind it was returned, and `effectiveStatus` withdrew its
+            // power to supersede. Saying "a person decided it stays open" would
+            // re-characterise what management actually recorded, which is the
+            // one thing this product may never do.
+            `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}, and it no longer supersedes the rule: a required record behind it is outstanding again. The conclusion stays in the trail; the item is open until the record is back.`
         : unmet.length > 0
           ? "Open. No conclusion has been recorded. Management may conclude on the evidence held, or obtain what is outstanding first."
           : "Open. No conclusion has been recorded; every required record is now in evidence.",
+    /**
+     * An outstanding record is reported whether or not a conclusion exists.
+     *
+     * This branched on `conclusion !== null` FIRST, so recording a conclusion
+     * suppressed the obtain-instruction outright: the answer said "None
+     * outstanding on this item" while its own MISSING EVIDENCE block named the
+     * record, its own citations carried it as MISSING, and the service
+     * reported it unmet. And it is the ordinary path, not a corner —
+     * `ConclusionPanel` defaults the selection to REMAINS_OPEN exactly when a
+     * requirement is outstanding, so it is the first conclusion most readers
+     * record on a blocked exception.
+     *
+     * G25's defect was this handler asserting a record claim it had no way to
+     * check. Replacing it with a different record claim the answer itself
+     * contradicts one field away is the same defect wearing the fix's clothes.
+     */
     nextAction: !open
       ? "None — resolved; the history travels with the item."
-      : conclusion !== null
-        ? "None outstanding on this item — the conclusion recorded against it keeps it open by choice."
-        : unmet.length > 0
-          ? `Obtain: ${unmet.map((r) => r.description).join("; ")}`
+      : unmet.length > 0
+        ? `Obtain: ${unmet.map((r) => r.description).join("; ")}`
+        : conclusion !== null
+          ? "None outstanding on this item — every required record is in evidence, and the conclusion recorded against it keeps it open by choice."
           : "Record a management conclusion.",
     citations: [
       cite(view.exception.id, { href: `/exceptions/${view.exception.id}` }),
@@ -2712,13 +2795,29 @@ export function answerQuestion(
   const namedSerial = extractSerial(q);
   const scopedException = namedException ?? context.exceptionId;
   const scopedSerial = namedSerial ?? context.serial;
+  /**
+   * A scope is DISPLACED only when the reader did not name it themselves.
+   *
+   * `extractSerial` returns the first match, so "Compare KE-X1-9025 and
+   * KE-E2-1048." from KE-E2-1048's page answered the first and then told the
+   * reader the second was merely "what this screen is scoped to" — denying that
+   * they had named a record they had just named. That is the substitution this
+   * disclosure exists to stop, asserted in prose.
+   *
+   * Tested against the normalized question, which is where the ids were folded.
+   */
+  const namesInQuestion = (id: string): boolean => q.includes(id.toLowerCase());
   const displacedScope = [
     namedException !== undefined &&
     context.exceptionId !== undefined &&
-    context.exceptionId !== namedException
+    context.exceptionId !== namedException &&
+    !namesInQuestion(context.exceptionId)
       ? context.exceptionId
       : undefined,
-    namedSerial !== undefined && context.serial !== undefined && context.serial !== namedSerial
+    namedSerial !== undefined &&
+    context.serial !== undefined &&
+    context.serial !== namedSerial &&
+    !namesInQuestion(context.serial)
       ? context.serial
       : undefined,
   ].filter((id): id is string => id !== undefined);
@@ -2731,15 +2830,28 @@ export function answerQuestion(
   const asksWhyOpen = matchesQuestion(ASKS_WHY_OPEN, q);
   const intent = INTENTS.find((i) => matchesQuestion(i.match, q));
 
+  /**
+   * Where the ANSWERING route's calls begin.
+   *
+   * `session.anyDenied` is session-wide, and the engine may run an intent that
+   * is denied, abandon it, and answer from the screen's object instead. Read
+   * session-wide, the disclosure was attached to answers no denial touched: a
+   * WAREHOUSE reader on a unit screen got "1 of the lookups behind this answer
+   * was refused (get_pbc_status). It is not a complete answer." over a complete
+   * financial-life answer that never called it.
+   */
+  let answeringCallsFrom = 0;
   let answer: AiMaterialAnswer | undefined;
   let mode: AiMode = "EXPLAIN";
   let route = "unrouted";
 
+  answeringCallsFrom = session.calls.length;
   if (asksWhyOpen && scopedException !== undefined) {
     answer = answerException(session, scopedException);
     mode = "INVESTIGATE";
     route = "exception-detail";
   } else if (intent !== undefined) {
+    answeringCallsFrom = session.calls.length;
     answer = intent.answer(session, scope);
     mode = intent.mode;
     route = intent.key;
@@ -2748,6 +2860,7 @@ export function answerQuestion(
   // scoped object — previously the two branches were mutually exclusive, so
   // "show me the history of this item" on an exception answered nothing.
   if (answer === undefined && scopedException !== undefined) {
+    answeringCallsFrom = session.calls.length;
     answer = answerException(session, scopedException);
     mode = "INVESTIGATE";
     route = answer !== undefined ? "exception-detail" : route;
@@ -2836,12 +2949,16 @@ export function answerQuestion(
    * Disclosed here rather than in each handler, so a handler added later cannot
    * forget: this runs over whatever the engine actually produced.
    */
-  if (answer !== undefined && session.anyDenied) {
-    const denied = [
-      ...new Set(
-        session.calls.filter((c) => c.outcome === "NOT_AUTHORIZED").map((c) => c.tool),
-      ),
-    ].sort();
+  const answeringDenials = [
+    ...new Set(
+      session.calls
+        .slice(answeringCallsFrom)
+        .filter((c) => c.outcome === "NOT_AUTHORIZED")
+        .map((c) => c.tool),
+    ),
+  ].sort();
+  if (answer !== undefined && answeringDenials.length > 0) {
+    const denied = answeringDenials;
     answer = {
       ...answer,
       // A refusal is a restriction, so it goes in the restriction channel. Put

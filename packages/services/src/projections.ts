@@ -59,9 +59,14 @@ import type { Workspace } from "./workspace.js";
  *   and neither silently skips it.
  *
  * A delegate added here that reads `ws.dataset.*` and returns any of its text
- * belongs in the first list, not the second. The claim is only worth making if
- * it is checked, so `projections.test.ts` asserts the split rather than
- * trusting this paragraph.
+ * belongs in the first list, not the second.
+ *
+ * The claim is only worth making if it is checked: `security.test.ts` asserts
+ * the withholding and asserts that no figure shrinks with it. That sentence
+ * first shipped naming `projections.test.ts`, a file that does not exist — a
+ * comment citing its own guard by a name nobody had created, written while
+ * fixing the class "a claim more precise than its enforcement". Cite the file
+ * that holds the test, and open it before you write the sentence.
  */
 export function createProjectionService(ws: Workspace) {
   return {

@@ -97,6 +97,13 @@ export const AI_TOOL_NAMES = [
    * resolutions, listing eight items none of which was one of them.
    */
   "get_effective_exceptions",
+  /**
+   * What THIS reader may DO — from the same permission keys the commands
+   * authorize against. An answer that prescribes an act is making a claim about
+   * the reader's page, and the blockers intent was telling eight of ten roles to
+   * record a sign-off the Overview beside it refuses them in words.
+   */
+  "get_demo_capabilities",
 ] as const;
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
 

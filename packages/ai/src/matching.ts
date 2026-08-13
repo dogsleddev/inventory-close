@@ -77,7 +77,34 @@ const escapeLiteral = (value: string): string =>
  * second form written out, and a verb tense is not number and is not touched
  * here — those stay the author's job, and a stem marker exists for them.
  */
+/**
+ * Words that take no number, because they are not nouns.
+ *
+ * `numberForms` was applied to the last segment of every phrase unconditionally,
+ * and the docstring above claims the last segment "is the head noun in every
+ * phrase this table declares". It is not: the table ends phrases in pronouns
+ * ("not ours"), prepositions ("makes up the cost of") and particles. Inflecting
+ * those widens a phrase into questions the intent was never written for —
+ * `not ours` became `not (?:ours|our)`, so "Is the reserve not our decision to
+ * make?" and "Why is the write-down not our call?" were both claimed by the
+ * consignment handler and answered with twelve vendor-owned units.
+ *
+ * A closed list rather than a part-of-speech test: the vocabulary is small,
+ * enumerable, and an unknown word should inflect. `routing-identity.test.ts`
+ * asserts the reader-facing consequence from hand-authored English rather than
+ * from this list, so the list being incomplete fails a test rather than
+ * widening a phrase.
+ */
+const UNINFLECTED = new Set([
+  "ours", "our", "yours", "theirs", "its", "his", "hers", "mine",
+  "this", "that", "these", "those", "each", "any", "some", "all", "no",
+  "of", "to", "on", "in", "at", "by", "for", "from", "up", "off", "out",
+  "with", "into", "over", "under", "and", "or", "not", "is", "are", "was",
+  "were", "be", "been", "has", "have", "had", "do", "does", "did",
+]);
+
 export function numberForms(word: string): readonly string[] {
+  if (UNINFLECTED.has(word)) return [word];
   const forms = new Set<string>([word]);
   if (/[^aeiou]ies$/.test(word)) forms.add(`${word.slice(0, -3)}y`);
   else if (/(?:[sxz]|ch|sh)es$/.test(word)) forms.add(word.slice(0, -2));

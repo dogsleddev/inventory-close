@@ -665,7 +665,20 @@ describe("the live close, not the baseline", () => {
     // REMAINS_OPEN records that a person looked and decided it stays open, so
     // the item is still open and the answer must not read as resolved.
     expect(workflow.open).toBe(true);
-    expect(answer?.nextAction).not.toMatch(/^Obtain:/);
+    /**
+     * And the outstanding record is STILL reported. This assertion originally
+     * required the opposite — that recording a conclusion suppressed the
+     * obtain-instruction — which encoded the defect a later pass found: the
+     * answer said "None outstanding on this item" while its own MISSING
+     * EVIDENCE block named the record and the service reported it unmet.
+     *
+     * Asserted as the biconditional so it cannot encode a preference again:
+     * the instruction stands exactly when the workspace still wants something.
+     */
+    expect(/^Obtain:/.test(answer?.nextAction ?? "")).toBe(
+      workflow.unmetRequirements.length > 0,
+    );
+    expect(answer?.nextAction).not.toMatch(/None outstanding/);
   });
 
   it("counts resolutions the close actually holds, not the ones the rules made", () => {
@@ -697,7 +710,11 @@ describe("the live close, not the baseline", () => {
         .reduce((n, e) => n + e.unmetRequirements.length, 0);
     const stated = () => {
       const status = answerQuestion(w.t2, "Which evidence is still missing?", {}).answer?.status;
-      return /^No required record/.test(status ?? "") ? 0 : Number(/^(\d+) required/.exec(status ?? "")?.[1]);
+      // "No exception is open" and "No required record is outstanding on the
+      // open items" are both the zero case; only the counted form carries a
+      // number. Bounded to the OPEN population, which is what `gaps` measures.
+      const counted = /^(\d+) required/.exec(status ?? "");
+      return counted === null ? 0 : Number(counted[1]);
     };
     expect(outstanding()).toBeGreaterThan(0);
     expect(stated()).toBe(outstanding());
@@ -720,7 +737,10 @@ describe("the live close, not the baseline", () => {
     resolveEveryBlocker(w);
     const r = answerQuestion(w.t2, "Which evidence is still missing?", {});
     expect(r.refusal).toBeUndefined();
-    expect(r.answer?.status).toMatch(/No required record is outstanding/);
+    // Bounded to the population it measured: `gaps` only ever sees the open
+    // set, so the sentence may not claim the whole close.
+    expect(r.answer?.status).toMatch(/^No (exception is open|required record is outstanding on the open items)/);
+    expect(r.answer?.status).not.toMatch(/^No required record is outstanding$/);
     expect(r.answer?.missingEvidence).toEqual([]);
   });
 

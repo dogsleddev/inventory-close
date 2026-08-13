@@ -247,6 +247,7 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
   get_exception_workflow: ({ queries, ctx }, args) =>
     queries.getExceptionWorkflow(ctx, args["exceptionId"] ?? ""),
   get_effective_exceptions: ({ queries, ctx }) => queries.getEffectiveExceptions(ctx),
+  get_demo_capabilities: ({ queries, ctx }) => queries.getDemoCapabilities(ctx),
 };
 
 /** Run one approved tool. Never throws for authorization; reports instead. */
