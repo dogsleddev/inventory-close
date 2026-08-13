@@ -19,7 +19,7 @@ import type {
 } from "../view-model";
 import { statusView } from "../workflow-view";
 import { attempt } from "./data";
-import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./exception-view";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -199,7 +199,13 @@ export function buildProcurementData(
     };
   }
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: `closeCapsule` renders `statusView(view.exception.status).label` and
+  // branches its glyph and variant on `view.open`, and the received-not-
+  // invoiced rows paint ember off the same flag. Read frozen, concluding
+  // EXC-002 left the three-way-match row capsule reading "Waiting on Third
+  // Party" in the frost treatment beside a drawer, opened from that same row,
+  // reading "Resolved — No Adjustment".
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const periodEnd = populations.asOf;
@@ -363,7 +369,17 @@ export function buildProcurementData(
         qty !== undefined ? `${qty} × ${skus}${amount !== null ? ` · ${amount}` : ""}` : null,
       nsTag: `NS 3WM · ${order.nativeNetsuiteMatchStatus}`,
       close: closeCapsule(order.closeMatchStatus, view),
-      ember: tone === "ember",
+      // The caller's tone is a BASELINE HINT the live position can only
+      // narrow, exactly like `assembleDrawer`'s blocker badge.
+      // `order.closeMatchStatus` is a rules artifact that never moves, so the
+      // featured loop below passes "ember" for every non-PASS order forever.
+      // After a conclusion that painted the alarm treatment on a card whose
+      // own capsule read "Resolved — No Adjustment" and whose own footnote,
+      // twelve lines down and already branching on `view.open`, had turned
+      // aurora — one card, two treatments, disagreeing about one item.
+      // Narrowed here rather than at the three call sites, for the reason
+      // 212d219 taught: a caller fixed by hand is a caller the next one misses.
+      ember: tone === "ember" && (view === undefined || view.open),
       legs: [poLeg(d), irLeg(d), vbLeg(d, order.purchaseOrderNumber)],
       footnote:
         view !== undefined

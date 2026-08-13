@@ -15,6 +15,7 @@ import {
   assembleDrawer,
   assembleEvidenceRecord,
   gatherExceptionContext,
+  liveExceptionViews,
 } from "./exception-view";
 import { ROLE_LABELS, getQueries, makeContext, roleLabel, userById } from "./workspace";
 
@@ -132,7 +133,12 @@ export function buildAuditPackageData(
   }
 
   const readinessOut = attempt(() => queries.getCloseReadiness(ctx));
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: the lineage strip's CLOSE EXCEPTION layer prints
+  // `statusView(view.exception.status).label` and takes its ember from
+  // `view.open`, and every related-exception row carries both. This is the
+  // package handed to an auditor, so a frozen status here is the one place a
+  // stale label is least defensible.
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const manifest = attempt(() => queries.getRunManifest(ctx));

@@ -17,7 +17,7 @@ import type {
   ProcurementStat,
 } from "../view-model";
 import { attempt } from "./data";
-import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./exception-view";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -138,7 +138,18 @@ export function buildCostingData(user: DemoUser, correlationId: string): Costing
     };
   }
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  /**
+   * Live, for uniformity rather than to fix anything visible.
+   *
+   * This screen uses the list ONLY to find the view it hands to
+   * `gatherExceptionContext`, which fetches its own live position, so nothing
+   * rendered here moves with this change and it carries no test — stated
+   * plainly rather than counted as a fix. It is bound live anyway because the
+   * defect this family keeps producing is a status pill added later to a
+   * surface whose list was already frozen, and every sibling screen now
+   * inherits the live one.
+   */
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const drawers: Record<string, ExceptionDrawerData> = {};
