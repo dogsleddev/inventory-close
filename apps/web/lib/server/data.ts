@@ -34,6 +34,7 @@ import type {
   ShellData,
   SourceHealthRow,
 } from "../view-model";
+import { attempt } from "./attempt";
 import { buildLenses, staleNoteText } from "./exception-lenses";
 import {
   assembleChainNodes,
@@ -61,20 +62,11 @@ import { getQueries, initials, makeContext, roleLabel } from "./workspace";
  */
 
 /**
- * Runs a query, returning undefined ONLY when the viewer's role is denied.
- * Any other failure rethrows: a bug must surface as a bug, never disguise
- * itself as a permissions boundary the Controller would try to request.
+ * Re-exported from its own module so the nine view files that import it from
+ * here keep working. It moved because `exception-view.ts` needs it and this
+ * file imports `exception-view.ts`.
  */
-export function attempt<T>(fn: () => T): T | undefined {
-  try {
-    return fn();
-  } catch (error) {
-    // Matched by name, not by class: the web app reaches the domain only
-    // through the query service and does not depend on @icg/permissions.
-    if (error instanceof Error && error.name === "AuthorizationError") return undefined;
-    throw error;
-  }
-}
+export { attempt } from "./attempt";
 
 export function buildShellData(user: DemoUser, correlationId: string): ShellData {
   const queries = getQueries();

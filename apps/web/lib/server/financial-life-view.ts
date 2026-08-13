@@ -37,6 +37,7 @@ import {
   assembleEvidenceRecord,
   carrierPhrase,
   gatherExceptionContext,
+  liveExceptionViews,
 } from "./exception-view";
 import { classificationLabel, kindLabel, locationLabel, sourceLabel, titleCase } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
@@ -198,6 +199,8 @@ function assemblePhases(
     adjustmentNote: string | null;
     adjustmentRefs: readonly string[];
     evidenceRecordIds: ReadonlyMap<string, string>;
+    /** Outstanding required records, counting this session's submissions. */
+    unmetFor: (e: ExceptionView) => readonly string[];
   },
 ): Assembled {
   const records: Record<string, EvidenceRecordView> = {};
@@ -907,9 +910,10 @@ function assemblePhases(
   if (exceptions.length > 0) {
     const primary = exceptions.find((e) => e.open) ?? exceptions[0];
     if (primary !== undefined) {
-      const unmet = primary.exception.finding.evidenceRequirements
-        .filter((req) => req.required && !req.satisfied)
-        .map((req) => req.description);
+      // Live: what is STILL outstanding, not what the rules baked. The frozen
+      // `satisfied` flag is a literal in the rules package and never moves, so
+      // this card demanded records the product had already accepted.
+      const unmet = opts.unmetFor(primary);
       close.push(
         card({
           kind: "CONCLUSION",
@@ -1105,7 +1109,23 @@ export function buildFinancialLifeData(
     };
   }
 
-  const exceptions = (attempt(() => queries.listExceptions(ctx)) ?? []).filter((e) =>
+  /**
+   * The close as it reads NOW, filtered to this serial.
+   *
+   * This was `listExceptions` — the rules' frozen list — and every consumer
+   * below it inherited that: the phase cards, the `primary` the header picks,
+   * the accounting footnote and the `proposed` line. So after concluding
+   * EXC-003 the header said `{status:'Resolved — No Adjustment',
+   * blocker:false}` while, in the SAME payload two panels down, the phase
+   * strip said `{"date":"Open","title":"EXC-003 · Recount Required",
+   * "glyph":"✕"}` and `{"title":"Management conclusion: Open","meta":"Obtain:
+   * Supervised recount locating the unit"}`, and the accounting footnote said
+   * "Any change requires a management conclusion on EXC-003 first."
+   *
+   * One live list, bound once, is the whole fix — the alternative is fixing
+   * each consumer, which is what left these three behind last time.
+   */
+  const exceptions = liveExceptionViews(queries, ctx).filter((e) =>
     view.exceptions.includes(e.exception.id),
   );
   /**
@@ -1120,6 +1140,21 @@ export function buildFinancialLifeData(
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const effectiveExceptions = attempt(() => queries.getEffectiveExceptions(ctx));
   const effectiveById = new Map((effectiveExceptions ?? []).map((e) => [e.exception.id, e]));
+  /**
+   * What the item still needs, counting evidence submitted and accepted this
+   * session. `liveExceptionViews` carries the live STATUS on every row, but
+   * the outstanding requirement list is not part of `ExceptionView`, so this
+   * is the one lookup that still has to reach the effective projection — and
+   * there is exactly one of it, shared by the header's conclusion line and the
+   * CONCLUSION phase card. The card had its own copy reading the frozen
+   * `evidenceRequirements` and printed "Obtain: Supervised recount locating
+   * the unit" for a requirement the workspace had already accepted.
+   */
+  const unmetFor = (e: ExceptionView): readonly string[] =>
+    effectiveById.get(e.exception.id)?.unmetRequirements ??
+    e.exception.finding.evidenceRequirements
+      .filter((req) => req.required && !req.satisfied)
+      .map((req) => req.description);
   const readiness = attempt(() => queries.getCloseReadiness(ctx));
   const recon = attempt(() => queries.getReconciliation(ctx));
   const manifest = attempt(() => queries.getRunManifest(ctx));
@@ -1188,6 +1223,7 @@ export function buildFinancialLifeData(
     adjustmentNote,
     adjustmentRefs: serialAdjustments.map((a) => a.transactionNumber),
     evidenceRecordIds,
+    unmetFor,
   });
   Object.assign(assembled.records, records);
 
@@ -1293,19 +1329,16 @@ export function buildFinancialLifeData(
     close:
       primary !== undefined
         ? (() => {
-            const row = effectiveById.get(primary.exception.id);
-            const status =
-              (row?.effectiveStatus as typeof primary.exception.status | undefined) ??
-              primary.exception.status;
-            const unmet =
-              row?.unmetRequirements ??
-              primary.exception.finding.evidenceRequirements
-                .filter((req) => req.required && !req.satisfied)
-                .map((req) => req.description);
+            // `primary` comes off the live list, so its status IS the
+            // effective one. This block used to re-derive that here — the
+            // fifth copy of `effectiveStatus ?? frozen` in the app, and the
+            // reason the header could be right while the panels below it,
+            // reading the same variable name off the frozen list, were wrong.
+            const status = primary.exception.status;
             return {
               status: statusView(status),
               blocker: blockerIds.has(primary.exception.id),
-              body: `Conclusion ${conclusionLabel(status)} — ${nextActionText(status, unmet)}`,
+              body: `Conclusion ${conclusionLabel(status)} — ${nextActionText(status, unmetFor(primary))}`,
             };
           })()
         : {

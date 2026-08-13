@@ -21,6 +21,7 @@ import type {
   ExceptionDrawerData,
   TimelineEntry,
 } from "../view-model";
+import { attempt } from "./attempt";
 import { kindLabel, locationLabel, sourceLabel } from "./humanize";
 
 /**
@@ -180,6 +181,52 @@ export function livePosition(context: ExceptionContext): {
       .filter((r) => r.required && !r.satisfied)
       .map((r) => r.description);
   return { status, unmet, moved: status !== frozen };
+}
+
+/**
+ * Every exception as the close reads it NOW, in `ExceptionView` shape.
+ *
+ * This is `livePosition(context)` above, at list scale: the same question
+ * ("what is this item's position now?") asked about the whole population
+ * rather than about one context object. A surface that REPORTS CURRENT STATE
+ * binds its list here. A surface that explicitly reports the rules' own
+ * answer calls `queries.listExceptions` directly — and must label it, because
+ * an unlabelled frozen figure beside a live one is two numbers for one fact.
+ *
+ * The rows are `listExceptions`' rows with `open` and `exception.status`
+ * replaced by the effective ones, matched by id; a row with no effective
+ * match passes through untouched, and if the effective projection is
+ * unavailable to this caller the whole baseline list passes through.
+ *
+ * It exists because there were already four hand-rolled copies of
+ * "`effectiveStatus` if there is one, else the frozen status" in this app, and
+ * that duplication is the documented mechanism behind the reopen rate: each
+ * copy is a place the next fix can miss. `financial-life-view.ts:1122` built
+ * a fifth, then handed the FROZEN list to the function that renders from it.
+ */
+export function liveExceptionViews(
+  queries: QueryService,
+  ctx: ServiceContext,
+): readonly ExceptionView[] {
+  const baseline = attempt(() => queries.listExceptions(ctx)) ?? [];
+  const effective = attempt(() => queries.getEffectiveExceptions(ctx));
+  if (effective === undefined) return baseline;
+  const byId = new Map(effective.map((e) => [e.exception.id, e]));
+  return baseline.map((view) => {
+    const live = byId.get(view.exception.id);
+    if (live === undefined) return view;
+    return {
+      ...view,
+      open: live.open,
+      exception: {
+        ...view.exception,
+        // `effectiveStatus` is typed `string` on EffectiveExceptionView. This
+        // is the ONE point where it becomes the DerivedException status
+        // union; no consumer downstream should have to cast it again.
+        status: live.effectiveStatus as ExceptionView["exception"]["status"],
+      },
+    };
+  });
 }
 
 /** Said out loud wherever a viewer's scope, not the data, empties a section. */

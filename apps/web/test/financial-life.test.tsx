@@ -11,6 +11,12 @@ import {
   buildInventorySearchData,
 } from "../lib/server/financial-life-view";
 import { getQueries, makeContext } from "../lib/server/workspace";
+import {
+  concludeException,
+  controller,
+  resetDemo,
+  satisfyRequirements,
+} from "./support/live-close";
 
 afterEach(cleanup);
 
@@ -177,5 +183,98 @@ describe("Inventory serial search", () => {
     const serial = offBook?.exception.finding.subjects.serials?.[0] ?? "";
     renderSearch(serial);
     expect(screen.getByText("Not on the listing")).toBeTruthy();
+  });
+});
+
+/**
+ * The unit page below its own header.
+ *
+ * Commit 295a8c4 made this screen's HEADER live, and its message names the
+ * exact strings it was closing. Two panels down, in the same payload, the
+ * phase strip and the accounting block were still built from
+ * `queries.listExceptions` — the rules' frozen list — so after concluding
+ * EXC-003 `buildFinancialLifeData("KE-X1-3498")` returned a header reading
+ * `{status:'Resolved — No Adjustment', blocker:false}` alongside:
+ *
+ *   {"kind":"EXCEPTION","date":"Open","title":"EXC-003 · Recount Required","glyph":"✕"}
+ *   {"kind":"CONCLUSION","date":"Open","title":"Management conclusion: Open",
+ *    "meta":"Obtain: Supervised recount locating the unit"}
+ *   accounting.footnote: "…Any change requires a management conclusion on EXC-003 first."
+ *
+ * Rendered at FinancialLifeScreen.tsx:268 and :544. Each assertion below is
+ * made twice — once before the conclusion, to prove the string is reachable at
+ * all, and once after.
+ */
+describe("Financial Life — the panels below the header read the live close", () => {
+  const SUBJECT = "KE-X1-3498"; // EXC-003's serial
+
+  afterEach(resetDemo);
+
+  const cards = (serial: string) =>
+    buildFinancialLifeData(controller(), serial, "T-LIFE-LIVE").phases.flatMap((p) => p.events);
+
+  it("stops printing the frozen status, the frozen requirement and the frozen footnote", () => {
+    // Premise. Without these four the assertions below pass on any payload
+    // that merely never contained the strings.
+    const before = buildFinancialLifeData(controller(), SUBJECT, "T-LIFE-BEFORE");
+    const beforeCards = before.phases.flatMap((p) => p.events);
+    expect(beforeCards.some((c) => /Recount Required/.test(c.title))).toBe(true);
+    expect(beforeCards.some((c) => /^Obtain:/.test(c.meta ?? ""))).toBe(true);
+    expect(beforeCards.some((c) => /Management conclusion: Open/.test(c.title))).toBe(true);
+    expect(before.accounting?.footnote).toMatch(/requires a management conclusion/);
+
+    concludeException("EXC-003");
+
+    const after = buildFinancialLifeData(controller(), SUBJECT, "T-LIFE-AFTER");
+    const afterCards = after.phases.flatMap((p) => p.events);
+    expect(afterCards.filter((c) => /Recount Required/.test(c.title))).toEqual([]);
+    expect(afterCards.filter((c) => /^Obtain:/.test(c.meta ?? ""))).toEqual([]);
+    expect(afterCards.filter((c) => /Management conclusion: Open/.test(c.title))).toEqual([]);
+    expect(after.accounting?.footnote).not.toMatch(/requires a management conclusion/);
+  });
+
+  /**
+   * The state the conclusion test cannot reach.
+   *
+   * `nextActionText` returns "None — resolved; history retained" for ANY
+   * resolved status before it ever looks at the unmet list (workflow-view.ts:
+   * 101), so once a conclusion is recorded the requirement list is dead code
+   * on this card and an assertion made there proves nothing about it. The
+   * state where it is live is the one in between, and it is a real demo step:
+   * the Controller has submitted the record, the Accounting Manager has
+   * accepted it, and nobody has concluded yet. The card demanded a record the
+   * product was already holding — the frozen `satisfied` flag is a literal in
+   * the rules package (counts.ts:62 `satisfied: false`) and never moves.
+   */
+  it("stops demanding a record the close has already accepted, before any conclusion", () => {
+    const metaOf = (kind: string) => cards(SUBJECT).find((c) => c.kind === kind)?.meta ?? "";
+    expect(metaOf("CONCLUSION")).toMatch(/^Obtain: Supervised recount/);
+
+    satisfyRequirements("EXC-003");
+
+    // Still open — no conclusion has been recorded, and the card still says so.
+    const after = buildFinancialLifeData(controller(), SUBJECT, "T-LIFE-SATISFIED");
+    const conclusion = after.phases.flatMap((p) => p.events).find((c) => c.kind === "CONCLUSION");
+    expect(conclusion?.title).toBe("Management conclusion: Open");
+    expect(conclusion?.meta).not.toMatch(/Obtain:/);
+    expect(conclusion?.meta).toBe("Complete the recount and reconcile the variance");
+  });
+
+  it("agrees with the header it sits under", () => {
+    concludeException("EXC-003");
+    const data = buildFinancialLifeData(controller(), SUBJECT, "T-LIFE-AGREE");
+
+    // The header, which 295a8c4 fixed.
+    expect(data.header?.close.status?.label).toBe("Resolved — No Adjustment");
+    expect(data.header?.close.blocker).toBe(false);
+
+    // The panels below it, which it disagreed with.
+    const exceptionCard = cards(SUBJECT).find((c) => c.kind === "EXCEPTION");
+    expect(exceptionCard?.date).toBe("Resolved");
+    expect(exceptionCard?.title).toContain("Resolved — No Adjustment");
+    expect(exceptionCard?.glyph).not.toBe("✕");
+
+    const conclusionCard = cards(SUBJECT).find((c) => c.kind === "CONCLUSION");
+    expect(conclusionCard?.title).toBe("Management conclusion: Resolved — No Adjustment");
   });
 });
