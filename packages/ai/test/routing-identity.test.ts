@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { DEMO_USERS, userByRole } from "@icg/data";
 import { INVENTORY_GL_ACCOUNTS, OFFSET_GL_ACCOUNTS } from "@icg/domain";
 import {
+  createCommandService,
   createProjectionService,
   createQueryService,
   createWorkspace,
@@ -753,11 +754,55 @@ describe("the tool surface", () => {
  * handler can put a new sentence in it tomorrow.
  */
 describe("scope restrictions travel in their own channel", () => {
-  const ws = createWorkspace();
   const RESTRICTION =
     /access scope|outside your scope|withheld from (this role|you)|may not read|restricted at your/i;
 
-  it("puts no restriction sentence in the missing-evidence channel", () => {
+  /**
+   * Two workspace states, and the second one is the point.
+   *
+   * This guard first ran against a single untouched workspace, and advertised
+   * itself as "a property over every intent and every role". It was a property
+   * over every intent and every role in ONE state — the one where nobody has
+   * done anything. Every restriction that only EXISTS after a session act was
+   * invisible to it, and one duly survived: the memo-draft handler went on
+   * filing its withheld-draft note as missing evidence, because no draft exists
+   * until a Controller saves one and the guard never saw a workspace where one
+   * had been.
+   *
+   * That is this project's whole review history in miniature: the defects live
+   * in the diverged state, and a check that only reads the baseline reports the
+   * product clean.
+   */
+  const worked = () => {
+    const fresh = createWorkspace();
+    const commands = createCommandService(fresh);
+    const asController = {
+      user: userByRole("CONTROLLER"),
+      correlationId: "T-SCOPE-WORK",
+      sourceInterface: "ASK_GAURD",
+    };
+    // A draft, which is what makes the memo withholding reachable at all.
+    commands.saveMemoDraft(asController, {
+      title: "Working draft",
+      body: "INTERNAL — reserve exposure, do not circulate",
+    });
+    // And a conclusion, so the live-versus-baseline answers are exercised too.
+    const blocker = fresh.close.blockers[0];
+    if (blocker !== undefined) {
+      commands.concludeException(asController, {
+        exceptionId: blocker.exceptionId,
+        conclusion: "REMAINS_OPEN",
+        rationale: "Reviewed; stays open.",
+      });
+    }
+    return fresh;
+  };
+
+  it.each([
+    { state: "untouched", make: () => createWorkspace() },
+    { state: "after a draft and a conclusion", make: worked },
+  ])("puts no restriction sentence in the missing-evidence channel ($state)", ({ make }) => {
+    const ws = make();
     let answers = 0;
     let restrictionsSeen = 0;
     for (const user of DEMO_USERS) {

@@ -49,24 +49,33 @@ import type { Workspace } from "./workspace.js";
  * scope hides FC-002 read its note on `/valuation`: the side door around
  * `listEvidence` that `makeRecordScope` exists to close. It is scoped now.
  *
- * Which delegates reach source records at all, and what each does:
+ * Which delegates reach source records at all:
  *
- * - `procurement`, `ownership`, `costing`, `methodology`, `eoMethodology` —
- *   reach source documents and call `makeRecordScope`.
- * - `glAccounts`, `memo` — reach no source record. `glAccounts` reads close
- *   aggregates and the GL account map; `memo` reads workspace drafts and
- *   versions, whose own visibility `memo.ts` decides. Neither needs the scope
- *   and neither silently skips it.
+ * - `procurement`, `ownership`, `eoMethodology` — read source documents and
+ *   call `makeRecordScope`.
+ * - `costing`, `methodology`, `glAccounts`, `memo` — reach no scoped source
+ *   record, and each says so in its own file. `costing`: "Nothing here reads a
+ *   source document… `costComponents`, `periodCosts` and `skus` carry no
+ *   `sourceRef`". `methodology`: the same, and "it is deliberately not called
+ *   rather than silently omitted". `glAccounts` reads close aggregates and the
+ *   account map; `memo` reads workspace drafts, whose visibility `memo.ts`
+ *   decides from the drafting permission.
  *
  * A delegate added here that reads `ws.dataset.*` and returns any of its text
- * belongs in the first list, not the second.
+ * belongs in the first list.
  *
- * The claim is only worth making if it is checked: `security.test.ts` asserts
- * the withholding and asserts that no figure shrinks with it. That sentence
- * first shipped naming `projections.test.ts`, a file that does not exist — a
- * comment citing its own guard by a name nobody had created, written while
- * fixing the class "a claim more precise than its enforcement". Cite the file
- * that holds the test, and open it before you write the sentence.
+ * **This list has now been wrong twice, and each time in a way a reader would
+ * have believed.** First it claimed all ten delegates scoped, when most did
+ * not. Then the fix for that put `costing` and `methodology` in the scoping
+ * list — from a `grep -c makeRecordScope` that counted the very comments
+ * saying they deliberately do NOT call it — and cited its own guard as
+ * `projections.test.ts`, a file nobody had written. Counting mentions is not
+ * counting calls, and a comment naming its own test is worth nothing until
+ * that file exists.
+ *
+ * It exists now: `projections.test.ts` derives both lists from the source and
+ * fails if this paragraph and the code disagree. Do not restate the split here
+ * without changing it there.
  */
 export function createProjectionService(ws: Workspace) {
   return {

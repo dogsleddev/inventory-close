@@ -534,14 +534,31 @@ const INTENTS: readonly Intent[] = [
           { label: "Gross GL", valueCents: r.grossGlCents, source: "get_methodology" },
           { label: "Difference", valueCents: r.differenceCents, source: "get_methodology" },
           { label: "Sign convention", text: r.signConvention, source: "get_methodology" },
+          ...m.replayExclusions.map(
+            (x): AiFigure => ({
+              label: "Outside the reproducibility check",
+              text: `${x} — working state, not close output.`,
+              source: "get_methodology",
+            }),
+          ),
         ],
         conflictingEvidence: [],
-        // What the reproducibility check does NOT cover, from the exported
-        // list the check itself reads — so this can never claim coverage the
-        // replay does not have.
-        missingEvidence: m.replayExclusions.map(
-          (x) => `${x} is excluded from the reproducibility check — it is working state, not close output.`,
-        ),
+        /**
+         * What the replay does NOT cover is a FACT about the check's scope, so
+         * it is reported as one.
+         *
+         * These lines sat in `missingEvidence`, whose contract is "records the
+         * close asked for and does not hold… the reader is expected to act on
+         * it". Nothing here is a record and nothing is outstanding: they are
+         * the check's own deliberate exclusions, read from the list the check
+         * itself uses. The drawer counted them anyway, so the one answer whose
+         * whole subject is that every figure is reproducible announced "3
+         * required items of evidence reported missing" to every role.
+         *
+         * They are not access restrictions either, so `scopeNotes` would be
+         * the same mistake one channel over.
+         */
+        missingEvidence: [],
         assertions: [],
         managementConclusion:
           "A figure on any screen is reproducible from the run named above. Reproduce Close re-derives it from the seed and reports which sections it compared.",
