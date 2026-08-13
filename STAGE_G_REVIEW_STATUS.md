@@ -1,12 +1,44 @@
 # Stage G review — status
 
-**Written 2026-08-12, mid-review; updated 2026-08-12 after the first fix pass.** The org hit its
-monthly spend limit during the verification fleet. This document is the complete state: what is
-committed, what the review established, what it did not reach, where every artifact lives, and how
-to resume without repeating any of it.
+**Written 2026-08-12, mid-review; updated 2026-08-12 after the first fix pass and again after the
+fix-validation tail was closed.** The org hit its monthly spend limit during the verification fleet.
+This document is the complete state: what is committed, what the review established, what it did not
+reach, where every artifact lives, and how to resume without repeating any of it.
 
 > Read this before `STAGE_G_REVIEW_PLAN.md`. The plan is still the method; this is where the method
 > got to.
+
+---
+
+## 0z. The fix-validation tail is CLOSED (`a4b4e6f`)
+
+**All 47 remaining fix-validation findings are fixed.** The 48-item tail counted three duplicate
+reports of two defects, and its one uncounted P1 survived only as two doc comments claiming
+`unmetRequirements` counts an *accepted* submission when PENDING satisfies it. Gate: typecheck, lint
+and production build clean, 20 routes, **2,488 tests across 73 files**. Locked baseline unmoved.
+Verified in a browser as the Controller and as U-009, in the DIVERGED state — after a conclusion and
+after a saved draft, which is the only state most of these are visible in.
+
+**The finding the tail itself produced, which is the reusable part.** Writing the regression for
+"attribute a denial to the answering route, not the session" showed that the fix being validated set
+its marker on three of four routes and missed the fourth — the very route its own worked example
+runs through. **A validation pass is worth a validation pass.** And the first version of that test
+made two `answerQuestion` calls and passed against a deliberately reintroduced defect, because each
+call builds its own session: the premise did not hold, so it could not fail. Every guard covering a
+fix in that commit was mutation-tested against the defect it closes before being trusted.
+
+**What is now left of the Stage G review: the 44-item G-tail in §0d below** — 27 P2 and 17 NOTE from
+the review's own findings (`G01…G96`), a different list from the fix-validation one. Nothing at P0 or
+P1 is open on either.
+
+**Two claims in this repo that are now stale and were not changed here:**
+
+- `SPEC_MANIFEST.json` no longer matches `README.md` (43 of 44 hashes match; the README was last
+  touched at `d1c2fa5`, long before this pass). The handoff still says the spec package is pristine.
+  Either refresh that one hash deliberately or correct the sentence — do not do it silently.
+- `docs/09`'s material-answer contract does not list the `scopeNotes` channel. The spec package is
+  hashed and stays pristine, so the reconciliation was recorded on the field in `packages/ai/src/types.ts`
+  instead. If the spec is ever reopened, that clause belongs in it.
 
 ---
 

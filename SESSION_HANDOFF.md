@@ -10,21 +10,33 @@ review, its re-verification, nine fix commits and a fix-validation fleet over th
 
 ## 0a. START HERE — every P0 and P1 is closed, and the fix pass has been validated
 
-> ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST. Its §0c is the newest and most important part.
+> ### ⬅ READ `STAGE_G_REVIEW_STATUS.md` FIRST. Its §0z is the newest part.
 >
-> **HEAD is `0b05ba7`.** The Stage G review, its re-verification, nine fix commits and a
-> fix-validation fleet are all done and committed. **Nothing the review confirmed at P0 or P1 remains
-> open.** Gate: typecheck, lint and production build clean, 20 routes, **2,493 tests across 73 files
-> passing**. Locked baseline unmoved and re-confirmed in a browser.
+> **HEAD is `a4b4e6f`.** The Stage G review, its re-verification, nine fix commits, a fix-validation
+> fleet, and the fleet's entire 48-item tail are all done and committed. **Nothing the review or the
+> fleet confirmed at P0 or P1 remains open.** Gate: typecheck, lint and production build clean, 20
+> routes, **2,488 tests across 73 files passing**. Locked baseline unmoved and re-confirmed in a
+> browser as the Controller and as U-009, in the diverged state.
 >
-> **What remains is a 48-item tail** — 26 P2, 19 NOTE, and 3 P1-titled entries the tally filter
-> matched loosely (check those first; at least two are already fixed). Every record carries the
-> command that was run and its real output:
+> **What remains is the review's OWN 44-item tail** — 27 P2 and 17 NOTE from `G01…G96`, listed by
+> file in `STAGE_G_REVIEW_STATUS.md` §0d/§5/§6. That is a different list from the fix-validation one,
+> which is now closed. Then Stage H (QA).
+>
+> Every fix-validation record carries the command that was run and its real output:
 > `.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_e6105877-98d/journal.jsonl`
 >
 > ---
 >
-> ### The four things that cost the most to learn, and must not be re-derived
+> ### The five things that cost the most to learn, and must not be re-derived
+>
+> **0. A validation pass is worth a validation pass, and a test must be shown to fail first.**
+> Closing the fleet's tail meant writing the regressions the tail asked for — and one of them found
+> that the fix it was validating had set its marker on three of four routes and missed the fourth,
+> which was the route the finding's own worked example runs through. **Two levels deep, the same
+> class was still there.** Worse: the first version of that test made two `answerQuestion` calls and
+> passed against a deliberately reintroduced defect, because each call builds its own session. Its
+> premise did not hold, so it could not fail, and it would have shipped reading like proof. Mutate
+> the source, watch the test go red, and only then trust it.
 >
 > **1. A fix pass reopens defect classes at roughly the rate the original code created them.**
 > Measured, not suspected: the fix-validation fleet returned **64 findings over the eight fix
@@ -135,10 +147,11 @@ but the *next task* is here, not in §8.
 | **Stage G fix pass 4** | ✅ Done (`bbbcdca`, `9b62dcd`, `73a7e3c`, `5cfeb20`) — **every P0 and P1 closed** |
 | **Fix-validation fleet** | ✅ Done — 11 agents over the eight fix commits: 64 findings, **21 CLASS_REOPENED**, 132 cleared |
 | **Fix pass 5** | ✅ Done (`8881db5`, `ed76212`, `bcb11f6`) — 17 of the 64 fixed, including a comment citing a test file that did not exist |
-| **The 48-item tail** | ⬅ **NEXT.** 26 P2 + 19 NOTE + 3 loosely-matched P1s, in `wf_e6105877-98d/journal.jsonl` |
+| **Fix pass 6 — the 48-item tail** | ✅ Done (`a4b4e6f`) — all 47 distinct items; the tail's own new test found a fourth route the fix it validated had missed |
+| **The review's own 44-item tail** | ⬅ **NEXT.** 27 P2 + 17 NOTE from `G01…G96`, clustered by file in `STAGE_G_REVIEW_STATUS.md` §0d |
 | H — QA | Not started |
 
-**2,493 tests across 73 files passing**; typecheck, lint and production build clean, 20 routes.
+**2,488 tests across 73 files passing**; typecheck, lint and production build clean, 20 routes.
 Run the suite as `npx vitest run --maxWorkers=3` — the default worker count OOMs on this machine.
 The locked financial baseline has not moved and is verified in a browser, not only in tests:
 1,500 units · $4,800,000 subledger · $4,812,450 gross GL · $12,450 difference · 15 exceptions ·
@@ -556,7 +569,7 @@ Before anything else:
    accessibility, demo states, and the mockup defects in §9a you must correct rather than
    replicate).
 2. Verify nothing drifted: `pnpm typecheck && pnpm lint && npx vitest run --maxWorkers=3 && pnpm build`
-   — expect **2,493 tests across 73 files passing** (833/59 was the stage-09 figure). **Stop any `pnpm dev` server first** (see §7).
+   — expect **2,488 tests across 73 files passing** (833/59 was the stage-09 figure). **Stop any `pnpm dev` server first** (see §7).
 
 **All four adversarial reviews are done.** Full tree at `f3f6f98` (12 lenses, 9 fixed —
 eight lenses examined their area and found nothing; that is a result, not a gap). Stage-10
@@ -1023,6 +1036,14 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
   checks and lints clean and only shows up as garbage in the rendered UI. Use the Edit tool.
   To check: `Get-ChildItem -Recurse -Include *.ts,*.tsx,*.css apps,packages | ForEach-Object
   { if ([IO.File]::ReadAllText($_.FullName) -match '[âÃÂ]') { $_.FullName } }`.
+- **`perl -0pi -e 's/…/…/'` is the same hazard with a different signature.** Used on
+  `answers.ts` to mutate one line for a mutation test, it did not perform the substitution and
+  instead wrote **NUL bytes over two spaces** — both inside `` `${sku} ${location}` ``, the
+  template literal the pattern was reaching into. `-0` sets the record separator to NUL and the
+  pattern's `${…}` interacts with Perl's own interpolation; the result compiled, and `grep`
+  reporting `Binary file … matches` was the only symptom. **Use the Edit tool for in-place edits,
+  including throwaway mutation tests.** To check a working tree:
+  `node -e "const fs=require('fs'),cp=require('child_process');for(const f of cp.execSync('git diff --name-only',{encoding:'utf8'}).trim().split('\n')){const b=fs.readFileSync(f);if(b.indexOf(0)>=0)console.log('NUL',f)}"`
 
 ---
 
