@@ -102,7 +102,15 @@ export function buildShellData(user: DemoUser, correlationId: string): ShellData
       readiness !== undefined
         ? {
             ready: `${formatBpsOverview(live?.readinessBps ?? readiness.totalBasisPoints)} ready`,
-            blockers: `${live?.blockerCount ?? readiness.aggregates.blockerCount} blockers`,
+            // `plural`, because making this figure LIVE is what made a count
+            // of one reachable here. The literal "blockers" was correct by
+            // construction for as long as this string was the rules' constant
+            // seven, and the same commit that made it move would have shipped
+            // "1 blockers" into the header on all twenty routes. This is the
+            // documented failure mode of this repo's fix passes — a fix that
+            // reopens a class one row over — caught in the browser pass at the
+            // count that exposes it.
+            blockers: `${live?.blockerCount ?? readiness.aggregates.blockerCount} ${plural(live?.blockerCount ?? readiness.aggregates.blockerCount, "blocker")}`,
           }
         : null,
     navOpenBlockers: live?.blockerCount ?? readiness?.aggregates.blockerCount ?? null,
@@ -649,14 +657,20 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
       // count. The rules' own baseline stays reportable beside it, because a
       // figure that moved is only meaningful next to the one it moved from.
       blockerCount: live?.blockerCount ?? agg.blockerCount,
-      blockerSummary: `${live?.blockerCount ?? agg.blockerCount} blockers · ${formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents)}`,
+      // `plural` on both of these, and on the sign-off reason below. They are
+      // live figures carrying a hard-coded plural — the same trap as the
+      // header KPI, and the same reason it was invisible: the count was seven
+      // until somebody concluded, and no baseline render can reach one. Found
+      // in the browser pass at the demo's climax, where the gate read
+      // "Unavailable — 1 blockers open".
+      blockerSummary: `${live?.blockerCount ?? agg.blockerCount} ${plural(live?.blockerCount ?? agg.blockerCount, "blocker")} · ${formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents)}`,
       blockerExposure: `${formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents)} exposure`,
       signOff: {
         available: (live?.blockerCount ?? agg.blockerCount) === 0,
         permitted: capabilities?.canSignOff ?? false,
         reason:
           (live?.blockerCount ?? agg.blockerCount) > 0
-            ? `Unavailable — ${live?.blockerCount ?? agg.blockerCount} blockers open`
+            ? `Unavailable — ${live?.blockerCount ?? agg.blockerCount} ${plural(live?.blockerCount ?? agg.blockerCount, "blocker")} open`
             : capabilities?.canSignOff === true
               ? "Every blocker has a management conclusion. Signing off locks the period."
               : "Your demo role cannot record sign-off.",

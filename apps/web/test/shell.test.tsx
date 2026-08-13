@@ -9,7 +9,7 @@ import { AppShell } from "../components/AppShell";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
 import { NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_BOOTSTRAP, THEME_KEY } from "../lib/theme";
-import { concludeException, controller, resetDemo } from "./support/live-close";
+import { concludeException, controller, resetDemo, resolveAllBut } from "./support/live-close";
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -232,6 +232,30 @@ describe("App shell — the header and the rail read the close as it is NOW", ()
     expect(gate?.blockerCount).toBe(6);
     expect(after.headerKpis?.blockers).toBe(`${gate?.blockerCount} blockers`);
     expect(after.headerKpis?.ready).toBe(`${gate?.readinessOverview} ready`);
+  });
+
+  /**
+   * The trap in making a figure live, found in the browser pass and fixed
+   * here.
+   *
+   * `headerKpis.blockers` was `${n} blockers` — a hard-coded plural that was
+   * correct by construction for exactly as long as this string was the rules'
+   * constant seven. Making it live is what made a count of one reachable, so
+   * the commit that fixed the header's figure would have shipped "1 blockers"
+   * onto all twenty routes. That is the reopen pattern this repo has measured:
+   * a fix that opens a class one row over. No baseline render can show it,
+   * which is why this test drives the count to one first.
+   */
+  it("says '1 blocker', not '1 blockers', at a count of one", () => {
+    expect(buildShellData(controller(), "T-SHELL-PLURAL-BASE").headerKpis?.blockers).toBe(
+      "7 blockers",
+    );
+
+    resolveAllBut(1);
+
+    const shell = buildShellData(controller(), "T-SHELL-PLURAL");
+    expect(shell.headerKpis?.blockers).toBe("1 blocker");
+    expect(shell.navOpenBlockers).toBe(1);
   });
 
   it("puts the live count on the rendered rail badge", () => {

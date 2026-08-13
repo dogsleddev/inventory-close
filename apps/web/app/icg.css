@@ -1998,7 +1998,15 @@ button {
   min-width: 0;
   flex-shrink: 1;
   overflow-wrap: anywhere;
-  text-align: right;
+  /* LEFT, and it still reads as a right-hand column. A value that fits is
+     never shrunk, so its box is already at its content width and
+     `justify-content: space-between` has put that box against the right edge —
+     alignment inside it is a no-op, and every figure still sits right. The
+     alignment only becomes visible once the value WRAPS, and there right is
+     the wrong answer: measured on the 341-char "Basis" value, `right` gave
+     nine lines with flush right edges and left edges ragged by up to 92px,
+     which is prose a reader has to hunt for the start of on every line. */
+  text-align: left;
 }
 .icg-ask-body {
   font-size: 11.5px;

@@ -854,6 +854,26 @@ describe("Overview — the blocker panel counts its own rows", () => {
   });
 
   /**
+   * The gate's own count-varying words, at the count that exposes them.
+   *
+   * Found in the browser pass: with one blocker left, the Overview gate read
+   * "Unavailable — 1 blockers open" and the summary beside it "1 blockers ·
+   * $18,750". Both are LIVE figures carrying a hard-coded plural, which is the
+   * same trap as the header KPI and invisible for the same reason — the count
+   * is seven until somebody concludes, and no baseline render can reach one.
+   */
+  it("says '1 blocker' in the gate reason and summary at a count of one", () => {
+    const before = buildOverviewData(controller(), "T-OV-GATE-BASE");
+    expect(before.gate?.signOff.reason).toBe("Unavailable — 7 blockers open");
+
+    resolveAllBut(1);
+
+    const after = buildOverviewData(controller(), "T-OV-GATE-ONE");
+    expect(after.gate?.signOff.reason).toBe("Unavailable — 1 blocker open");
+    expect(after.gate?.blockerSummary).toMatch(/^1 blocker · /);
+  });
+
+  /**
    * OWNERSHIP, at the state where its own half of the fix is live.
    *
    * The case counts items whose CONTRACT support is still missing, and it

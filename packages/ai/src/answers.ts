@@ -484,12 +484,24 @@ function serialCountAnswer(
         }),
       ),
       ...testFacts,
+      // A FACT, not a missing requirement. No test count is required of any
+      // particular unit — test counts are a selection — so putting this in
+      // `missingEvidence` made the drawer announce "1 required item of
+      // evidence reported missing" about a unit whose count line is complete
+      // and whose variance is zero. The one thing this product may never do is
+      // overstate, and that includes overstating a gap.
+      ...(tests.length === 0
+        ? [
+            {
+              label: `${serial} — test counts touching it`,
+              count: 0,
+              source: "get_financial_lifecycle" as const,
+            },
+          ]
+        : []),
     ],
     conflictingEvidence: [],
-    missingEvidence:
-      tests.length === 0
-        ? [`No test count touches ${serial}; the count line above is the only observation of it.`]
-        : [],
+    missingEvidence: [],
     assertions: ["EXISTENCE", "COMPLETENESS"],
     managementConclusion:
       latest.row.variance === 0
