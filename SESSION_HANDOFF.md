@@ -1413,3 +1413,89 @@ passes"). What remains from the original release, in order:
 
 The 60-second demo path the UI must serve:
 `Overview → EXC-001 → NetSuite vs Physical vs Accounting → Transaction Chain → Ask Gaurd`.
+
+---
+
+## Demo-prep pass (f4391db → HEAD): the frozen-vs-live family, finished at the root
+
+Twelve items from `DEMO_PREP_PROMPT.md`, all landed, each with a regression test whose RED was
+observed under mutation. Gate at the end: typecheck clean, lint clean, `@icg/web` build compiled,
+`npx vitest run --maxWorkers=3` → **Test Files 78 passed (78), Tests 2534 passed (2534)**, from a
+baseline of 73 files / 2,497 tests. No locked-baseline figure moved; `shell.test.tsx` now pins
+7 blockers / 8142 bps / `$198,950` / `81.4% ready` at a fresh load.
+
+### What landed
+
+- **One live exception list.** `exception-view.ts` exports `liveExceptionViews(queries, ctx)` — the
+  list-scale twin of `livePosition(context)`. `financial-life-view`, `recon-view`,
+  `adjustments-view`, `count-view` and `valuation-view` all bind to it. It exists because there were
+  already four hand-rolled copies of `effectiveStatus ?? frozen`; this pass removed the fifth
+  rather than adding a sixth. `attempt()` moved to `lib/server/attempt.ts` (re-exported from
+  `data.ts`) so `exception-view.ts` could use it without a cycle.
+- **The shell.** `buildShellData` reads `getEffectiveClose`, so the header KPIs and the nav rail
+  badge no longer print the rules' 7 above a gate reading 6, on all twenty routes.
+- **The drawer badge.** `assembleDrawer` emits `blocker: isBlocker && !isResolvedStatus(status)`.
+  Fixed in the assembler, not in the seven callers that passed a baseline blocker set.
+- **The register overlay.** `lib/server/live-register.ts` substitutes the live position for the
+  baked `undraftedReason` / `exceptionOpen` at the VIEW layer. `@icg/rules` is untouched and
+  correct; a screen printing "EXC-015 has not reached a management conclusion" after the Controller
+  reached one is the defect.
+- **The Overview.** All five exception-derived close-area notes move together; `registerCount` is
+  live and asserted equal to its destination; the close-areas percentage is LABELLED as the rules'
+  baseline rather than made live.
+- **The Evidence Center**, **the count-varying prose** at a count of one, and **three Ask Gaurd
+  answers** (`component(s)`, the reconciliation answer's assertions now derived from its own
+  citations, and a serial-scoped `counts` answer for the flagship unit page's chip).
+- **A class this pass opened and closed.** Making the header figure live made `"1 blockers"`
+  reachable on all twenty routes; the browser pass caught it at one blocker. The Overview gate's
+  `"Unavailable — 1 blockers open"` and `"1 blockers · $18,750"` were the same defect, pre-existing.
+  All three now use `plural()`, each with a test that drives the count to one.
+
+### Two lessons worth keeping
+
+1. **`nextActionText` returns early for any resolved status** (`workflow-view.ts:101`), so an
+   assertion about outstanding requirements made AFTER a conclusion tests dead code. Two tests in
+   this pass had to be moved to the state in between — record submitted and accepted, nothing
+   concluded — before their mutation went red. That state is a real demo step and is where several
+   of these defects actually live.
+2. **`no-hardcoded-totals.test.ts` scans comments too.** A comment quoting the labelled
+   close-areas sentence put `81.42%` and `8142` back into `lib/` and failed the gate. That
+   conservatism is right; do not weaken it to accommodate prose.
+
+### One existing assertion changed, with the reason
+
+`overview.test.tsx` asserted `registerCount` stays at the rules' 7, on the stated rationale that
+"the link leads to /exceptions, which lists what the RULES derived". That rationale is false about
+the destination and was checked before the change: `buildExceptionsData`'s blocker filter is live —
+resolve six and `/exceptions?filter=blockers` returns one row, `openBlockerCount` 1, under its own
+basis line "The rules raised 7; 6 have been concluded in this session and are no longer listed."
+The old assertion pinned "View all 7" onto a page showing one. The replacement asserts the link
+against the destination rather than a literal.
+
+### DEFERRED — demo-containable, NOT closed
+
+Every item below was known and left alone. None is fixed, none is proven harmless; each is
+something a viewer could reach.
+
+- **Ask Gaurd routing and matching gaps: G41 (negation), G72 (tense), G73 ("unexplained"), G45
+  ("git").** `packages/ai/src/matching.ts` was out of scope for this session. A question phrased
+  around a negation or a past tense can still route to a handler that answers a different question.
+- **CSV canonical-token and blank-cell defects: G76, G77, G78, G60.** Untouched. Only the exports
+  a task named were in scope, and none of these was named.
+- **The close-summary CSV is still entirely baseline and unlabelled** while the Overview above it
+  is live. Export it after concluding anything and it disagrees with the screen it was exported
+  from, with nothing on the file saying which position it holds. This is the same class this pass
+  closed on the screens, left open on the file a user hands to an auditor.
+- **The `/inventory` search list and its structurally-frozen facet counts.** The facets are derived
+  from the baseline population and do not move with the close.
+- **G53: Ask Gaurd prescribes actions a locked period refuses.** After sign-off locks the period,
+  answers still emit `nextAction` text telling the reader to do things the command service will
+  now reject.
+- **`valuation-view`'s damaged-row "Assessment outstanding" note** is now live, but no damaged row
+  on this dataset carries an OPEN exception (the only one with an exception is EXC-012, resolved at
+  baseline), so that path has no observable before/after here and carries no test.
+- **The EXCEPTIONS close-area BAR SCORE** stays at the rules' 53.33% under a live "N open blockers"
+  caption, and `closeAreas.weightedResult` stays baseline. Both are the readiness policy's own
+  weighted output and were explicitly out of scope; the divergence banner names them.
+- **The wider `"(s)"`-parenthetical class in `packages/ai/src/answers.ts`.** One instance was
+  fixed. The class was not swept.
