@@ -126,7 +126,10 @@ const HANDLERS: Readonly<Record<AiToolName, Handler>> = {
       // record lost the row entirely rather than seeing it withheld — and
       // `withheldCount` then reported that nothing had been withheld.
       { label: "Installation", ref: r.installation?.id, at: life.sellSide.installedAt, exists: life.sellSide.installedAt !== undefined, unscopedRef: life.sellSide.installation },
-      { label: "First online", ref: r.telemetry?.serial, at: life.sellSide.firstOnlineAt, exists: life.sellSide.firstOnlineAt !== undefined, unscopedRef: life.sellSide.telemetry },
+      // `r.telemetry.id`, matching Installation above it. `serial` named the
+      // unit, so the one row whose job is to tell an auditor which record to
+      // ask for named the record they were already holding.
+      { label: "First online", ref: r.telemetry?.id, at: life.sellSide.firstOnlineAt, exists: life.sellSide.firstOnlineAt !== undefined, unscopedRef: life.sellSide.telemetry },
       { label: "Customer Invoice", ref: r.customerInvoice?.transactionNumber, at: r.customerInvoice?.invoiceDate, exists: life.sellSide.customerInvoice !== undefined, unscopedRef: life.sellSide.customerInvoice },
     ];
 

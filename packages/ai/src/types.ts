@@ -143,6 +143,25 @@ export interface AiFigure {
   readonly count?: number | undefined;
   /** Non-numeric values (a status enum, a serial, a date) as returned. */
   readonly text?: string | undefined;
+  /**
+   * An ISO instant, formatted by the app the way cents and basis points are.
+   *
+   * Interpolating one into `text` put `2027-01-07T06:03:00Z` in the drawer
+   * beside `Jan. 7, 2027 06:03 UTC` on the panel one click away — on the
+   * field an auditor relies on for who concluded and when. The engine has no
+   * formatter and must not grow one; it hands the instant over whole.
+   */
+  readonly valueInstant?: string | undefined;
+  /**
+   * A management-conclusion token, worded by the app from the conclusion
+   * vocabulary rather than the exception-status one.
+   *
+   * `RESOLVED_NO_ADJUSTMENT` is a member of BOTH, spelled "Resolved — No
+   * Adjustment" as a status and "Resolved — no adjustment required" as a
+   * conclusion, so a single flat token map has to pick one and be wrong on
+   * the other surface. This field carries the context the token cannot.
+   */
+  readonly valueConclusion?: string | undefined;
   /** The tool this figure came from — makes drift auditable. */
   readonly source: AiToolName;
 }
@@ -196,7 +215,18 @@ export interface AiMaterialAnswer {
    * than each writing an empty array. `routing-identity.test.ts` asserts over
    * every intent and every role that no restriction sentence is left in
    * `missingEvidence`, which is the check that keeps the two channels apart —
-   * a field a handler may omit needs one.
+   * a field a handler may omit needs one, and it is driven over a WORKED
+   * workspace as well as an untouched one, because a restriction that only
+   * exists after a draft or a conclusion is invisible to the baseline.
+   *
+   * **Not in docs/09's material-answer contract, deliberately.** That sentence
+   * enumerates what a material answer must CONTAIN and predates this channel;
+   * the spec package is hashed in `SPEC_MANIFEST.json` and stays pristine, so
+   * the reconciliation is recorded here, where a reader of the field is
+   * standing. This channel is additive and is a restriction, never a gap:
+   * Missing Evidence means the close asked for a record and does not hold it,
+   * and the reader is expected to act on it. A restriction filed there sends
+   * them to obtain a document already on file.
    */
   readonly scopeNotes?: readonly string[];
   readonly assertions: readonly string[];
@@ -256,6 +286,16 @@ export interface AiInteraction {
  * answer engine moved from unanchored regexes to the phrase matcher in
  * `matching.ts`. Both are recorded on every interaction, so an answer
  * captured before the change is legible as one.
+ *
+ * v1.2.0: the Stage G review's fix passes. The toolset gained the live twins
+ * of the frozen-close tools (`get_effective_close`, `get_exception_workflow`,
+ * `get_effective_exceptions`) and the capability lookup; the engine changed
+ * which tools several intents call and therefore what `source` every figure in
+ * those answers carries, moved scope restrictions into `scopeNotes`, and gave
+ * `AiFigure` structured instants and conclusions. An answer captured at v1.1.0
+ * and one captured now differ in provenance, in channel and in field shape —
+ * which is precisely what these two strings exist to make legible, and they
+ * did not move for the first eight of those commits.
  */
-export const TOOLSET_VERSION = "ASK-GAURD-TOOLS-v1.1.0";
-export const ANSWER_ENGINE_VERSION = "ASK-GAURD-ANSWERS-v1.1.0";
+export const TOOLSET_VERSION = "ASK-GAURD-TOOLS-v1.2.0";
+export const ANSWER_ENGINE_VERSION = "ASK-GAURD-ANSWERS-v1.2.0";

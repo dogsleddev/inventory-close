@@ -11,6 +11,9 @@ import {
   type ServiceContext,
   type Workspace,
 } from "../src/index.js";
+// Not on the package barrel: the scope predicate is internal, and this test
+// asserts a projection against the very rule it implements.
+import { makeRecordScope } from "../src/queries.js";
 
 /** The eight prompt-04 security/behavior test categories. */
 
@@ -312,13 +315,41 @@ describe("the projection layer withholds record text an auditor may not read", (
     // assertions below describe a case that does not occur.
     expect(noted.length).toBeGreaterThan(0);
 
+    /**
+     * Per row, against the scope that decides it — not "withheld always".
+     *
+     * The contract `makeRecordScope` implements is "withheld iff the record is
+     * out of scope". Requiring every noted row to be withheld is stronger than
+     * that, and over a population of one it is indistinguishable from it: a
+     * second forecast note authored INSIDE the auditor's workpaper scope would
+     * fail this test rather than the code. Both directions are asserted, so a
+     * scope that stopped withholding anything fails just as loudly.
+     */
+    const scope = makeRecordScope(ws, userByRole("AUDITOR_READ_ONLY"));
+    let withheldSome = 0;
+    let visibleSome = 0;
     for (const row of noted) {
+      const source = ws.dataset.forecasts.find((f) => f.sku === row.sku)?.sourceRef;
+      const inScope = source !== undefined && scope(source);
       const seen = auditor.signals.find((s) => s.sku === row.sku);
-      expect(seen?.forecastNote, `${row.sku} note reached the auditor verbatim`).not.toBe(
-        row.forecastNote,
-      );
-      expect(seen?.forecastNote).toMatch(/outside your access scope/);
+      if (inScope) {
+        visibleSome += 1;
+        expect(seen?.forecastNote, `${row.sku} in-scope note was withheld anyway`).toBe(
+          row.forecastNote,
+        );
+      } else {
+        withheldSome += 1;
+        expect(seen?.forecastNote, `${row.sku} note reached the auditor verbatim`).not.toBe(
+          row.forecastNote,
+        );
+        expect(seen?.forecastNote).toMatch(/outside your access scope/);
+      }
     }
+    // Anti-vacuity on the branch that carries the fix. The other counter is
+    // reported rather than required: today it is zero, and a fixture that gave
+    // the auditor an in-scope note should exercise the first branch, not fail.
+    expect(withheldSome, "no forecast note is out of the auditor's scope").toBeGreaterThan(0);
+    expect(withheldSome + visibleSome).toBe(noted.length);
   });
 
   it("withholds the note without shrinking a single figure", () => {

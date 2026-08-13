@@ -884,7 +884,11 @@ export function createQueryService(ws: Workspace) {
           ...(installation ? { installedAt: installation.installedAt } : {}),
           ...(installation ? { installation: installation.id } : {}),
           ...(telemetry ? { firstOnlineAt: telemetry.firstOnlineAt } : {}),
-          ...(telemetry ? { telemetry: telemetry.serial } : {}),
+          // The telemetry RECORD's id, not the unit's serial. The comment on
+          // this field promises "the records' own identifiers", and the whole
+          // point of the field is that a reader whose scope hid the record can
+          // see which record to request — the serial they typed is not that.
+          ...(telemetry ? { telemetry: telemetry.id } : {}),
           ...(invoice ? { customerInvoice: invoice.transactionNumber } : {}),
         },
         exceptions: ws.close.exceptions
@@ -1268,7 +1272,10 @@ export function createQueryService(ws: Workspace) {
      * `unmetRequirements` rides along because the same surfaces ask both
      * questions of the same exception one line apart, and reading "still open"
      * from here while reading "still missing" from the frozen finding is how
-     * the drawer came to report an accepted submission as "not in evidence".
+     * the drawer came to report a submitted record as "not in evidence".
+     * Submitted, not accepted: only RETURNED unsatisfies, so PENDING clears a
+     * requirement, and no surface may word this field as a reviewer's
+     * acceptance.
      *
      * Both figures are returned deliberately: `baselineOpen` is the rules'
      * answer and stays readable, so a surface can name which one it is showing

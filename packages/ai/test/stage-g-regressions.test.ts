@@ -489,9 +489,16 @@ describe("a restriction reaches the reader, and only a real one", () => {
    *
    * So the property is stated where it is true — for every role, every
    * serial and every state — and the defining fact is read from the SERVICE
-   * VIEW rather than re-derived from the handler's own inputs. A test that
-   * recomputed `exists` the way `get_evidence_timeline` does would agree
-   * with it about a shared mistake.
+   * VIEW rather than from the handler's own line of code.
+   *
+   * Not an independent derivation, and the comment should not claim one: the
+   * service view IS the handler's input, and the map below is a hand-written
+   * SECOND STATEMENT of the same rule, duplicated on purpose so that a change
+   * to either side is visible. That is a change-detector rather than an
+   * oracle, which is what this rule can have — it is a definition, and there
+   * is no other source to check it against. What it does buy is real: it fails
+   * on the named pre-fix defect, where a WITHHELD row was pushed for a
+   * delivery that had not happened.
    */
   it("never puts a row of any state on a timeline for an event the close does not contain", () => {
     const definingFact: Record<string, (life: FinancialLifeView) => boolean> = {
@@ -742,6 +749,27 @@ describe("the live close, not the baseline", () => {
     expect(r.answer?.status).toMatch(/^No (exception is open|required record is outstanding on the open items)/);
     expect(r.answer?.status).not.toMatch(/^No required record is outstanding$/);
     expect(r.answer?.missingEvidence).toEqual([]);
+
+    /**
+     * And the CONCLUSION is anchored to the whole close, not to the population
+     * the answer happens to have measured.
+     *
+     * The oracle is the workspace's own count across all fifteen exceptions,
+     * deliberately not the `.filter(e => e.open)` the handler uses — a test
+     * that restates the implementation's filter agrees with a scoping error by
+     * construction, and this branch's first version put "Every required record
+     * the rules asked for is on file" on top of an open-only measurement while
+     * nine records on the resolved items were never filed.
+     */
+    const everywhere = w.queries
+      .getEffectiveExceptions(w.asController)
+      .reduce((n, e) => n + e.unmetRequirements.length, 0);
+    const claimsTheWholeFile = /Every required record the rules asked for is on file/.test(
+      r.answer?.managementConclusion ?? "",
+    );
+    expect(everywhere).toBeGreaterThan(0);
+    expect(claimsTheWholeFile).toBe(everywhere === 0);
+    expect(r.answer?.managementConclusion).toMatch(/never filed/);
   });
 
   it("stops telling a reader to conclude what has been concluded", () => {
@@ -902,31 +930,114 @@ describe("labels and imperatives track their own populations", () => {
     expect(answer?.managementConclusion).toMatch(/identified and attributed/);
   });
 
-  it("counts the count variances that are still open, and branches on that", () => {
-    const effective = createQueryService(ws).getEffectiveExceptions(ctxFor("CONTROLLER"));
-    const openSerials = new Set(
-      effective
-        .filter((e) => e.open)
-        .flatMap((e) => [...(e.exception.finding.subjects.serials ?? [])]),
-    );
-    const detail = createQueryService(ws).getCountDetail(ctxFor("CONTROLLER"));
-    const openVariances = detail.results.filter(
-      (r) => r.variance !== 0 && r.serial !== undefined && openSerials.has(r.serial),
-    ).length;
-    const total = detail.results.filter((r) => r.variance !== 0).length;
+  /**
+   * The other arm, which the dataset cannot produce.
+   *
+   * `ws.close.reconciliation` is baseline-derived and `unexplainedCents` is
+   * structurally zero, so the test above only ever exercises the zero side —
+   * a build that deleted the `unexplainedCents > 0` arm outright would pass
+   * it. Named a biconditional, exercised as a one-sided implication. Driven
+   * here through a mutated workspace, because the arm that is unreachable
+   * today is the one a future change makes live, and it was carrying the same
+   * label/sentence contradiction the reachable arm was fixed to remove.
+   */
+  it("says 'unreconciled' and drops the attributed-in-full sentence together", () => {
+    const local = createWorkspace();
+    const recon = local.close.reconciliation as { unexplainedCents: number };
+    // The premise, watched failing first: zero on the untouched close.
+    expect(recon.unexplainedCents).toBe(0);
+    recon.unexplainedCents = 250_00;
 
-    // The premise: the chip asks "still open" and the two counts differ, which
-    // is the whole reason the total was the wrong answer.
-    expect(total).toBeGreaterThan(openVariances);
+    const localT: AiToolContext = {
+      queries: createQueryService(local),
+      projections: createProjectionService(local),
+      ctx: ctxFor("CONTROLLER"),
+    };
+    const answer = answerQuestion(localT, "Why doesn't inventory tie?", {}).answer;
+    expect(answer?.exposure?.label).toMatch(/Unreconciled/);
+    expect(answer?.exposure?.valueCents).toBe(250_00);
+    // The label and the sentence are one claim. This is what the arm got wrong.
+    expect(answer?.managementConclusion).not.toMatch(/identified and attributed/);
+    expect(answer?.managementConclusion).toMatch(/attributed to no reconciling item/);
+  });
+
+  /**
+   * The expected figure is a LITERAL derived from the fixture by hand, and the
+   * rows are named.
+   *
+   * The first version of this test recomputed the implementation's own
+   * expression — `r.serial !== undefined && openSerials.has(r.serial)` over
+   * every plan — so it agreed with both of that expression's errors by
+   * construction, and asserted 1 === 1 while the derivation underneath was
+   * wrong in two ways. A test built from the code under test cannot see the
+   * code under test.
+   *
+   * The year-end plan has four variance rows (`countSummary.varianceRows`, and
+   * eight across all plans — the figure the answer used to count over):
+   *
+   *   KE-E2-8904 · PRIMARY_WAREHOUSE · −1  → EXC-006, resolved
+   *   KE-X1-3498 · PRIMARY_WAREHOUSE · −1  → EXC-003, OPEN
+   *   KV-Z1      · PRIMARY_WAREHOUSE · −2  → EXC-005, resolved (no serial)
+   *   KE-E2-1986 · STAGING          · +1  → EXC-013, resolved
+   */
+  it("counts the count variances that are still open, and branches on that", () => {
+    const queries = createQueryService(ws);
+    const summary = queries.getCountSummary(ctxFor("CONTROLLER"));
+    const detail = queries.getCountDetail(ctxFor("CONTROLLER"));
+
+    // The premise, asserted rather than assumed: the two populations really do
+    // differ, so counting over the wrong one is a live error and not a
+    // distinction without a difference.
+    expect(summary.varianceRows).toBe(4);
+    expect(detail.results.filter((r) => r.variance !== 0).length).toBe(8);
 
     const answer = answerQuestion(t, "Which count issues are still open?", {}).answer;
     const stated = answer?.knownFacts.find((f) => f.label === "Variance rows still open");
     expect(stated?.source).toBe("get_cycle_count_history");
-    expect(stated?.count).toBe(openVariances);
+    // One: KE-X1-3498, whose EXC-003 is the only open exception naming a
+    // year-end variance row.
+    expect(stated?.count).toBe(1);
+    expect(answer?.knownFacts.find((f) => f.label === "Variance rows")?.count).toBe(4);
     // The imperative is the same claim as the figure, so it branches with it.
-    expect(/Resolve the open count variances/.test(answer?.nextAction ?? "")).toBe(
-      openVariances > 0,
-    );
+    expect(answer?.nextAction).toMatch(/Resolve the open count variances/);
+  });
+
+  /**
+   * The join must reach a variance row that no serial names.
+   *
+   * CNT-VAR-001 is the one rule whose entire subject is count variances, and
+   * it fires on non-serialized stock: `serial === undefined`, subjects
+   * `{skus, locations}`. A join written only on `subjects.serials` cannot see
+   * it, so with EXC-005 open the answer asserted "No count variance is still
+   * open" — a silent omission rendering as a zero, in the slot that then
+   * prescribes no work.
+   *
+   * Constructed in-test because the baseline cannot produce it: the scenario
+   * resolves EXC-005 by recount. `createWorkspace()` builds a fresh close per
+   * call, so mutating this one is isolated to this test.
+   */
+  it("sees an open variance whose exception names a sku and a location, not a serial", () => {
+    const local = createWorkspace();
+    const exc005 = local.close.exceptions.find((e) => e.id === "EXC-005")!;
+    const exc003 = local.close.exceptions.find((e) => e.id === "EXC-003")!;
+    // The premise this test turns on: EXC-005 names no serial at all.
+    expect(exc005.finding.subjects.serials ?? []).toEqual([]);
+    expect(exc005.finding.subjects.skus).toEqual(["KV-Z1"]);
+    expect(exc005.finding.subjects.locations).toEqual(["PRIMARY_WAREHOUSE"]);
+
+    // Reopen the sku/location one, close the serial one. Now the ONLY open
+    // variance is the one a serial join cannot reach.
+    (exc005 as { status: string }).status = "RECOUNT_REQUIRED";
+    (exc003 as { status: string }).status = "RESOLVED_NO_ADJUSTMENT";
+
+    const localT: AiToolContext = {
+      queries: createQueryService(local),
+      projections: createProjectionService(local),
+      ctx: ctxFor("CONTROLLER"),
+    };
+    const answer = answerQuestion(localT, "Which count issues are still open?", {}).answer;
+    expect(answer?.knownFacts.find((f) => f.label === "Variance rows still open")?.count).toBe(1);
+    expect(answer?.nextAction).toMatch(/Resolve the open count variances/);
   });
 });
 
@@ -950,7 +1061,13 @@ describe("the record a question names outranks the screen it was asked from", ()
     expect(answer?.status).toMatch(/KE-X1-9025/);
     expect(answer?.status).not.toMatch(/KE-E2-1048/);
     // And says so, because the drawer prints no subject label of its own.
-    expect(answer?.managementConclusion).toMatch(/not KE-E2-1048/);
+    //
+    // In the restriction channel, and asserted as NOT in the conclusion one:
+    // MANAGEMENT CONCLUSION carries the human judgement, and a routing fact
+    // the engine authored does not belong under that heading. Both halves are
+    // asserted, because only the negative catches the sentence drifting back.
+    expect(answer?.scopeNotes?.some((n) => /not KE-E2-1048/.test(n))).toBe(true);
+    expect(answer?.managementConclusion).not.toMatch(/KE-E2-1048/);
   });
 
   it("answers the named exception, not the screen's", () => {
@@ -958,7 +1075,8 @@ describe("the record a question names outranks the screen it was asked from", ()
       exceptionId: "EXC-001",
     }).answer;
     expect(answer?.knownFacts.some((f) => /EXC-007/.test(f.text ?? ""))).toBe(true);
-    expect(answer?.managementConclusion).toMatch(/not EXC-001/);
+    expect(answer?.scopeNotes?.some((n) => /not EXC-001/.test(n))).toBe(true);
+    expect(answer?.managementConclusion).not.toMatch(/EXC-001/);
   });
 
   it("says nothing about a swap when there was none", () => {
@@ -1035,8 +1153,58 @@ describe("a denied lookup is disclosed in the answer that used it", () => {
     // The false-positive direction: a line on every answer would satisfy the
     // assertion above and put a restriction notice on every clean drawer.
     const r = answerQuestion(t, "Financial life of KE-E2-1048", {});
+    // Asserted first, because `?? ""` turns "the answer vanished" into "the
+    // answer said nothing about a refusal" — the guard would go on passing if
+    // the financial-life handler stopped answering at all.
+    expect(r.answer).toBeDefined();
     expect(r.toolCalls.some((c) => c.outcome === "NOT_AUTHORIZED")).toBe(false);
-    expect(r.answer?.scopeNotes?.join(" ") ?? "").not.toMatch(/refused at your access scope/);
+    expect(r.answer!.scopeNotes?.join(" ") ?? "").not.toMatch(/refused at your access scope/);
+  });
+
+  /**
+   * The denial the shipped role matrix can actually produce, with no proxy.
+   *
+   * Every assertion above runs against a fabricated denial, where the denied
+   * call and the answering route are the same route — which is precisely the
+   * case that cannot see the defect. `session.anyDenied` was session-wide, so
+   * a WAREHOUSE reader on a unit screen got "1 of the lookups behind this
+   * answer was refused (get_pbc_status). It is not a complete answer." over a
+   * complete financial-life answer that never called it. WAREHOUSE,
+   * SUPPLY_CHAIN and LEGAL are the three roles without `pbc.read`.
+   *
+   * It takes ONE `answerQuestion` call, because that is what a session is: the
+   * pbc intent matches, `get_pbc_status` is denied, the intent returns
+   * undefined, and the serial-scoped fallback answers from tools that were all
+   * permitted. A test that made two calls would prove nothing — each call
+   * builds its own session, so the denial could never reach the second answer.
+   */
+  it("attributes a denial to the answering route, not to the session", () => {
+    for (const role of ["WAREHOUSE", "SUPPLY_CHAIN", "LEGAL"] as const) {
+      const asRole: AiToolContext = {
+        queries: createQueryService(ws),
+        projections: createProjectionService(ws),
+        ctx: ctxFor(role),
+      };
+      const r = answerQuestion(asRole, "How ready is the PBC package?", {
+        serial: "KE-E2-1048",
+      });
+      // The premise, both halves: a denial really happened, and the fallback
+      // really produced an answer over it.
+      expect(
+        r.toolCalls.some((c) => c.tool === "get_pbc_status" && c.outcome === "NOT_AUTHORIZED"),
+        `${role} was not denied get_pbc_status`,
+      ).toBe(true);
+      expect(r.answer, `${role} got no fallback answer`).toBeDefined();
+      expect(r.route).toBe("unit-detail");
+
+      // The answering route called nothing that was refused, so nothing about
+      // a refusal may be attached to it.
+      const notes = r.answer!.scopeNotes?.join(" ") ?? "";
+      expect(notes, `${role} was told a complete answer was incomplete`).not.toMatch(
+        /refused at your access scope/,
+      );
+      expect(notes).not.toMatch(/get_pbc_status/);
+    }
   });
 });
 
@@ -1053,6 +1221,11 @@ describe("a withheld timeline component is marked, never dropped", () => {
       .listInventoryUnits(ctxFor("CONTROLLER"))
       .map((u) => u.serial);
     let sawWithheld = 0;
+    // The two labels the fix is ABOUT. A bare `sawWithheld > 0` floor is
+    // satisfied by any withheld row anywhere — it guards the shape of this
+    // test, not its subject, and one fixture edit away it would pass
+    // vacuously while reporting that it had verified the fix.
+    const withheldLabels = new Set<string>();
     for (const serial of serials) {
       const asController = runTool(t, "get_evidence_timeline", { serial }).data as {
         events: { label: string }[];
@@ -1073,10 +1246,14 @@ describe("a withheld timeline component is marked, never dropped", () => {
       expect(asAuditor.withheldCount, serial).toBe(withheld);
       expect(asAuditor.scopeReduced, serial).toBe(withheld > 0);
       sawWithheld += withheld;
+      for (const e of asAuditor.events) if (e.state === "WITHHELD") withheldLabels.add(e.label);
     }
     // Without this the equality above passes on a dataset that withholds
     // nothing, proving only that two identical lists are identical.
     expect(sawWithheld).toBeGreaterThan(0);
+    // And named, so the floor is about the rows the fix restored.
+    expect(withheldLabels).toContain("Installation");
+    expect(withheldLabels).toContain("First online");
   });
 });
 
@@ -1186,19 +1363,79 @@ describe("the memo answer reads the fields its sentences depend on", () => {
     expect(moved()).toBe(true);
   });
 
-  it("reports no comparison before anything is issued", () => {
-    // `null` is not `false`: with nothing sealed there is nothing to compare,
-    // and "has not moved" would be a comparison that never happened reported
-    // as a negative result.
+  /**
+   * The property where it can actually fail: "moved" implies the field says so.
+   *
+   * The first version asserted that a status printed before anything is issued
+   * says nothing about movement — but the `positionMoved` branch is nested
+   * inside `memo.issued !== null`, so with nothing sealed the branch is
+   * unreachable and NO implementation of it could have put "moved" in that
+   * string. It held for every possible implementation and constrained nothing;
+   * the null/false distinction is enforced by the nesting, not by the guard.
+   *
+   * Stated as the implication over all four states instead, so the mutation it
+   * names — treating `null` as `false`, or as `true` — is one it can see.
+   */
+  it("says 'moved' only where the field says the position moved", () => {
     const w = memoWorld();
-    w.commands.saveMemoDraft(w.ctl, { title: "Working draft", body: "Draft." });
-    expect(
+    const memoFor = () =>
       createProjectionService(w.fresh).getMemo({
         user: userByRole("CONTROLLER"),
         correlationId: "T-MEMO-W",
         sourceInterface: "ASK_GAURD",
-      }).positionMoved,
-    ).toBeNull();
-    expect(w.status("CONTROLLER")).not.toMatch(/moved/);
+      });
+    const check = (label: string) => {
+      const saysMoved = /moved/.test(w.status("CONTROLLER"));
+      expect(saysMoved, `${label}: positionMoved=${String(memoFor().positionMoved)}`).toBe(
+        memoFor().positionMoved === true,
+      );
+    };
+
+    // 1. Untouched: nothing drafted, nothing issued.
+    expect(memoFor().positionMoved).toBeNull();
+    check("untouched");
+
+    // 2. A draft exists, nothing issued. `null` is not `false`: with nothing
+    //    sealed there is nothing to compare.
+    w.commands.saveMemoDraft(w.ctl, { title: "Working draft", body: "Draft." });
+    expect(memoFor().positionMoved).toBeNull();
+    check("drafted, unissued");
+
+    // 3. Issued, and the close has not moved since.
+    w.commands.issueMemoVersion(w.ctl, { note: "First issue." });
+    expect(memoFor().positionMoved).toBe(false);
+    check("issued, unmoved");
+
+    // 4. Issued, then the close moves under it. Through the product's own
+    //    verbs: `concludeException` will not resolve an item whose required
+    //    records are outstanding, so the records are obtained first.
+    const queries = createQueryService(w.fresh);
+    const id = w.fresh.close.blockers[0]!.exceptionId;
+    for (const requirement of queries.getExceptionWorkflow(w.ctl, id).unmetRequirements) {
+      const submitted = w.commands.submitEvidence(w.ctl, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: id,
+        satisfiesRequirement: { exceptionId: id, requirement },
+      });
+      w.commands.reviewEvidence(
+        {
+          user: userByRole("ACCOUNTING_MANAGER"),
+          correlationId: "T-MEMO-W",
+          sourceInterface: "ASK_GAURD",
+        },
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+    w.commands.concludeException(w.ctl, {
+      exceptionId: id,
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Support obtained.",
+    });
+    expect(memoFor().positionMoved).toBe(true);
+    check("issued, moved");
   });
 });

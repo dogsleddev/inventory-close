@@ -219,7 +219,15 @@ interface EffectiveExceptionResult {
 }
 /** What `get_exception_workflow` returns — one exception's live working state. */
 interface ExceptionWorkflowResult {
-  /** Requirements still outstanding, counting an accepted submission as met. */
+  /**
+   * Requirements still outstanding, counting a SUBMITTED one as met.
+   *
+   * Not "accepted": `unmetRequirements` clears a requirement on any submission
+   * whose reviewState is not RETURNED, and PENDING is the only state the
+   * shipped UI can produce — `reviewEvidence` is exposed by no server action.
+   * A sentence built on this field may say a record was submitted; it may not
+   * say a reviewer accepted it.
+   */
   unmetRequirements: readonly string[];
   canResolve: boolean;
   conclusion: {
@@ -241,7 +249,19 @@ interface ExceptionResult {
       whyFlagged: string;
       exposureCents: number;
       assertions: readonly string[];
-      subjects: { serials?: readonly string[]; custodian?: string };
+      /**
+       * `skus` and `locations` are declared because a finding may name a
+       * population rather than a unit. CNT-VAR-001 does exactly that — no
+       * serial, a sku and a location — and while this interface listed only
+       * `serials`, an answer joining variance rows to exceptions could not
+       * see the one rule whose subject is count variances.
+       */
+      subjects: {
+        serials?: readonly string[];
+        skus?: readonly string[];
+        locations?: readonly string[];
+        custodian?: string;
+      };
       evidenceRequirements: readonly {
         description: string;
         required: boolean;
@@ -377,16 +397,32 @@ const INTENTS: readonly Intent[] = [
          * draft was withheld from them. `withheldDraftCount` is the same guard
          * `CloseMemoScreen` already applies before it will say the memo has
          * not been drafted.
+         *
+         * That correction then over-reached in the opposite direction: it
+         * stated the count and closed with "whether one exists is not
+         * something this answer can tell you". `withheldDraftCount` is
+         * `memoVersions.length - visible.length`, so the branch cannot render
+         * unless a draft provably exists — the first clause falsifies the
+         * second. What scope withholds here is the draft's CONTENT, which is
+         * what the sentence now says, and what the service's own withheldNote
+         * has always said.
+         *
+         * **"the close has moved since it was sealed."** True of the seal,
+         * which hashes fifteen fields, while the drawer prints eight of them —
+         * so the sentence can sit above a set of figures identical to the
+         * sealed ones and look like a contradiction. The Close Memo screen
+         * renders every compared field and has no such gap. The sentence now
+         * says where the whole comparison can be read.
          */
         status:
           memo.issued !== null
             ? memo.positionMoved === true
-              ? `${memo.issued.label} issued; the close has moved since it was sealed, and the position below is the close as it stands now`
+              ? `${memo.issued.label} issued; the close has moved since it was sealed, and the position below is the close as it stands now — the Close Memo screen shows every field the seal compares, which is more than the figures here`
               : `${memo.issued.label} issued; the close position is the one below`
             : memo.workingDraft !== null
               ? "A working draft exists; nothing has been issued"
               : memo.withheldDraftCount > 0
-                ? `Nothing issued. ${count(memo.withheldDraftCount)} unissued ${plural(memo.withheldDraftCount, "draft is", "drafts are")} withheld from your role, so whether one exists is not something this answer can tell you`
+                ? `Nothing issued. ${count(memo.withheldDraftCount)} unissued ${plural(memo.withheldDraftCount, "draft is", "drafts are")} withheld from your role — a draft is internal management working paper, so its text is not shown here`
                 : "Nothing drafted and nothing issued",
         knownFacts: [
           { label: "Book units", count: p.bookUnits, source: "get_memo" },
@@ -404,12 +440,15 @@ const INTENTS: readonly Intent[] = [
          * Scope, said as scope, and carried in the channel that says so.
          *
          * This sentence was the reason `scopeNotes` was built, and it is the
-         * one call site the move missed — so the auditor's drawer went on
-         * announcing "1 required item of evidence reported missing" about a
-         * draft the close holds and they may not read, while four other sites
-         * had been moved. The commit that edited the status line two lines
-         * above even quoted this reader's experience in its own message and
-         * left the note where it was.
+         * one call site the move missed — so the drawer went on announcing
+         * "1 required item of evidence reported missing" about a draft the
+         * close holds and the reader may not read, while four other sites had
+         * been moved. The commit that edited the status line two lines above
+         * even quoted this reader's experience in its own message and left the
+         * note where it was.
+         *
+         * Five roles are scoped here, not one: the withholding is derived from
+         * `memo.draft`, and every role that lacks it lands in this branch.
          */
         scopeNotes:
           memo.withheldDraftCount > 0 && memo.withheldNote !== null
@@ -1130,12 +1169,10 @@ const INTENTS: readonly Intent[] = [
         "consignment",
         "consigned",
         "consignment-in",
-        "vendor owned",
         "vendor-owned",
         "owned by somebody else",
         "owned by someone else",
         "not ours",
-        "off book",
         "off-book",
       ],
     },
@@ -1260,7 +1297,6 @@ const INTENTS: readonly Intent[] = [
         "holding our inventory",
         "physically held",
         "physically holds",
-        "third party",
         "third-party",
         "3pl",
       ],
@@ -1320,7 +1356,6 @@ const INTENTS: readonly Intent[] = [
         "aged",
         "months of supply",
         "last movement",
-        "slow moving",
         "slow-moving",
       ],
     },
@@ -1384,7 +1419,6 @@ const INTENTS: readonly Intent[] = [
         "obsolescence",
         "reserve",
         "valuation",
-        "write down",
         "write-down",
       ],
     },
@@ -1515,7 +1549,6 @@ const INTENTS: readonly Intent[] = [
     match: {
       any: [
         "procurement",
-        "three way match",
         "three-way match",
         "3wm",
         "purchase order match",
@@ -1631,7 +1664,22 @@ const INTENTS: readonly Intent[] = [
                 valueCents: recon.differenceCents,
                 source: "get_reconciliation_status",
               },
-        managementConclusion: `Every dollar of the difference is identified and attributed. Applying all ${recon.items.length} would bring the gross GL to the subledger, but none has been posted.`,
+        /**
+         * Branched on the SAME predicate as the exposure label above it.
+         *
+         * It was unconditional, so the arm that says "Unreconciled difference"
+         * would have printed directly under "Every dollar of the difference is
+         * identified and attributed" — the label/sentence contradiction the
+         * exposure fix was written to remove, re-created in the arm the fix
+         * added. Unreachable on this dataset, because `ws.close.reconciliation`
+         * is baseline-derived and `unexplainedCents` is structurally zero, so
+         * no test can reach it and a change that made the reconciliation live
+         * would have shipped the original defect back in silence.
+         */
+        managementConclusion:
+          recon.unexplainedCents > 0
+            ? `Part of the difference is attributed to no reconciling item — the unreconciled amount is the exposure figure above. Applying all ${recon.items.length} identified ${plural(recon.items.length, "item")} would not close the gap.`
+            : `Every dollar of the difference is identified and attributed. Applying all ${recon.items.length} would bring the gross GL to the subledger, but none has been posted.`,
         nextAction: "Conclude the open reconciling items, then prepare and approve the entries.",
         citations: recon.items.map((i) =>
           cite(i.relatedExceptionId, { href: `/exceptions/${i.relatedExceptionId}` }),
@@ -2270,16 +2318,33 @@ const INTENTS: readonly Intent[] = [
               source: "get_effective_close",
             }),
           ),
-          // The rules' own position, named as such. Shown only once it differs
-          // from the live one, so a reader who has changed nothing is not
-          // offered two numbers to reconcile.
-          ...(live.diverged
+          /**
+           * The rules' own position, named as such. Shown only once it differs
+           * from the live one, so a reader who has changed nothing is not
+           * offered two numbers to reconcile.
+           *
+           * Which means gating on the difference. This gated on
+           * `live.diverged`, and `diverged` is `conclusions.length > 0 ||
+           * submittedEvidence.length > 0` — somebody acted, not the figures
+           * moved. Both reachable first acts leave these two figures untouched:
+           * REMAINS_OPEN is the conclusion the codebase documents as never
+           * moving status, and Submit Support moves neither. So the comment
+           * above described a property its own gate did not enforce, and the
+           * visible result was the outcome it says it prevents — 7 and 7 under
+           * two contrasting labels. Each figure is now emitted only when its
+           * own twin differs.
+           */
+          ...(live.blockerCount !== live.baselineBlockerCount
             ? [
                 {
                   label: "Blockers the rules derived, before this session",
                   count: live.baselineBlockerCount,
                   source: "get_effective_close" as const,
                 },
+              ]
+            : []),
+          ...(live.readinessBps !== live.baselineReadinessBps
+            ? [
                 {
                   label: "Close readiness as the rules derived it",
                   valueBps: live.baselineReadinessBps,
@@ -2369,7 +2434,13 @@ const INTENTS: readonly Intent[] = [
           managementTests: number;
           auditorTests: number;
         };
-        results: readonly { serial?: string | undefined; variance: number }[];
+        results: readonly {
+          countType: string;
+          sku: string;
+          location: string;
+          serial?: string | undefined;
+          variance: number;
+        }[];
       }>("get_cycle_count_history");
       if (detail === undefined) return undefined;
       const c = detail.summary;
@@ -2386,19 +2457,58 @@ const INTENTS: readonly Intent[] = [
        * same set.
        *
        * Cross-referenced through the exceptions rather than re-derived: a
-       * variance is open exactly when an exception naming its serial is open,
-       * and that is the effective open set, not the frozen one.
+       * variance is open exactly when an exception naming it is open, and that
+       * is the effective open set, not the frozen one.
+       *
+       * Two things that first version got wrong, both of which made the new
+       * sentence assert a zero it had not measured.
+       *
+       * **The population.** `varianceRows` beside it counts the YEAR-END plan
+       * (`close.ts:107`); `detail.results` is every plan the dataset holds. Two
+       * figures under one heading, counted over different sets.
+       *
+       * **The join.** It matched only on `serial`, and `CNT-VAR-001` — the one
+       * rule whose entire subject IS count variances — fires on rows where
+       * `serial === undefined` and names `{skus, locations}` instead. So the
+       * count-variance exception could never be seen, and the branch below
+       * could tell a reader "No count variance is still open" with that very
+       * exception open. A variance row is now attributed by serial OR by its
+       * sku-and-location pair, and a row that matches neither is reported as
+       * unattributed rather than counted as closed.
        */
       const effective = s.run<readonly EffectiveExceptionResult[]>("get_effective_exceptions");
+      const openExceptions = (effective ?? []).filter((e) => e.open);
       const openSerials = new Set(
-        (effective ?? [])
-          .filter((e) => e.open)
-          .flatMap((e) => [...(e.exception.finding.subjects.serials ?? [])]),
+        openExceptions.flatMap((e) => [...(e.exception.finding.subjects.serials ?? [])]),
       );
-      const varianceSerials = detail.results
-        .filter((r) => r.variance !== 0 && r.serial !== undefined)
-        .map((r) => r.serial as string);
-      const openVariances = varianceSerials.filter((serial) => openSerials.has(serial));
+      const openSkuLocations = new Set(
+        openExceptions.flatMap((e) =>
+          (e.exception.finding.subjects.skus ?? []).flatMap((sku) =>
+            (e.exception.finding.subjects.locations ?? []).map(
+              (location) => `${sku} ${location}`,
+            ),
+          ),
+        ),
+      );
+      const yearEndVariances = detail.results.filter(
+        (r) => r.countType === "YEAR_END" && r.variance !== 0,
+      );
+      const attribution = (r: (typeof yearEndVariances)[number]): "OPEN" | "CLOSED" | "UNKNOWN" => {
+        if (r.serial !== undefined) return openSerials.has(r.serial) ? "OPEN" : "CLOSED";
+        if (openSkuLocations.has(`${r.sku} ${r.location}`)) return "OPEN";
+        // A non-serialized row is attributable only through sku+location. If
+        // no exception of any state names that pair, nothing here established
+        // that it is closed.
+        return effective !== undefined &&
+          (effective ?? []).some((e) =>
+            (e.exception.finding.subjects.skus ?? []).includes(r.sku) &&
+            (e.exception.finding.subjects.locations ?? []).includes(r.location),
+          )
+          ? "CLOSED"
+          : "UNKNOWN";
+      };
+      const openVariances = yearEndVariances.filter((r) => attribution(r) === "OPEN");
+      const unattributedVariances = yearEndVariances.filter((r) => attribution(r) === "UNKNOWN");
       return {
         status: `${count(c.firstPassMatchedUnits)} of ${count(c.populationUnits)} units matched on the first pass`,
         knownFacts: [
@@ -2426,6 +2536,17 @@ const INTENTS: readonly Intent[] = [
                   source: "get_cycle_count_history" as const,
                 },
               ]),
+          // Stated, never folded into either side. A row nothing names is not
+          // evidence that it is closed.
+          ...(unattributedVariances.length > 0
+            ? [
+                {
+                  label: "Variance rows no exception names",
+                  count: unattributedVariances.length,
+                  source: "get_cycle_count_history" as const,
+                },
+              ]
+            : []),
           { label: "Movements during the count", count: c.movements, source: "get_cycle_count_history" },
           { label: "Management test counts", count: c.managementTests, source: "get_cycle_count_history" },
           { label: "Auditor test counts", count: c.auditorTests, source: "get_cycle_count_history" },
@@ -2438,7 +2559,9 @@ const INTENTS: readonly Intent[] = [
         nextAction:
           effective === undefined || openVariances.length > 0
             ? "Resolve the open count variances; each is an exception of its own."
-            : "No count variance is still open; each was concluded as an exception of its own.",
+            : unattributedVariances.length > 0
+              ? "No count variance with an exception against it is still open. The rows above that no exception names are not evidence of a conclusion — establish what happened to them."
+              : "No count variance is still open; each was concluded as an exception of its own.",
         citations: [cite("Physical Count", { href: "/physical-count" })],
       };
     },
@@ -2600,8 +2723,9 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
    * recorded resolution — the engine was reporting "Resolved" and
    * "Obtain: …" in the same answer for eight of the fifteen exceptions.
    *
-   * Taken from the workflow projection, which counts an accepted submission
-   * as satisfying, rather than from the finding's frozen flags.
+   * Taken from the workflow projection, which counts a submission that has not
+   * been RETURNED as satisfying, rather than from the finding's frozen flags.
+   * Submitted, not accepted — nothing the shipped UI can do reaches ACCEPTED.
    */
   const outstanding = new Set(
     workflow?.unmetRequirements ?? f.evidenceRequirements.filter((r) => r.required && !r.satisfied).map((r) => r.description),
@@ -2617,15 +2741,36 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
     knownFacts: [
       { label: "Exception", text: `${view.exception.id} — ${f.title}`, source: "get_exception" },
       { label: "Exposure", valueCents: f.exposureCents, source: "get_exception" },
-      // The conclusion itself, from the projection that holds it. Rendered as
-      // a fact rather than folded into prose so the reader can see WHO
-      // concluded and WHEN, which is the part an auditor relies on.
+      /**
+       * The conclusion itself, from the projection that holds it. Rendered as
+       * a fact rather than folded into prose so the reader can see WHO
+       * concluded and WHEN, which is the part an auditor relies on.
+       *
+       * Three fields, not one composed string. The composed version put the
+       * canonical token and a raw `2027-01-07T06:03:00Z` in front of the
+       * reader: the token because the drawer's flat label map spells
+       * `RESOLVED_NO_ADJUSTMENT` from the exception-status vocabulary, which
+       * is a different sentence from the one the ConclusionPanel prints for
+       * the same record; the instant because @icg/ai has no formatter and
+       * must not grow one. Both now leave as structured values and are worded
+       * by the app, the way cents and basis points already are.
+       */
       ...(conclusion === null
         ? []
         : [
             {
               label: "Management conclusion",
-              text: `${conclusion.conclusion} · recorded ${conclusion.at} · ${conclusion.rationale}`,
+              valueConclusion: conclusion.conclusion,
+              source: "get_exception_workflow" as const,
+            },
+            {
+              label: "Conclusion recorded",
+              valueInstant: conclusion.at,
+              source: "get_exception_workflow" as const,
+            },
+            {
+              label: "Conclusion rationale",
+              text: conclusion.rationale,
               source: "get_exception_workflow" as const,
             },
           ]),
@@ -2672,6 +2817,11 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
      * the first a record claim the handler had no way to check, the second the
      * product judging rather than reporting, since `concludeException` itself
      * permits REMAINS_OPEN on absent evidence.
+     *
+     * The token and the instant left this prose for the fact rows above: the
+     * engine cannot word the first correctly or format the second at all, and
+     * "which conclusion, by whom, when" is what a fact row is for. The prose
+     * says what happened.
      */
     managementConclusion: !open
       ? unmetWhileResolved.length > 0
@@ -2681,15 +2831,22 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
         : "Resolved. The recorded conclusion stands on the evidence held."
       : conclusion !== null
         ? conclusion.conclusion === "REMAINS_OPEN"
-          ? `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}: a person looked and decided the item stays open. It does not change the rule's status.`
+          ? "Open. A management conclusion is recorded against this item: a person looked and decided it stays open. It does not change the rule's status. The conclusion, who recorded it and when are above."
           : // A resolving conclusion that is NOT superseding the rule means the
             // record behind it was returned, and `effectiveStatus` withdrew its
             // power to supersede. Saying "a person decided it stays open" would
             // re-characterise what management actually recorded, which is the
             // one thing this product may never do.
-            `Open. A management conclusion of ${conclusion.conclusion} was recorded on ${conclusion.at}, and it no longer supersedes the rule: a required record behind it is outstanding again. The conclusion stays in the trail; the item is open until the record is back.`
+            "Open. A resolving management conclusion is recorded against this item, and it no longer supersedes the rule: a required record behind it is outstanding again. The conclusion stays in the trail; the item is open until the record is back."
         : unmet.length > 0
-          ? "Open. No conclusion has been recorded. Management may conclude on the evidence held, or obtain what is outstanding first."
+          ? // What the command will actually accept. `concludeException` calls
+            // the requirements gate "the one rule this command will not bend"
+            // and throws for both resolving conclusions while anything is
+            // unmet — which, on this dataset, is every open exception. Offering
+            // two routes where the product permits one sends the reader to a
+            // refusal, which is the same defect as prescribing a control the
+            // reader's role may not operate.
+            "Open. No conclusion has been recorded. Management may record that the item remains open; resolving it requires the outstanding records first."
           : "Open. No conclusion has been recorded; every required record is now in evidence.",
     /**
      * An outstanding record is reported whether or not a conclusion exists.
@@ -2893,6 +3050,13 @@ export function answerQuestion(
    * while the object the reader was looking at could have answered it.
    */
   if (answer === undefined && scopedSerial !== undefined) {
+    // Marked like the other three routes. This one was missed, and it is the
+    // route the denial defect's own example runs through: a WAREHOUSE reader
+    // asks a PBC question from a unit screen, `get_pbc_status` is refused, and
+    // the financial-life fallback answers from tools that were all permitted.
+    // Without this line the disclosure still reached back across the abandoned
+    // route and called that complete answer incomplete.
+    answeringCallsFrom = session.calls.length;
     const lifeIntent = INTENTS.find((i) => i.key === "financial-life")!;
     answer = lifeIntent.answer(session, { serial: scopedSerial });
     if (answer !== undefined) {
@@ -2946,27 +3110,26 @@ export function answerQuestion(
   }
 
   /**
-   * The reader named a record other than the one the screen is scoped to, and
-   * the answer is about the one they named. Said out loud, because the swap is
-   * otherwise invisible: the drawer echoes the question above the answer and
-   * prints no subject label of its own, so two records one keystroke apart
-   * look identical.
-   *
-   * Stated as a fact about which SCOPE was set aside — not as a claim that
-   * either record exists. Existence is the tools' answer, and an answer that
-   * reached this line already has one.
-   */
-  /**
-   * A denial is never absorbed into an answer.
+   * A denial is DISCLOSED. It is not prevented from reaching the answer.
    *
    * `session.run` returns `undefined` for NOT_FOUND and NOT_AUTHORIZED alike,
    * and three handlers treat that as permission to skip an existence check:
    * `if (hits !== undefined && !hits.some(...)) return undefined` passes when
    * the lookup was REFUSED, and a `.filter(v => v !== undefined)` quietly drops
-   * a denied exception from a list. So a WAREHOUSE or LEGAL reader, denied
-   * `get_exception`, was handed a confident answer with no mention that part of
-   * it had been refused — the "restricted, not empty" rule the tool layer
-   * states in its own header, lost one layer up.
+   * a denied item from a list. So a reader was handed a confident answer with
+   * no mention that part of it had been refused — the "restricted, not empty"
+   * rule the tool layer states in its own header, lost one layer up.
+   *
+   * What this block adds is the sentence, not the guard: the answer's CONTENT
+   * still absorbs the denial, and the three skipped existence checks are still
+   * skipped. Making them distinguish NOT_FOUND from NOT_AUTHORIZED is the
+   * remaining half, and it needs `session.run` to return the outcome.
+   *
+   * The reachable denial on the shipped role matrix is `get_pbc_status`, which
+   * WAREHOUSE, SUPPLY_CHAIN and LEGAL do not hold `pbc.read` for. Denied
+   * `get_exception` requires SYSTEM_ADMIN, who has no `close.read` and so
+   * never reaches an answer at all — do not reason about this block from that
+   * case.
    *
    * Disclosed here rather than in each handler, so a handler added later cannot
    * forget: this runs over whatever the engine actually produced.
@@ -2994,10 +3157,31 @@ export function answerQuestion(
     };
   }
 
+  /**
+   * The reader named a record other than the one the screen is scoped to, and
+   * the answer is about the one they named. Said out loud, because the swap is
+   * otherwise invisible: the drawer echoes the question above the answer and
+   * prints no subject label of its own, so two records one keystroke apart
+   * look identical.
+   *
+   * Stated as a fact about which SCOPE was set aside — not as a claim that
+   * either record exists. Existence is the tools' answer, and an answer that
+   * reached this line already has one.
+   *
+   * In `scopeNotes`, not appended to `managementConclusion`. That field renders
+   * under MANAGEMENT CONCLUSION, which exists to carry the human judgement and
+   * nothing else — a routing fact the software authored has no business inside
+   * it, and it was landing in the same sentence as "No conclusion has been
+   * recorded". The restriction channel is where engine statements about what
+   * this answer covers belong; the denial disclosure above already uses it.
+   */
   if (answer !== undefined && displacedScope.length > 0) {
     answer = {
       ...answer,
-      managementConclusion: `${answer.managementConclusion} This answer is about the record your question names, not ${displacedScope.join(" or ")}, which is what this screen is scoped to.`,
+      scopeNotes: [
+        ...(answer.scopeNotes ?? []),
+        `This answer is about the record your question names, not ${displacedScope.join(" or ")}, which is what this screen is scoped to.`,
+      ],
     };
   }
 

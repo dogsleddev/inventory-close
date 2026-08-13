@@ -162,7 +162,7 @@ describe("Overview — Preventing Sign-Off", () => {
     expect(within(rows[0]!).getByText("$92,400")).toBeTruthy();
     expect(screen.getByText("$180,550 shown")).toBeTruthy();
     expect(
-      screen.getByText("EXC-003 and EXC-004 ($9,200 each) complete the seven."),
+      screen.getByText("EXC-003 and EXC-004 ($9,200 each) complete the seven still open."),
     ).toBeTruthy();
   });
 
@@ -343,6 +343,100 @@ describe("Overview — the blocker panel counts its own rows", () => {
     expect(after.preventing?.allTotal).toBe("$0");
     expect(after.preventing?.remainingNote).not.toMatch(/seven blockers shown/);
     expect(after.preventing?.shownTotal).toBe("$0");
+  });
+
+  /**
+   * Every count-varying word in the panel, at the count that exposes it.
+   *
+   * Making these figures live is what made "1 blockers", "All one blocker
+   * shown." and "EXC-004 (… each) complete the six." reachable — three
+   * hard-coded agreements that were correct by construction while the count
+   * was a constant seven, and that no baseline render can show. `git blame`
+   * named the commit that made the figures live as the author of two of them.
+   *
+   * Six of the seven resolved, so the panel renders exactly one row.
+   */
+  const resolveAllBut = (keep: number) => {
+    const commands = getCommands();
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-WORK");
+    const blockers = [...getWorkspace().close.blockers];
+    for (const blocker of blockers.slice(0, blockers.length - keep)) {
+      const id = blocker.exceptionId;
+      for (const requirement of queries.getExceptionWorkflow(ctx, id).unmetRequirements) {
+        const submitted = commands.submitEvidence(ctx, {
+          title: `Support for ${requirement}`,
+          kind: "DOCUMENT",
+          content: { note: "Obtained." },
+          relatedObjectRef: id,
+          satisfiesRequirement: { exceptionId: id, requirement },
+        });
+        commands.reviewEvidence(
+          makeContext(manager(), "T-OV-REVIEW"),
+          submitted.id,
+          "ACCEPTED",
+          "Reviewed.",
+        );
+      }
+      commands.concludeException(ctx, {
+        exceptionId: id,
+        conclusion: "RESOLVED_NO_ADJUSTMENT",
+        rationale: "Support obtained and reviewed; no adjustment required.",
+      });
+    }
+  };
+
+  it("agrees with itself at a count of one", () => {
+    resolveAllBut(1);
+    const data = buildOverviewData(controller(), "T-OV-ONE");
+    expect(data.preventing?.blockerCount).toBe(1);
+    expect(data.preventing?.rows.length).toBe(1);
+    // The caption, which had "All one blocker shown."
+    expect(data.preventing?.remainingNote).toBe("The one open blocker is shown.");
+
+    // And the header beside it, which is the component's own hard-coded
+    // plural — the half the data layer cannot fix.
+    render(
+      <OverviewScreen
+        shell={buildShellData(controller(), "T-OV-ONE")}
+        data={data}
+        setRoleAction={vi.fn(async () => {})}
+      />,
+    );
+    expect(screen.getByText(/across 1 blocker$/)).toBeTruthy();
+    expect(screen.queryByText(/across 1 blockers/)).toBeNull();
+  });
+
+  it("stops saying the period is not ready once nothing blocks it", () => {
+    // The gate headline was a constant, authored when the panel below it could
+    // not move. Every figure under it is live now, so a reader who concludes
+    // the last blocker was reading "NOT READY FOR MANAGEMENT SIGN-OFF" over a
+    // gate offering them the sign-off control.
+    const before = buildOverviewData(controller(), "T-OV-GATE-BEFORE");
+    expect(before.gate?.signOff.available).toBe(false);
+    render(
+      <OverviewScreen
+        shell={buildShellData(controller(), "T-OV-GATE-BEFORE")}
+        data={before}
+        setRoleAction={vi.fn(async () => {})}
+      />,
+    );
+    expect(screen.getByText("NOT READY FOR MANAGEMENT SIGN-OFF")).toBeTruthy();
+    cleanup();
+
+    resolveEveryBlocker();
+
+    const after = buildOverviewData(controller(), "T-OV-GATE-AFTER");
+    expect(after.gate?.signOff.available).toBe(true);
+    render(
+      <OverviewScreen
+        shell={buildShellData(controller(), "T-OV-GATE-AFTER")}
+        data={after}
+        setRoleAction={vi.fn(async () => {})}
+      />,
+    );
+    expect(screen.getByText("READY FOR MANAGEMENT SIGN-OFF")).toBeTruthy();
+    expect(screen.queryByText("NOT READY FOR MANAGEMENT SIGN-OFF")).toBeNull();
   });
 
   it("links to the register with the register's own count", () => {

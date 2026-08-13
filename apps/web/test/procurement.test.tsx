@@ -386,13 +386,22 @@ describe("Procurement — a scoped reader is not shown their own scope as a find
     for (const totalOrders of [1, 2, 84]) {
       for (const missingRows of [0, 1, 2]) {
         for (const rowsMissingADocument of [0, 1, 2]) {
-          const note = tabWithheldNote({ missingRows, rowsMissingADocument, totalOrders });
-          if (note === null) continue;
-          const hit = singular.exec(note);
-          expect(
-            hit === null,
-            `"1 ${hit?.[1]}" at totalOrders=${totalOrders} missing=${missingRows} docs=${rowsMissingADocument}: ${note}`,
-          ).toBe(true);
+          // Both note shapes, because the match clause only renders on one tab
+          // and it is the clause that carries the order count.
+          for (const showsMatchFigures of [true, false]) {
+            const note = tabWithheldNote({
+              missingRows,
+              rowsMissingADocument,
+              totalOrders,
+              showsMatchFigures,
+            });
+            if (note === null) continue;
+            const hit = singular.exec(note);
+            expect(
+              hit === null,
+              `"1 ${hit?.[1]}" at totalOrders=${totalOrders} missing=${missingRows} docs=${rowsMissingADocument} match=${showsMatchFigures}: ${note}`,
+            ).toBe(true);
+          }
         }
       }
     }
@@ -401,10 +410,36 @@ describe("Procurement — a scoped reader is not shown their own scope as a find
   it("still says the plural where the count is plural", () => {
     // The other direction: a builder that emitted the singular everywhere
     // would satisfy the assertion above.
-    const note = tabWithheldNote({ missingRows: 3, rowsMissingADocument: 2, totalOrders: 84 });
+    const note = tabWithheldNote({
+      missingRows: 3,
+      rowsMissingADocument: 2,
+      totalOrders: 84,
+      showsMatchFigures: true,
+    });
     expect(note).toMatch(/3 orders are/);
     expect(note).toMatch(/2 rows keep/);
     expect(note).toMatch(/84 orders/);
+  });
+
+  /**
+   * A note must not describe a population its tab does not render.
+   *
+   * The closing sentence reassured the reader that the match figures count the
+   * whole population either way. It was appended to every tab's note, so on
+   * Invoiced Not Received it sat above three headline figures of that tab's own
+   * that ARE scope-shortened — a reassurance about numbers on a different tab,
+   * standing in for one about the numbers on this one. Same shape as the
+   * screen-wide note it replaced, narrowed rather than removed.
+   */
+  it("mentions the match figures only on the tab that renders them", () => {
+    const shape = { missingRows: 3, rowsMissingADocument: 2, totalOrders: 84 };
+    const onMatch = tabWithheldNote({ ...shape, showsMatchFigures: true });
+    const offMatch = tabWithheldNote({ ...shape, showsMatchFigures: false });
+    expect(onMatch).toMatch(/match figures/);
+    expect(offMatch).not.toMatch(/match figures/);
+    // The cutoff-fact clause is true on every tab and survives on both.
+    expect(onMatch).toMatch(/cutoff fact/);
+    expect(offMatch).toMatch(/cutoff fact/);
   });
 
   it("points at the table it describes, which is below it on every tab", async () => {

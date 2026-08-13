@@ -12,7 +12,7 @@ import {
   type AiCitation,
   type AiFigure,
 } from "@icg/ai";
-import { formatBpsExact, formatCents, formatCount } from "../format";
+import { formatBpsExact, formatCents, formatCount, formatInstant } from "../format";
 import {
   AGING_BASIS_LABELS,
   RULE_RESULT_LABELS,
@@ -93,7 +93,21 @@ const CANONICAL_LABELS: ReadonlyMap<string, string> = new Map<string, string>([
     ([key, presentation]): [string, string] => [key, presentation.label],
   ),
   ...Object.entries(RULE_RESULT_LABELS),
-  ...Object.entries(CONCLUSION_LABELS),
+  /**
+   * CONCLUSION_LABELS is deliberately NOT here.
+   *
+   * Two of its three keys — RESOLVED_NO_ADJUSTMENT and
+   * RESOLVED_ADJUSTMENT_PROPOSED — are also exception statuses, spread below,
+   * and a Map constructor lets the later entry win. So the export that exists
+   * to stop the drawer restating the vocabulary was inert for exactly the two
+   * tokens that have two spellings ("Resolved — No Adjustment" as a status,
+   * "Resolved — no adjustment required" as a conclusion), and only
+   * REMAINS_OPEN ever came through it. Reordering would have swapped which
+   * surface is wrong. A token that means two things in two contexts cannot be
+   * worded by a context-free map, so a conclusion travels as
+   * `AiFigure.valueConclusion` and `renderFigure` words it from the map that
+   * owns it.
+   */
   ...Object.entries(AGING_BASIS_LABELS),
   ...Object.entries(DIMENSION_LABELS),
   ...Object.entries(COGS_LABELS),
@@ -164,6 +178,17 @@ function renderFigure(f: AiFigure): AskFigure {
   if (f.valueCents !== undefined) return { label, value: formatCents(f.valueCents) };
   if (f.valueBps !== undefined) return { label, value: formatBpsExact(f.valueBps) };
   if (f.count !== undefined) return { label, value: formatCount(f.count) };
+  // Same formatter the exception screen uses, so the drawer and the panel it
+  // opens over cannot spell one recorded instant two ways.
+  if (f.valueInstant !== undefined) return { label, value: formatInstant(f.valueInstant) };
+  // Worded from the CONCLUSION vocabulary, which the flat token map cannot
+  // reach: two of its three keys are also exception statuses.
+  if (f.valueConclusion !== undefined) {
+    return {
+      label,
+      value: CONCLUSION_LABELS[f.valueConclusion] ?? humanizeCanonical(f.valueConclusion),
+    };
+  }
   return { label, value: humanizeCanonical(f.text ?? "—") };
 }
 

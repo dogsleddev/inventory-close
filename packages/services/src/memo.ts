@@ -29,11 +29,17 @@ import type { MemoVersion, Workspace } from "./workspace.js";
  *    rule, blocker, readiness input or locked figure reads it. Writing a memo
  *    must not change how ready the close is.
  *
- * Auditor scope: an auditor sees ISSUED versions only, and the count of what
- * was withheld travels with the result. An unissued draft is internal
- * management working paper — the same rule the PBC package already applies to
- * unsealed workpaper drafts — and an omission nobody is told about is the
- * defect that rule exists to prevent.
+ * Draft scope: a role without `memo.draft` sees ISSUED versions only, and the
+ * count of what was withheld travels with the result. An unissued draft is
+ * internal management working paper — the same rule the PBC package already
+ * applies to unsealed workpaper drafts — and an omission nobody is told about
+ * is the defect that rule exists to prevent.
+ *
+ * Said as the capability, not as "an auditor", because it was written as
+ * `roles.includes("AUDITOR_READ_ONLY")` and four other non-drafting roles read
+ * a document headed "INTERNAL — reserve exposure, do not circulate". Naming a
+ * role where a capability belongs is what failed; a comment that keeps naming
+ * the role is the artefact that made the role literal look correct.
  */
 
 /** Write the working draft. Preparation, not issue. */

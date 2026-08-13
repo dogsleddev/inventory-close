@@ -1,6 +1,6 @@
 import type { DemoUser } from "@icg/data";
 import type { PhysicalCustodyType } from "@icg/domain";
-import { formatCents, formatDate } from "../format";
+import { formatCents, formatDate, plural } from "../format";
 import type { StatusView } from "../workflow-view";
 import { classificationLabel, locationLabel } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
@@ -202,7 +202,6 @@ const ROW_STATUS: Readonly<Record<string, StatusView>> = {
   NONE: { label: "None named", glyph: "○", variant: "neutral" },
 };
 
-const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 const num = (n: number) => n.toLocaleString("en-US");
 
 function hrefFor(

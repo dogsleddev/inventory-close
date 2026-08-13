@@ -94,10 +94,23 @@ export const tabWithheldNote = (p: {
   missingRows: number;
   rowsMissingADocument: number;
   totalOrders: number;
+  /**
+   * Whether THIS tab renders the match figures.
+   *
+   * The closing sentence reassured the reader that the match figures count the
+   * whole population either way — true, and useful, on the tab that shows
+   * them. It was appended to every note, so on Invoiced Not Received an
+   * auditor read a reassurance about figures on another tab, directly above
+   * three headline figures of this tab's own that ARE scope-shortened and that
+   * the sentence says nothing about. This function's own docstring names that
+   * as the first thing it must not do: describe a population it is not
+   * rendered over. The cutoff-fact clause is true on every tab and stays.
+   */
+  showsMatchFigures: boolean;
 }): string | null => {
   /**
-   * Every noun here goes through `plural`, including the ones in sentences
-   * that only ever render one way today.
+   * Every count-varying noun and verb here goes through `plural`, including
+   * the ones in sentences that only ever render one way today.
    *
    * A hard-coded plural is invisible until a population reaches exactly one,
    * and the auditor is that reader: the note read "1 orders" for as long as it
@@ -106,6 +119,11 @@ export const tabWithheldNote = (p: {
    * closing sentence, forty lines from a tile that got the same count right.
    * Branching each phrase by hand is the defect; the wording was only where it
    * showed.
+   *
+   * "no row in the table below" is the one singular that stays singular in
+   * both branches, and deliberately: it distributes over each order — one
+   * order, one absent row — so "they have no row" is the plural reading of a
+   * distributive singular, not an agreement error.
    */
   const parts: string[] = [];
   if (p.missingRows > 0) {
@@ -121,7 +139,10 @@ export const tabWithheldNote = (p: {
     );
   }
   if (parts.length === 0) return null;
-  return `${parts.join(" ")} The match figures count the close's own population of ${p.totalOrders} ${plural(p.totalOrders, "order")} either way, and a period-end position is a cutoff fact derived from the documents' own dates, so it does not move with your scope.`;
+  const matchClause = p.showsMatchFigures
+    ? ` The match figures count the close's own population of ${p.totalOrders} ${plural(p.totalOrders, "order")} either way, and a`
+    : " A";
+  return `${parts.join(" ")}${matchClause} period-end position is a cutoff fact derived from the documents' own dates, so it does not move with your scope.`;
 };
 
 /** The disclosure for every tab, each built only from that tab's own table. */
@@ -136,7 +157,11 @@ const tabWithheldNotes = (p: {
   Object.fromEntries(
     (["match", "grni", "inr", "git", "ppv"] as const).map((tab) => [
       tab,
-      tabWithheldNote({ ...p[tab], totalOrders: p.totalOrders }),
+      tabWithheldNote({
+        ...p[tab],
+        totalOrders: p.totalOrders,
+        showsMatchFigures: tab === "match",
+      }),
     ]),
   );
 

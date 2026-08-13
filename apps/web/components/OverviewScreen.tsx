@@ -95,9 +95,20 @@ export function OverviewScreen({
             {/* Sign-off gate — the single canonical gate (design 07 note). */}
             <Panel decision className="icg-gate">
               <div className="icg-gate-left">
+                {/* The headline is the gate's own state, not a constant.
+                    It was authored when the panel below it was baseline —
+                    seven blockers, always — so "NOT READY" could not be
+                    wrong. Every figure under it is live now, and a reader
+                    who concludes the last blocker gets a panel saying
+                    sign-off is available under a headline saying it is not.
+                    Same field the button reads. */}
                 <div className="icg-gate-state">
                   <span aria-hidden>◆</span>
-                  <span>NOT READY FOR MANAGEMENT SIGN-OFF</span>
+                  <span>
+                    {data.gate.signOff.available
+                      ? "READY FOR MANAGEMENT SIGN-OFF"
+                      : "NOT READY FOR MANAGEMENT SIGN-OFF"}
+                  </span>
                 </div>
                 {/* The question this page exists to answer leads: what is
                     preventing sign-off, and how much is at stake. Readiness
@@ -274,8 +285,11 @@ export function OverviewScreen({
                           {data.preventing.shownTotal} shown
                         </div>
                         <div className="icg-quiet icg-num" style={{ fontSize: "10.5px" }}>
+                          {/* `blockerCount` became live when the rows did, which
+                              made "1 blockers" reachable. The count beside it in
+                              the gate already branches; this one did not. */}
                           of {data.preventing.allTotal} across {data.preventing.blockerCount}{" "}
-                          blockers
+                          {data.preventing.blockerCount === 1 ? "blocker" : "blockers"}
                         </div>
                       </div>
                     }
@@ -365,8 +379,15 @@ export function OverviewScreen({
                       {/* Counts the register, not these rows: the Exceptions
                           page lists the blockers the rules derived, and a link
                           promising a live count onto a baseline page is this
-                          panel's own defect moved one click along. */}
-                      View all {data.preventing.registerCount} blockers →
+                          panel's own defect moved one click along.
+
+                          Which is why the label has to SAY it counts the
+                          register. The caption to its left counts the live
+                          set, so after one conclusion the two sat on one line
+                          reading "complete the six" and "View all 7 blockers"
+                          with nothing between them to say they count
+                          different things. */}
+                      View all {data.preventing.registerCount} in the exception register →
                     </Link>
                   </div>
                 </Panel>

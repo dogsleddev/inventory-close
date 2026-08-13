@@ -214,6 +214,13 @@ describe("no answer shows a reader a canonical token", () => {
       ...answer!.knownFacts.flatMap((f) => [f.label, f.value]),
       ...answer!.conflictingEvidence,
       ...answer!.missingEvidence,
+      // The restriction channel is rendered, so it is scanned. It is a newer
+      // channel than this list, and `ask-view.ts` states that this test "asserts
+      // no rendered answer field still carries a screaming-snake token, which is
+      // what keeps this map complete" — a claim that was more precise than the
+      // list enforcing it the moment a rendered field was added and not added
+      // here.
+      ...answer!.scopeNotes,
       ...answer!.citations.map((c) => c.label),
       ...answer!.assertions,
       ...answer!.draft.flatMap((d) => [d.heading, d.body]),

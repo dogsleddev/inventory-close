@@ -102,6 +102,21 @@ async function openAsk(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Ask Gaurd" }));
 }
 
+/**
+ * Render the Overview as `actingRole`, open the drawer and ask, so a test can
+ * assert on what a reader actually SEES rather than on what the engine
+ * returned. `actingRole` must already be set — `renderOverview` reads it.
+ */
+async function openDrawerAndAsk(question: string) {
+  const user = userEvent.setup();
+  renderOverview(actingRole);
+  await openAsk(user);
+  const d = await drawer();
+  await user.type(d.getByLabelText("Ask Gaurd about this close"), question);
+  await user.click(d.getByRole("button", { name: "Ask" }));
+  await d.findByText("KNOWN FACTS");
+}
+
 describe("the default state offers prompts and states what Gaurd cannot do", () => {
   it("shows the can/cannot lists before anything is asked", async () => {
     const user = userEvent.setup();
@@ -261,12 +276,80 @@ describe("the drawer words tokens without rewriting identifiers", () => {
     expect(valueOf("Is this close reproducible?", "Policy")).toMatch(/^CLOSE-POLICY-/);
   });
 
+  /**
+   * Both halves directional: a worded form present AND its raw form absent.
+   *
+   * The source-health half used to be `toMatch(/Company warehouse|HEALTHY|
+   * STALE|PARTIAL/)` over the VALUES — an alternation whose last three arms
+   * are the raw tokens themselves, so it passed identically whether
+   * `humanizeCanonical` worded anything or was replaced by the identity
+   * function. It was written to be the false-positive guard for narrowing the
+   * humanizer and could not fail on a narrowing. The values on that answer are
+   * `HEALTHY` / `STALE` / `PARTIAL` and stay that way deliberately; the LABELS
+   * are what the map words, so the labels are what is asserted.
+   */
   it("still words a standalone canonical token", () => {
     const health = factsFor("Which sources are not healthy?");
-    const values = health.map((f) => f.value).join(" | ");
-    expect(values).toMatch(/Company warehouse|HEALTHY|STALE|PARTIAL/);
+    const healthLabels = health.map((f) => f.label).join(" | ");
+    expect(healthLabels).toMatch(/Device Cloud/);
+    expect(healthLabels).not.toMatch(/DEVICE_CLOUD/);
     const custody = factsFor("Who is holding our inventory?");
     expect(custody.map((f) => f.label).join(" | ")).toMatch(/Company warehouse/);
     expect(custody.map((f) => f.label).join(" | ")).not.toMatch(/COMPANY_WAREHOUSE/);
+  });
+
+  /**
+   * The restriction block is a RENDERING, and four of its five distinguishing
+   * signals live here rather than in the engine.
+   *
+   * The defect this block exists to close was never the words: the heading,
+   * the ember colour, the "○" glyph, the screen-reader suffix and the live
+   * region's count each said "missing" independently of the sentence. Every
+   * guard written with the fix asserts which ARRAY the sentence lands in, all
+   * of it in packages/ai. Re-pointing this block at `icg-ask-sec--missing`,
+   * restoring the glyph, or folding `scopeNotes` into the announced count
+   * would reproduce the original defect with the whole suite green.
+   */
+  describe("a withheld record is rendered as a restriction, not as a gap", () => {
+    const withheldQuestion = "Which orders were invoiced but not received?";
+
+    /** The drawer's own live region, not the screen's. */
+    const askLiveRegion = async () =>
+      (await screen.findByLabelText("Ask Gaurd", { selector: "aside" })).querySelector(
+        '[role="status"]',
+      );
+
+    it("renders the scope block outside the missing-evidence section, unglyphed", async () => {
+      actingRole = "AUDITOR_READ_ONLY";
+      await openDrawerAndAsk(withheldQuestion);
+      // The section, not the label inside it: `closest("div")` from the heading
+      // returns the label itself and would have asserted over one string.
+      const section = screen.getByText("WITHHELD AT YOUR ACCESS SCOPE").parentElement;
+      expect(section).toBeTruthy();
+      expect(section!.className).toMatch(/icg-ask-sec/);
+      // Not the missing block, and not carrying its assistive-tech suffix.
+      expect(section!.className).not.toMatch(/icg-ask-sec--missing/);
+      expect(section!.textContent).not.toMatch(/missing, required/);
+      expect(section!.textContent).toMatch(/restricted, not missing/);
+      expect(section!.textContent).not.toMatch(/○/);
+    });
+
+    it("announces the restriction separately from the missing count", async () => {
+      actingRole = "AUDITOR_READ_ONLY";
+      await openDrawerAndAsk(withheldQuestion);
+      const live = await askLiveRegion();
+      expect(live?.textContent).toMatch(/0 required items of evidence reported missing/);
+      // Counted beside it, never into it: the wrong non-zero this fix removed
+      // must not have become a clean zero over a withholding.
+      expect(live?.textContent).toMatch(/withheld at your access scope/);
+    });
+
+    it("shows no such block to a reader nothing is withheld from", async () => {
+      actingRole = "CONTROLLER";
+      await openDrawerAndAsk(withheldQuestion);
+      expect(screen.queryByText("WITHHELD AT YOUR ACCESS SCOPE")).toBeNull();
+      const live = await askLiveRegion();
+      expect(live?.textContent).not.toMatch(/withheld at your access scope/);
+    });
   });
 });

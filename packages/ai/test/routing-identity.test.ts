@@ -69,12 +69,27 @@ const ctx = (): ServiceContext => ({
   sourceInterface: "ASK_GAURD",
 });
 
+/**
+ * A scoped reader, because several channels are empty for a Controller.
+ *
+ * `scopeNotes` is the clearest case: as the Controller nothing is withheld on
+ * any intent, so a property test that enumerated the channel and ran only as
+ * the Controller would iterate an empty array on all 33 intents and report
+ * that it had checked it.
+ */
+let auditor: AiToolContext;
+
 beforeAll(() => {
   const ws = createWorkspace();
   t = {
     queries: createQueryService(ws),
     projections: createProjectionService(ws),
     ctx: ctx(),
+  };
+  auditor = {
+    queries: createQueryService(ws),
+    projections: createProjectionService(ws),
+    ctx: { ...ctx(), user: userByRole("AUDITOR_READ_ONLY") },
   };
 });
 
@@ -160,9 +175,6 @@ describe("every phrase is a whole word, by construction", () => {
   const phrases = INTENT_MATCHES.flatMap((i) =>
     intentPhrases(i.match).map((phrase) => ({ key: i.key, phrase })),
   );
-  /** Non-stem phrases: a stem's `[a-z]*` tail answers these questions itself. */
-  const closedPhraseRows = phrases.filter((p) => !p.phrase.endsWith("*"));
-
   it("has phrases to check", () => {
     // Without this, a table that failed to export would make every
     // assertion below iterate an empty list and report success.
@@ -238,6 +250,34 @@ describe("every phrase is a whole word, by construction", () => {
   });
 
   /**
+   * The fold asserted on the COMPILER, because no phrase in the table can
+   * exercise it.
+   *
+   * `phrasePattern` folds the phrase through `normalizeQuestion` for two
+   * reasons, and the table can demonstrate neither. A phrase carrying a curly
+   * apostrophe is forbidden by the ASCII assertion above, and no phrase today
+   * carries padding — so removing the fold left all 2,481 tests green while
+   * dropping the thing it actually buys: a padded phrase compiles ANCHORED
+   * rather than as the bare unanchored alternation `/(?:accounts|account)/`,
+   * which is the §3.9 mis-route class this whole file exists to make
+   * unexpressible.
+   *
+   * Both assertions are on `phrasePattern` directly with hand-written inputs,
+   * so neither can be satisfied by the table agreeing with itself.
+   */
+  it("folds a declared phrase, so padding cannot drop the word boundary", () => {
+    const padded = phrasePattern("  account ");
+    expect(padded.test("account")).toBe(true);
+    expect(padded.test("prefixedaccount"), "a padded phrase compiled unanchored").toBe(false);
+  });
+
+  it("folds a declared phrase's typography, so a curly phrase would still route", () => {
+    const curly = String.fromCharCode(0x2019);
+    const pattern = phrasePattern(`hasn${curly}t moved`);
+    expect(pattern.test(normalizeQuestion("What hasn't moved in a year?"))).toBe(true);
+  });
+
+  /**
    * Hyphen and space are one spelling, in both directions.
    *
    * The join was `[\s-]+` and the split was `\s+`, so the property held one way
@@ -246,20 +286,62 @@ describe("every phrase is a whole word, by construction", () => {
    * ledger?" refused. Seven other hyphenated phrases looked fine only because
    * an author had hand-listed the spaced twin — the allowlist standing in for
    * the property, which is what number agreement had just been moved off.
+   *
+   * Over EVERY phrase, stems included. The first version exempted stems on the
+   * stated ground that a stem's `[a-z]*` tail "answers these questions itself"
+   * — which is about a different axis: a hyphenated stem fails on its spaced
+   * spelling exactly as `sub-ledger` did, tail or no tail. The property holds
+   * for stems under this compiler, so including them costs nothing and stops a
+   * stem phrase authored with a separator tomorrow from being silently outside
+   * the guard. The `*` is stripped the way the boundary assertion above does.
    */
-  it.each(closedPhraseRows)("$key: '$phrase' matches hyphenated and spaced alike", ({ phrase }) => {
+  it.each(phrases)("$key: '$phrase' matches hyphenated and spaced alike", ({ phrase }) => {
     const pattern = phrasePattern(phrase);
-    const literal = normalizeQuestion(phrase);
+    const literal = normalizeQuestion(phrase.endsWith("*") ? phrase.slice(0, -1) : phrase);
     const spaced = literal.replace(/-/g, " ");
     const hyphenated = literal.replace(/\s+/g, "-");
     expect(pattern.test(spaced), `${phrase} does not match "${spaced}"`).toBe(true);
     expect(pattern.test(hyphenated), `${phrase} does not match "${hyphenated}"`).toBe(true);
   });
 
+  /**
+   * Reader-facing identity, measured against the COMPILER rather than the
+   * allowlist.
+   *
+   * The comment above says seven hyphenated phrases "looked fine only because
+   * an author had hand-listed the spaced twin", and the first version of this
+   * test then demonstrated the property using one of exactly those seven —
+   * "Show me the three way match." is satisfied by the surviving allowlist
+   * entry and would keep passing with the compiler change reverted. The
+   * redundant twins are deleted from the table instead (see `answers.ts`), so
+   * every assertion here now reaches the compiler.
+   */
   it("reaches the intent for a phrase a reader spaced out", () => {
     expect(routeQuestion("What is in the sub ledger?")?.key).toBe("reconciliation");
     expect(routeQuestion("What is in the sub-ledger?")?.key).toBe("reconciliation");
     expect(routeQuestion("Show me the three way match.")?.key).toBe("procurement-chain");
+    expect(routeQuestion("Show me the three-way match.")?.key).toBe("procurement-chain");
+  });
+
+  /**
+   * And the allowlist is not quietly growing back.
+   *
+   * A spaced phrase whose hyphenated twin is also declared is a row the
+   * compiler already covers, and each one is a place the property can look
+   * satisfied while being satisfied by hand.
+   */
+  it("declares no phrase whose separator-twin is also declared", () => {
+    const seen = new Map<string, string>();
+    const redundant: string[] = [];
+    for (const { key, phrase } of phrases) {
+      const folded = normalizeQuestion(phrase.endsWith("*") ? phrase.slice(0, -1) : phrase)
+        .replace(/[\s-]+/g, " ");
+      const id = `${key}::${folded}`;
+      const prior = seen.get(id);
+      if (prior !== undefined && prior !== phrase) redundant.push(`${key}: "${prior}" / "${phrase}"`);
+      else seen.set(id, phrase);
+    }
+    expect(redundant, "hand-listed separator twins the compiler already covers").toEqual([]);
   });
 });
 
@@ -633,18 +715,26 @@ describe("routing identity", () => {
      * four-digit numbers that must NOT be grouped — `1200`, never `1,200` —
      * so they are excluded from the chart of accounts itself rather than
      * listed here, where a sixth account would silently start failing.
+     *
+     * `scopeNotes` is engine-composed prose like the rest and is included, and
+     * the probe runs as a scoped role as well as the Controller — as the
+     * Controller the channel is empty on every intent, so a list that named it
+     * would still have been checking nothing.
      */
-    const r = answerQuestion(t, q, scope ?? {});
-    const sentences = [
-      r.answer?.status ?? "",
-      r.answer?.managementConclusion ?? "",
-      r.answer?.nextAction ?? "",
-      ...(r.answer?.conflictingEvidence ?? []),
-      ...(r.answer?.missingEvidence ?? []),
-      ...(r.answer?.knownFacts ?? []).map((f) => f.label),
-    ];
-    for (const sentence of sentences) {
-      expect(ungroupedCounts(sentence), `ungrouped count in: "${sentence}"`).toEqual([]);
+    for (const who of [t, auditor]) {
+      const r = answerQuestion(who, q, scope ?? {});
+      const sentences = [
+        r.answer?.status ?? "",
+        r.answer?.managementConclusion ?? "",
+        r.answer?.nextAction ?? "",
+        ...(r.answer?.conflictingEvidence ?? []),
+        ...(r.answer?.missingEvidence ?? []),
+        ...(r.answer?.scopeNotes ?? []),
+        ...(r.answer?.knownFacts ?? []).map((f) => f.label),
+      ];
+      for (const sentence of sentences) {
+        expect(ungroupedCounts(sentence), `ungrouped count in: "${sentence}"`).toEqual([]);
+      }
     }
   });
 

@@ -71,10 +71,17 @@ export function formatCount(value: number): string {
  * "population of 1 orders", forty lines from a tile that got it right — so the
  * lesson is that branching each phrase by hand is the defect, not the wording.
  *
- * `packages/ai/src/answers.ts` holds a twin of this for answer prose. The two
- * are deliberately not shared: @icg/ai may not depend on the web app, and a
- * formatting helper does not belong in the answer engine. They are three lines
- * and pure; a package boundary is the right price.
+ * `packages/ai/src/answers.ts` holds a twin of this for answer prose, and that
+ * one twin is all there is. The two are deliberately not shared: @icg/ai may
+ * not depend on the web app, and a formatting helper does not belong in the
+ * answer engine. They are three lines and pure; a package boundary is the
+ * right price.
+ *
+ * A boundary is the only thing that buys a copy, so there is no third. This
+ * comment enumerated two while `inventory-list-view.ts` held a byte-equivalent
+ * local const inside the same app, where no boundary is being paid for — a
+ * convergence claim contradicted by the tree it was written into. That one now
+ * imports this.
  */
 export function plural(count: number, one: string, many = `${one}s`): string {
   return count === 1 ? one : many;

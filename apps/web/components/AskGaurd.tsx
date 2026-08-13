@@ -94,13 +94,27 @@ export function AskGaurd({
       <div className="icg-ask-scroll">
         {/* Mounted for the whole life of the drawer so assistive tech has a
             region to observe before the first answer lands. */}
+        {/* The restriction count is announced BESIDE the missing count, never
+            folded into it — two categories, two numbers.
+
+            Moving scope restrictions out of `missingEvidence` was right, and
+            it left this region announcing a clean "0 required items of
+            evidence reported missing" on exactly the answers that withhold
+            something. The wrong non-zero became a wrong zero: an assistive-tech
+            reader heard nothing at all about a WITHHELD AT YOUR ACCESS SCOPE
+            block sitting in the visible drawer. An absence must be stated
+            rather than implied, and that applies to the announcement too. */}
         <div role="status" aria-live="polite" className="icg-sr-only">
           {pending
             ? "Reading the close."
             : state === null
               ? ""
               : state.result?.answer != null
-                ? `Answer ready. ${state.result.answer.missingEvidence.length} required item${state.result.answer.missingEvidence.length === 1 ? "" : "s"} of evidence reported missing.`
+                ? `Answer ready. ${state.result.answer.missingEvidence.length} required item${state.result.answer.missingEvidence.length === 1 ? "" : "s"} of evidence reported missing.${
+                    state.result.answer.scopeNotes.length > 0
+                      ? ` ${state.result.answer.scopeNotes.length} note${state.result.answer.scopeNotes.length === 1 ? "" : "s"} on what is withheld at your access scope.`
+                      : ""
+                  }`
                 : state.result?.refusal != null
                   ? `Ask Gaurd declined: ${state.result.refusal.reason}.`
                   : "Ask Gaurd is unavailable. Deterministic close data remains available."}

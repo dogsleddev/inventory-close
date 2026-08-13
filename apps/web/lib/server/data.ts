@@ -378,21 +378,36 @@ export function buildOverviewData(user: DemoUser, correlationId: string): Overvi
    *
    * The baseline is not lost: `gate.divergence` names it, and Reset Demo
    * restores it. It is simply not what a caption about these rows counts.
+   *
+   * Making the count live also made every hard-coded agreement in these two
+   * sentences reachable, and the rewrite reached for `plural` on the one noun
+   * it could see: "All one blocker shown.", and a single remaining exception
+   * rendered as "EXC-004 (… each) complete the six" — a plural verb, and an
+   * "each" distributing over one amount. Which is the same defect the commit
+   * before it was written to fix.
+   * Every count-varying word here now agrees with its own count, and the
+   * counts are two different sets: `remaining` governs the verb, and
+   * `liveBlockerCount` governs the total the sentence closes on.
    */
   const liveBlockerCount = blockerViews.length;
   const remainingNote =
     liveBlockerCount === 0
       ? "Every blocker the rules raised carries a management conclusion recorded in this session."
       : remaining.length === 0
-        ? `All ${numberWord(liveBlockerCount)} ${plural(liveBlockerCount, "blocker")} shown.`
+        ? liveBlockerCount === 1
+          ? "The one open blocker is shown."
+          : `All ${numberWord(liveBlockerCount)} open blockers shown.`
         : (() => {
             const amounts = remaining.map((e) => e.exception.finding.exposureCents);
             const allEqual = amounts.every((a) => a === amounts[0]);
             const ids = remaining.map((e) => e.exception.id).join(" and ");
-            const amountText = allEqual
-              ? `${formatCents(amounts[0] ?? 0)} each`
-              : remaining.map((e) => formatCents(e.exception.finding.exposureCents)).join(", ");
-            return `${ids} (${amountText}) complete the ${numberWord(liveBlockerCount)}.`;
+            // "each" distributes over more than one amount. With a single
+            // remaining blocker there is nothing for it to distribute over.
+            const amountText =
+              allEqual && amounts.length > 1
+                ? `${formatCents(amounts[0] ?? 0)} each`
+                : remaining.map((e) => formatCents(e.exception.finding.exposureCents)).join(", ");
+            return `${ids} (${amountText}) ${plural(remaining.length, "completes", "complete")} the ${numberWord(liveBlockerCount)} still open.`;
           })();
 
   const staleCount = health?.sources.filter((s) => s.status === "STALE").length ?? 0;
@@ -814,6 +829,7 @@ function controlState(
   status: ExceptionView["exception"]["status"],
   coverage: string | undefined,
   warnings: ExceptionView["sourceCoverageWarnings"],
+  recordedConclusion: string | null,
 ): NonNullable<ExceptionDetailData["whyFlagged"]>["state"] {
   const unmet = finding.evidenceRequirements.filter((r) => r.required && !r.satisfied);
   const evaluated = coverage === "COMPLETE";
@@ -836,14 +852,32 @@ function controlState(
           ? "Every required record is in evidence."
           : `Still required: ${unmet.map((r) => r.description).join("; ")}.`,
     },
+    /**
+     * Whether a conclusion was RECORDED is a question about the trail, not
+     * about the status.
+     *
+     * This branched on the status alone, and `effectiveStatus` deliberately
+     * does not move for REMAINS_OPEN — so a reader who recorded that the item
+     * stays open was told on this very panel that no conclusion had been
+     * recorded, while the Ask Gaurd drawer over the same exception named their
+     * conclusion, who made it and when. Two surfaces, one record, opposite
+     * answers. The status still names the label; the recorded conclusion
+     * names the note.
+     */
     managementConclusion: {
       label: conclusionLabel(status),
       note:
-        status === "RESOLVED_NO_ADJUSTMENT"
+        recordedConclusion === "RESOLVED_NO_ADJUSTMENT"
           ? "Management concluded the item is supported and no adjustment is required."
-          : status === "RESOLVED_ADJUSTMENT_PROPOSED"
+          : recordedConclusion === "RESOLVED_ADJUSTMENT_PROPOSED"
             ? "Management concluded an adjustment is required. Proposed — never posted by this product."
-            : "No management conclusion has been recorded. Software does not conclude on management's behalf.",
+            : recordedConclusion === "REMAINS_OPEN"
+              ? "Management reviewed this item and recorded that it remains open. That is a decision about the review, not about the rule — the status is unchanged."
+              : status === "RESOLVED_NO_ADJUSTMENT"
+                ? "Management concluded the item is supported and no adjustment is required."
+                : status === "RESOLVED_ADJUSTMENT_PROPOSED"
+                  ? "Management concluded an adjustment is required. Proposed — never posted by this product."
+                  : "No management conclusion has been recorded. Software does not conclude on management's behalf.",
     },
   };
 }
@@ -1003,7 +1037,13 @@ export function buildExceptionDetailData(
       ruleVersion: finding.ruleVersion,
       result: execution?.result ?? "—",
       coverage: execution?.coverage ?? "—",
-      state: controlState(finding, status, execution?.coverage, view.sourceCoverageWarnings),
+      state: controlState(
+        finding,
+        status,
+        execution?.coverage,
+        view.sourceCoverageWarnings,
+        conclusionRecord?.conclusion ?? null,
+      ),
       audit: [
         { k: "Object ID", v: exceptionId },
         { k: "Rule", v: `${finding.ruleId} · v${finding.ruleVersion}` },
