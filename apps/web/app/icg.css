@@ -1976,18 +1976,29 @@ button {
 }
 .icg-ask-fact dt {
   color: var(--soft);
-  min-width: 0;
   /* Long labels ("Redwood Installation Services — carrying value") wrap
-     rather than pushing the figure out of a 320px drawer. */
-  overflow-wrap: anywhere;
+     rather than pushing the figure out of a 320px drawer. The floor is the
+     label's own longest word: `break-word` breaks a word that cannot fit
+     but, unlike `anywhere`, does NOT drop the automatic minimum size to a
+     single character. That distinction is what stops a 5-char label
+     collapsing to one letter per line when the value beside it is prose —
+     with `anywhere` and `min-width: 0` there was no floor at all, so flex
+     handed the label a 5px box and it obeyed. */
+  overflow-wrap: break-word;
 }
 .icg-ask-fact dd {
   margin: 0;
   font-weight: 600;
-  /* Never nowrap: it shoved the figure off the edge of the drawer instead
-     of wrapping the label beside it. */
+  /* A flex item sized `flex-basis: auto` takes its MAX-CONTENT width as its
+     flex base size, and `flex-shrink: 0` forbids it coming down from there.
+     So a 341-char prose value laid itself out as one unbroken 1,913px line
+     inside a 287px scroll container, and every pixel of negative free space
+     landed on the label instead. Shrinking is what makes the value wrap;
+     `min-width: 0` is what lets the shrink actually take effect. */
+  min-width: 0;
+  flex-shrink: 1;
+  overflow-wrap: anywhere;
   text-align: right;
-  flex-shrink: 0;
 }
 .icg-ask-body {
   font-size: 11.5px;
