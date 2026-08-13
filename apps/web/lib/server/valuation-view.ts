@@ -11,7 +11,7 @@ import type {
 } from "../view-model";
 import { statusView } from "../workflow-view";
 import { attempt } from "./data";
-import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./exception-view";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -185,7 +185,11 @@ export function buildValuationData(
 
   const eo = attempt(() => getEoMethodology(getWorkspace(), ctx));
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: the reserve review's status capsule and the damaged row's
+  // "Assessment outstanding" both report where an assessment stands NOW. Read
+  // frozen, a concluded EXC-011 kept "Assessment outstanding" beside a drawer
+  // reading "Resolved — No Adjustment".
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
 

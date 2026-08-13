@@ -10,8 +10,9 @@ import type {
 } from "../view-model";
 import { statusView } from "../workflow-view";
 import { attempt } from "./data";
-import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./exception-view";
 import { sourceLabel } from "./humanize";
+import { liveRegister } from "./live-register";
 import { ROLE_LABELS, getQueries, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -65,7 +66,12 @@ export function buildAdjustmentsData(
     };
   }
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: the card's status pill, its ember treatment, its undrafted reason
+  // and the KPI note beneath "Entries drafted" all report the close NOW. Read
+  // frozen, the EXC-015 card kept the ember alarm and the sentence "EXC-015
+  // has not reached a management conclusion" after the Controller reached one.
+  const exceptions = liveExceptionViews(queries, ctx);
+  const live = liveRegister(exceptions);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const recon = attempt(() => queries.getReconciliation(ctx));
@@ -112,9 +118,9 @@ export function buildAdjustmentsData(
       detail:
         proposal !== undefined
           ? `${proposal.id} · ${proposal.lines.length} lines · prepared, awaiting approval`
-          : (entry.undraftedReason ?? "No entry drafted."),
+          : (live.undraftedReason(entry) ?? "No entry drafted."),
       amount: formatCents(entry.amountCents),
-      ember: entry.exceptionOpen,
+      ember: live.isOpen(entry),
       status: view !== undefined ? statusView(view.exception.status) : null,
       entry:
         proposal !== undefined
@@ -138,7 +144,7 @@ export function buildAdjustmentsData(
               postingStatus: "Not posted in NetSuite — no write path exists",
             }
           : null,
-      undraftedReason: proposal === undefined ? (entry.undraftedReason ?? null) : null,
+      undraftedReason: proposal === undefined ? (live.undraftedReason(entry) ?? null) : null,
       // Where no entry exists, the offset is the open question — never an
       // account picked to make the entry balance.
       offsetRequirement:
@@ -150,6 +156,8 @@ export function buildAdjustmentsData(
       href: `/exceptions/${entry.exceptionId}`,
     };
   });
+
+  const awaitingConclusion = live.openCount(register.entries);
 
   return {
     restricted: false,
@@ -163,7 +171,17 @@ export function buildAdjustmentsData(
       {
         label: "Entries drafted",
         value: String(register.draftedCount),
-        note: `${register.identifiedCount - register.draftedCount} awaiting a management conclusion`,
+        // Counted from the items still WAITING on a conclusion, not from
+        // `identifiedCount - draftedCount`. Those two are only equal at the
+        // baseline: the arithmetic version said "1 awaiting a management
+        // conclusion" on the same screen as a card whose own drawer read
+        // "Resolved — No Adjustment", because an undrafted entry and an
+        // unconcluded exception are different facts that happened to have the
+        // same count until somebody concluded one.
+        note:
+          awaitingConclusion > 0
+            ? `${awaitingConclusion} awaiting a management conclusion`
+            : "Every identified item has a management conclusion",
         ...(register.draftedCount < register.identifiedCount
           ? { tone: "warn" as const }
           : {}),

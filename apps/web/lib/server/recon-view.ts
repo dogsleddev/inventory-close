@@ -24,9 +24,11 @@ import {
   assembleDrawer,
   assembleEvidenceRecord,
   gatherExceptionContext,
+  liveExceptionViews,
 } from "./exception-view";
 import { countOutcome, countOutcomeDetail } from "./financial-life-view";
 import { classificationLabel, locationLabel, titleCase } from "./humanize";
+import { liveRegister } from "./live-register";
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
@@ -59,7 +61,10 @@ function buildFinancialBridge(
 ): FinancialBridgeData {
   const viewFor = (id: string) => exceptions.find((e) => e.exception.id === id);
   const entries = register?.entries ?? [];
-  const openEntries = entries.filter((e) => e.exceptionOpen);
+  // `exceptionOpen` is baked into the register at close derivation, so this
+  // counted a concluded item as open and the total row said so out loud.
+  const live = liveRegister(exceptions);
+  const openEntries = entries.filter((e) => live.isOpen(e));
   const undrafted = entries.filter((e) => e.proposal === undefined);
   const potentialDifferenceCents = recon.potentialAdjustedGlCents - recon.subledgerCents;
   // "item", never "proposal": three items are identified and only two carry a
@@ -97,7 +102,8 @@ function buildFinancialBridge(
       detail:
         entry?.proposal !== undefined
           ? `${entry.proposal.id} · prepared, ${entry.proposal.lines.length} balanced lines`
-          : (entry?.undraftedReason ?? "No entry drafted."),
+          : ((entry !== undefined ? live.undraftedReason(entry) : undefined) ??
+            "No entry drafted."),
       amount: formatCents(item.amountCents),
       ember: open,
       status: view !== undefined ? statusView(view.exception.status) : null,
@@ -434,7 +440,12 @@ export function buildReconciliationData(
     };
   }
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: the financial bridge's status pills, its ember treatment and the
+  // "Not reachable — N exception(s) open" tail all report the close NOW.
+  // /reconciliation is step 1 of the user guide's third journey, and read
+  // frozen it told a Controller who had just concluded EXC-015 that EXC-015
+  // "has not reached a management conclusion".
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
   const recon = attempt(() => queries.getReconciliation(ctx));

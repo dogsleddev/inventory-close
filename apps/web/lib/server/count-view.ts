@@ -11,7 +11,7 @@ import type {
 } from "../view-model";
 import { ownerForStatus, riskView, statusView } from "../workflow-view";
 import { attempt } from "./data";
-import { assembleDrawer, gatherExceptionContext } from "./exception-view";
+import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./exception-view";
 import { locationLabel } from "./humanize";
 import { getQueries, makeContext, roleLabel } from "./workspace";
 
@@ -58,7 +58,11 @@ export function buildPhysicalCountData(
   const detail = attempt(() => queries.getCountDetail(ctx));
   if (summary === undefined || detail === undefined) return emptyData(role);
 
-  const exceptions = attempt(() => queries.listExceptions(ctx)) ?? [];
+  // Live: the variance row's status pill, its owner routing and the
+  // floor-to-sheet discovery card all report an item's position NOW. Read
+  // frozen, a concluded EXC-003 still routed to a recount and still showed
+  // "Recount Required" on the screen its own drawer had stopped saying it on.
+  const exceptions = liveExceptionViews(queries, ctx);
   const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
 

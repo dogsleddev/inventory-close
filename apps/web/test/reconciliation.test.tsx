@@ -5,8 +5,10 @@ import userEvent from "@testing-library/user-event";
 import { userByRole } from "@icg/data";
 import { ReconciliationScreen } from "../components/ReconciliationScreen";
 import { buildShellData } from "../lib/server/data";
+import { buildAdjustmentsData } from "../lib/server/adjustments-view";
 import { buildReconciliationData } from "../lib/server/recon-view";
 import { getQueries, makeContext } from "../lib/server/workspace";
+import { concludeException, controller, resetDemo } from "./support/live-close";
 
 afterEach(cleanup);
 
@@ -126,5 +128,79 @@ describe("Reconciliation — serial integrity", () => {
   it("reports an unknown serial as a checked absence", () => {
     renderRecon("KE-Z9-0000");
     expect(screen.getByText(/No source in the dataset references KE-Z9-0000/)).toBeTruthy();
+  });
+});
+
+/**
+ * Sentences, not stale badges.
+ *
+ * With the exception list bound to `listExceptions`, concluding EXC-015 left
+ * /reconciliation's financial bridge showing that row as 'Controller Review',
+ * ember true, detail "No entry drafted — EXC-015 has not reached a management
+ * conclusion.", and the total row as "Not reachable — 1 exception open, 1 with
+ * no entry drafted". /adjustments showed the same card plus the KPI note "1
+ * awaiting a management conclusion". Meanwhile /exceptions/EXC-015 said
+ * "Management concluded the item is supported and no adjustment is required."
+ *
+ * /reconciliation is step 1 of the user guide's third journey
+ * (UserGuideScreen.tsx:106-111), so this is on a path the demo walks.
+ *
+ * `undraftedReason` and `exceptionOpen` are baked into the register by
+ * @icg/rules and cannot be changed there — the rules are reporting what was
+ * true when the close ran. The overlay is at the view layer.
+ */
+describe("Reconciliation and Adjustments report the conclusion the product is holding", () => {
+  afterEach(resetDemo);
+
+  const bridgeRows = () =>
+    buildReconciliationData(controller(), "", "T-REC-LIVE").financial?.bridge.rows ?? [];
+  const rowFor = (id: string) => bridgeRows().find((r) => r.id === id);
+  const totalRow = () => bridgeRows().find((r) => r.kind === "total");
+  const draftedNote = (data: ReturnType<typeof buildAdjustmentsData>) =>
+    data.stats.find((s) => s.label === "Entries drafted")?.note ?? "";
+
+  it("says all five of these before anyone concludes", () => {
+    const row = rowFor("EXC-015");
+    expect(row?.status?.label).toBe("Controller Review");
+    expect(row?.ember).toBe(true);
+    expect(row?.detail).toMatch(/has not reached a management conclusion/);
+    expect(totalRow()?.detail).toMatch(/1 exception open/);
+    expect(draftedNote(buildAdjustmentsData(controller(), "T-ADJ-BEFORE"))).toMatch(/1 awaiting/);
+  });
+
+  it("says none of them once the Controller has concluded EXC-015", () => {
+    concludeException("EXC-015");
+
+    const row = rowFor("EXC-015");
+    expect(row?.status?.label).toBe("Resolved — No Adjustment");
+    expect(row?.ember).toBe(false);
+    expect(row?.detail).not.toMatch(/has not reached a management conclusion/);
+
+    const total = totalRow();
+    expect(total?.detail).not.toMatch(/1 exception open/);
+    expect(total?.detail).not.toMatch(/exceptions? open/);
+    // The other half of that sentence is still TRUE and must survive: the item
+    // genuinely has no drafted entry. Only the claim about the conclusion was
+    // false, and only that claim is removed.
+    expect(total?.detail).toMatch(/1 with no entry drafted/);
+
+    expect(draftedNote(buildAdjustmentsData(controller(), "T-ADJ-AFTER"))).not.toMatch(/1 awaiting/);
+  });
+
+  it("matches the /adjustments card to the drawer it opens", () => {
+    concludeException("EXC-015");
+    const data = buildAdjustmentsData(controller(), "T-ADJ-CARD");
+    const card = data.cards.find((c) => c.exceptionId === "EXC-015");
+
+    expect(card?.status?.label).toBe("Resolved — No Adjustment");
+    expect(card?.ember).toBe(false);
+    expect(card?.detail).not.toMatch(/has not reached a management conclusion/);
+    expect(card?.undraftedReason).not.toMatch(/has not reached a management conclusion/);
+    // It still says no entry was drafted, because none was.
+    expect(card?.undraftedReason).toMatch(/No entry drafted/);
+
+    const drawer = card?.drawerId !== null ? data.drawers[card?.drawerId ?? ""] : undefined;
+    expect(drawer?.status.label).toBe(card?.status?.label);
+    expect(drawer?.blocker).toBe(false);
   });
 });
