@@ -1326,8 +1326,12 @@ export function buildExceptionDetailData(
     evidenceState,
     timeline,
     evidenceRecords,
+    // `plural` on the denominator: this reads "Exception 1 of 1 blockers" on
+    // the last blocker left, which is exactly where a Controller working the
+    // queue down ends up. Found by the sweep in
+    // `count-agreement-sweep.test.ts` on its first run.
     blockerPosition: isBlocker
-      ? `Exception ${blockerIds.indexOf(exceptionId) + 1} of ${blockerIds.length} blockers`
+      ? `Exception ${blockerIds.indexOf(exceptionId) + 1} of ${blockerIds.length} ${plural(blockerIds.length, "blocker")}`
       : null,
   };
 }
