@@ -214,6 +214,17 @@ export interface ExceptionDrawerData {
     readonly source: string;
     readonly kind: string;
   }[];
+  /**
+   * Set when the reader's scope, not the close, emptied the records above.
+   *
+   * `sourceRecords` was simply shorter for a scoped reader and the SOURCE
+   * RECORDS block was omitted entirely when it hit zero, while `layers.physical`
+   * fell back to "No operational events in evidence for this item" — an
+   * absence claim about a close that holds five of them. Every other surface
+   * in this app already distinguishes the two; the drawer had no channel to
+   * do it in.
+   */
+  readonly scopeNotice: string | null;
   readonly coverageWarnings: readonly string[];
 }
 

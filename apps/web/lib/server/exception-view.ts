@@ -563,10 +563,25 @@ export function assembleDrawer(
       if (d !== undefined) physicalBits.push(`first online ${formatDateShort(d)}`);
     }
   }
+  /**
+   * A restriction is never reported as an absence.
+   *
+   * This fell back to "No operational events in evidence for this item"
+   * whenever the scoped list was empty — with no qualifier. For U-009 that
+   * sentence printed on EXC-002, where the close holds five source records a
+   * Controller can see, and on thirteen of the fifteen drawers overall. The
+   * product's whole argument is that it never claims more than it can support;
+   * asserting that a record does not exist when the truth is that this reader
+   * may not read it is the one sentence it must not print. `evidenceOutOfScope`
+   * already existed and already fed two other assemblers — the drawer had no
+   * channel for it.
+   */
   const physical =
     physicalBits.length > 0
       ? physicalBits.join(" · ")
-      : "No operational events in evidence for this item";
+      : context.evidenceOutOfScope
+        ? "Operational evidence for this item is outside your access scope — this is a restriction on what you may read, not an absence of records."
+        : "No operational events in evidence for this item";
 
   const accounting =
     unmet.length > 0
@@ -600,6 +615,9 @@ export function assembleDrawer(
       source: e.sourceSystem !== undefined ? sourceLabel(e.sourceSystem) : "—",
       kind: kindLabel(e.kind),
     })),
+    // The same notice the evidence-state and timeline assemblers already
+    // carry, on the surface that omitted its records block entirely.
+    scopeNotice: context.evidenceOutOfScope ? SCOPE_NOTICE : null,
     coverageWarnings: view.sourceCoverageWarnings.map(
       (w) => `${sourceLabel(w.sourceSystem)} ${w.status}`,
     ),

@@ -5,7 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach } from "vitest";
 import { userByRole } from "@icg/data";
 import { OverviewScreen } from "../components/OverviewScreen";
-import { buildOverviewData, buildShellData } from "../lib/server/data";
+import {
+  buildExceptionDetailData,
+  buildExceptionsData,
+  buildOverviewData,
+  buildShellData,
+} from "../lib/server/data";
 import { askGaurdData } from "../lib/server/ask-view";
 import { getCommands, getQueries, getWorkspace, makeContext } from "../lib/server/workspace";
 
@@ -437,6 +442,124 @@ describe("Overview — the blocker panel counts its own rows", () => {
     );
     expect(screen.getByText("READY FOR MANAGEMENT SIGN-OFF")).toBeTruthy();
     expect(screen.queryByText("NOT READY FOR MANAGEMENT SIGN-OFF")).toBeNull();
+  });
+
+  /**
+   * The three surfaces of one conclusion must agree, and this must be checked
+   * AFTER the conclusion, not before.
+   *
+   * Every existing test of these builders read an untouched workspace, where
+   * live and baseline are identical by construction — so the product reported
+   * itself clean while, one conclusion in, the Overview said "6 blockers ·
+   * $189,750" and the concluded exception's own page said status "Recount
+   * Required", conclusion "Open", `blocker: true`, "Exception 3 of 7 blockers"
+   * and "Obtain: Supervised recount locating the unit", directly above a panel
+   * reading "Resolved — no adjustment required" with `unmetRequirements: []`.
+   * `getEffectiveClose` was called once in data.ts; `getBlockers` six times.
+   *
+   * This is the one loop the product exists for, so it is asserted end to end
+   * and in both directions: the item that moved, and one that did not.
+   */
+  it("agrees across the Overview, the queue and the detail page after a conclusion", () => {
+    const commands = getCommands();
+    const queries = getQueries();
+    const ctx = makeContext(controller(), "T-OV-LOOP");
+
+    // Premise, asserted before anything is done: all three surfaces start at 7
+    // and EXC-003 is one of them. Without this the assertions below could pass
+    // against a build that had simply lost the blocker concept.
+    expect(buildOverviewData(controller(), "T-OV-LOOP").gate?.blockerCount).toBe(7);
+    const queueBefore = buildExceptionsData(controller(), "T-OV-LOOP", undefined, "blockers");
+    expect(queueBefore.rows.map((r) => r.id)).toContain("EXC-003");
+    expect(queueBefore.rows.length).toBe(7);
+    expect(buildExceptionDetailData(controller(), "EXC-003", "T-OV-LOOP").header?.blocker).toBe(true);
+
+    // Do the work the product is for, through the product's own verbs.
+    for (const requirement of queries.getExceptionWorkflow(ctx, "EXC-003").unmetRequirements) {
+      const submitted = commands.submitEvidence(ctx, {
+        title: `Support for ${requirement}`,
+        kind: "DOCUMENT",
+        content: { note: "Obtained." },
+        relatedObjectRef: "EXC-003",
+        satisfiesRequirement: { exceptionId: "EXC-003", requirement },
+      });
+      commands.reviewEvidence(
+        makeContext(manager(), "T-OV-LOOP-REVIEW"),
+        submitted.id,
+        "ACCEPTED",
+        "Reviewed.",
+      );
+    }
+    commands.concludeException(ctx, {
+      exceptionId: "EXC-003",
+      conclusion: "RESOLVED_NO_ADJUSTMENT",
+      rationale: "Recount completed; no adjustment required.",
+    });
+
+    // 1. The Overview moved.
+    const overview = buildOverviewData(controller(), "T-OV-LOOP");
+    expect(overview.gate?.blockerCount).toBe(6);
+    expect(overview.preventing?.blockerCount).toBe(6);
+
+    // 2. The queue the Overview links to moved with it, and says why.
+    const queue = buildExceptionsData(controller(), "T-OV-LOOP", undefined, "blockers");
+    expect(queue.rows.map((r) => r.id)).not.toContain("EXC-003");
+    expect(queue.rows.length).toBe(6);
+    expect(queue.openBlockerCount).toBe(6);
+    // The baseline is named rather than silently dropped — a shorter list with
+    // no explanation is the same defect one step quieter.
+    expect(queue.filter?.basis).toMatch(/rules raised 7/);
+
+    // 3. The item's own page agrees with the panel on it, in every field that
+    //    carries the claim.
+    const detail = buildExceptionDetailData(controller(), "EXC-003", "T-OV-LOOP");
+    expect(detail.header?.blocker).toBe(false);
+    expect(detail.header?.status.label).toMatch(/Resolved/);
+    expect(detail.header?.conclusion).toMatch(/Resolved/);
+    expect(detail.header?.positionLabel).toBe("Resolved exception");
+    expect(detail.header?.nextAction).not.toMatch(/Obtain/);
+    expect(detail.workflow?.unmetRequirements).toEqual([]);
+    // And the rules' own position stays readable, because it is the
+    // reproducible artifact — superseded, not erased.
+    expect(detail.header?.conclusionNote).toMatch(/rules derived this as "Recount Required"/);
+
+    // 4. The other direction: an item nobody touched is untouched everywhere.
+    const untouched = buildExceptionDetailData(controller(), "EXC-001", "T-OV-LOOP");
+    expect(untouched.header?.blocker).toBe(true);
+    expect(untouched.header?.conclusion).toBe("Open");
+    expect(untouched.header?.nextAction).toMatch(/Obtain/);
+    expect(queue.rows.map((r) => r.id)).toContain("EXC-001");
+  });
+
+  /**
+   * A REMAINS_OPEN conclusion is a review decision, not a resolution.
+   *
+   * The complement of the test above, and the branch a live-vs-baseline fix is
+   * most likely to overshoot: `effectiveStatus` deliberately does not move for
+   * REMAINS_OPEN, so every surface must keep the item open and blocking while
+   * still showing that a person looked at it.
+   */
+  it("keeps an item blocking when the conclusion recorded is that it remains open", () => {
+    const commands = getCommands();
+    commands.concludeException(makeContext(controller(), "T-OV-REMAIN"), {
+      exceptionId: "EXC-003",
+      conclusion: "REMAINS_OPEN",
+      rationale: "Recount not yet performed.",
+    });
+
+    expect(buildOverviewData(controller(), "T-OV-REMAIN").gate?.blockerCount).toBe(7);
+    const queue = buildExceptionsData(controller(), "T-OV-REMAIN", undefined, "blockers");
+    expect(queue.rows.map((r) => r.id)).toContain("EXC-003");
+    expect(queue.rows.length).toBe(7);
+    // Nothing moved, so nothing claims a divergence.
+    expect(queue.filter?.basis).not.toMatch(/rules raised/);
+
+    const detail = buildExceptionDetailData(controller(), "EXC-003", "T-OV-REMAIN");
+    expect(detail.header?.blocker).toBe(true);
+    expect(detail.header?.conclusion).toBe("Open");
+    expect(detail.header?.conclusionNote).not.toMatch(/rules derived this as/);
+    // But the review IS recorded, and the panel below says so.
+    expect(detail.workflow?.conclusionLabel).toBe("Remains open");
   });
 
   it("links to the register with the register's own count", () => {

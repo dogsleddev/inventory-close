@@ -112,3 +112,62 @@ describe("Exceptions queue — deterministic default sort", () => {
     expect(screen.queryByRole("complementary", { name: "EXC-009 summary" })).toBeNull();
   });
 });
+
+/**
+ * A restriction is never rendered as an absence — including by omission.
+ *
+ * For U-009, `traceLineage` returns nothing on exceptions where a Controller
+ * reads five source records, so the drawer's SOURCE RECORDS block was omitted
+ * outright — no heading, no sentence, nothing on the page saying why — while
+ * the split-evidence PHYSICAL layer fell back to "No operational events in
+ * evidence for this item". Thirteen of the fifteen drawers, on the one product
+ * whose entire argument is that it never claims more than it can support.
+ *
+ * `evidenceOutOfScope` and `SCOPE_NOTICE` already existed and already fed two
+ * other assemblers; the drawer had no channel for either.
+ */
+describe("Exceptions queue — a scoped reader is told what is withheld", () => {
+  const renderAs = (role: Parameters<typeof userByRole>[0]) => {
+    const user = userByRole(role);
+    return render(
+      <ExceptionsScreen
+        shell={buildShellData(user, "T-QUEUE-SCOPE")}
+        data={buildExceptionsData(user, "T-QUEUE-SCOPE")}
+        setRoleAction={noopRole}
+      />,
+    );
+  };
+
+  it("names the withholding where the Controller sees records", async () => {
+    // The premise, both halves: the Controller really does get records here,
+    // so the auditor's empty list is a scope result and not an empty close.
+    const asController = buildExceptionsData(userByRole("CONTROLLER"), "T-Q-CTL");
+    expect(asController.drawers["EXC-002"]?.sourceRecords.length).toBeGreaterThan(0);
+    expect(asController.drawers["EXC-002"]?.scopeNotice).toBeNull();
+
+    const asAuditor = buildExceptionsData(userByRole("AUDITOR_READ_ONLY"), "T-Q-AUD");
+    expect(asAuditor.drawers["EXC-002"]?.sourceRecords.length).toBe(0);
+    expect(asAuditor.drawers["EXC-002"]?.scopeNotice).not.toBeNull();
+    // And the layer sentence stops asserting the records do not exist.
+    expect(asAuditor.drawers["EXC-002"]?.layers.physical).toMatch(/outside your access scope/);
+    expect(asAuditor.drawers["EXC-002"]?.layers.physical).not.toMatch(/No operational events/);
+
+    const user = userEvent.setup();
+    renderAs("AUDITOR_READ_ONLY");
+    await user.click(screen.getByRole("button", { name: "Open EXC-002 summary" }));
+    const drawer = screen.getByRole("complementary", { name: "EXC-002 summary" });
+    expect(within(drawer).getByText(/WITHHELD AT YOUR ACCESS SCOPE/)).toBeTruthy();
+    expect(within(drawer).getByText(/restricted, not missing/)).toBeTruthy();
+  });
+
+  it("says nothing about scope to a reader nothing is withheld from", async () => {
+    // The false-positive direction: a notice on every drawer would satisfy the
+    // assertions above and tell every Controller their view was cut.
+    const user = userEvent.setup();
+    renderAs("CONTROLLER");
+    await user.click(screen.getByRole("button", { name: "Open EXC-002 summary" }));
+    const drawer = screen.getByRole("complementary", { name: "EXC-002 summary" });
+    expect(within(drawer).queryByText(/WITHHELD AT YOUR ACCESS SCOPE/)).toBeNull();
+    expect(within(drawer).getByText("SOURCE RECORDS")).toBeTruthy();
+  });
+});

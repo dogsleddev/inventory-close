@@ -704,9 +704,37 @@ export function buildExceptionsData(
   }
   const rules = attempt(() => queries.listRuleSummaries(ctx)) ?? [];
   const domainOf = new Map(rules.map((r) => [r.id, r.controlDomain]));
-  const allBlockerIds = new Set(
+
+  /**
+   * The queue answers from the LIVE close, and names the rules' position.
+   *
+   * `listExceptions` returns the frozen status and `open = !isResolvedStatus`
+   * of it, and the blocker set came from `getBlockers`, which is the rules'
+   * own. So an exception concluded in this session kept its baseline status
+   * capsule here and stayed in "Preventing sign-off" — a page whose caption
+   * reads "The open items management must conclude", listing an item
+   * management had just concluded, while the Overview that links here had
+   * already moved. `getEffectiveExceptions` carries both positions per row,
+   * which is why the baseline is still reportable below.
+   */
+  const effective = attempt(() => queries.getEffectiveExceptions(ctx));
+  const effectiveById = new Map(
+    (effective ?? []).map((e) => [e.exception.id, e]),
+  );
+  const live = attempt(() => queries.getEffectiveClose(ctx));
+  const baselineBlockerIds = new Set(
     (attempt(() => queries.getBlockers(ctx)) ?? []).map((b) => b.exceptionId),
   );
+  const allBlockerIds =
+    live !== undefined
+      ? new Set(live.blockers.map((b) => b.exceptionId))
+      : baselineBlockerIds;
+  /** The effective status of a row, falling back to the rules' own. */
+  const statusOf = (e: (typeof all)[number]) =>
+    (effectiveById.get(e.exception.id)?.effectiveStatus as typeof e.exception.status | undefined) ??
+    e.exception.status;
+  const openOf = (e: (typeof all)[number]) =>
+    effectiveById.get(e.exception.id)?.open ?? e.open;
   const domainFiltered =
     section === undefined
       ? all
@@ -718,7 +746,7 @@ export function buildExceptionsData(
     ? domainFiltered.filter((e) => allBlockerIds.has(e.exception.id))
     : domainFiltered;
 
-  const blockers = (attempt(() => queries.getBlockers(ctx)) ?? []).filter((b) =>
+  const blockers = (live?.blockers ?? attempt(() => queries.getBlockers(ctx)) ?? []).filter((b) =>
     exceptions.some((e) => e.exception.id === b.exceptionId),
   );
   const blockerIds = new Set(blockers.map((b) => b.exceptionId));
@@ -726,13 +754,13 @@ export function buildExceptionsData(
   const ordered = [...exceptions].sort((a, b) =>
     defaultExceptionOrder(
       {
-        open: a.open,
+        open: openOf(a),
         blocker: blockerIds.has(a.exception.id),
         exposureCents: a.exception.finding.exposureCents,
         id: a.exception.id,
       },
       {
-        open: b.open,
+        open: openOf(b),
         blocker: blockerIds.has(b.exception.id),
         exposureCents: b.exception.finding.exposureCents,
         id: b.exception.id,
@@ -755,9 +783,9 @@ export function buildExceptionsData(
       ruleId: e.exception.finding.ruleId,
       exposure: formatCents(e.exception.finding.exposureCents),
       risk: riskView(e.exception.finding.risk),
-      status: statusView(e.exception.status),
+      status: statusView(statusOf(e)),
       blocker: blockerIds.has(e.exception.id),
-      open: e.open,
+      open: openOf(e),
       coverageWarnings: e.sourceCoverageWarnings.map(
         (w) => `${sourceLabel(w.sourceSystem)} ${w.status}`,
       ),
@@ -784,12 +812,22 @@ export function buildExceptionsData(
           ? {
               title: "Preventing sign-off",
               context: "The open items management must conclude before the period can be signed off.",
+              /**
+               * Live, and the rules' own count named beside it once they
+               * differ — so a reader who has concluded something is told their
+               * work moved this page, rather than being shown a shorter list
+               * with no explanation for why it shortened.
+               */
               basis:
-                "Open exceptions the close identifies as blockers, ordered by exposure. An exception that is open but not blocking is not shown here.",
+                live !== undefined && live.blockers.length !== baselineBlockerIds.size
+                  ? `Blockers still open, ordered by exposure. The rules raised ${baselineBlockerIds.size}; ${baselineBlockerIds.size - live.blockers.length} ${baselineBlockerIds.size - live.blockers.length === 1 ? "has" : "have"} been concluded in this session and ${baselineBlockerIds.size - live.blockers.length === 1 ? "is" : "are"} no longer listed. An exception that is open but not blocking is not shown here.`
+                  : "Open exceptions the close identifies as blockers, ordered by exposure. An exception that is open but not blocking is not shown here.",
               shown: exceptions.length,
               outOf: all.length,
               emptyNote:
-                "No exception is currently blocking sign-off in this close — verified empty, not assumed.",
+                live !== undefined && baselineBlockerIds.size > 0
+                  ? `Every blocker the rules raised carries a management conclusion recorded in this session. The rules' own position — ${baselineBlockerIds.size} ${baselineBlockerIds.size === 1 ? "blocker" : "blockers"} — is unchanged and is what Reproduce Close replays.`
+                  : "No exception is currently blocking sign-off in this close — verified empty, not assumed.",
             }
           : null,
   };
@@ -898,18 +936,57 @@ export function buildExceptionDetailData(
   }
 
   const finding = view.exception.finding;
-  const status = view.exception.status;
+  /**
+   * The rules' own position. Still read, still reported — it is the
+   * reproducible artifact — but it is no longer what the header states.
+   */
+  const baselineStatus = view.exception.status;
   const context = gatherExceptionContext(queries, ctx, view);
-  const blockers = attempt(() => queries.getBlockers(ctx)) ?? [];
-  const blockerIds = blockers.map((b) => b.exceptionId);
+
+  /**
+   * This page answers from the LIVE close, and names the baseline where the
+   * two differ.
+   *
+   * `getEffectiveClose` was called in exactly one place in this file — the
+   * Overview — while `getBlockers` was called in six. So concluding an
+   * exception moved the Overview to "6 blockers · $189,750" and left this page
+   * saying, about the item just concluded: status "Recount Required",
+   * conclusion "Open", `blocker: true`, "Exception 3 of 7 blockers" and
+   * "Obtain: Supervised recount locating the unit" — directly above a panel
+   * reading "Resolved — no adjustment required" with nothing outstanding.
+   * One page, both answers, on the product's own trust screen, in the one
+   * loop the product exists for.
+   *
+   * `b1cf8aa` closed this family for Ask Gaurd and the Overview. These are the
+   * surfaces it did not reach.
+   */
+  const wf = attempt(() => queries.getExceptionWorkflow(ctx, exceptionId));
+  const live = attempt(() => queries.getEffectiveClose(ctx));
+  const status = (wf?.effectiveStatus as typeof baselineStatus | undefined) ?? baselineStatus;
+  const statusMoved = status !== baselineStatus;
+
+  const liveBlockerIds = (live?.blockers ?? []).map((b) => b.exceptionId);
+  const baselineBlockers = attempt(() => queries.getBlockers(ctx)) ?? [];
+  const blockerIds = live !== undefined ? liveBlockerIds : baselineBlockers.map((b) => b.exceptionId);
   const isBlocker = blockerIds.includes(exceptionId);
+  const wasBaselineBlocker = baselineBlockers.some((b) => b.exceptionId === exceptionId);
+
   const manifest = attempt(() => queries.getRunManifest(ctx));
   const executions = attempt(() => queries.getRuleExecutions(ctx)) ?? [];
   const execution = executions.find((e) => String(e.ruleId) === finding.ruleId);
 
-  const unmet = finding.evidenceRequirements
-    .filter((r) => r.required && !r.satisfied)
-    .map((r) => r.description);
+  /**
+   * Outstanding NOW, counting what this session has submitted — the same
+   * field the ConclusionPanel eighteen lines below already reads. Read from
+   * the frozen finding, the header demanded a record the panel beneath it
+   * showed as obtained.
+   */
+  const unmet =
+    wf?.unmetRequirements !== undefined
+      ? [...wf.unmetRequirements]
+      : finding.evidenceRequirements
+          .filter((r) => r.required && !r.satisfied)
+          .map((r) => r.description);
   const routing = ownerForStatus(status);
 
   const serials = finding.subjects.serials ?? [];
@@ -934,9 +1011,10 @@ export function buildExceptionDetailData(
   });
 
   // Working state: what a person has done about this item, kept separate
-  // from what the rule found.
+  // from what the rule found. `wf` is fetched above, because the header now
+  // answers from it too — one lookup, one position, no chance of the two
+  // halves of this page reading different runs.
   const capabilities = attempt(() => queries.getDemoCapabilities(ctx));
-  const wf = attempt(() => queries.getExceptionWorkflow(ctx, exceptionId));
   const conclusionRecord = wf?.conclusion ?? null;
   const workflow: ExceptionDetailData["workflow"] =
     wf === undefined
@@ -1017,15 +1095,34 @@ export function buildExceptionDetailData(
       primarySerial: serials[0] ?? null,
       description: finding.whyFlagged,
       conclusion: conclusionLabel(status),
-      conclusionNote:
-        status === "RESOLVED_ADJUSTMENT_PROPOSED"
+      /**
+       * Where the live position differs from the rules', this line is what
+       * names the difference — the reader is looking straight at the
+       * conclusion, so it is where the baseline belongs. The rules' position
+       * is not lost by being superseded: it is the reproducible artifact, and
+       * Reproduce Close replays it.
+       */
+      conclusionNote: statusMoved
+        ? `The rules derived this as "${statusView(baselineStatus).label}". A management conclusion recorded in this session supersedes that; the rules' own position is unchanged.`
+        : status === "RESOLVED_ADJUSTMENT_PROPOSED"
           ? "Adjustment proposed — not posted"
           : "No proposed adjustment at baseline",
       nextAction: nextActionText(status, unmet),
       nextActionParty: routing.actionParty,
+      /**
+       * Three states, not two. `!isBlocker → "Resolved exception"` was true
+       * only by coincidence — every open exception is a blocker on this
+       * baseline — and the coincidence does not survive a session: an item
+       * concluded REMAINS_OPEN stays open, and one whose blocker status is
+       * lifted while it stays open would have read "Resolved" outright.
+       */
       positionLabel: isBlocker
-        ? `Exception ${blockerIds.indexOf(exceptionId) + 1} of ${blockerIds.length} blockers`
-        : "Resolved exception",
+        ? `Exception ${blockerIds.indexOf(exceptionId) + 1} of ${blockerIds.length} ${blockerIds.length === 1 ? "blocker" : "blockers"}`
+        : conclusionLabel(status) === "Open"
+          ? wasBaselineBlocker
+            ? "Open — no longer blocking sign-off"
+            : "Open exception — not blocking sign-off"
+          : "Resolved exception",
     },
     lenses,
     workflow,

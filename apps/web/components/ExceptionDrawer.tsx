@@ -132,6 +132,24 @@ export function ExceptionDrawer({
           </div>
         </div>
 
+        {/* An empty records list is a fact about the READER, not the close.
+            The block used to be omitted outright when the scoped list hit
+            zero, so an auditor's drawer simply had no SOURCE RECORDS heading
+            — on thirteen of the fifteen exceptions — with nothing anywhere
+            saying why. Rendered as a restriction, in its own words, never as
+            a shorter list and never as silence. */}
+        {data.sourceRecords.length === 0 && data.scopeNotice !== null ? (
+          <div>
+            <div className="icg-label icg-label--md" style={{ marginBottom: "6px" }}>
+              SOURCE RECORDS · WITHHELD AT YOUR ACCESS SCOPE
+            </div>
+            <div className="icg-quiet" style={{ fontSize: "11.5px", lineHeight: 1.5 }}>
+              {data.scopeNotice}
+              <span className="icg-sr-only"> — restricted, not missing</span>
+            </div>
+          </div>
+        ) : null}
+
         {data.sourceRecords.length > 0 ? (
           <div>
             <div className="icg-label icg-label--md" style={{ marginBottom: "6px" }}>
