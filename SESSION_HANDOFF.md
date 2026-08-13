@@ -1551,3 +1551,40 @@ Still deferred and unchanged: the Ask Gaurd routing/matching gaps (G41, G72, G73
 canonical-token and blank-cell defects (G76, G77, G78, G60), the `/inventory` search facet counts,
 G53, the valuation damaged-row note, the EXCEPTIONS bar score, and the wider `"(s)"` class in
 `answers.ts`.
+
+### Full browser pass (end to end, as Controller)
+
+Baseline on all 21 routes → every Ask Gaurd chip → the close driven blocker by blocker from 7 to 0
+→ sign-off → reset. Two defects found, **both introduced by this session**, both invisible to a
+2,544-test suite because each lives at one specific count:
+
+- The counts answer filed the "appears only in N test count" sentence in `missingEvidence`, so
+  /inventory/KE-X1-8842 announced **"2 required items of evidence reported missing"** about a unit
+  with exactly one missing record. A test count is a selection and is never required of a
+  particular unit. This is the same overstatement removed from the *counted* branch of that answer
+  earlier in the session, left behind on the *absence* branch — the reopen pattern one branch over,
+  inside a fix that had named the principle it was applying.
+- The close-summary CSV headed an **empty** blocker list with "Blockers still open." — correct at
+  six, false at zero, which is the count the demo ends on.
+
+**What the pass confirmed and did not change:** Item 1 in a real browser both directions (341-char
+value → 9 lines all flush left, 275-char → 8, labels of 68–75 chars wrap at word boundaries and
+never collapse, every figure box still measures flush-right, no horizontal scroll); items 10/11/12
+from their own shipped chips; the `/procurement` card and Audit Package related row from the
+previous commit, neither previously seen rendered; 36 surfaces (22 routes + 14 CSV exports) swept
+at 1 blocker and again at 0 with zero offenders; `"Exception 1 of 1 blocker"` correct on the page;
+sign-off locking the period; and Reset Demo restoring 81.4% / 7 blockers / PERIOD OPEN exactly.
+
+**Checked and NOT a defect:** at 1 blocker, /reconciliation and /adjustments still say "EXC-015 has
+not reached a management conclusion", "1 exception open" and "1 awaiting a management conclusion".
+EXC-015 *is* the last open blocker at that point, so all three are true — the overlay preserving a
+true statement rather than suppressing the sentence.
+
+**Screenshots were unavailable throughout** (the Browser pane is not displayed, so the page never
+composites frames). Item 1 was therefore verified by geometry — per-line client rects, box offsets,
+computed styles — and by extracting the wrapped lines as text. That is strong evidence for
+wrapping, overflow and alignment, and it is *not* the same as a person looking at it. The
+typography still deserves one human glance before the demo.
+
+Gate: typecheck clean, lint clean, build compiled, **Test Files 79 passed (79), Tests 2545 passed
+(2545)**.
