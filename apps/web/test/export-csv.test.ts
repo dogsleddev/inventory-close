@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { userByRole } from "@icg/data";
+import { buildOverviewData } from "../lib/server/data";
 import { EXPORT_TABLES, buildCsv, isExportTable } from "../lib/server/export-csv";
 import { getQueries, makeContext } from "../lib/server/workspace";
+import { controller, resetDemo, resolveAllBut } from "./support/live-close";
 
 /**
  * CSV export. The risk in an export is not that it renders badly — it is
@@ -137,5 +139,104 @@ describe("CSV export — a withheld document is not an absent one", () => {
     expect(auditor).not.toMatch(/\b1 source documents\b/);
     // The Controller withholds nothing, so neither line may appear.
     expect(csv("CONTROLLER", "procurement").body).not.toContain("outside this role's scope\"");
+  });
+});
+
+/**
+ * The close-summary file, which is the one most likely to leave the product.
+ *
+ * It was entirely the rules' baseline and said so nowhere. Conclude anything
+ * and it disagreed with the Overview it is exported from — that screen's gate,
+ * blocker count and exposure are all live — with nothing on the file to tell a
+ * reader which position they held. A spreadsheet outlives the tab it came
+ * from, and this is the one a reader is most likely to open without the screen
+ * beside it.
+ *
+ * Both figures now travel, in the shape this file already used twice: the
+ * `exceptions` table's paired "Status" / "Status the rules derived" columns,
+ * and the `close-memo` table's Basis prose naming the baseline whenever the
+ * live figure has moved from it.
+ */
+describe("CSV export — the close summary says which position it holds", () => {
+  afterEach(resetDemo);
+
+  const summary = () => buildCsv(controller(), "close-summary", "T-CSV-SUMMARY").body;
+
+  /**
+   * The cells of one row, found by its label.
+   *
+   * Asserted per CELL rather than with `toContain` over the whole file, and
+   * that is not fussiness: the first version of these tests asserted
+   * `body).toContain('"1"')`, which every weight column and half the counts
+   * satisfy, and `toContain("The rules on their own derived 7;")`, which the
+   * two rows BELOW the one under test also emit. Reverting the fix left both
+   * green. A file-wide substring assertion on a file this wide proves almost
+   * nothing.
+   */
+  const cells = (body: string, label: string): readonly string[] => {
+    const line = body.split("\n").find((l) => l.startsWith(`"${label}"`));
+    expect(line, `no row labelled ${label}`).toBeDefined();
+    // Split on quoted FIELDS, not on commas: every cell this encoder writes is
+    // quoted, and the interesting ones ("$198,950", every Basis sentence)
+    // contain commas of their own. Splitting on "," turned "$198,950" into
+    // "$198" and shifted every column after it.
+    return [...(line ?? "").matchAll(/"((?:[^"]|"")*)"/g)].map((m) =>
+      (m[1] ?? "").replace(/""/g, '"'),
+    );
+  };
+
+  it("reports the rules' figures, and says nothing has moved, at a fresh load", () => {
+    const body = summary();
+    const blockers = cells(body, "Sign-off blockers");
+    expect(blockers[1]).toBe("7");
+    expect(blockers[2]).toContain(
+      "The derived baseline. Nothing recorded in this session has moved it.",
+    );
+    expect(cells(body, "Blocker exposure")[1]).toBe("$198,950");
+    expect(cells(body, "Open")[1]).toBe("7");
+    expect(cells(body, "Resolved")[1]).toBe("8");
+    expect(body).not.toContain("a management conclusion or a submitted record has moved it");
+    // Every blocker the rules raised is listed, and no note claims otherwise.
+    for (const id of ["EXC-001", "EXC-002", "EXC-003", "EXC-004", "EXC-007", "EXC-011", "EXC-015"]) {
+      expect(body, id).toContain(id);
+    }
+    expect(body).not.toContain("Blockers still open.");
+  });
+
+  it("moves with the close, and names the baseline it moved from", () => {
+    resolveAllBut(1);
+    const body = summary();
+
+    // The live figure, in its own cell, matching the Overview this file
+    // summarises rather than the rules' seven.
+    const gate = buildOverviewData(controller(), "T-CSV-GATE").gate;
+    expect(gate?.blockerCount).toBe(1);
+    const blockers = cells(body, "Sign-off blockers");
+    expect(blockers[1]).toBe("1");
+    expect(blockers[1]).toBe(String(gate?.blockerCount));
+
+    // And the rules' own figure, named in that same cell's Basis rather than
+    // silently replaced.
+    expect(blockers[2]).toContain("The rules on their own derived 7;");
+    expect(blockers[2]).toContain("a management conclusion or a submitted record has moved it.");
+
+    // The population counts moved too, and each names what it moved from.
+    expect(cells(body, "Open")[1]).toBe("1");
+    expect(cells(body, "Open")[2]).toContain("The rules on their own derived 7;");
+    expect(cells(body, "Resolved")[1]).toBe("14");
+
+    // The blocker LIST agrees with the count above it: six concluded items are
+    // no longer listed, and the file says where they went.
+    const listed = ["EXC-001", "EXC-002", "EXC-003", "EXC-004", "EXC-007", "EXC-011", "EXC-015"]
+      .filter((id) => body.includes(`"${id}"`));
+    expect(listed).toHaveLength(1);
+    expect(cells(body, "Note")[1]).toContain("Blockers still open.");
+    expect(cells(body, "Note")[1]).toContain("The rules raised 7;");
+  });
+
+  it("labels the weighted close-area scores as the rules' own, never as live", () => {
+    resolveAllBut(1);
+    const body = summary();
+    expect(body).toContain("The rules' derived score, before this session's conclusions");
   });
 });

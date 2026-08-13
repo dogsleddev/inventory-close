@@ -1812,42 +1812,115 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     const recon = queries.getReconciliation(ctx);
     const health = queries.getSourceHealth(ctx);
     const agg = readiness.aggregates;
+    /**
+     * LIVE, with the rules' own figure named beside it.
+     *
+     * This whole file was the rules' baseline and said so nowhere. Conclude
+     * anything and it disagreed with the Overview it is exported from — the
+     * gate, the blocker count and the exposure on that screen are all live —
+     * with nothing on the file to tell a reader which position they held. It
+     * is also the artifact most likely to leave the product and be read
+     * without the screen beside it.
+     *
+     * Both figures are carried, in the shape this file already uses twice: the
+     * `exceptions` table emits "Status" and "Status the rules derived" as
+     * separate columns, and the `close-memo` table's Basis cell names the
+     * baseline in prose whenever the live figure has moved from it. The Basis
+     * sentences below are that same vocabulary, because one export saying
+     * "derived" and another saying "baseline" about the same idea is the
+     * defect this file exists to avoid.
+     */
+    const live = attempt(() => queries.getEffectiveClose(ctx));
+    const effective = attempt(() => queries.getEffectiveExceptions(ctx));
+    const movedFrom = (baseline: string): string =>
+      live?.diverged === true
+        ? `The rules on their own derived ${baseline}; a management conclusion or a submitted record has moved it.`
+        : "The derived baseline. Nothing recorded in this session has moved it.";
+
     lines.push(row(["SIGN-OFF POSITION"]));
     lines.push(row(["Measure", "Value", "Basis"]));
     lines.push(
       row([
         "Sign-off blockers",
-        agg.blockerCount,
-        "Open exceptions that prevent management sign-off",
+        live?.blockerCount ?? agg.blockerCount,
+        `Open exceptions that prevent management sign-off. ${movedFrom(`${agg.blockerCount}`)}`,
       ]),
     );
-    lines.push(row(["Blocker exposure", formatCents(agg.blockerExposureCents), "Open blockers only"]));
+    lines.push(
+      row([
+        "Blocker exposure",
+        formatCents(live?.blockerExposureCents ?? agg.blockerExposureCents),
+        `Open blockers only. ${movedFrom(formatCents(agg.blockerExposureCents))}`,
+      ]),
+    );
     lines.push(
       row([
         "Close readiness",
-        `${agg.closeReadinessBps} bps`,
-        "A management workflow measure — not audit assurance and not a statement of financial-statement accuracy",
+        `${live?.readinessBps ?? agg.closeReadinessBps} bps`,
+        `A management workflow measure — not audit assurance and not a statement of financial-statement accuracy. ${movedFrom(`${agg.closeReadinessBps} bps`)}`,
       ]),
     );
     lines.push(row(["Readiness policy", readiness.policyVersion, "The weighting this score was computed under"]));
     lines.push("");
     lines.push(row(["CLOSE AREAS"]));
-    lines.push(row(["Area", "Weight (%)", "Score (hundredths of a percent)"]));
+    lines.push(row(["Area", "Weight (%)", "Score (hundredths of a percent)", "Basis"]));
     for (const c of readiness.categories) {
-      lines.push(row([c.label, c.weightPercent, c.scoreHundredths]));
+      lines.push(
+        row([
+          c.label,
+          c.weightPercent,
+          c.scoreHundredths,
+          // NOT made live, and labelled instead — the same decision the
+          // Overview's own "Weighted result" line carries, and for the same
+          // reason: these are the readiness policy's weighted output over the
+          // rules' population, and recomputing them here would be a second
+          // definition of readiness.
+          "The rules' derived score, before this session's conclusions",
+        ]),
+      );
     }
     lines.push("");
     lines.push(row(["EXCEPTION POPULATION"]));
-    lines.push(row(["Measure", "Value"]));
-    lines.push(row(["Designed exceptions", agg.exceptionCount]));
-    lines.push(row(["Open", agg.openExceptionCount]));
-    lines.push(row(["Resolved", agg.resolvedExceptionCount]));
-    lines.push(row(["Total designed exposure", formatCents(agg.designedExceptionExposureCents)]));
+    lines.push(row(["Measure", "Value", "Basis"]));
+    // The designed population is a property of the RUN and cannot move.
+    lines.push(row(["Designed exceptions", agg.exceptionCount, "The close as the rules derived it"]));
+    const liveOpen = effective?.filter((e) => e.open).length;
+    lines.push(
+      row([
+        "Open",
+        liveOpen ?? agg.openExceptionCount,
+        movedFrom(`${agg.openExceptionCount}`),
+      ]),
+    );
+    lines.push(
+      row([
+        "Resolved",
+        liveOpen !== undefined ? agg.exceptionCount - liveOpen : agg.resolvedExceptionCount,
+        movedFrom(`${agg.resolvedExceptionCount}`),
+      ]),
+    );
+    lines.push(
+      row([
+        "Total designed exposure",
+        formatCents(agg.designedExceptionExposureCents),
+        "The close as the rules derived it",
+      ]),
+    );
     lines.push("");
     lines.push(row(["BLOCKERS"]));
     lines.push(row(["Exception", "Description", "Exposure"]));
-    for (const b of queries.getBlockers(ctx)) {
+    // The blockers STILL open. Listing the rules' seven under a headline
+    // figure of one is the same file disagreeing with itself.
+    for (const b of live?.blockers ?? queries.getBlockers(ctx)) {
       lines.push(row([b.exceptionId, b.description, formatCents(b.exposureCents)]));
+    }
+    if (live?.diverged === true) {
+      lines.push(
+        row([
+          "Note",
+          `Blockers still open. The rules raised ${agg.blockerCount}; those carrying a management conclusion recorded in this session are not listed here and are exported in full by the exceptions table.`,
+        ]),
+      );
     }
     lines.push("");
     lines.push(row(["INVENTORY TO GL — GROSS"]));
