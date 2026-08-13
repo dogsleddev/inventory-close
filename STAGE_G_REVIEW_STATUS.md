@@ -177,6 +177,51 @@ Per-agent output with full reproductions:
 
 ---
 
+## 0c. The fix-validation fleet (§8 step 5, done) — and what it means
+
+**Eleven agents over the eight fix commits.** 11 of 11 returned; **64 findings, 132 areas cleared,
+none dead.** 1.90M tokens.
+
+```
+P1 14   P2 30   NOTE 20
+CLASS_REOPENED 21    WEAK_TEST 20    LOAD_BEARING_DECISION 5    REGISTRATION_TRAP 4    OTHER 14
+```
+
+**The headline is the 21.** The question the fleet was built around — *does a fix create a new
+instance of the class it closes?* — is not a caution any more. **A fix pass reopens classes at
+roughly the rate the original code created them**, and it does it while the author is looking
+straight at the class. Budget for a validation pass after every remediation; it is not optional
+overhead, it is where a third of the defects are.
+
+**Sixteen are fixed** (`8881db5`, `ed76212`, `bcb11f6`). The emblematic one: a comment written
+*while fixing* "a claim more precise than its enforcement" cited `projections.test.ts` as its own
+guard. **That file did not exist.** It does now, and it derives its lists from the source with
+comments stripped — because the same comment's delegate list was also wrong, from a
+`grep -c makeRecordScope` that counted the very docstrings saying the function is deliberately *not*
+called. **Counting mentions is not counting calls.**
+
+**Three lessons worth more than the individual fixes:**
+
+1. **A regression written by the author of the fix inherits the fix's blind spot.** Three of my own
+   tests failed on these corrections *because they had encoded the defective behaviour* — one
+   asserted that recording a conclusion suppresses the obtain-instruction, which was the defect.
+   Each is now a biconditional against the service so it cannot encode a preference again.
+2. **A property test over one workspace state is a property test over one workspace state.** The
+   channel guard advertised itself as "over every intent and every role"; it ran only against an
+   untouched workspace, so the memo-draft leak — which needs a saved draft to exist at all — passed
+   it. It now runs over a worked state too, and the mutation test is the proof: reintroduce the leak
+   and the untouched case still passes while the worked case names it.
+3. **A disclosure needs its own false-positive test.** G34's denial note fired on a session-wide
+   flag and labelled a complete answer incomplete over a lookup it never made; G37's displacement
+   note told readers they had not named a record they had named. Both were added to *fix* a silent
+   substitution, and both substituted something else.
+
+**48 findings remain** — 26 P2, 19 NOTE, and 3 P1s whose titles the fix-tally filter matched
+loosely; check them first. Full records, each with the command run and its real output, in
+`.claude/projects/C--dev-Inventory-Close/<session>/subagents/workflows/wf_e6105877-98d/journal.jsonl`.
+
+---
+
 ## 1. Where the code stands
 
 **HEAD is `b1cf8aa`** — Stage G (`7333663`), the remediation of the review plan's own §0
