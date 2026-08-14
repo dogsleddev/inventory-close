@@ -2700,31 +2700,44 @@ html[data-icg-rail="collapsed"] .icg-nav-label {
 html[data-icg-rail="collapsed"] .icg-nav-num {
   color: rgba(242, 234, 216, 0.72);
 }
+/* The rail's own control, and it has to look like one.
+   The first version was a 9px mono word at the BOTTOM of the rail whose text
+   was visually hidden the moment the rail collapsed — so in the state where a
+   reader most needs a way out, it was an unlabelled 11px chevron below the
+   fold. It now sits directly under the brand, is 26px tall, and keeps a
+   visible glyph at every width. */
 .icg-rail-toggle {
-  margin: 0 8px 8px;
-  padding: 5px 8px;
-  background: transparent;
+  margin: 2px 8px 10px;
+  padding: 6px 9px;
+  min-height: 26px;
+  background: rgba(242, 234, 216, 0.06);
   border: 1px solid var(--rail-hair);
   border-radius: 6px;
-  color: rgba(242, 234, 216, 0.62);
+  color: rgba(242, 234, 216, 0.78);
   font-family: var(--font-mono);
   font-size: 9px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 .icg-rail-toggle:hover {
   color: #f2ead8;
-  border-color: rgba(242, 234, 216, 0.34);
+  background: rgba(242, 234, 216, 0.12);
+  border-color: rgba(242, 234, 216, 0.42);
+}
+.icg-rail-toggle:focus-visible {
+  outline: 2px solid #e66a3c;
+  outline-offset: 1px;
 }
 .icg-rail-toggle-glyph {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
 }
 html[data-icg-rail="collapsed"] .icg-rail-toggle {
   justify-content: center;
+  padding: 6px 0;
 }
 html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
   position: absolute;
@@ -2734,33 +2747,38 @@ html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-/* Below 1280 the rail is already collapsed by the breakpoint, so the manual
-   control would be offering a state the viewport has already forced. */
+/* 1024–1279: nav rail is icon-only 56px; the two-column workspace stacks.
+ *
+ * EVERY rule here is suppressed by `html[data-icg-rail="expanded"]`, because
+ * the breakpoint is a GUESS about the reader and the attribute is the reader
+ * saying otherwise. Without that, a window under 1280 forced the rail to 56px
+ * with no way out — the toggle was hidden here too, on the reasoning that the
+ * viewport had already decided — so a reader on a narrow window got icons,
+ * no labels, and no control. An explicit choice has to beat a heuristic.
+ *
+ * Suppressing the rules is deliberate, rather than restoring the values in an
+ * `expanded` block: `display: none` has no single correct inverse here (the
+ * hidden elements are inline, block and flex), so re-declaring them would be
+ * guessing three defaults that already exist above.
+ */
 @media (max-width: 1279px) {
-  .icg-rail-toggle {
-    display: none;
-  }
-}
-
-/* 1024–1279: nav rail is icon-only 56px; the two-column workspace stacks. */
-@media (max-width: 1279px) {
-  .icg-rail {
+  html:not([data-icg-rail="expanded"]) .icg-rail {
     width: 56px;
   }
-  .icg-rail-brand-name,
-  .icg-rail-company,
-  .icg-nav-badge,
-  .icg-nav-start,
-  .icg-nav-group-title,
-  .icg-rail-health,
-  .icg-rail-user-meta {
+  html:not([data-icg-rail="expanded"]) .icg-rail-brand-name,
+  html:not([data-icg-rail="expanded"]) .icg-rail-company,
+  html:not([data-icg-rail="expanded"]) .icg-nav-badge,
+  html:not([data-icg-rail="expanded"]) .icg-nav-start,
+  html:not([data-icg-rail="expanded"]) .icg-nav-group-title,
+  html:not([data-icg-rail="expanded"]) .icg-rail-health,
+  html:not([data-icg-rail="expanded"]) .icg-rail-user-meta {
     display: none;
   }
   /* The label leaves the LAYOUT, never the accessibility tree: display:none
      here made every nav link nameless below 1280 (WCAG 4.1.2). The number
      is the sole visible identifier in the collapsed rail, so it also stops
      being decorative-contrast. */
-  .icg-nav-label {
+  html:not([data-icg-rail="expanded"]) .icg-nav-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -2768,12 +2786,26 @@ html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .icg-nav-num {
+  html:not([data-icg-rail="expanded"]) .icg-nav-num {
     color: rgba(242, 234, 216, 0.72);
   }
   /* Twin of the manual-collapse rule: no reserved gutter at 56px. */
-  .icg-rail-nav {
+  html:not([data-icg-rail="expanded"]) .icg-rail-nav {
     scrollbar-gutter: auto;
+  }
+  /* The toggle STAYS — this is where a reader most needs it. Its label is
+     hidden the way every other label here is, never removed. */
+  html:not([data-icg-rail="expanded"]) .icg-rail-toggle {
+    justify-content: center;
+    padding: 6px 0;
+  }
+  html:not([data-icg-rail="expanded"]) .icg-rail-toggle-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .icg-split {
     grid-template-columns: 1fr;

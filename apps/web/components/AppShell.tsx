@@ -224,21 +224,40 @@ export function AppShell(props: AppShellProps) {
    */
   const [rail, setRail] = useState<RailState>("expanded");
   useEffect(() => {
-    setRail(
-      document.documentElement.getAttribute(RAIL_ATTR) === "collapsed"
-        ? "collapsed"
-        : "expanded",
-    );
+    /**
+     * Seeded from the stamped attribute, and FAILING BACK TO THE VIEWPORT —
+     * not to "expanded".
+     *
+     * With no stored choice the rail's real state is whatever the 1279px
+     * breakpoint decides, so assuming "expanded" made the button lie on a
+     * narrow window: it read "Collapse navigation" beside a rail that was
+     * already collapsed, and the first press appeared to do nothing.
+     */
+    const stamped = document.documentElement.getAttribute(RAIL_ATTR);
+    if (stamped === "collapsed" || stamped === "expanded") {
+      setRail(stamped);
+      return;
+    }
+    /**
+     * `matchMedia` is guarded because jsdom does not implement it. Falling
+     * back to "expanded" is not a convenience: jsdom applies no CSS, so the
+     * breakpoint never fires there and the rail genuinely is expanded. A
+     * fallback of "collapsed" would have made every shell test assert against
+     * a state the test environment cannot produce.
+     */
+    const narrow =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(max-width: 1279px)").matches;
+    setRail(narrow ? "collapsed" : "expanded");
   }, []);
 
   const toggleRail = (): void => {
     const next: RailState = rail === "collapsed" ? "expanded" : "collapsed";
     setRail(next);
-    if (next === "collapsed") {
-      document.documentElement.setAttribute(RAIL_ATTR, next);
-    } else {
-      document.documentElement.removeAttribute(RAIL_ATTR);
-    }
+    // Both states are stamped. "expanded" is what overrides the breakpoint;
+    // removing the attribute would hand the decision back to the viewport,
+    // which is exactly what the reader just overruled.
+    document.documentElement.setAttribute(RAIL_ATTR, next);
     try {
       localStorage.setItem(RAIL_KEY, next);
     } catch {
@@ -256,6 +275,28 @@ export function AppShell(props: AppShellProps) {
           <span className="icg-rail-brand-name">Close Gaurd</span>
         </div>
         <div className="icg-rail-company">KESTRELGRID AI</div>
+        {/*
+          Directly under the brand, not at the foot of the rail. Collapsed, the
+          rail is 56px of numbers and the control has to be the first thing a
+          reader's eye lands on; at the bottom it was below the fold on a short
+          window, which is exactly where the breakpoint collapses the rail.
+          The LABEL says what pressing it does, and flips with the state.
+        */}
+        <button
+          type="button"
+          className="icg-rail-toggle"
+          onClick={toggleRail}
+          aria-expanded={rail === "expanded"}
+          aria-label={rail === "collapsed" ? "Expand navigation" : "Collapse navigation"}
+          title={rail === "collapsed" ? "Expand navigation" : "Collapse navigation"}
+        >
+          <span className="icg-rail-toggle-glyph" aria-hidden>
+            {rail === "collapsed" ? "»" : "«"}
+          </span>
+          <span className="icg-rail-toggle-text">
+            {rail === "collapsed" ? "EXPAND" : "COLLAPSE"}
+          </span>
+        </button>
         <div className="icg-rail-nav">
           {NAV_SECTIONS.map((section) => (
             <div key={section.title} className="icg-nav-group">
@@ -301,18 +342,6 @@ export function AppShell(props: AppShellProps) {
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          className="icg-rail-toggle"
-          onClick={toggleRail}
-          aria-expanded={rail === "expanded"}
-          aria-label={rail === "collapsed" ? "Expand navigation" : "Collapse navigation"}
-        >
-          <span className="icg-rail-toggle-glyph" aria-hidden>
-            {rail === "collapsed" ? "»" : "«"}
-          </span>
-          <span className="icg-rail-toggle-text">COLLAPSE</span>
-        </button>
         <div className="icg-rail-footer">
           {shell.dataHealthPct !== null ? (
             <div className="icg-rail-health">

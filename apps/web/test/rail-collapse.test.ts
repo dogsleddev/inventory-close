@@ -135,8 +135,30 @@ describe("the manual collapse and the responsive collapse stay in step", () => {
     expect(mediaSection()).toMatch(/\.icg-rail-nav\s*\{\s*scrollbar-gutter:\s*auto/);
   });
 
-  it("does not offer a manual toggle where the viewport already forced it", () => {
-    expect(mediaSection()).toBeTruthy();
-    expect(CSS).toMatch(/\.icg-rail-toggle\s*\{\s*display:\s*none/);
+  it("keeps the toggle reachable at every width", () => {
+    // This asserted the OPPOSITE until a reader hit it: below 1280 the rail
+    // was forced to 56px AND the toggle was hidden, on the reasoning that the
+    // viewport had already decided. The result was icons, no labels and no
+    // control — the one state where the control matters most.
+    expect(CSS).not.toMatch(/\.icg-rail-toggle\s*\{\s*display:\s*none/);
+    // Its label is hidden the way every other label is, never removed.
+    const media = mediaSection();
+    const toggleRule = media.slice(media.indexOf(".icg-rail-toggle-text"));
+    expect(toggleRule.slice(0, 220)).toMatch(/clip-path:\s*inset\(50%\)/);
+    expect(toggleRule.slice(0, 220)).not.toMatch(/display:\s*none/);
+  });
+
+  it("lets an explicit expand outrank the breakpoint", () => {
+    // The breakpoint is a guess about the reader; the attribute is the reader
+    // answering. Every rule inside the 1279px block must therefore yield to
+    // `expanded`, or a narrow window can never show labels.
+    const media = mediaSection();
+    const railRules = media.match(/\n\s*(html[^\n{]*)?\.icg-rail[^\n{]*\{/g) ?? [];
+    expect(railRules.length).toBeGreaterThan(2);
+    for (const rule of railRules) {
+      expect(rule, `unguarded rail rule in the breakpoint: ${rule.trim()}`).toContain(
+        'html:not([data-icg-rail="expanded"])',
+      );
+    }
   });
 });
