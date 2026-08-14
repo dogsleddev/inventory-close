@@ -204,6 +204,33 @@ function coverageWarnings(
     }));
 }
 
+/** One product line on a sales order — what was sold, per SKU. */
+export interface SalesOrderLineOut {
+  readonly sku: string;
+  readonly quantity: number;
+  /** Absent when the line carries no amount; never coerced to zero. */
+  readonly amountCents: number | undefined;
+}
+
+/**
+ * A sales order's own product lines, scoped to the reader.
+ *
+ * Lives here rather than in `costing.ts` because a sales order CAN be a
+ * scoped record — `SO-26184` is in the evidence graph — and `costing.ts`
+ * documents, and `projections.test.ts` enforces, that it reads no source
+ * document. The COGS surface joins this on by order number instead, so the
+ * scoped read stays in the module that already owns scoped reads.
+ */
+export interface SalesOrderLinesOut {
+  readonly salesOrder: string;
+  /** Empty when withheld OR when the order genuinely has no lines. */
+  readonly lines: readonly SalesOrderLineOut[];
+  /** The order exists and this reader may not see it. Ask this, not `length`. */
+  readonly withheld: boolean;
+  /** Sum of the lines, or null when withheld or any line is unpriced. */
+  readonly totalCents: number | null;
+}
+
 export interface ExceptionView {
   readonly exception: DerivedException;
   readonly open: boolean;
@@ -701,6 +728,35 @@ export function createQueryService(ws: Workspace) {
           RULE_REQUIRED_SOURCES[exception.finding.ruleId] ?? [],
         ),
       };
+    },
+
+    /**
+     * Every sales order's product lines, scoped.
+     *
+     * The COGS tab is the only order-keyed surface in this product and it
+     * reported a state per order without ever saying what was sold on it —
+     * the documents carried full line detail the whole time. `withheld` is
+     * carried beside `lines` so a surface can never render an unreadable
+     * order as an order with nothing on it.
+     */
+    listSalesOrderLines(ctx: ServiceContext): readonly SalesOrderLinesOut[] {
+      authorize(ctx.user, "close.read");
+      const inScope = makeRecordScope(ws, ctx.user);
+      return ws.dataset.salesOrders.map((order) => {
+        const visible = inScope(order.sourceRef);
+        return {
+          salesOrder: order.transactionNumber,
+          lines: visible
+            ? order.lines.map((l) => ({
+                sku: l.sku,
+                quantity: l.quantity,
+                amountCents: l.amountCents,
+              }))
+            : [],
+          withheld: !visible,
+          totalCents: visible ? (documentTotalCents(order.lines) ?? null) : null,
+        };
+      });
     },
 
     listInventoryUnits(ctx: ServiceContext) {

@@ -1615,6 +1615,23 @@ export interface CogsRowView {
    */
   readonly detail: string;
   readonly exceptionId: string | null;
+  /** What was sold on this order, per SKU. Empty when withheld OR absent. */
+  readonly lines: readonly CogsLineView[];
+  /**
+   * Why `lines` is empty, when it is. Rendered as a scope notice, never as
+   * "no lines" — an unreadable order and an order with nothing on it are
+   * different facts and this product does not let one stand for the other.
+   */
+  readonly linesNote: string | null;
+  /** The order total, already formatted. Null when it cannot be stated. */
+  readonly orderTotal: string | null;
+}
+
+export interface CogsLineView {
+  readonly sku: string;
+  readonly quantity: string;
+  /** Formatted, or null when the line carries no amount. */
+  readonly amount: string | null;
 }
 
 export interface CostingData {

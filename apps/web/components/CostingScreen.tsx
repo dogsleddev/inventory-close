@@ -442,6 +442,7 @@ export function CostingScreen({
                           <tr>
                             <th scope="col">Sales order</th>
                             <th scope="col">Cost of sales</th>
+                            <th scope="col">Product lines sold</th>
                             <th scope="col">What the book shows</th>
                           </tr>
                         </thead>
@@ -486,6 +487,43 @@ export function CostingScreen({
                                     </span>
                                   ) : null}
                                 </span>
+                              </td>
+                              <td>
+                                {row.lines.length > 0 ? (
+                                  <span
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "2px",
+                                      fontSize: "11px",
+                                      lineHeight: 1.5,
+                                    }}
+                                  >
+                                    {row.lines.map((line) => (
+                                      <span key={`${row.salesOrder}-${line.sku}`}>
+                                        <span className="icg-mono" style={{ fontSize: "10px" }}>
+                                          {line.sku}
+                                        </span>{" "}
+                                        &times;{line.quantity}
+                                        {line.amount !== null ? (
+                                          <span className="icg-soft"> · {line.amount}</span>
+                                        ) : null}
+                                      </span>
+                                    ))}
+                                    {row.orderTotal !== null ? (
+                                      <span className="icg-soft" style={{ fontSize: "10px" }}>
+                                        Order total {row.orderTotal}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="icg-soft"
+                                    style={{ fontSize: "11px", lineHeight: 1.5 }}
+                                  >
+                                    {row.linesNote}
+                                  </span>
+                                )}
                               </td>
                               <td>
                                 <span

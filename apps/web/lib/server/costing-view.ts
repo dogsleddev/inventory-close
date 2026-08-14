@@ -21,6 +21,23 @@ import { assembleDrawer, gatherExceptionContext, liveExceptionViews } from "./ex
 import { getQueries, getWorkspace, makeContext, roleLabel } from "./workspace";
 
 /**
+ * Why a COGS row shows no product lines, when it shows none.
+ *
+ * Three different facts, and none may stand in for another: the order is
+ * unreadable here, the close carries no such order, or the order is real and
+ * empty. Returning null for the ordinary case keeps the cell blank when there
+ * ARE lines to show.
+ */
+function cogsLinesNote(
+  order: { readonly lines: readonly unknown[]; readonly withheld: boolean } | undefined,
+): string | null {
+  if (order === undefined) return "No sales order under this chain's subject in the close.";
+  if (order.withheld) return "Order lines withheld — outside this role's scope.";
+  if (order.lines.length === 0) return "This order carries no product lines.";
+  return null;
+}
+
+/**
  * Costing (COMPLETION_PLAN Stage D) — which costs belong in inventory.
  *
  * Four tabs over two services calls: the standard cost stack, how those
@@ -290,6 +307,16 @@ export function buildCostingData(user: DemoUser, correlationId: string): Costing
 
   /* ---------------- COGS state ---------------- */
 
+  /**
+   * Product lines per order, keyed for the join below. The COGS rows come
+   * from the rules' chains and the lines from the scoped document read, so
+   * an order the reader may not see resolves to a `withheld` entry here
+   * rather than simply missing from the map.
+   */
+  const orderLines = new Map(
+    (attempt(() => queries.listSalesOrderLines(ctx)) ?? []).map((o) => [o.salesOrder, o]),
+  );
+
   const cogsRows: CogsRowView[] = classification.cogs.rows.map((r) => {
     const presentation = COGS_PRESENTATION[r.state] ?? {
       label: r.state,
@@ -303,6 +330,22 @@ export function buildCostingData(user: DemoUser, correlationId: string): Costing
       variant: presentation.variant,
       detail: cogsDetail(r),
       exceptionId: drawerFor(r.relatedExceptionId),
+      lines: (orderLines.get(r.salesOrder)?.lines ?? []).map((l) => ({
+        sku: l.sku,
+        quantity: String(l.quantity),
+        amount: l.amountCents === undefined ? null : formatCents(l.amountCents),
+      })),
+      /**
+       * Withheld and absent are separate sentences. Saying "no lines" for a
+       * withheld order would tell a reader the order was empty, which is the
+       * scope-as-absence defect this repo keeps finding — so the withheld case
+       * names the scope and the absent case names the missing document.
+       */
+      linesNote: cogsLinesNote(orderLines.get(r.salesOrder)),
+      orderTotal: (() => {
+        const total = orderLines.get(r.salesOrder)?.totalCents;
+        return total === undefined || total === null ? null : formatCents(total);
+      })(),
     };
   });
 
