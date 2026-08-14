@@ -2,12 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { userByRole } from "@icg/data";
 import { AppShell } from "../components/AppShell";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
-import { NAV_SECTIONS } from "../lib/nav";
+import { FOLDED_ROUTES, NAV_ITEMS, NAV_SECTIONS } from "../lib/nav";
 import { THEME_ATTR, THEME_BOOTSTRAP, THEME_KEY } from "../lib/theme";
 import { concludeException, controller, resetDemo, resolveAllBut } from "./support/live-close";
 
@@ -41,18 +41,19 @@ function renderShell(setRole: (userId: string) => Promise<void> = noopRole) {
 }
 
 describe("App shell — navigation and identity", () => {
-  it("renders all seventeen sections with the blocker badge and start-here tag", () => {
+  it("renders all fifteen destinations, grouped, with the badge and start-here tag", () => {
     renderShell();
-    // Pinned against the canonical list, not against NAV_SECTIONS itself —
+    // Pinned against the canonical list, not against NAV_ITEMS itself —
     // iterating the source array would shrink with it and pass on deletion.
-    expect(NAV_SECTIONS.map((s) => s.label)).toEqual([
+    // Cutoff and Ownership are deliberately absent: they were never screens,
+    // and are now filters on /exceptions. See FOLDED_ROUTES.
+    expect(NAV_ITEMS.map((s) => s.label)).toEqual([
       "Overview",
+      "How to Explore",
       "Inventory",
       "Procurement",
       "Costing",
       "Physical Count",
-      "Cutoff",
-      "Ownership",
       "Custody & Disposition",
       "Valuation",
       "Exceptions",
@@ -62,9 +63,17 @@ describe("App shell — navigation and identity", () => {
       "Audit Package",
       "Methodology",
       "Close Memo",
-      "How to Explore",
     ]);
-    for (const s of NAV_SECTIONS) {
+    // The grouping is pinned too, or a regression that flattened the rail
+    // back into one column would pass on the labels alone.
+    expect(NAV_SECTIONS.map((s) => s.title)).toEqual([
+      "Start",
+      "The Book",
+      "Assertions",
+      "The Close",
+      "Output",
+    ]);
+    for (const s of NAV_ITEMS) {
       expect(screen.getByRole("link", { name: new RegExp(s.label) })).toBeTruthy();
     }
     const exceptions = screen.getByRole("link", { name: /Exceptions/ });
@@ -100,11 +109,30 @@ describe("App shell — every nav entry is a built screen", () => {
    */
   it("resolves every nav href to a route file that exists", () => {
     const appDir = join(__dirname, "..", "app");
-    for (const section of NAV_SECTIONS) {
+    for (const section of NAV_ITEMS) {
       const segment = section.href === "/" ? "" : section.href.replace(/^\//, "");
       const route = join(appDir, segment, "page.tsx");
       expect(existsSync(route), `${section.label} → ${section.href} (${route})`).toBe(true);
     }
+  });
+
+  it("keeps a route file behind every folded URL, so an old link redirects", () => {
+    // /cutoff and /ownership left the rail; they must not have left the site.
+    // A 404 on a publicly deployed URL is the defect this guards, and the
+    // destinations are read from the same map the stubs redirect to.
+    const appDir = join(__dirname, "..", "app");
+    for (const [from, to] of Object.entries(FOLDED_ROUTES)) {
+      const route = join(appDir, from.replace(/^\//, ""), "page.tsx");
+      expect(existsSync(route), `${from} has no route file`).toBe(true);
+      const src = readFileSync(route, "utf8");
+      expect(src, `${from} does not redirect`).toContain("redirect");
+      // The destination must be a filter this screen actually serves, not
+      // just any string — a redirect to an unhandled filter would render the
+      // unfiltered queue and silently lose the view.
+      expect(to).toMatch(/^\/exceptions\?filter=(cutoff|ownership)$/);
+    }
+    // And nothing may quietly re-add them to the rail.
+    expect(NAV_ITEMS.some((i) => i.href in FOLDED_ROUTES)).toBe(false);
   });
 
   it("ships no not-designed placeholder screen or catch-all section route", () => {

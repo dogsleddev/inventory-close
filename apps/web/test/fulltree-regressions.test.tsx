@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userByRole } from "@icg/data";
 import { OverviewScreen } from "../components/OverviewScreen";
-import { NAV_SECTIONS } from "../lib/nav";
+import { NAV_ITEMS } from "../lib/nav";
 import { buildOverviewData, buildShellData } from "../lib/server/data";
 import { getQueries, makeContext } from "../lib/server/workspace";
 
@@ -252,7 +252,7 @@ describe("the collapsed nav rail keeps its accessible names", () => {
     const nav = document.querySelector(".icg-rail-nav");
     expect(nav).not.toBeNull();
     const links = nav!.querySelectorAll("a");
-    expect(links.length).toBe(NAV_SECTIONS.length);
+    expect(links.length).toBe(NAV_ITEMS.length);
     for (const link of links) {
       const label = link.querySelector(".icg-nav-label");
       expect(label?.textContent?.trim(), "a nav link with no label text").toBeTruthy();

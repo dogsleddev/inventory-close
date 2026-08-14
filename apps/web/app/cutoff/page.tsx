@@ -1,31 +1,20 @@
-import type { Metadata } from "next";
-import { buildExceptionsData, buildShellData } from "../../lib/server/data";
-import { currentUser, newCorrelationId } from "../../lib/server/current-user";
-import { ExceptionsScreen } from "../../components/ExceptionsScreen";
-import { setRole } from "../actions";
+import { redirect } from "next/navigation";
+import { FOLDED_ROUTES } from "../../lib/nav";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Cutoff",
-  description:
-    "Shipments and receipts that fall either side of the balance-sheet date, and the exceptions raised where the two disagree.",
-};
-
 /**
- * Cutoff (stage 09) — the exception queue filtered to the cutoff control
- * domain (design/IMPLEMENTATION_HANDOFF §9.4). The rows, drawers, ordering
- * and row activation are the queue's; only the population differs, and the
- * page says so rather than presenting a subset as the whole close.
+ * Cutoff was never a screen — it rendered `ExceptionsScreen` with the CUTOFF
+ * control-domain lens, which is now a filter on `/exceptions` itself.
+ *
+ * This stub exists rather than the directory being deleted because the site
+ * is publicly deployed: a link to /cutoff may already be in someone's notes.
+ * The destination comes from `FOLDED_ROUTES` so this file and the tests that
+ * prove the old URLs still resolve read ONE list.
+ *
+ * No `metadata` export: a redirect renders nothing, and a title on a page
+ * that never paints is a claim about a screen that no longer exists.
  */
-export default async function CutoffPage() {
-  const user = await currentUser();
-  const correlationId = newCorrelationId();
-  return (
-    <ExceptionsScreen
-      shell={buildShellData(user, correlationId)}
-      data={buildExceptionsData(user, correlationId, "cutoff")}
-      setRoleAction={setRole}
-    />
-  );
+export default function CutoffPage(): never {
+  redirect(FOLDED_ROUTES["/cutoff"] as string);
 }

@@ -17,7 +17,7 @@ import { buildInventoryListData } from "../lib/server/inventory-list-view";
 import { formatBpsExact, formatCents } from "../lib/format";
 import { CloseMemoScreen } from "../components/CloseMemoScreen";
 import { MethodologyScreen } from "../components/MethodologyScreen";
-import { NAV_SECTIONS } from "../lib/nav";
+import { NAV_ITEMS } from "../lib/nav";
 import { buildShellData } from "../lib/server/data";
 import { buildCloseMemoData } from "../lib/server/memo-view";
 import { buildMethodologyData } from "../lib/server/methodology-view";
@@ -453,7 +453,7 @@ describe("the new sections are wired the way the shell expects", () => {
       { file: "CloseMemoScreen.tsx", href: "/close-memo" },
     ];
     for (const pair of pairs) {
-      const label = NAV_SECTIONS.find((s) => s.href === pair.href)?.label;
+      const label = NAV_ITEMS.find((s) => s.href === pair.href)?.label;
       expect(label, pair.href).toBeDefined();
       const source = readFileSync(join(__dirname, "..", "components", pair.file), "utf8");
       expect(source, pair.file).toContain(`section="${label}"`);
@@ -464,8 +464,8 @@ describe("the new sections are wired the way the shell expects", () => {
     // `shell.test.tsx` builds `new RegExp(label)` unescaped and `getByRole`
     // throws on ambiguity, so a label contained in another label breaks a
     // test whose failure names neither of them.
-    for (const a of NAV_SECTIONS) {
-      for (const b of NAV_SECTIONS) {
+    for (const a of NAV_ITEMS) {
+      for (const b of NAV_ITEMS) {
         if (a.href === b.href) continue;
         expect(b.label.includes(a.label), `"${a.label}" is inside "${b.label}"`).toBe(false);
       }

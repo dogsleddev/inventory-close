@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AskResult, ResetResultView, ShellData } from "../lib/view-model";
-import { NAV_SECTIONS } from "../lib/nav";
+import { NAV_ITEMS, NAV_SECTIONS } from "../lib/nav";
 import { RAIL_ATTR, RAIL_KEY, type RailState } from "../lib/rail";
 import { THEME_ATTR, THEME_KEY, type Theme } from "../lib/theme";
 import { AskGaurd, type AskState } from "./AskGaurd";
@@ -257,25 +257,48 @@ export function AppShell(props: AppShellProps) {
         </div>
         <div className="icg-rail-company">KESTRELGRID AI</div>
         <div className="icg-rail-nav">
-          {NAV_SECTIONS.map((item, i) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="icg-nav-item"
-              aria-current={item.label === props.section ? "page" : undefined}
-            >
-              <span className="icg-nav-bar" aria-hidden />
-              <span className="icg-nav-num" aria-hidden>
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="icg-nav-label">{item.label}</span>
-              {item.label === "Exceptions" && shell.navOpenBlockers !== null ? (
-                <span className="icg-nav-badge">{shell.navOpenBlockers}</span>
-              ) : null}
-              {item.label === "How to Explore" ? (
-                <span className="icg-nav-start">START HERE</span>
-              ) : null}
-            </Link>
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title} className="icg-nav-group">
+              {/*
+                The heading is decorative-by-position, not by omission: the
+                group is a real <ul> labelled by it, so a screen reader gets
+                the same grouping a sighted reader gets from the rule above
+                it. Hidden when the rail collapses, like every other label.
+              */}
+              <div className="icg-nav-group-title" aria-hidden>
+                {section.title}
+              </div>
+              <ul className="icg-nav-group-list" aria-label={section.title}>
+                {section.items.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="icg-nav-item"
+                      aria-current={item.label === props.section ? "page" : undefined}
+                    >
+                      <span className="icg-nav-bar" aria-hidden />
+                      {/*
+                        The number is the ONLY visible identifier once the rail
+                        collapses, so it is derived from the flat projection
+                        rather than from the index within a group — two items
+                        numbered 01 in different groups would be worse than no
+                        number at all.
+                      */}
+                      <span className="icg-nav-num" aria-hidden>
+                        {String(NAV_ITEMS.indexOf(item) + 1).padStart(2, "0")}
+                      </span>
+                      <span className="icg-nav-label">{item.label}</span>
+                      {item.label === "Exceptions" && shell.navOpenBlockers !== null ? (
+                        <span className="icg-nav-badge">{shell.navOpenBlockers}</span>
+                      ) : null}
+                      {item.label === "How to Explore" ? (
+                        <span className="icg-nav-start">START HERE</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
         <button

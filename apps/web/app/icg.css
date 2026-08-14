@@ -164,12 +164,18 @@ button {
      pill: it needed 201px of content inside a 188px box and pushed the nav's
      scrollWidth to 209 against a 204 client width — a 5px horizontal
      scrollbar under the whole rail. Measured again after widening, the worst
-     row needs 226px of rail to render untruncated; 236 leaves headroom for
-     platforms whose font metrics differ from the one this was measured on.
+     row needs 226px of rail to render untruncated.
+     Then GROUPING the rail pushed it into vertical overflow (scrollHeight 562
+     against clientHeight 543 at a 720px viewport) and the scrollbar took 15px
+     off the content box, truncating the same row again at the same width.
+     Whether that scrollbar exists depends on the viewport HEIGHT, so the rail
+     is sized to fit its widest row with the gutter ALWAYS reserved — see
+     scrollbar-gutter on .icg-rail-nav — rather than only when the window
+     happens to be tall enough.
      Width alone is not the fix, though: see .icg-nav-label, which is what
      makes a slider structurally unreachable rather than merely absent at
      today's label lengths. */
-  width: 236px;
+  width: 252px;
   background: var(--rail);
   color: var(--rail-fg);
   display: flex;
@@ -218,6 +224,72 @@ button {
      answer, so the axis is closed rather than widened. */
   overflow-y: auto;
   overflow-x: hidden;
+  /* Reserve the scrollbar gutter whether or not it is scrolling. Without it
+     the nav's content width depends on the viewport HEIGHT — a taller window
+     gives 15px back — so the widest label fits or truncates depending on how
+     tall the browser is, which is not a thing a reader can be expected to
+     understand. Deterministic width beats 15px of recovered space. */
+  scrollbar-gutter: stable;
+}
+/* The exception queue's four views. Before Cutoff and Ownership were folded
+   in there was no filter control here at all — the active filter was named in
+   the heading and offered nowhere. */
+.icg-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.icg-filter-chip {
+  padding: 4px 11px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.icg-filter-chip:hover {
+  color: var(--fg);
+  border-color: var(--fg-hair, var(--hair));
+}
+.icg-filter-chip[data-active="true"] {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+  font-weight: 600;
+}
+
+.icg-nav-group + .icg-nav-group {
+  margin-top: 12px;
+}
+.icg-nav-group-title {
+  padding: 0 10px 4px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(242, 234, 216, 0.32);
+}
+.icg-nav-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* Collapsed: the group titles go, but the groups still separate the items,
+   so the rail keeps its rhythm at 56px instead of becoming one long column. */
+html[data-icg-rail="collapsed"] .icg-nav-group-title {
+  display: none;
+}
+/* The gutter is reserved only while the rail is wide. At 56px it would take
+   15 of the ~40 usable pixels and clip the number, which is the collapsed
+   rail's ONLY visible identifier. Measured: scrollWidth exceeded clientWidth
+   at 56px until this. Mirrored in the <1280 breakpoint. */
+html[data-icg-rail="collapsed"] .icg-rail-nav {
+  scrollbar-gutter: auto;
 }
 .icg-nav-item {
   display: flex;
@@ -2601,7 +2673,7 @@ button.icg-close-capsule {
  * tree. CSS cannot share declarations across a media boundary, so these are
  * two statements of one rule and they can drift; `rail-collapse.test.ts`
  * fails when they do. The label rule in particular must never become
- * `display: none`: that made all 17 nav links nameless (WCAG 4.1.2) the last
+ * `display: none`: that made every nav link nameless (WCAG 4.1.2) the last
  * time this rail was collapsed, and the number is the sole visible
  * identifier once the label is gone.
  * ------------------------------------------------------------------ */
@@ -2612,6 +2684,7 @@ html[data-icg-rail="collapsed"] .icg-rail-brand-name,
 html[data-icg-rail="collapsed"] .icg-rail-company,
 html[data-icg-rail="collapsed"] .icg-nav-badge,
 html[data-icg-rail="collapsed"] .icg-nav-start,
+html[data-icg-rail="collapsed"] .icg-nav-group-title,
 html[data-icg-rail="collapsed"] .icg-rail-health,
 html[data-icg-rail="collapsed"] .icg-rail-user-meta {
   display: none;
@@ -2678,12 +2751,13 @@ html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
   .icg-rail-company,
   .icg-nav-badge,
   .icg-nav-start,
+  .icg-nav-group-title,
   .icg-rail-health,
   .icg-rail-user-meta {
     display: none;
   }
   /* The label leaves the LAYOUT, never the accessibility tree: display:none
-     here made all 13 nav links nameless below 1280 (WCAG 4.1.2). The number
+     here made every nav link nameless below 1280 (WCAG 4.1.2). The number
      is the sole visible identifier in the collapsed rail, so it also stops
      being decorative-contrast. */
   .icg-nav-label {
@@ -2696,6 +2770,10 @@ html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
   }
   .icg-nav-num {
     color: rgba(242, 234, 216, 0.72);
+  }
+  /* Twin of the manual-collapse rule: no reserved gutter at 56px. */
+  .icg-rail-nav {
+    scrollbar-gutter: auto;
   }
   .icg-split {
     grid-template-columns: 1fr;

@@ -62,14 +62,26 @@ describe("the nav rail cannot produce a horizontal slider", () => {
     expect(label).toMatch(/text-overflow:\s*ellipsis/);
   });
 
+  it("reserves the scrollbar gutter so the content width is not height-dependent", () => {
+    // Grouping the rail pushed the nav into vertical overflow and the
+    // scrollbar took 15px off the content box, truncating the widest label at
+    // a width that had measured clean minutes earlier. Whether that scrollbar
+    // exists depends on the viewport HEIGHT, so the gutter is always
+    // reserved and the width is sized around it.
+    expect(block(".icg-rail-nav")).toMatch(/scrollbar-gutter:\s*stable/);
+  });
+
   it("is wide enough that no shipped label truncates today", () => {
-    // Measured in a real browser after the widening: the worst row ("How to
-    // Explore" + START HERE) needs 226px of rail to render untruncated. At
-    // 224 it still ellipsised by 2px — which is why this asserts the measured
-    // requirement and not the first width that removed the scrollbar.
-    // Ellipsis is the guarantee for a FUTURE label, not the everyday state.
+    // Measured in a real browser, three times, and it moved twice:
+    //   224 -> widest row still ellipsised by 2px
+    //   236 -> clean flat, then truncated again once grouping added a
+    //          vertical scrollbar that ate 15px
+    //   252 -> 217px of content + 16px nav padding + a 15px reserved gutter
+    // This asserts the measured requirement, not the first width that looked
+    // right. Ellipsis is the guarantee for a FUTURE label, not the everyday
+    // state: zero shipped labels truncate.
     const width = /width:\s*(\d+)px/.exec(block(".icg-rail"))?.[1];
-    expect(Number(width)).toBeGreaterThanOrEqual(226);
+    expect(Number(width)).toBeGreaterThanOrEqual(248);
   });
 });
 
@@ -101,7 +113,7 @@ describe("the manual collapse and the responsive collapse stay in step", () => {
   });
 
   it("takes the label out of the layout but never out of the a11y tree", () => {
-    // The regression this guards: display:none here made 17 nav links
+    // The regression this guards: display:none here made every nav link
     // nameless below 1280. Both copies must use the clip technique.
     const manual = block('html[data-icg-rail="collapsed"] .icg-nav-label');
     expect(manual).toMatch(/clip-path:\s*inset\(50%\)/);
@@ -111,6 +123,16 @@ describe("the manual collapse and the responsive collapse stay in step", () => {
     const labelRule = media.slice(media.indexOf(".icg-nav-label"));
     expect(labelRule.slice(0, 200)).toMatch(/clip-path:\s*inset\(50%\)/);
     expect(labelRule.slice(0, 200)).not.toMatch(/display:\s*none/);
+  });
+
+  it("drops the reserved gutter in both collapsed states", () => {
+    // At 56px the gutter would take 15 of ~40 usable pixels and clip the
+    // number — the collapsed rail's only visible identifier. Measured:
+    // scrollWidth exceeded clientWidth at 56px until this was added.
+    expect(block('html[data-icg-rail="collapsed"] .icg-rail-nav')).toMatch(
+      /scrollbar-gutter:\s*auto/,
+    );
+    expect(mediaSection()).toMatch(/\.icg-rail-nav\s*\{\s*scrollbar-gutter:\s*auto/);
   });
 
   it("does not offer a manual toggle where the viewport already forced it", () => {

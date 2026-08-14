@@ -252,7 +252,7 @@ export function buildCustodyData(user: DemoUser, correlationId: string): Custody
       // very units — EXC-007's third-party holding among them. Custody is
       // still the question this screen answers; ownership is reported as what
       // the listing asserts, with the dispute named rather than papered over.
-      note: "Custody says who is holding the unit. Ownership is the accounting conclusion beside it, and the two answer different questions: every unit here is stock the listing RECORDS as company-owned, including the units a customer, a carrier or an installer is holding. Where an open exception disputes that record, the Exceptions and Ownership screens carry it — this screen never treats a location as an ownership conclusion. Location is not ownership.",
+      note: "Custody says who is holding the unit. Ownership is the accounting conclusion beside it, and the two answer different questions: every unit here is stock the listing RECORDS as company-owned, including the units a customer, a carrier or an installer is holding. Where an open exception disputes that record, the exception queue carries it — this screen never treats a location as an ownership conclusion. Location is not ownership.",
     },
     consignment: {
       stats: consignmentStats,

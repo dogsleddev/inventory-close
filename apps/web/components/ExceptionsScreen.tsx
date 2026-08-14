@@ -17,6 +17,27 @@ import {
 } from "./kit";
 
 /**
+ * The four views of this queue, as one control.
+ *
+ * Until Cutoff and Ownership were folded in there was no filter CONTROL on
+ * this screen at all — `?filter=blockers` worked, and the only way to reach
+ * it was the Overview's figures. The active filter was described in the page
+ * heading and nowhere offered. Two of these views used to be rail entries,
+ * so making them reachable was not optional once the rail stopped carrying
+ * them.
+ *
+ * `title` matches the heading `buildExceptionsData` produces for the same
+ * key, so the control and the heading cannot disagree about which view is
+ * showing. `null` is the unfiltered queue.
+ */
+const FILTERS: readonly { readonly key: string | null; readonly label: string }[] = [
+  { key: null, label: "All exceptions" },
+  { key: "blockers", label: "Preventing sign-off" },
+  { key: "cutoff", label: "Cutoff" },
+  { key: "ownership", label: "Ownership" },
+];
+
+/**
  * Exceptions queue (stage 05): all designed exceptions in the deterministic
  * default order — open blockers first, then open items, then resolved;
  * exposure descending within each tier; stable id tiebreak. The row opens
@@ -38,7 +59,16 @@ export function ExceptionsScreen({
   return (
     <AppShell
       shell={shell}
-      section={filter?.title ?? "Exceptions"}
+      /**
+       * Always "Exceptions", never the filter's title.
+       *
+       * AppShell marks the active rail item by BYTE-EQUAL label comparison.
+       * While Cutoff and Ownership were rail entries their titles matched a
+       * label and highlighting worked by coincidence; now that they are
+       * filters, passing the filter title would highlight nothing at all and
+       * a reader inside a filtered view would see no rail position.
+       */
+      section="Exceptions"
       setRoleAction={setRoleAction}
       drawerOpen={drawerData !== undefined}
       onCloseDrawer={() => setOpenId(null)}
@@ -64,13 +94,32 @@ export function ExceptionsScreen({
             <ExportCsvLink
               table="exceptions"
               label="the exception queue"
-              // One component, four populations (/exceptions, ?filter=blockers,
-              // /cutoff, /ownership) and one file. The file is always all of
-              // them, so the button says so rather than promising the view.
+              // One component, four filters over one queue, and one file. The
+              // file is always the whole queue, so the button says so rather
+              // than promising the view.
               scopeNote="Every designed exception, not just this view's rows."
             />
           )}
         </div>
+
+        {data.restricted ? null : (
+          <nav className="icg-filter-bar" aria-label="Exception views">
+            {FILTERS.map((f) => {
+              const active = (filter?.key ?? null) === f.key;
+              return (
+                <Link
+                  key={f.label}
+                  href={f.key === null ? "/exceptions" : `/exceptions?filter=${f.key}`}
+                  className="icg-filter-chip"
+                  data-active={active}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {f.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         {data.restricted ? (
           <Panel>

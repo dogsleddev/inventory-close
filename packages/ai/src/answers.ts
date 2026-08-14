@@ -523,7 +523,7 @@ function serialCountAnswer(
     nextAction: `Open ${serial}'s Financial Life for the four-phase chain of custody behind this count.`,
     citations: [
       cite(serial, { href: `/inventory/${serial}` }),
-      cite("Physical Count", { href: "/count" }),
+      cite("Physical Count", { href: "/physical-count" }),
       ...(latest.row.externalCountDetailId !== undefined
         ? [cite(latest.row.externalCountDetailId)]
         : []),

@@ -329,6 +329,14 @@ export interface ExceptionsData {
    * it is showing, or its counts read as the whole close.
    */
   readonly filter: {
+    /**
+     * The `?filter=` value that produced this view.
+     *
+     * Carried rather than inferred: the screen's filter control needs to know
+     * which option is active, and matching the heading TEXT to decide would
+     * be a proxy for the fact — the failure mode this codebase keeps finding.
+     */
+    readonly key: string;
     readonly title: string;
     readonly context: string;
     readonly basis: string;

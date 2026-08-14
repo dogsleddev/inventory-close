@@ -19,7 +19,7 @@ import { ProcurementScreen } from "../components/ProcurementScreen";
 import { ReconciliationScreen } from "../components/ReconciliationScreen";
 import { ValuationScreen } from "../components/ValuationScreen";
 import { EXPORT_TABLES, buildCsv } from "../lib/server/export-csv";
-import { NAV_SECTIONS } from "../lib/nav";
+import { NAV_ITEMS } from "../lib/nav";
 import { getQueries, makeContext } from "../lib/server/workspace";
 import { buildAdjustmentsData } from "../lib/server/adjustments-view";
 import { buildAuditPackageData } from "../lib/server/audit-package-view";
@@ -334,8 +334,8 @@ describe("the button never promises a file the viewer would be refused", () => {
 
 describe("where the file is broader than the view, the button says so", () => {
   it("qualifies the exception queue, whose four views share one file", () => {
-    // /cutoff and /ownership render this component filtered to a control
-    // domain; the file is always all 15.
+    // The cutoff and ownership filters render this component narrowed to a
+    // control domain; the file is always all 15.
     render(
       <ExceptionsScreen
         shell={buildShellData(user(), "T-EXP")}
@@ -738,8 +738,12 @@ describe("the nav and the affordance agree about what exists", () => {
     // A section in the rail that is neither exportable nor says why would be
     // the gap this whole file is about, returning quietly.
     const covered = new Set<string>(SCREENS.map((s) => s.route));
-    const uncovered = NAV_SECTIONS.map((s) => s.href).filter(
-      (href) => !covered.has(href) && href !== "/user-guide" && href !== "/cutoff" && href !== "/ownership",
+    // /user-guide is the one exemption left: it is static and figure-free by
+    // design, so it has nothing to export. The /cutoff and /ownership
+    // exemptions went with the routes — they are filters on /exceptions now,
+    // and /exceptions is covered.
+    const uncovered = NAV_ITEMS.map((s) => s.href).filter(
+      (href) => !covered.has(href) && href !== "/user-guide",
     );
     expect(uncovered).toEqual([]);
   });

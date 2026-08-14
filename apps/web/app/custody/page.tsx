@@ -17,10 +17,11 @@ export const metadata: Metadata = {
  * Custody & Disposition (COMPLETION_PLAN Stage E). `?tab=` opens a population
  * directly, as on Procurement and Costing.
  *
- * This is a NEW route rather than a rework of `/ownership`, which stays the
- * exception queue filtered to the ownership and third-party control domains.
- * Those are different questions — one is "what is disputed", this is "who is
- * holding it" — and merging them would delete a working lens.
+ * This is a NEW route rather than a rework of the ownership lens, which is
+ * the exception queue filtered to the ownership and third-party control
+ * domains — reachable now as `/exceptions?filter=ownership` rather than as
+ * its own route. Those are different questions — one is "what is disputed",
+ * this is "who is holding it" — and merging them would delete a working lens.
  */
 export default async function CustodyPage({
   searchParams,

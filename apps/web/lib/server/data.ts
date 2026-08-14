@@ -816,6 +816,29 @@ export const EXCEPTION_SECTIONS: Readonly<
   },
 };
 
+/**
+ * One `?filter=` value, split into the two arguments the builder takes.
+ *
+ * This lives here rather than inline in `/exceptions/page.tsx` because it is
+ * a DECISION, and a decision inside a server component is one no test can
+ * reach: with the mapping inlined, deleting it entirely left all 688 app
+ * tests green while every folded URL silently rendered the unfiltered queue.
+ *
+ * The split itself is an implementation detail of `buildExceptionsData` —
+ * "blockers" is a property of an item, cutoff and ownership are control
+ * domains — and the reader should never have to know it, which is the whole
+ * reason those two stopped being routes.
+ */
+export function resolveExceptionFilter(filter: string | undefined): {
+  readonly sectionKey: string | undefined;
+  readonly filterKey: string | undefined;
+} {
+  if (filter !== undefined && filter in EXCEPTION_SECTIONS) {
+    return { sectionKey: filter, filterKey: undefined };
+  }
+  return { sectionKey: undefined, filterKey: filter };
+}
+
 export function buildExceptionsData(
   user: DemoUser,
   correlationId: string,
@@ -943,6 +966,7 @@ export function buildExceptionsData(
     filter:
       section !== undefined
         ? {
+            key: sectionKey as string,
             title: section.title,
             context: section.context,
             // The basis is stated, not implied: this page is a filter over
@@ -954,6 +978,7 @@ export function buildExceptionsData(
           }
         : blockersOnly
           ? {
+              key: "blockers",
               title: "Preventing sign-off",
               context: "The open items management must conclude before the period can be signed off.",
               /**

@@ -1,31 +1,16 @@
-import type { Metadata } from "next";
-import { buildExceptionsData, buildShellData } from "../../lib/server/data";
-import { currentUser, newCorrelationId } from "../../lib/server/current-user";
-import { ExceptionsScreen } from "../../components/ExceptionsScreen";
-import { setRole } from "../actions";
+import { redirect } from "next/navigation";
+import { FOLDED_ROUTES } from "../../lib/nav";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Ownership",
-  description:
-    "Units held somewhere other than a company warehouse, and whether the right to them is confirmed or still open.",
-};
-
 /**
- * Ownership (stage 09) — the exception queue filtered to the ownership and
- * third-party control domains: the same assertion asked of units that sit
- * somewhere else. The grouping is authored, so the panel states which
- * domains it contains.
+ * Ownership was never a screen — it rendered `ExceptionsScreen` with the
+ * OWNERSHIP and THIRD_PARTY control-domain lens, which is now a filter on
+ * `/exceptions` itself.
+ *
+ * Kept as a redirect rather than deleted: the site is publicly deployed and
+ * a link to /ownership may already exist. See `FOLDED_ROUTES`.
  */
-export default async function OwnershipPage() {
-  const user = await currentUser();
-  const correlationId = newCorrelationId();
-  return (
-    <ExceptionsScreen
-      shell={buildShellData(user, correlationId)}
-      data={buildExceptionsData(user, correlationId, "ownership")}
-      setRoleAction={setRole}
-    />
-  );
+export default function OwnershipPage(): never {
+  redirect(FOLDED_ROUTES["/ownership"] as string);
 }
