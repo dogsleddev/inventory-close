@@ -1246,7 +1246,13 @@ const INTENTS: readonly Intent[] = [
         "cost of goods sold",
         "left the book",
         "inventory relief",
-        "relieved",
+        /**
+         * A STEM. "relieved" alone lost "Which chains relieve inventory?" to
+         * `procurement-chain`, an intent below this one — a wrong answer, not
+         * a refusal. `reliev*` is unambiguous in this domain: no other word
+         * in the corpus begins with it.
+         */
+        "reliev*",
         "accounting impact",
       ],
       all: [["sold", "book"]],
@@ -1440,7 +1446,16 @@ const INTENTS: readonly Intent[] = [
       all: [
         ["third party", "confirmation"],
         ["custodian", "confirmation"],
-        ["third party", "confirmed"],
+        /**
+         * A STEM, not the past participle. Declared as "confirmed", the
+         * present tense fell through this intent and was claimed by `custody`
+         * — which sits BELOW it, so ordering could not arbitrate — and "Does
+         * the third party confirm the units it holds?" was answered with a
+         * custody breakdown. `confirm*` covers confirm / confirms /
+         * confirmed / confirming, and confirmation is this intent's own
+         * subject, so the widening cannot reach a question it should lose.
+         */
+        ["third party", "confirm*"],
       ],
     },
     answer: (s) => {

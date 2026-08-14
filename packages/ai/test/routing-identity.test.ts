@@ -132,6 +132,15 @@ const PROBES: readonly {
   { q: "What did we dispose of this year, and what did we get back?", intent: "disposition" },
   { q: "Is any stock on our floor owned by somebody else?", intent: "consignment" },
   { q: "Which third-party inventory is unsupported?", intent: "third-party" },
+  /**
+   * G72, the two cases that were MIS-ROUTES rather than refusals. Declared in
+   * the past tense only, each lost its present-tense phrasing to an intent
+   * BELOW it — so ordering could not arbitrate and the reader got a confident
+   * answer to a different question. Both now use the stem marker the compiler
+   * provides for exactly this; the past-tense probes above still hold.
+   */
+  { q: "Does the third party confirm the units it holds?", intent: "third-party" },
+  { q: "Which chains relieve inventory?", intent: "cogs-relief" },
   { q: "Who is holding our inventory that we do not hold ourselves?", intent: "custody" },
   { q: "Which stock has not moved in a year?", intent: "eo-aging" },
   { q: "Has a reserve been concluded?", intent: "valuation" },
