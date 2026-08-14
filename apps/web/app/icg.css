@@ -160,7 +160,16 @@ button {
 
 /* ============ Nav rail ============ */
 .icg-rail {
-  width: 204px;
+  /* 236, not 204. The widest row is "How to Explore" carrying the START HERE
+     pill: it needed 201px of content inside a 188px box and pushed the nav's
+     scrollWidth to 209 against a 204 client width — a 5px horizontal
+     scrollbar under the whole rail. Measured again after widening, the worst
+     row needs 226px of rail to render untruncated; 236 leaves headroom for
+     platforms whose font metrics differ from the one this was measured on.
+     Width alone is not the fix, though: see .icg-nav-label, which is what
+     makes a slider structurally unreachable rather than merely absent at
+     today's label lengths. */
+  width: 236px;
   background: var(--rail);
   color: var(--rail-fg);
   display: flex;
@@ -204,7 +213,11 @@ button {
   flex-direction: column;
   padding: 0 8px;
   gap: 1px;
-  overflow: auto;
+  /* Vertical only. `overflow: auto` on both axes is what rendered the 5px
+     horizontal slider; a rail that scrolls sideways is never the right
+     answer, so the axis is closed rather than widened. */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .icg-nav-item {
   display: flex;
@@ -255,6 +268,15 @@ button {
 .icg-nav-label {
   flex: 1;
   white-space: nowrap;
+  /* A flex item's base size is its max-content width unless it can shrink,
+     so without min-width:0 a long label forces the row wider than the rail
+     and the nav scrolls sideways — the same mechanism that put a 341-char
+     Ask Gaurd value 1,913px inside a 287px drawer. The rail is sized so no
+     shipped label ellipsises today; this is what guarantees a longer one
+     truncates instead of reopening the slider. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .icg-nav-badge {
   font-family: var(--font-mono);
@@ -2568,6 +2590,82 @@ button.icg-close-capsule {
   .icg-facts,
   .icg-kpis--quad {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Manual rail collapse.
+ *
+ * Deliberately the SAME vocabulary as the <1280 breakpoint below — 56px,
+ * chrome hidden, label out of the layout but still in the accessibility
+ * tree. CSS cannot share declarations across a media boundary, so these are
+ * two statements of one rule and they can drift; `rail-collapse.test.ts`
+ * fails when they do. The label rule in particular must never become
+ * `display: none`: that made all 17 nav links nameless (WCAG 4.1.2) the last
+ * time this rail was collapsed, and the number is the sole visible
+ * identifier once the label is gone.
+ * ------------------------------------------------------------------ */
+html[data-icg-rail="collapsed"] .icg-rail {
+  width: 56px;
+}
+html[data-icg-rail="collapsed"] .icg-rail-brand-name,
+html[data-icg-rail="collapsed"] .icg-rail-company,
+html[data-icg-rail="collapsed"] .icg-nav-badge,
+html[data-icg-rail="collapsed"] .icg-nav-start,
+html[data-icg-rail="collapsed"] .icg-rail-health,
+html[data-icg-rail="collapsed"] .icg-rail-user-meta {
+  display: none;
+}
+html[data-icg-rail="collapsed"] .icg-nav-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-icg-rail="collapsed"] .icg-nav-num {
+  color: rgba(242, 234, 216, 0.72);
+}
+.icg-rail-toggle {
+  margin: 0 8px 8px;
+  padding: 5px 8px;
+  background: transparent;
+  border: 1px solid var(--rail-hair);
+  border-radius: 6px;
+  color: rgba(242, 234, 216, 0.62);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.icg-rail-toggle:hover {
+  color: #f2ead8;
+  border-color: rgba(242, 234, 216, 0.34);
+}
+.icg-rail-toggle-glyph {
+  font-size: 11px;
+  line-height: 1;
+}
+html[data-icg-rail="collapsed"] .icg-rail-toggle {
+  justify-content: center;
+}
+html[data-icg-rail="collapsed"] .icg-rail-toggle-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Below 1280 the rail is already collapsed by the breakpoint, so the manual
+   control would be offering a state the viewport has already forced. */
+@media (max-width: 1279px) {
+  .icg-rail-toggle {
+    display: none;
   }
 }
 

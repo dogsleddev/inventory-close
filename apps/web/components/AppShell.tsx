@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { AskResult, ResetResultView, ShellData } from "../lib/view-model";
 import { NAV_SECTIONS } from "../lib/nav";
+import { RAIL_ATTR, RAIL_KEY, type RailState } from "../lib/rail";
 import { THEME_ATTR, THEME_KEY, type Theme } from "../lib/theme";
 import { AskGaurd, type AskState } from "./AskGaurd";
 import { SiteFooter } from "./SiteFooter";
@@ -215,6 +216,36 @@ export function AppShell(props: AppShellProps) {
 
   const railClosed = !askOpen && !props.drawerOpen;
 
+  /**
+   * Rail collapse. The attribute is already on <html> before this component
+   * mounts (RAIL_BOOTSTRAP in <head>), so state is seeded FROM the document
+   * rather than defaulting to "expanded" and correcting itself — which would
+   * flash the rail open on every one of the twenty server-rendered routes.
+   */
+  const [rail, setRail] = useState<RailState>("expanded");
+  useEffect(() => {
+    setRail(
+      document.documentElement.getAttribute(RAIL_ATTR) === "collapsed"
+        ? "collapsed"
+        : "expanded",
+    );
+  }, []);
+
+  const toggleRail = (): void => {
+    const next: RailState = rail === "collapsed" ? "expanded" : "collapsed";
+    setRail(next);
+    if (next === "collapsed") {
+      document.documentElement.setAttribute(RAIL_ATTR, next);
+    } else {
+      document.documentElement.removeAttribute(RAIL_ATTR);
+    }
+    try {
+      localStorage.setItem(RAIL_KEY, next);
+    } catch {
+      /* Storage denied: the rail still toggles, it just will not persist. */
+    }
+  };
+
   return (
     <div className="icg-app">
       <nav className="icg-rail" aria-label="Primary">
@@ -247,6 +278,18 @@ export function AppShell(props: AppShellProps) {
             </Link>
           ))}
         </div>
+        <button
+          type="button"
+          className="icg-rail-toggle"
+          onClick={toggleRail}
+          aria-expanded={rail === "expanded"}
+          aria-label={rail === "collapsed" ? "Expand navigation" : "Collapse navigation"}
+        >
+          <span className="icg-rail-toggle-glyph" aria-hidden>
+            {rail === "collapsed" ? "»" : "«"}
+          </span>
+          <span className="icg-rail-toggle-text">COLLAPSE</span>
+        </button>
         <div className="icg-rail-footer">
           {shell.dataHealthPct !== null ? (
             <div className="icg-rail-health">

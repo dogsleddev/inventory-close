@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@fontsource-variable/fraunces";
+import { RAIL_BOOTSTRAP } from "../lib/rail";
 import { THEME_BOOTSTRAP } from "../lib/theme";
 import "./icg.css";
 
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+        <script dangerouslySetInnerHTML={{ __html: RAIL_BOOTSTRAP }} />
       </head>
       <body className={`${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
