@@ -144,6 +144,18 @@ const PROBES: readonly {
   { q: "What supports EXC-001?", intent: "evidence-support" },
   { q: "Which evidence is still missing?", intent: "missing-evidence" },
   { q: "Which exceptions are resolved?", intent: "resolved-exceptions" },
+  /**
+   * G41. The negated ask used to be claimed by `resolved-exceptions` — both
+   * "which" and "resolved" are present and the pattern language has no
+   * negation — so the product answered with the exact complement of the
+   * question. These four probe the boundary from both sides; the
+   * "largest unresolved exposures" probe below is the third side, and it
+   * failed when this intent first declared a bare "unresolved".
+   */
+  { q: "Which exceptions are not resolved?", intent: "unresolved-exceptions" },
+  { q: "What has not been resolved?", intent: "unresolved-exceptions" },
+  { q: "Which exceptions are unresolved?", intent: "unresolved-exceptions" },
+  { q: "Which exceptions have not been concluded?", intent: "unresolved-exceptions" },
   { q: "Which serials have open exceptions?", intent: "serials-with-exceptions" },
   { q: "What conflicts at year-end?", intent: "unit-conflicts", scope: { serial: "KE-E2-1048" } },
   { q: "What should I work on first?", intent: "work-priority" },

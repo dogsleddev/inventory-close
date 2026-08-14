@@ -12,6 +12,7 @@ import type {
   MethodologyOut,
   ProcurementPopulationsOut,
 } from "@icg/services";
+import { namesContradiction } from "@icg/domain";
 import { checkDraft } from "./guardrails.js";
 import {
   extractExceptionId,
@@ -247,6 +248,14 @@ interface ExceptionResult {
     finding: {
       title: string;
       whyFlagged: string;
+      /**
+       * Declared because `whyFlagged` alone cannot say WHAT KIND of finding it
+       * describes. A rule fires both for records that contradict each other
+       * and for a record that was asked for and never arrived, and this
+       * package filed both under CONFLICTING EVIDENCE. See
+       * `REASON_CODE_KIND` in @icg/domain.
+       */
+      reasonCodes: readonly string[];
       exposureCents: number;
       assertions: readonly string[];
       /**
@@ -2214,6 +2223,88 @@ const INTENTS: readonly Intent[] = [
     },
   },
   {
+    /**
+     * The NEGATED ask, and it must sit immediately above `resolved-exceptions`.
+     *
+     * "Which exceptions are not resolved?" matched that intent's
+     * `["which", "resolved"]` group — both words are present — so the product
+     * answered with the RESOLVED population and listed eight items, every one
+     * of which was the opposite of what was asked. Confidently, with a
+     * correct-looking list. It was the worst of the open findings.
+     *
+     * The fix is an intent that CLAIMS the phrasing, not a negation operator
+     * in the pattern language: `matching.ts` states plainly that there is no
+     * negation and that disambiguation lives in the ORDER of this table,
+     * asserted probe by probe. Adding `not:` here would move the
+     * disambiguation somewhere invisible. Ordering is the mechanism, so
+     * ordering is what this uses — and `routing-identity.test.ts` pins it.
+     *
+     * A reader asking this deserves the real answer, not a refusal: the open
+     * population is exactly what they asked for.
+     */
+    key: "unresolved-exceptions",
+    mode: "SUMMARIZE",
+    /**
+     * `unresolved` is NOT in `any`, and that is not fussiness.
+     *
+     * The first version declared it there and the routing harness caught it
+     * stealing "Show largest unresolved exposures." from `largest-exposures`
+     * — an intent that sits BELOW this one, so ordering could not arbitrate.
+     * The bare adjective describes exposures, chains and differences too; only
+     * the negated VERB phrases are unambiguous on their own. So the adjective
+     * has to name its subject, and the verb phrases do not.
+     */
+    match: {
+      any: ["not resolved", "not been resolved", "not concluded", "not been concluded"],
+      all: [
+        ["unresolved", "exceptions"],
+        ["unresolved", "items"],
+        ["without a conclusion"],
+      ],
+    },
+    answer: (s) => {
+      const all = s.run<readonly EffectiveExceptionResult[]>("get_effective_exceptions");
+      if (all === undefined) return undefined;
+      const open = all.filter((e) => e.open);
+      if (open.length === 0) {
+        // Verified empty, said as a conclusion rather than an empty list.
+        return {
+          status: `Every one of the ${all.length} exceptions carries a resolution`,
+          knownFacts: [],
+          conflictingEvidence: [],
+          missingEvidence: [],
+          assertions: [],
+          managementConclusion:
+            "Nothing is outstanding. That is a measured position over the whole population, not an empty filter.",
+          nextAction: "Open the close memo to state the position, or Overview to sign off.",
+          citations: [],
+        };
+      }
+      return {
+        status: `${open.length} of ${all.length} ${plural(all.length, "exception")} ${plural(open.length, "is", "are")} not resolved`,
+        knownFacts: open.map(
+          (e): AiFigure => ({
+            label: `${e.exception.id} — ${e.exception.finding.title}`,
+            // What is OUTSTANDING is the subject of the question, so each row
+            // says what it is waiting on rather than restating its status.
+            text:
+              e.unmetRequirements.length > 0
+                ? `${e.effectiveStatus} · waiting on ${count(e.unmetRequirements.length)} required ${plural(e.unmetRequirements.length, "record")}`
+                : `${e.effectiveStatus} · every required record is in evidence; awaiting a management conclusion`,
+            source: "get_effective_exceptions",
+          }),
+        ),
+        conflictingEvidence: [],
+        missingEvidence: [],
+        assertions: [],
+        managementConclusion:
+          "An exception is resolved when a person records a conclusion against it. Software does not resolve one, so every item above is waiting on evidence, a conclusion, or both.",
+        nextAction: "Open Exceptions to work these; each row links to what it is waiting on.",
+        citations: open.map((e) => cite(e.exception.id, { href: `/exceptions/${e.exception.id}` })),
+      };
+    },
+  },
+  {
     key: "resolved-exceptions",
     mode: "SUMMARIZE",
     match: {
@@ -2346,7 +2437,7 @@ const INTENTS: readonly Intent[] = [
               source: "get_exception",
             }),
           ),
-          conflictingEvidence: views.filter((v) => v.open).map((v) => v.exception.finding.whyFlagged),
+          conflictingEvidence: conflictNarratives(views.filter((v) => v.open)),
           missingEvidence: views
             .filter((v) => v.open)
             .flatMap((v) =>
@@ -2366,8 +2457,16 @@ const INTENTS: readonly Intent[] = [
       }
       const open = s.run<readonly ExceptionResult[]>("list_open_exceptions");
       if (open === undefined || open.length === 0) return undefined;
+      /**
+       * Counted from the items that actually carry a contradiction, not from
+       * `open.length`. The status said "7 open items carry evidence that
+       * conflicts" while three of the seven carried no contradiction at all —
+       * a count over one population describing another.
+       */
+      const conflicting = open.filter((e) => namesContradiction(e.exception.finding.reasonCodes));
+      if (conflicting.length === 0) return undefined;
       return {
-        status: `${open.length} open ${plural(open.length, "item")} carry evidence that conflicts`,
+        status: `${conflicting.length} open ${plural(conflicting.length, "item")} ${plural(conflicting.length, "carries", "carry")} evidence that conflicts`,
         knownFacts: open.map(
           (e): AiFigure => ({
             label: `${e.exception.id} — ${e.exception.finding.title}`,
@@ -2375,7 +2474,7 @@ const INTENTS: readonly Intent[] = [
             source: "list_open_exceptions",
           }),
         ),
-        conflictingEvidence: open.map((e) => e.exception.finding.whyFlagged),
+        conflictingEvidence: conflictNarratives(conflicting),
         missingEvidence: [],
         assertions: [...new Set(open.flatMap((e) => e.exception.finding.assertions))],
         managementConclusion:
@@ -3061,7 +3160,14 @@ function answerException(s: AiToolSession, exceptionId: string): AiMaterialAnswe
             },
           ]),
     ],
-    conflictingEvidence: open ? [f.whyFlagged] : [],
+    /**
+     * `open` is necessary but no longer sufficient. A resolved item reports no
+     * live conflict; an OPEN item reports one only when its own reason codes
+     * name a contradiction. EXC-007 filed "the year-end custodian confirmation
+     * requested 2026-12-28 has not been answered" under CONFLICTING EVIDENCE
+     * while the same answer filed the same absence under MISSING EVIDENCE.
+     */
+    conflictingEvidence: open && namesContradiction(f.reasonCodes) ? [f.whyFlagged] : [],
     // Stated as missing, never inferred. This is the refusal — and it is
     // phrased from the requirement, not from EXC-001's contract language,
     // which was previously emitted verbatim for recounts and damage
@@ -3183,14 +3289,50 @@ export const INTENT_MATCHES: readonly { key: string; match: IntentMatch }[] = [
 /**
  * Which intent a question reaches, before any tool runs.
  *
- * Exported for the routing harness AND used by `answerQuestion`, so the two
- * cannot disagree about what the table says. It is not the whole story —
- * `answerQuestion` falls back when an intent matches and produces nothing —
- * which is why the interaction records the route that actually answered.
+ * The ONE place the intent table is searched.
+ *
+ * Both `routeQuestion` (the harness) and `answerQuestion` (production) call
+ * this. They used to run the same `INTENTS.find(...)` expression in two
+ * places, under a comment claiming routeQuestion was "used by answerQuestion,
+ * so the two cannot disagree about what the table says" — which was false
+ * about the code. The two agreed only because the duplicated expressions
+ * happened to be identical, and nothing made them stay identical: the harness
+ * could have gone on validating a path production no longer took.
+ *
+ * `q` is already normalised by the caller.
+ */
+function selectIntent(q: string) {
+  return INTENTS.find((i) => matchesQuestion(i.match, q));
+}
+
+/**
+ * The rules' own conflict narratives, for the findings that HAVE a conflict.
+ *
+ * One helper for the three call sites that emit this channel, because the
+ * defect was reachable through all three and a fix at one leaves the identical
+ * sentences on the other two — the reopen pattern this repo has measured at
+ * one in three. The sentence itself is the rule's and is never re-authored:
+ * a finding is routinely a real contradiction WITH an absence clause welded
+ * on (EXC-001, EXC-002), and rewriting rule prose here to split them would
+ * put an authored sentence in the assistant's mouth.
+ */
+function conflictNarratives(
+  views: readonly { exception: { finding: { reasonCodes: readonly string[]; whyFlagged: string } } }[],
+): string[] {
+  return views
+    .filter((v) => namesContradiction(v.exception.finding.reasonCodes))
+    .map((v) => v.exception.finding.whyFlagged);
+}
+
+/**
+ * Exported for the routing harness AND used by `answerQuestion` — both
+ * through `selectIntent`, so the two genuinely cannot disagree about what the
+ * table says. It is not the whole story — `answerQuestion` falls back when an
+ * intent matches and produces nothing — which is why the interaction records
+ * the route that actually answered.
  */
 export function routeQuestion(question: string): { key: string; mode: AiMode } | undefined {
-  const q = normalizeQuestion(question);
-  const intent = INTENTS.find((i) => matchesQuestion(i.match, q));
+  const intent = selectIntent(normalizeQuestion(question));
   return intent === undefined ? undefined : { key: intent.key, mode: intent.mode };
 }
 
@@ -3268,7 +3410,9 @@ export function answerQuestion(
 
   // An object-scoped "why is this open" outranks the general intents.
   const asksWhyOpen = matchesQuestion(ASKS_WHY_OPEN, q);
-  const intent = INTENTS.find((i) => matchesQuestion(i.match, q));
+  // Through `selectIntent`, the same call the routing harness makes — see the
+  // comment there. This was a second copy of the expression.
+  const intent = selectIntent(q);
 
   /**
    * Where the ANSWERING route's calls begin.
