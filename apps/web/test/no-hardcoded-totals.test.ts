@@ -27,6 +27,19 @@ const FORBIDDEN = [
   "1,065",
   "1,061",
   "7,400",
+  /**
+   * The BOOK population — locked at the same level as the $4,800,000 it
+   * carries, and absent from this list until it was found hard-coded on two
+   * shipped surfaces at once: the physical-count CSV's population cell and
+   * the Procurement GRNI note. Both sat in a sentence whose neighbouring
+   * figures all came from the service, so one number was frozen while the
+   * rest moved.
+   *
+   * Its absence here is why neither was caught. A firewall is only as wide as
+   * its list, and this one guarded every canonical VALUE except the count of
+   * the things being valued.
+   */
+  "1,500",
   // Stage 07: the 1290 reserve balance and the PBC package counts
   "54,000",
   "17 of 21",

@@ -1,5 +1,5 @@
 import type { DemoUser } from "@icg/data";
-import { getProcurementPopulations } from "@icg/services";
+import { getCustodyBreakdown, getProcurementPopulations } from "@icg/services";
 import type {
   ExceptionView,
   ProcurementDetail,
@@ -180,6 +180,15 @@ export function buildProcurementData(
   const queries = getQueries();
   const ctx = makeContext(user, correlationId);
   const role = roleLabel(user);
+
+  /**
+   * The book population, for the GRNI note below. `attempt()` because this is
+   * prose garnish, not the tab's subject: a reader denied the custody read
+   * gets the sentence without the size rather than losing the tab.
+   */
+  const bookUnits = attempt(() => getCustodyBreakdown(getWorkspace(), ctx).bookUnits);
+  const bookUnitsLabel =
+    bookUnits === undefined ? "" : `${bookUnits.toLocaleString("en-US")}-unit `;
 
   const populations = attempt(() => getProcurementPopulations(getWorkspace(), ctx));
   if (populations === undefined) {
@@ -566,7 +575,14 @@ export function buildProcurementData(
         },
       ],
       rows: grniRows,
-      note: "These units were received before the balance-sheet date, so they are already in the 1,500-unit book population and in the inventory accounts. What is missing is the other side: the vendor's invoice. The accrual sits in accounts payable, not in inventory, which is why this population does not appear in the inventory-to-GL reconciliation.",
+      /**
+       * The book population is read, not typed. This sentence carried
+       * the book population as a literal beside figures that all come from the
+       * service — one number in the paragraph frozen while its neighbours
+       * moved. Same defect as the physical-count CSV's population cell, on a
+       * surface the review never reached.
+       */
+      note: `These units were received before the balance-sheet date, so they are already in the ${bookUnitsLabel}book population and in the inventory accounts. What is missing is the other side: the vendor's invoice. The accrual sits in accounts payable, not in inventory, which is why this population does not appear in the inventory-to-GL reconciliation.`,
     },
     inr: {
       stats: [

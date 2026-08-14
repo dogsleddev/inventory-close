@@ -299,7 +299,7 @@ function FilterSelect({ field }: { field: InventoryFilterField }) {
 }
 
 /**
- * The master table. The population is 1,500 rows and the page renders one
+ * The master table. The population is the whole book and the page renders one
  * hundred at a time: filtering and paging both happen on the server, so the
  * browser never receives a population it cannot render.
  */

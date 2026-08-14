@@ -55,7 +55,7 @@ export function formatCentsMillions(cents: number, decimals: number): string {
  * inline and produce exactly this; naming it here gives them somewhere to
  * converge and gives Ask Gaurd — which had been rendering `String(count)` —
  * the same grouping the screens use. A book population printed as `1500`
- * beside a screen printing `1,500` is one figure in two spellings.
+ * beside a screen printing it grouped is one figure in two spellings.
  */
 export function formatCount(value: number): string {
   return value.toLocaleString("en-US");

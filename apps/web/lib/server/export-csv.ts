@@ -191,7 +191,7 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     // `accountingClassification` and `glAccount`. Neither field exists on
     // `InventoryItemFixture`: the classification is `classification`, and the
     // GL account is DERIVED in the services layer. So both columns emitted an
-    // empty cell on all 1,500 rows — a header asserting that no unit in the
+    // empty cell on every row — a header asserting that no unit in the
     // population has a GL account. An absence must be stated, never implied,
     // and this one was implied AND false.
     const master = queries.listInventoryMaster(ctx);
@@ -1383,7 +1383,25 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
     const yearEndPlans = detail.plans.filter((p) => p.countType === "YEAR_END");
     lines.push(row(["COUNT SUMMARY — YEAR-END COUNT ONLY"]));
     lines.push(row(["Measure", "Value", "Scope"]));
-    lines.push(row(["Count population (units)", summary.populationUnits, "Year-end count, counted locations only — not the 1,500-unit book population"]));
+    /**
+     * The book population is READ, not typed.
+     *
+     * This cell used to end with the book population as a
+     * source literal, in the same `row([...])` whose middle cell comes from
+     * the service. So one figure in the sentence moved with the dataset and
+     * the other did not, and a regenerated dataset would have left the
+     * scope note quietly asserting a size the close no longer held. It is
+     * also the figure `no-hardcoded-totals.test.ts` exists to keep out of
+     * `lib/`.
+     */
+    const bookUnits = getCustodyBreakdown(getWorkspace(), ctx).bookUnits;
+    lines.push(
+      row([
+        "Count population (units)",
+        summary.populationUnits,
+        `Year-end count, counted locations only — not the ${bookUnits.toLocaleString("en-US")}-unit book population`,
+      ]),
+    );
     lines.push(row(["First-pass matched (units)", summary.firstPassMatchedUnits, "Year-end count"]));
     lines.push(row(["First-pass variance rows", summary.varianceRows, "Year-end count"]));
     lines.push(row(["Controlled movements during the count", summary.movements, "Year-end count window"]));
@@ -1437,7 +1455,28 @@ export function buildCsv(user: DemoUser, table: ExportTable, correlationId: stri
           r.serial ?? "Not serial-identified",
           r.snapshotQuantity,
           r.countQuantity,
-          r.adjustedQuantity ?? "",
+          /**
+           * Never blank, because this column is NUMERIC and blank is not.
+           *
+           * "Adjusted qty" sits between "Counted qty" and "Variance" under an
+           * all-numeric header, so a spreadsheet coerces an empty cell to 0 in
+           * any per-row formula. 905 of these 906 rows carry no adjusted
+           * quantity, and as blanks they read as 905 lines adjusted DOWN TO
+           * ZERO — the opposite of the truth, which is that nothing was
+           * adjusted at all. A column SUM likewise totalled 1 across 906 rows.
+           *
+           * Seven of the blanks carry a real non-zero variance the source
+           * never posted a line-level adjustment for; those are the rows a
+           * reviewer most needs to notice, and blank made them
+           * indistinguishable from the 898 where there was nothing to adjust.
+           * The Variance column beside this one already separates the two, so
+           * this cell states one fact and does not re-derive that one.
+           *
+           * Same argument as `documentCell` above and the serial cell below —
+           * only the numeric column was left blank, where the misreading is
+           * arithmetic rather than merely verbal.
+           */
+          r.adjustedQuantity ?? "No adjustment posted",
           r.variance,
         ]),
       );

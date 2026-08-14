@@ -22,7 +22,7 @@ export const metadata: Metadata = {
  *
  * Filters arrive as a GET query string, exactly like the existing `?q=`
  * search: the URL is the whole filter state, so a filtered population is
- * shareable, bookmarkable and reproducible, and the 1,500-row list is
+ * shareable, bookmarkable and reproducible, and the whole-book list is
  * narrowed on the server rather than in the browser. The route is
  * force-dynamic, so every combination is rendered fresh.
  */

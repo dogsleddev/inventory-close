@@ -35,7 +35,7 @@ import { getQueries, makeContext, roleLabel } from "./workspace";
  *    serial search above the table, which reaches beyond the listing.
  */
 
-/** Rows per page. The population is 1,500; the browser gets 100 at a time. */
+/** Rows per page. The population is the whole book; the browser gets 100. */
 export const INVENTORY_PAGE_SIZE = 100;
 
 export interface InventoryFilterOption {
@@ -250,7 +250,7 @@ export function buildInventoryListData(
   const needle = serialQuery.toUpperCase();
 
   // Every predicate is a pure read of a derived row field. Filtering happens
-  // on the server so a 1,500-row population never has to reach the browser.
+  // on the server so the whole-book population never has to reach the browser.
   const namesUnit = (row: (typeof all)[number]) =>
     row.exceptions.filter((e) => e.identifiesUnit);
   const matches = (row: (typeof all)[number]): boolean => {
